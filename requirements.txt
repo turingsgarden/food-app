@@ -1,0 +1,7 @@
+Flask
+transformers
+torch
+Pillow
+pandas
+spacy
+google-generativeai
