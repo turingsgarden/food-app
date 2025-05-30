@@ -2,94 +2,163 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Food Image Recognition</title>
+    <title>Food Recognizer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: #fdfdfd;
+            background: #f5f5f5;
             color: #333;
-            max-width: 960px;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1200px;
             margin: auto;
-            padding: 30px;
+            padding: 30px 20px;
         }
         h1 {
             color: #00695c;
             font-size: 2em;
+            text-align: center;
         }
         form {
-            margin-bottom: 20px;
             display: flex;
-            align-items: center;
+            justify-content: center;
             gap: 10px;
+            margin-bottom: 30px;
+        }
+        input[type="file"], input[type="submit"] {
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.9em;
         }
         input[type="file"] {
-            padding: 10px;
-            border-radius: 6px;
             border: 1px solid #ccc;
         }
         input[type="submit"] {
-            background-color: #00897b;
+            background-color: #009688;
             color: white;
-            padding: 10px 20px;
             border: none;
-            border-radius: 6px;
             cursor: pointer;
         }
-        .results-container {
-            display: flex;
-            gap: 30px;
-            flex-wrap: wrap;
+        .results {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
         }
-        .results-container img {
-            width: 240px;
-            height: 240px;
-            object-fit: cover;
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        .results img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
             border: 1px solid #ddd;
-            border-radius: 10px;
         }
-        pre {
-            background: #f4f4f4;
-            padding: 15px;
-            border-radius: 10px;
-            white-space: pre-wrap;
+        h2 {
+            color: #444;
+            font-size: 1.1em;
+            margin-bottom: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75em;
+            table-layout: fixed;
             word-wrap: break-word;
-            flex: 1;
         }
-        .section {
-            margin-top: 30px;
+        th, td {
+            padding: 4px 6px;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
-    <h1>🍽️ Smart Food Recognizer</h1>
+<div class="container">
+    <h1>🍽️ Food Recognizer</h1>
     <form action="/upload" method="post" enctype="multipart/form-data">
         <input type="file" name="image" accept="image/*" required>
         <input type="submit" value="Analyze">
     </form>
 
     {% if error %}
-        <p style="color:red;">⚠️ Error: {{ error }}</p>
+        <p style="color:red; text-align:center;">⚠️ {{ error }}</p>
     {% endif %}
 
     {% if image_path %}
-    <div class="section results-container">
-        <div>
-            <h2>📷 Uploaded Image:</h2>
-            <img src="/uploads/{{ image_path }}" alt="Uploaded food image">
+    <div class="results">
+        <div class="card">
+            <img src="/uploads/{{ image_path }}" alt="Food image">
         </div>
         <div>
-            {% if image_description %}
-                <h2>📝 Visible Ingredients & Dish Name:</h2>
-                <pre>{{ image_description }}</pre>
+            {% if dish_prediction %}
+                <div class="card">
+                    <h2>🍛 Dish</h2>
+                    <p>{{ dish_prediction | replace('*', '') }}</p>
+                </div>
             {% endif %}
-
+            {% if image_description %}
+                <div class="card">
+                    <h2>🧾 Ingredients & Quantities</h2>
+                    <table>
+                        <tr><th>Ingredient</th><th>Quantity Number</th><th>Unit</th><th>Reasoning</th></tr>
+                        {% for line in image_description.split('\n') if line.count('|') == 3 %}
+                            {% set parts = line.split('|') %}
+                            <tr>
+                                <td>{{ parts[0].strip() }}</td>
+                                <td>{{ parts[1].strip() }}</td>
+                                <td>{{ parts[2].strip() }}</td>
+                                <td>{{ parts[3].strip() }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
             {% if hidden_ingredients %}
-                <h2>🧂 Hidden Ingredients:</h2>
-                <pre>{{ hidden_ingredients }}</pre>
+                <div class="card">
+                    <h2>🧂 Hidden Ingredients</h2>
+                    <table>
+                        <tr><th>Ingredient</th><th>Quantity Number</th><th>Unit</th><th>Reasoning</th></tr>
+                        {% for line in hidden_ingredients.split('\n') if line.count('|') == 3 %}
+                            {% set parts = line.split('|') %}
+                            <tr>
+                                <td>{{ parts[0].strip() }}</td>
+                                <td>{{ parts[1].strip() }}</td>
+                                <td>{{ parts[2].strip() }}</td>
+                                <td>{{ parts[3].strip() }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+            {% endif %}
+            {% if nutrition_info %}
+                <div class="card">
+                    <h2>🍎 Nutritional Info</h2>
+                    <table>
+                        <tr><th>Nutrient</th><th>Value</th><th>Unit</th><th>Reasoning</th></tr>
+                        {% for line in nutrition_info.split('\n') if line.count('|') == 3 %}
+                            {% set parts = line.split('|') %}
+                            <tr>
+                                <td>{{ parts[0].strip() }}</td>
+                                <td>{{ parts[1].strip() }}</td>
+                                <td>{{ parts[2].strip() }}</td>
+                                <td>{{ parts[3].strip() }}</td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                </div>
             {% endif %}
         </div>
     </div>
     {% endif %}
+</div>
 </body>
 </html>

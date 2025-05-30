@@ -1,0 +1,26 @@
+It's impossible to give exact nutritional information without knowing the specific brands and quantities of each ingredient used.  However, we can provide a *rough estimate* based on typical serving sizes and nutritional data for common ingredients.  This is a very approximate calculation, and the actual values could vary significantly.
+
+**Assumptions:**
+
+* **Ground Beef (150g):**  Approximately 300 calories, 25g protein, 15g fat, 0g carbs, 0g fiber, 0g sugar, 80mg sodium.
+* **Cheddar Cheese (50g):** Approximately 200 calories, 10g protein, 18g fat, 1g carbs, 0g fiber, 1g sugar, 200mg sodium.
+* **Tortilla Chips (100g):** Approximately 400 calories, 5g protein, 20g fat, 60g carbs, 3g fiber, 1g sugar, 200mg sodium (this varies hugely depending on the type of chip).
+* **Black Olives (10g):** Approximately 10 calories, 0.5g protein, 0.5g fat, 1g carbs, 0g fiber, 0g sugar, 2mg sodium.
+* **Jalapenos (10g):** Approximately 5 calories, 0.5g protein, 0g fat, 1g carbs, 0g fiber, 0g sugar, 1mg sodium.
+* **Diced Tomatoes (50g):** Approximately 10 calories, 1g protein, 0g fat, 2g carbs, 1g fiber, 2g sugar, 2mg sodium.
+* **Green Onions (5g):** Approximately 2 calories, 0g protein, 0g fat, 1g carbs, 0g fiber, 0g sugar, 1mg sodium.
+
+**Estimated Nutritional Information (per serving):**
+
+* **Calories:**  920 - 1120 (large variation due to chips)
+* **Protein:** 40 - 50g
+* **Fat:** 55 - 70g (mostly saturated fat from cheese and beef)
+* **Carbohydrates:** 65 - 85g
+* **Fiber:** 4 - 5g
+* **Sugar:** 4 - 5g
+* **Sodium:** 600 - 1000mg (high due to cheese and chips)
+
+**Main Vitamins and Minerals:**  This will vary, but you'd expect some Vitamin A (from cheese and tomatoes), Vitamin K (from jalapenos), Calcium (from cheese), and Potassium (from tomatoes and olives).  The amounts would be relatively modest.
+
+
+**Disclaimer:** This is a very rough estimate.  The actual nutritional content will depend heavily on the specific ingredients used, their portion sizes, and preparation methods.  For a more accurate analysis, you would need to use a nutritional tracking app and input the specific details of the ingredients and quantities.

@@ -19,9 +19,12 @@ def encode_image(image_path):
 def analyze_image_with_gemini(image_path):
     image_data = encode_image(image_path)
     prompt = (
-        "Describe the food dish in this image. Give a clear name of the dish as the first line. "
-        "Then list all ingredients that are visually visible, with approximate quantities. "
-        "Ignore background, cutlery, or non-edible items."
+        "Describe the food dish in this image.\n"
+        "Return the dish name on the first line.\n"
+        "Then list each visible ingredient on a new line in the format: Ingredient | Quantity Number | Unit | Reasoning.\n"
+        "Avoid vague ranges or approximations like 'a few' or 'some'.\n"
+        "Be concise and avoid unnecessary descriptions.\n"
+        "Skip any background or utensils."
     )
     try:
         response = gemini_model.generate_content([
@@ -32,17 +35,49 @@ def analyze_image_with_gemini(image_path):
     except Exception as e:
         return f"Gemini error: {str(e)}"
 
+def extract_ingredients_only(description):
+    lines = description.splitlines()
+    ingredients = []
+    for line in lines[1:]:
+        if '|' in line and len(line.split('|')) == 4:
+            ingredients.append(line.strip())
+    return "\n".join(ingredients)
+
 def search_hidden_ingredients(dish_name, visible_ingredients):
     prompt = (
-        f"For the dish '{dish_name}', given the following detected visible ingredients: {visible_ingredients},\n"
-        f"what are the common hidden or non-visible ingredients (such as oils, spices, broth, sauces) that are likely used in most authentic recipes for this dish?\n"
-        f"Return only the hidden ingredients with approximate quantities. Do not include optional or garnish items."
+        f"You are a recipe analyst.\n"
+        f"For the dish '{dish_name}', given the following visible ingredients:\n{visible_ingredients},\n"
+        "list only the likely hidden ingredients used in traditional or common recipes for this dish.\n"
+        "Format each hidden ingredient on a new line like this: Ingredient | Quantity Number | Unit | Reasoning.\n"
+        "Only include core items like oil, butter, sauces, or spices typically used. Avoid optional or garnish ingredients.\n"
+        "Do NOT use any vague descriptions. Be clear and formatted strictly."
     )
     try:
         response = gemini_model.generate_content(prompt)
         return response.text
     except Exception as e:
         return f"Hidden ingredients lookup error: {str(e)}"
+
+def estimate_nutrition_from_ingredients(dish_name, visible_ingredients):
+    prompt = (
+        f"You are a nutritionist.\n"
+        f"The user has provided the visible ingredients from a dish named '{dish_name}'.\n"
+        f"Ingredients:\n{visible_ingredients}\n\n"
+        "Your task is to output the nutritional breakdown per serving (based on image analysis).\n"
+        "Output each nutrient on a new line in this exact format:\n"
+        "Nutrient | Value | Unit | Reasoning\n"
+        "Example:\n"
+        "Calories | 720 | kcal | Estimated from rice and cheese.\n"
+        "Protein | 32 | g | Chicken and beans contribute majorly.\n\n"
+        "Avoid ranges (like 100–200) or vague statements.\n"
+        "Include at least these nutrients: Calories, Protein, Fat, Carbohydrates, Fiber, Sugar, Sodium.\n"
+        "Be strict with the format."
+    )
+    try:
+        response = gemini_model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Nutrition estimation error: {str(e)}"
 
 def extract_dish_name(description):
     match = re.search(r'(?i)(?:dish name[:\-]?)\s*(.*)', description)
@@ -54,9 +89,12 @@ def extract_dish_name(description):
 def full_image_analysis(image_path):
     gemini_description = analyze_image_with_gemini(image_path)
     dish_name = extract_dish_name(gemini_description)
-    hidden_ingredients = search_hidden_ingredients(dish_name, gemini_description)
+    cleaned_ingredients = extract_ingredients_only(gemini_description)
+    hidden_ingredients = search_hidden_ingredients(dish_name, cleaned_ingredients)
+    nutrition_info = estimate_nutrition_from_ingredients(dish_name, cleaned_ingredients)
     return {
         'image_description': gemini_description,
         'dish_prediction': dish_name,
-        'hidden_ingredients': hidden_ingredients
+        'hidden_ingredients': hidden_ingredients,
+        'nutrition_info': nutrition_info
     }
