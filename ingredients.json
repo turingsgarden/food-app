@@ -1,0 +1,22 @@
+{
+  "Paneer": {
+    "Quantity Number/Value": 6,
+    "Unit": "Cubes",
+    "Reasoning": "Visible in the sauce."
+  },
+  "Rice": {
+    "Quantity Number/Value": 1.5,
+    "Unit": "Cups",
+    "Reasoning": "Estimated by visual comparison to the bowl size and paneer quantity."
+  },
+  "Cilantro": {
+    "Quantity Number/Value": 1,
+    "Unit": "Sprig",
+    "Reasoning": "On top of the dish."
+  },
+  "Sauce": {
+    "Quantity Number/Value": 1,
+    "Unit": "Bowl",
+    "Reasoning": "The orange colored liquid surrounding the paneer."
+  }
+}

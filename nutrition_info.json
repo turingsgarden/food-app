@@ -1,0 +1,37 @@
+{
+  "Calories": {
+    "Quantity Number/Value": 750,
+    "Unit": "kcal",
+    "Reasoning": "Estimated based on 1.5 cups of rice and 6 cubes of paneer, assuming moderate sauce quantity and oil."
+  },
+  "Protein": {
+    "Quantity Number/Value": 35,
+    "Unit": "g",
+    "Reasoning": "Primarily from paneer."
+  },
+  "Fat": {
+    "Quantity Number/Value": 40,
+    "Unit": "g",
+    "Reasoning": "Significant fat from paneer and butter in the sauce."
+  },
+  "Carbohydrates": {
+    "Quantity Number/Value": 80,
+    "Unit": "g",
+    "Reasoning": "Predominantly from rice."
+  },
+  "Fiber": {
+    "Quantity Number/Value": 2,
+    "Unit": "g",
+    "Reasoning": "Small contribution from rice and cilantro."
+  },
+  "Sugar": {
+    "Quantity Number/Value": 5,
+    "Unit": "g",
+    "Reasoning": "Primarily from the sauce, likely containing added sugar."
+  },
+  "Sodium": {
+    "Quantity Number/Value": 700,
+    "Unit": "mg",
+    "Reasoning": "High sodium content is likely due to the sauce, which often contains salt and other sodium-containing ingredients."
+  }
+}

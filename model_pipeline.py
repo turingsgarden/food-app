@@ -5,6 +5,7 @@ import google.generativeai as genai
 import base64
 import os
 import re
+import json
 
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
 
@@ -22,6 +23,7 @@ def analyze_image_with_gemini(image_path):
         "Describe the food dish in this image.\n"
         "Return the dish name on the first line.\n"
         "Then list each visible ingredient on a new line in the format: Ingredient | Quantity Number | Unit | Reasoning.\n"
+        "Quantity Number must be a numeric value only.\n"
         "Avoid vague ranges or approximations like 'a few' or 'some'.\n"
         "Be concise and avoid unnecessary descriptions.\n"
         "Skip any background or utensils."
@@ -49,6 +51,7 @@ def search_hidden_ingredients(dish_name, visible_ingredients):
         f"For the dish '{dish_name}', given the following visible ingredients:\n{visible_ingredients},\n"
         "list only the likely hidden ingredients used in traditional or common recipes for this dish.\n"
         "Format each hidden ingredient on a new line like this: Ingredient | Quantity Number | Unit | Reasoning.\n"
+        "Quantity Number must be a numeric value only.\n"
         "Only include core items like oil, butter, sauces, or spices typically used. Avoid optional or garnish ingredients.\n"
         "Do NOT use any vague descriptions. Be clear and formatted strictly."
     )
@@ -66,6 +69,7 @@ def estimate_nutrition_from_ingredients(dish_name, visible_ingredients):
         "Your task is to output the nutritional breakdown per serving (based on image analysis).\n"
         "Output each nutrient on a new line in this exact format:\n"
         "Nutrient | Value | Unit | Reasoning\n"
+        "Value must be a numeric value only.\n"
         "Example:\n"
         "Calories | 720 | kcal | Estimated from rice and cheese.\n"
         "Protein | 32 | g | Chicken and beans contribute majorly.\n\n"
@@ -86,12 +90,39 @@ def extract_dish_name(description):
     first_line = description.strip().split('\n')[0]
     return first_line.strip().capitalize()
 
+def parse_to_json(text):
+    data_dict = {}
+    for line in text.splitlines():
+        parts = [p.strip() for p in line.split('|')]
+        if len(parts) == 4:
+            try:
+                numeric_value = float(parts[1]) if '.' in parts[1] else int(parts[1])
+                data_dict[parts[0]] = {
+                    "Quantity Number/Value": numeric_value,
+                    "Unit": parts[2],
+                    "Reasoning": parts[3]
+                }
+            except ValueError:
+                continue  # Skip non-numeric values
+    return data_dict
+
+def save_json_output(filename, content):
+    with open(filename, 'w') as f:
+        json.dump(content, f, indent=2)
+
 def full_image_analysis(image_path):
     gemini_description = analyze_image_with_gemini(image_path)
     dish_name = extract_dish_name(gemini_description)
     cleaned_ingredients = extract_ingredients_only(gemini_description)
+
     hidden_ingredients = search_hidden_ingredients(dish_name, cleaned_ingredients)
     nutrition_info = estimate_nutrition_from_ingredients(dish_name, cleaned_ingredients)
+
+    # Save JSON files
+    save_json_output("ingredients.json", parse_to_json(cleaned_ingredients))
+    save_json_output("hidden_ingredients.json", parse_to_json(hidden_ingredients))
+    save_json_output("nutrition_info.json", parse_to_json(nutrition_info))
+
     return {
         'image_description': gemini_description,
         'dish_prediction': dish_name,
