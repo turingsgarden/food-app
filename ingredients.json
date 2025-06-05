@@ -1,22 +1,126 @@
 {
-  "Paneer": {
-    "Quantity Number/Value": 6,
-    "Unit": "Cubes",
-    "Reasoning": "Visible in the sauce."
+  "Healthy-Hawaiian-chicken-for-a-crowd-square-Custom.webp - 2025-06-05T00:05:27.177441": {
+    "Grilled Chicken": {
+      "Quantity Number/Value": 2,
+      "Unit": "pieces",
+      "Reasoning": "Two pieces of grilled chicken are visible."
+    },
+    "Macaroni Salad": {
+      "Quantity Number/Value": 1,
+      "Unit": "serving",
+      "Reasoning": "A single serving of macaroni salad is present."
+    },
+    "White Rice": {
+      "Quantity Number/Value": 1,
+      "Unit": "serving",
+      "Reasoning": "A single serving of white rice is present."
+    },
+    "Kale Salad": {
+      "Quantity Number/Value": 1,
+      "Unit": "serving",
+      "Reasoning": "A single serving of kale salad is present."
+    },
+    "Soy Sauce": {
+      "Quantity Number/Value": 1,
+      "Unit": "tbsp",
+      "Reasoning": "Used in many marinades for grilled chicken."
+    },
+    "Salt": {
+      "Quantity Number/Value": 1,
+      "Unit": "tsp",
+      "Reasoning": "Used in seasoning the chicken and other components."
+    },
+    "Mustard": {
+      "Quantity Number/Value": 1,
+      "Unit": "tbsp",
+      "Reasoning": "Common addition to macaroni salad."
+    },
+    "Vinegar": {
+      "Quantity Number/Value": 1,
+      "Unit": "tbsp",
+      "Reasoning": "Common addition to macaroni salad."
+    },
+    "Sugar": {
+      "Quantity Number/Value": 1,
+      "Unit": "tsp",
+      "Reasoning": "Common addition to macaroni salad."
+    },
+    "Olive Oil": {
+      "Quantity Number/Value": 1,
+      "Unit": "tbsp",
+      "Reasoning": "Used in preparation of the kale salad."
+    },
+    "Lemon Juice": {
+      "Quantity Number/Value": 1,
+      "Unit": "tbsp",
+      "Reasoning": "Used in preparation of the kale salad."
+    }
   },
-  "Rice": {
-    "Quantity Number/Value": 1.5,
-    "Unit": "Cups",
-    "Reasoning": "Estimated by visual comparison to the bowl size and paneer quantity."
-  },
-  "Cilantro": {
-    "Quantity Number/Value": 1,
-    "Unit": "Sprig",
-    "Reasoning": "On top of the dish."
-  },
-  "Sauce": {
-    "Quantity Number/Value": 1,
-    "Unit": "Bowl",
-    "Reasoning": "The orange colored liquid surrounding the paneer."
+  "paneer-tikka-masala-recipe.jpg - 2025-06-05T00:05:50.627960": {
+    "Paneer": {
+      "Quantity Number/Value": 6,
+      "Unit": "cubes",
+      "Reasoning": "Visible in the sauce."
+    },
+    "Sauce": {
+      "Quantity Number/Value": 1,
+      "Unit": "bowl",
+      "Reasoning": "The orange sauce coating the paneer."
+    },
+    "Rice": {
+      "Quantity Number/Value": 1.5,
+      "Unit": "cups",
+      "Reasoning": "Estimated amount visible in the bowl."
+    },
+    "Cilantro": {
+      "Quantity Number/Value": 1,
+      "Unit": "sprig",
+      "Reasoning": "Garnish on top of the dish."
+    },
+    "Oil": {
+      "Quantity Number/Value": 2,
+      "Unit": "tbsp",
+      "Reasoning": "Used for saut\u00e9ing onions and spices."
+    },
+    "Onion": {
+      "Quantity Number/Value": 1,
+      "Unit": "medium",
+      "Reasoning": "Base for the sauce."
+    },
+    "Ginger": {
+      "Quantity Number/Value": 1,
+      "Unit": "inch",
+      "Reasoning": "Common in Indian cooking for flavor."
+    },
+    "Garlic": {
+      "Quantity Number/Value": 2,
+      "Unit": "cloves",
+      "Reasoning": "Common in Indian cooking for flavor."
+    },
+    "Tomato": {
+      "Quantity Number/Value": 1,
+      "Unit": "medium",
+      "Reasoning": "Common ingredient in butter paneer sauce."
+    },
+    "Garam Masala": {
+      "Quantity Number/Value": 1,
+      "Unit": "tsp",
+      "Reasoning": "A blend of spices typical in Indian cuisine."
+    },
+    "Salt": {
+      "Quantity Number/Value": 1,
+      "Unit": "tsp",
+      "Reasoning": "To taste."
+    },
+    "Cream": {
+      "Quantity Number/Value": 2,
+      "Unit": "tbsp",
+      "Reasoning": "For richness and creaminess in the sauce."
+    },
+    "Butter": {
+      "Quantity Number/Value": 1,
+      "Unit": "tbsp",
+      "Reasoning": "In addition to what might be in the sauce, for richness."
+    }
   }
 }

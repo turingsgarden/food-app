@@ -6,6 +6,7 @@ import base64
 import os
 import re
 import json
+from datetime import datetime
 
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
 
@@ -106,9 +107,25 @@ def parse_to_json(text):
                 continue  # Skip non-numeric values
     return data_dict
 
-def save_json_output(filename, content):
+def append_to_json_file(filename, new_data, image_name):
+    timestamp = datetime.now().isoformat()
+    entry_key = f"{image_name} - {timestamp}"
+    full_entry = {
+        entry_key: new_data
+    }
+
+    try:
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                existing_data = json.load(f)
+        else:
+            existing_data = {}
+    except Exception:
+        existing_data = {}
+
+    existing_data.update(full_entry)
     with open(filename, 'w') as f:
-        json.dump(content, f, indent=2)
+        json.dump(existing_data, f, indent=2)
 
 def full_image_analysis(image_path):
     gemini_description = analyze_image_with_gemini(image_path)
@@ -118,10 +135,13 @@ def full_image_analysis(image_path):
     hidden_ingredients = search_hidden_ingredients(dish_name, cleaned_ingredients)
     nutrition_info = estimate_nutrition_from_ingredients(dish_name, cleaned_ingredients)
 
-    # Save JSON files
-    save_json_output("ingredients.json", parse_to_json(cleaned_ingredients))
-    save_json_output("hidden_ingredients.json", parse_to_json(hidden_ingredients))
-    save_json_output("nutrition_info.json", parse_to_json(nutrition_info))
+    # Merge and save Ingredients + Hidden Ingredients into one JSON
+    visible_json = parse_to_json(cleaned_ingredients)
+    hidden_json = parse_to_json(hidden_ingredients)
+    combined_ingredients = {**visible_json, **hidden_json}
+    append_to_json_file("ingredients.json", combined_ingredients, os.path.basename(image_path))
+
+    append_to_json_file("nutrition_info.json", parse_to_json(nutrition_info), os.path.basename(image_path))
 
     return {
         'image_description': gemini_description,

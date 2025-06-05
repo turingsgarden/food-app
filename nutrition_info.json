@@ -1,37 +1,76 @@
 {
-  "Calories": {
-    "Quantity Number/Value": 750,
-    "Unit": "kcal",
-    "Reasoning": "Estimated based on 1.5 cups of rice and 6 cubes of paneer, assuming moderate sauce quantity and oil."
+  "Healthy-Hawaiian-chicken-for-a-crowd-square-Custom.webp - 2025-06-05T00:05:27.179201": {
+    "Calories": {
+      "Quantity Number/Value": 750,
+      "Unit": "kcal",
+      "Reasoning": "Estimated based on typical serving sizes of grilled chicken, macaroni salad, white rice, and kale salad."
+    },
+    "Protein": {
+      "Quantity Number/Value": 50,
+      "Unit": "g",
+      "Reasoning": "Primarily from grilled chicken."
+    },
+    "Fat": {
+      "Quantity Number/Value": 30,
+      "Unit": "g",
+      "Reasoning": "Significant contribution from macaroni salad and grilled chicken."
+    },
+    "Carbohydrates": {
+      "Quantity Number/Value": 90,
+      "Unit": "g",
+      "Reasoning": "Primarily from white rice and macaroni salad."
+    },
+    "Fiber": {
+      "Quantity Number/Value": 5,
+      "Unit": "g",
+      "Reasoning": "Primarily from kale salad."
+    },
+    "Sugar": {
+      "Quantity Number/Value": 20,
+      "Unit": "g",
+      "Reasoning": "Primarily from macaroni salad and possibly added sugar to other components."
+    },
+    "Sodium": {
+      "Quantity Number/Value": 1200,
+      "Unit": "mg",
+      "Reasoning": "High sodium content is possible from macaroni salad and potentially the grilled chicken marinade."
+    }
   },
-  "Protein": {
-    "Quantity Number/Value": 35,
-    "Unit": "g",
-    "Reasoning": "Primarily from paneer."
-  },
-  "Fat": {
-    "Quantity Number/Value": 40,
-    "Unit": "g",
-    "Reasoning": "Significant fat from paneer and butter in the sauce."
-  },
-  "Carbohydrates": {
-    "Quantity Number/Value": 80,
-    "Unit": "g",
-    "Reasoning": "Predominantly from rice."
-  },
-  "Fiber": {
-    "Quantity Number/Value": 2,
-    "Unit": "g",
-    "Reasoning": "Small contribution from rice and cilantro."
-  },
-  "Sugar": {
-    "Quantity Number/Value": 5,
-    "Unit": "g",
-    "Reasoning": "Primarily from the sauce, likely containing added sugar."
-  },
-  "Sodium": {
-    "Quantity Number/Value": 700,
-    "Unit": "mg",
-    "Reasoning": "High sodium content is likely due to the sauce, which often contains salt and other sodium-containing ingredients."
+  "paneer-tikka-masala-recipe.jpg - 2025-06-05T00:05:50.630482": {
+    "Calories": {
+      "Quantity Number/Value": 750,
+      "Unit": "kcal",
+      "Reasoning": "Estimated based on 1.5 cups of rice (approx. 225 kcal), 6 cubes of paneer (approx. 300 kcal assuming 50 kcal/cube), and a generous amount of butter in the sauce (approx. 225 kcal)."
+    },
+    "Protein": {
+      "Quantity Number/Value": 30,
+      "Unit": "g",
+      "Reasoning": "Primarily from paneer (approx. 25g from 6 cubes)."
+    },
+    "Fat": {
+      "Quantity Number/Value": 45,
+      "Unit": "g",
+      "Reasoning": "High fat content from paneer and butter in the sauce."
+    },
+    "Carbohydrates": {
+      "Quantity Number/Value": 80,
+      "Unit": "g",
+      "Reasoning": "Primarily from rice (approx. 75g from 1.5 cups)."
+    },
+    "Fiber": {
+      "Quantity Number/Value": 2,
+      "Unit": "g",
+      "Reasoning": "Primarily from rice (approx. 1-2g from 1.5 cups) and small amount from cilantro."
+    },
+    "Sugar": {
+      "Quantity Number/Value": 5,
+      "Unit": "g",
+      "Reasoning": "Small contribution from rice and sauce, minimal from other ingredients."
+    },
+    "Sodium": {
+      "Quantity Number/Value": 700,
+      "Unit": "mg",
+      "Reasoning": "Significant sodium likely from the sauce (butter, spices).  This is an estimate and could vary widely based on sauce recipe."
+    }
   }
 }

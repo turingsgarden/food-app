@@ -105,36 +105,23 @@
                     <p>{{ dish_prediction | replace('*', '') }}</p>
                 </div>
             {% endif %}
-            {% if image_description %}
+            {% if image_description or hidden_ingredients %}
                 <div class="card">
                     <h2>🧾 Ingredients & Quantities</h2>
                     <table>
                         <tr><th>Ingredient</th><th>Quantity Number</th><th>Unit</th><th>Reasoning</th></tr>
-                        {% for line in image_description.split('\n') if line.count('|') == 3 %}
-                            {% set parts = line.split('|') %}
-                            <tr>
-                                <td>{{ parts[0].strip() }}</td>
-                                <td>{{ parts[1].strip() }}</td>
-                                <td>{{ parts[2].strip() }}</td>
-                                <td>{{ parts[3].strip() }}</td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                </div>
-            {% endif %}
-            {% if hidden_ingredients %}
-                <div class="card">
-                    <h2>🧂 Hidden Ingredients</h2>
-                    <table>
-                        <tr><th>Ingredient</th><th>Quantity Number</th><th>Unit</th><th>Reasoning</th></tr>
-                        {% for line in hidden_ingredients.split('\n') if line.count('|') == 3 %}
-                            {% set parts = line.split('|') %}
-                            <tr>
-                                <td>{{ parts[0].strip() }}</td>
-                                <td>{{ parts[1].strip() }}</td>
-                                <td>{{ parts[2].strip() }}</td>
-                                <td>{{ parts[3].strip() }}</td>
-                            </tr>
+                        {% for source in [image_description, hidden_ingredients] %}
+                            {% if source %}
+                                {% for line in source.split('\n') if line.count('|') == 3 %}
+                                    {% set parts = line.split('|') %}
+                                    <tr>
+                                        <td>{{ parts[0].strip() }}</td>
+                                        <td>{{ parts[1].strip() }}</td>
+                                        <td>{{ parts[2].strip() }}</td>
+                                        <td>{{ parts[3].strip() }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% endif %}
                         {% endfor %}
                     </table>
                 </div>
