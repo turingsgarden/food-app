@@ -13,7 +13,7 @@ from PIL import Image
 DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
 
 # Gemini API setup
-GEN_API_KEY = "AIzaSyAJn4e-AlCoFsgFOJvuc8QA2r2zQDBeBqg"
+GEN_API_KEY = " "
 genai.configure(api_key=GEN_API_KEY)
 gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
