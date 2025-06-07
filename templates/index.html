@@ -79,11 +79,30 @@
         th {
             background-color: #f0f0f0;
         }
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+        }
     </style>
 </head>
 <body>
-<div class="container">
+<div class="header-bar">
     <h1>🍽️ Food Recognizer</h1>
+    <div>
+        {% if username %}
+            <span>👋 Welcome, {{ username }} |</span>
+            <a href="{{ url_for('profile') }}">My Profile</a> |
+            <a href="{{ url_for('auth.logout') }}">Logout</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}">Login</a> |
+            <a href="{{ url_for('auth.signup') }}">Sign Up</a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container">
     <form action="/upload" method="post" enctype="multipart/form-data">
         <input type="file" name="image" accept="image/*" required>
         <input type="submit" value="Analyze">
