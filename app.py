@@ -2,13 +2,21 @@ from flask import Flask, request, render_template, send_from_directory, redirect
 import os
 from werkzeug.utils import secure_filename
 from model_pipeline import full_image_analysis
-from auth import auth_bp  # auth blueprint (login, signup, logout)
+from auth import auth_bp
+from bson import ObjectId
+from pymongo import MongoClient
 
 app = Flask(__name__)
-app.secret_key = 'your-secure-key'  # Use os.urandom(24) in production for security
+app.secret_key = 'your-secure-key'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
-# Register the authentication blueprint
+# MongoDB connection to correct database
+client = MongoClient("mongodb://localhost:27017/")
+db = client['food_db']  # use the same as in auth.py
+users_collection = db['users']
+uploads_collection = db['uploads']
+
+# Register auth blueprint
 app.register_blueprint(auth_bp)
 
 @app.route('/')
@@ -43,17 +51,17 @@ def uploaded_file(filename):
 @app.route('/profile')
 def profile():
     if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
+        return redirect('/login')
 
-    from pymongo import MongoClient
-    client = MongoClient("mongodb://localhost:27017")
-    db = client.food_db
-    ingredients_collection = db.ingredients_data
+    user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
+    if user is None:
+        session.clear()
+        return redirect('/login')
 
-    user_id = session['user_id']
-    dishes = ingredients_collection.find({'user_id': user_id}).sort('timestamp', -1)
+    uploads_cursor = uploads_collection.find({'user_id': session['user_id']}).sort('timestamp', -1)
+    uploads = list(uploads_cursor)  # convert to list for Jinja
 
-    return render_template('profile.html', username=session.get('username'), dishes=dishes)
+    return render_template('profile.html', username=user.get('username', 'User'), uploads=uploads)
 
 if __name__ == '__main__':
     if not os.path.exists('uploads'):

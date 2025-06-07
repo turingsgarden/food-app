@@ -2,72 +2,88 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sign Up - Food Recognizer</title>
+    <title>Sign Up | Food Recognizer</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background: #f9f9f9;
+            background: #f5f5f5;
             color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            margin: 0;
         }
-        .signup-container {
+        header, nav {
+            background-color: #00695c;
+            color: white;
+            padding: 1em;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            margin: 0 10px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 500px;
+            margin: 60px auto;
             background: white;
-            padding: 30px 40px;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            width: 350px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
         }
         h2 {
-            text-align: center;
             color: #00695c;
+            text-align: center;
             margin-bottom: 20px;
         }
-        form input {
+        input[type="text"], input[type="email"], input[type="password"], button {
             width: 100%;
-            padding: 10px 12px;
-            margin: 10px 0;
+            padding: 10px;
+            margin-top: 10px;
             border-radius: 6px;
             border: 1px solid #ccc;
+            font-size: 1em;
         }
-        form input[type="submit"] {
+        button {
             background-color: #009688;
             color: white;
             border: none;
             cursor: pointer;
+            margin-top: 20px;
         }
         p {
             text-align: center;
-            margin-top: 15px;
-        }
-        a {
-            color: #00796b;
-            text-decoration: none;
+            margin-top: 20px;
         }
         .error {
             color: red;
-            font-size: 0.9em;
             text-align: center;
-            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-<div class="signup-container">
-    <h2>Sign Up</h2>
-    <form method="POST">
+<header>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/login">Login</a>
+    </nav>
+</header>
+
+<div class="container">
+    <h2>📝 Sign Up</h2>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+    <form action="/signup" method="POST">
         <input type="text" name="username" placeholder="Username" required>
         <input type="email" name="email" placeholder="Email" required>
         <input type="password" name="password" placeholder="Password" required>
-        <input type="submit" value="Register">
+        <button type="submit">Create Account</button>
     </form>
-    <p>Already have an account? <a href="/login">Login here</a></p>
-    {% if error %}
-        <div class="error">{{ error }}</div>
-    {% endif %}
+    <p>Already have an account? <a href="/login">Login</a></p>
 </div>
 </body>
 </html>
