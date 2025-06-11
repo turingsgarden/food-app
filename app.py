@@ -1,18 +1,19 @@
-from flask import Flask, request, render_template, send_from_directory, redirect, url_for, session
+from flask import Flask, request, render_template, send_from_directory, redirect, session
 import os
 from werkzeug.utils import secure_filename
 from model_pipeline import full_image_analysis
 from auth import auth_bp
 from bson import ObjectId
 from pymongo import MongoClient
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'your-secure-key'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 
-# MongoDB connection to correct database
+# MongoDB setup
 client = MongoClient("mongodb://localhost:27017/")
-db = client['food_db']  # use the same as in auth.py
+db = client['food_db']  # Ensure this matches the DB name where users are stored
 users_collection = db['users']
 uploads_collection = db['uploads']
 
@@ -40,6 +41,18 @@ def upload():
         result = full_image_analysis(filepath, session['user_id'])
         result['image_path'] = filename
         result['username'] = session.get('username')
+
+        # Save upload metadata to MongoDB
+        uploads_collection.insert_one({
+            'user_id': session['user_id'],
+            'filename': filename,
+            'dish_prediction': result.get('dish_prediction'),
+            'nutrition_info': result.get('nutrition_info'),
+            'image_description': result.get('image_description'),
+            'hidden_ingredients': result.get('hidden_ingredients'),
+            'timestamp': datetime.now()
+        })
+
         return render_template('index.html', **result)
     except Exception as e:
         return render_template('index.html', error=str(e), username=session.get('username'))
@@ -59,7 +72,7 @@ def profile():
         return redirect('/login')
 
     uploads_cursor = uploads_collection.find({'user_id': session['user_id']}).sort('timestamp', -1)
-    uploads = list(uploads_cursor)  # convert to list for Jinja
+    uploads = list(uploads_cursor)
 
     return render_template('profile.html', username=user.get('username', 'User'), uploads=uploads)
 

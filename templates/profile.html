@@ -2,69 +2,108 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Profile | Food Recognizer</title>
+    <title>{{ username }}'s Profile</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             background: #f5f5f5;
-            color: #333;
             margin: 0;
             padding: 0;
+            color: #333;
         }
+
         header, nav {
             background-color: #00695c;
             color: white;
             padding: 1em;
             text-align: center;
         }
+
         nav a {
             color: white;
-            margin: 0 15px;
+            margin: 0 10px;
             text-decoration: none;
             font-weight: 500;
         }
+
         nav a:hover {
             text-decoration: underline;
         }
+
         .container {
-            max-width: 900px;
-            margin: auto;
-            padding: 40px 20px;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
         }
+
         h1 {
             color: #00695c;
             text-align: center;
         }
-        .upload-list {
-            margin-top: 30px;
-        }
-        .card {
+
+        .dish-card {
             background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
             padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            margin-bottom: 15px;
         }
-        .no-uploads {
-            text-align: center;
-            font-style: italic;
-            color: #777;
-        }
-        .upload-item {
+
+        .dish-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.95em;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
+            cursor: pointer;
         }
-        .upload-item:last-child {
-            border-bottom: none;
+
+        .dish-header h2 {
+            margin: 0;
+            color: #009688;
+        }
+
+        .timestamp {
+            font-size: 0.85em;
+            color: #777;
+        }
+
+        .details {
+            display: none;
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 6px;
+            border: 1px solid #ccc;
+        }
+
+        th {
+            background: #eee;
+        }
+
+        .empty {
+            text-align: center;
+            font-size: 1em;
+            color: #888;
+            margin-top: 40px;
         }
     </style>
+    <script>
+        function toggleDetails(id) {
+            const el = document.getElementById(id);
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
 </head>
 <body>
+
 <header>
     <nav>
         <a href="/">Home</a>
@@ -74,23 +113,57 @@
 </header>
 
 <div class="container">
-    <h1>👤 Welcome, {{ username }}</h1>
+    <h1>{{ username }}'s Dishes</h1>
 
-    <div class="upload-list">
-        <h2>Your Recent Dishes</h2>
-        {% if uploads %}
-            <div class="card">
-                {% for upload in uploads %}
-                    <div class="upload-item">
-                        <span>🍲 {{ upload.get('dish_name', 'Unnamed Dish') }}</span>
-                        <span>{{ upload.get('timestamp') }}</span>
-                    </div>
-                {% endfor %}
+    {% if uploads and uploads|length > 0 %}
+        {% for upload in uploads %}
+            <div class="dish-card">
+                <div class="dish-header" onclick="toggleDetails('dish{{ loop.index }}')">
+                    <h2>{{ upload.dish_prediction or "Unnamed Dish" }}</h2>
+                    <span class="timestamp">{{ upload.timestamp.strftime("%b %d, %Y %I:%M %p") }}</span>
+                </div>
+                <div class="details" id="dish{{ loop.index }}">
+                    {% if upload.nutrition_info %}
+                        <h3>🍎 Nutrition</h3>
+                        <table>
+                            <tr><th>Nutrient</th><th>Value</th><th>Unit</th><th>Reasoning</th></tr>
+                            {% for line in upload.nutrition_info.split('\n') if line.count('|') == 3 %}
+                                {% set parts = line.split('|') %}
+                                <tr>
+                                    <td>{{ parts[0].strip() }}</td>
+                                    <td>{{ parts[1].strip() }}</td>
+                                    <td>{{ parts[2].strip() }}</td>
+                                    <td>{{ parts[3].strip() }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+
+                    {% if upload.image_description or upload.hidden_ingredients %}
+                        <h3>🧾 Ingredients</h3>
+                        <table>
+                            <tr><th>Ingredient</th><th>Quantity</th><th>Unit</th><th>Reasoning</th></tr>
+                            {% for source in [upload.image_description, upload.hidden_ingredients] %}
+                                {% if source %}
+                                    {% for line in source.split('\n') if line.count('|') == 3 %}
+                                        {% set parts = line.split('|') %}
+                                        <tr>
+                                            <td>{{ parts[0].strip() }}</td>
+                                            <td>{{ parts[1].strip() }}</td>
+                                            <td>{{ parts[2].strip() }}</td>
+                                            <td>{{ parts[3].strip() }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </table>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <p class="no-uploads">No uploads yet. Try uploading a dish!</p>
-        {% endif %}
-    </div>
+        {% endfor %}
+    {% else %}
+        <p class="empty">You have no uploaded dishes yet. Try uploading one!</p>
+    {% endif %}
 </div>
 </body>
 </html>
