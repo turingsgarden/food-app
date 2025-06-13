@@ -12,11 +12,11 @@ DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if 
 
 # Gemini setup
 GEN_API_KEY = "AIzaSyAJn4e-AlCoFsgFOJvuc8QA2r2zQDBeBqg"
-genai.configure(api_key=GEN_API_KEY)
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
 # MongoDB setup
-client = MongoClient("mongodb://localhost:27017")
+client = MongoClient(os.getenv("MONGO_URI"))
 db = client.food_db
 users_collection = db.users
 ingredients_collection = db.ingredients_data
