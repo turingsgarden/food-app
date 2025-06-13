@@ -1,47 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>👨‍💻 Developer Mode | Food Recognizer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/dev_style.css">
-    <style>
-        .card button {
-            border: none;
-            background: none;
-            padding: 0;
-            cursor: pointer;
-        }
-        .card img {
-            width: 100%;
-            height: auto;
-            border-radius: 8px;
-            transition: transform 0.2s ease-in-out;
-        }
-        .card img:hover {
-            transform: scale(1.05);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Developer Food Gallery</title>
+  <style>
+    body {
+      font-family: Poppins, sans-serif;
+      background-color: #f8f9fa;
+      text-align: center;
+    }
+    .gallery {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      padding: 30px;
+    }
+    .gallery img {
+      width: 220px;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.3s;
+    }
+    .gallery img:hover {
+      transform: scale(1.05);
+    }
+  </style>
 </head>
 <body>
-
-    <header>
-        <h1>👨‍💻 Developer Mode: Sample Dishes</h1>
-    </header>
-
-    <div class="grid-container">
-        {% for image_path in sample_images %}
-        <div class="grid-container">
-            {% for image_url in sample_images %}
-                <div class="card">
-                    <a href="/developer/view?image_url={{ image_url | urlencode }}" target="_blank">
-                        <img loading="lazy" src="{{ image_url }}" alt="Food image">
-                    </a>
-                </div>
-            {% endfor %}
-        </div>             
-        {% endfor %}
-    </div>
-
+  <h1>🍽️ Developer Mode — 25 Random Dishes</h1>
+  <div class="gallery">
+    {% for img in images %}
+      <a href="{{ url_for('developer_view') }}?image_url={{ img }}" target="_blank">
+        <img src="{{ img }}" alt="food image">
+      </a>
+    {% endfor %}
+  </div>  
 </body>
 </html>

@@ -85,19 +85,112 @@ def profile():
 
 # ---------- DEVELOPER MODE ---------- #
 
-@app.route("/developer")
+# Your full list of 100 URLs
+food_image_urls = [
+    "https://foodish-api.com/images/biryani/biryani12.jpg",
+    "https://foodish-api.com/images/burger/burger4.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken17.jpg",
+    "https://foodish-api.com/images/dessert/dessert8.jpg",
+    "https://foodish-api.com/images/dosa/dosa19.jpg",
+    "https://foodish-api.com/images/idly/idly11.jpg",
+    "https://foodish-api.com/images/pasta/pasta7.jpg",
+    "https://foodish-api.com/images/pizza/pizza15.jpg",
+    "https://foodish-api.com/images/rice/rice13.jpg",
+    "https://foodish-api.com/images/samosa/samosa3.jpg",
+
+    "https://foodish-api.com/images/biryani/biryani3.jpg",
+    "https://foodish-api.com/images/burger/burger16.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken1.jpg",
+    "https://foodish-api.com/images/dessert/dessert20.jpg",
+    "https://foodish-api.com/images/dosa/dosa6.jpg",
+    "https://foodish-api.com/images/idly/idly2.jpg",
+    "https://foodish-api.com/images/pasta/pasta11.jpg",
+    "https://foodish-api.com/images/pizza/pizza8.jpg",
+    "https://foodish-api.com/images/rice/rice5.jpg",
+    "https://foodish-api.com/images/samosa/samosa11.jpg",
+
+    "https://foodish-api.com/images/biryani/biryani6.jpg",
+    "https://foodish-api.com/images/burger/burger20.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken3.jpg",
+    "https://foodish-api.com/images/dessert/dessert1.jpg",
+    "https://foodish-api.com/images/dosa/dosa18.jpg",
+    "https://foodish-api.com/images/idly/idly19.jpg",
+    "https://foodish-api.com/images/pasta/pasta15.jpg",
+    "https://foodish-api.com/images/pizza/pizza5.jpg",
+    "https://foodish-api.com/images/rice/rice17.jpg",
+    "https://foodish-api.com/images/samosa/samosa1.jpg",
+
+    "https://foodish-api.com/images/biryani/biryani15.jpg",
+    "https://foodish-api.com/images/burger/burger11.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken7.jpg",
+    "https://foodish-api.com/images/dessert/dessert16.jpg",
+    "https://foodish-api.com/images/dosa/dosa10.jpg",
+    "https://foodish-api.com/images/idly/idly6.jpg",
+    "https://foodish-api.com/images/pasta/pasta2.jpg",
+    "https://foodish-api.com/images/pizza/pizza13.jpg",
+    "https://foodish-api.com/images/rice/rice10.jpg",
+    "https://foodish-api.com/images/samosa/samosa20.jpg",
+
+    "https://foodish-api.com/images/biryani/biryani7.jpg",
+    "https://foodish-api.com/images/burger/burger13.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken19.jpg",
+    "https://foodish-api.com/images/dessert/dessert12.jpg",
+    "https://foodish-api.com/images/dosa/dosa3.jpg",
+    "https://foodish-api.com/images/idly/idly1.jpg",
+    "https://foodish-api.com/images/pasta/pasta8.jpg",
+    "https://foodish-api.com/images/pizza/pizza3.jpg",
+    "https://foodish-api.com/images/rice/rice4.jpg",
+    "https://foodish-api.com/images/samosa/samosa5.jpg",
+
+    "https://foodish-api.com/images/biryani/biryani20.jpg",
+    "https://foodish-api.com/images/burger/burger3.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken12.jpg",
+    "https://foodish-api.com/images/dessert/dessert5.jpg",
+    "https://foodish-api.com/images/dosa/dosa2.jpg",
+    "https://foodish-api.com/images/idly/idly13.jpg",
+    "https://foodish-api.com/images/pasta/pasta14.jpg",
+    "https://foodish-api.com/images/pizza/pizza10.jpg",
+    "https://foodish-api.com/images/rice/rice9.jpg",
+    "https://foodish-api.com/images/samosa/samosa8.jpg",
+
+    "https://foodish-api.com/images/biryani/biryani9.jpg",
+    "https://foodish-api.com/images/burger/burger7.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken8.jpg",
+    "https://foodish-api.com/images/dessert/dessert9.jpg",
+    "https://foodish-api.com/images/dosa/dosa14.jpg",
+    "https://foodish-api.com/images/idly/idly17.jpg",
+    "https://foodish-api.com/images/pasta/pasta18.jpg",
+    "https://foodish-api.com/images/pizza/pizza18.jpg",
+    "https://foodish-api.com/images/rice/rice18.jpg",
+    "https://foodish-api.com/images/samosa/samosa14.jpg",
+
+    "https://foodish-api.com/images/biryani/biryani1.jpg",
+    "https://foodish-api.com/images/burger/burger6.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken5.jpg",
+    "https://foodish-api.com/images/dessert/dessert2.jpg",
+    "https://foodish-api.com/images/dosa/dosa13.jpg",
+    "https://foodish-api.com/images/idly/idly8.jpg",
+    "https://foodish-api.com/images/pasta/pasta9.jpg",
+    "https://foodish-api.com/images/pizza/pizza1.jpg",
+    "https://foodish-api.com/images/rice/rice8.jpg",
+    "https://foodish-api.com/images/samosa/samosa10.jpg",
+
+    "https://foodish-api.com/images/biryani/biryani19.jpg",
+    "https://foodish-api.com/images/burger/burger14.jpg",
+    "https://foodish-api.com/images/butter-chicken/butter-chicken4.jpg",
+    "https://foodish-api.com/images/dessert/dessert18.jpg",
+    "https://foodish-api.com/images/dosa/dosa16.jpg",
+    "https://foodish-api.com/images/idly/idly14.jpg",
+    "https://foodish-api.com/images/pasta/pasta5.jpg",
+    "https://foodish-api.com/images/pizza/pizza20.jpg",
+    "https://foodish-api.com/images/rice/rice6.jpg",
+    "https://foodish-api.com/images/samosa/samosa17.jpg"
+] 
+
+@app.route('/developer')
 def developer_gallery():
-    image_urls = []
-
-    for _ in range(20):
-        try:
-            res = requests.get("https://foodish-api.com/api/")
-            if res.status_code == 200:
-                image_urls.append(res.json()["image"])
-        except:
-            continue
-
-    return render_template("developer.html", sample_images=image_urls)
+    selected_images = random.sample(food_image_urls, 25)
+    return render_template('developer.html', images=selected_images)
 
 
 @app.route("/developer/view")
