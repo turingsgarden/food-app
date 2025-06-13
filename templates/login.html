@@ -69,7 +69,8 @@
     <nav>
         <a href="/">Home</a>
         <a href="/signup">Sign Up</a>
-    </nav>
+        <a href="/developer" target="_blank">👨‍💻 Developer Mode</a>  <!-- ✅ New tab -->
+    </nav>    
 </header>
 
 <div class="container">
@@ -78,10 +79,11 @@
         <p class="error">{{ error }}</p>
     {% endif %}
     <form action="/login" method="POST">
-        <input type="email" name="email" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
+    <input type="email" name="email" placeholder="Email" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+</form>
+
     <p>Don't have an account? <a href="/signup">Create one</a></p>
 </div>
 </body>

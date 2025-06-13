@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Food Recognizer</title>
+    <title>Developer Dish Analysis</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -12,50 +12,10 @@
             margin: 0;
             padding: 0;
         }
-        header, nav {
-            background-color: #00695c;
-            color: white;
-            padding: 1em;
-            text-align: center;
-        }
-        nav a {
-            color: white;
-            margin: 0 15px;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        nav a:hover {
-            text-decoration: underline;
-        }
         .container {
             max-width: 1200px;
             margin: auto;
             padding: 30px 20px;
-        }
-        h1 {
-            color: #00695c;
-            font-size: 2em;
-            text-align: center;
-        }
-        form {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-        input[type="file"], input[type="submit"] {
-            padding: 10px 14px;
-            border-radius: 6px;
-            font-size: 0.9em;
-        }
-        input[type="file"] {
-            border: 1px solid #ccc;
-        }
-        input[type="submit"] {
-            background-color: #009688;
-            color: white;
-            border: none;
-            cursor: pointer;
         }
         .results {
             display: grid;
@@ -69,7 +29,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
         }
-        .results img {
+        img {
             width: 100%;
             height: auto;
             border-radius: 12px;
@@ -84,8 +44,6 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.75em;
-            table-layout: fixed;
-            word-wrap: break-word;
         }
         th, td {
             padding: 4px 6px;
@@ -94,57 +52,23 @@
         th {
             background-color: #f0f0f0;
         }
-        p.center-message {
-            text-align: center;
-            font-size: 0.95em;
-            margin-top: 40px;
-        }
     </style>
 </head>
 <body>
-
-<header>
-    <nav>
-        {% if session.get('user_id') %}
-            <a href="/">Home</a>
-            <a href="/profile">Profile</a>
-            <a href="/logout">Logout</a>
-        {% else %}
-            <a href="/login">Login</a>
-            <a href="/signup">Sign Up</a>
-        {% endif %}
-    </nav>
-</header>
-
-<div class="container">
-    <h1>🍽️ Food Recognizer</h1>
-
-    {% if session.get('user_id') %}
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="image" accept="image/*" required>
-        <input type="submit" value="Analyze">
-    </form>
-    {% else %}
-        <p class="center-message">🔒 Please <a href="/login">login</a> or <a href="/signup">sign up</a> to analyze food images.</p>
-    {% endif %}
-
-    {% if error %}
-        <p style="color:red; text-align:center;">⚠️ {{ error }}</p>
-    {% endif %}
-
-    {% if image_path %}
-    <div class="results">
-        <div class="card">
-            <img src="/uploads/{{ image_path }}" alt="Food image">
-        </div>
-        <div>
-            {% if dish_prediction %}
+    <div class="container">
+        <div class="results">
+            <div class="card">
+                <img src="{{ image_url }}" alt="Food image">
+            </div>
+            <div>
+                {% if dish_prediction %}
                 <div class="card">
                     <h2>🍛 Dish</h2>
-                    <p>{{ dish_prediction | replace('*', '') }}</p>
+                    <p>{{ dish_prediction }}</p>
                 </div>
-            {% endif %}
-            {% if image_description or hidden_ingredients %}
+                {% endif %}
+
+                {% if image_description or hidden_ingredients %}
                 <div class="card">
                     <h2>🧾 Ingredients & Quantities</h2>
                     <table>
@@ -164,8 +88,9 @@
                         {% endfor %}
                     </table>
                 </div>
-            {% endif %}
-            {% if nutrition_info %}
+                {% endif %}
+
+                {% if nutrition_info %}
                 <div class="card">
                     <h2>🍎 Nutritional Info</h2>
                     <table>
@@ -181,10 +106,9 @@
                         {% endfor %}
                     </table>
                 </div>
-            {% endif %}
+                {% endif %}
+            </div>
         </div>
     </div>
-    {% endif %}
-</div>
 </body>
 </html>
