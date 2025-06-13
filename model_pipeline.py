@@ -1,4 +1,3 @@
-import torch
 from PIL import Image
 import google.generativeai as genai
 import base64
@@ -7,8 +6,6 @@ import re
 from datetime import datetime
 from pymongo import MongoClient
 
-# Device config
-DEVICE = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
 
 # Gemini setup
 GEN_API_KEY = "AIzaSyAJn4e-AlCoFsgFOJvuc8QA2r2zQDBeBqg"
