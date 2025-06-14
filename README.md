@@ -17,6 +17,7 @@
    ```
    python  -m scripts.run_training
    ```
+   And then rerun step 3.
 
 ## Issues
 There are two main issues with the current system. 
