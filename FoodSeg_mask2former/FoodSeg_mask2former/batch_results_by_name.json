@@ -1,0 +1,1376 @@
+{
+  "apple_pie.jpg": {
+    "image": "apple_pie.jpg",
+    "vit_prediction": "apple_pie",
+    "detected_labels": [
+      "bread"
+    ],
+    "pixel_percentages": {
+      "bread": 100.0
+    },
+    "total_energy_kcal": 288.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_apple_pie.jpg"
+  },
+  "baby_back_ribs.jpg": {
+    "image": "baby_back_ribs.jpg",
+    "vit_prediction": "baby_back_ribs",
+    "detected_labels": [
+      "steak",
+      "sauce",
+      "ice cream",
+      "potato"
+    ],
+    "pixel_percentages": {
+      "steak": 64.27,
+      "sauce": 1.0,
+      "ice cream": 11.76,
+      "potato": 22.98
+    },
+    "total_energy_kcal": 100.07,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_baby_back_ribs.jpg"
+  },
+  "baklava.jpg": {
+    "image": "baklava.jpg",
+    "vit_prediction": "baklava",
+    "detected_labels": [
+      "bread"
+    ],
+    "pixel_percentages": {
+      "bread": 100.0
+    },
+    "total_energy_kcal": 288.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_baklava.jpg"
+  },
+  "beef_carpaccio.jpg": {
+    "image": "beef_carpaccio.jpg",
+    "vit_prediction": "beef_carpaccio",
+    "detected_labels": [
+      "onion",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "onion": 10.11,
+      "cilantro mint": 89.89
+    },
+    "total_energy_kcal": 29.12,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_beef_carpaccio.jpg"
+  },
+  "beef_tartare.jpg": {
+    "image": "beef_tartare.jpg",
+    "vit_prediction": "beef_tartare",
+    "detected_labels": [
+      "french fries",
+      "steak"
+    ],
+    "pixel_percentages": {
+      "french fries": 21.38,
+      "steak": 78.62
+    },
+    "total_energy_kcal": 121.86,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_beef_tartare.jpg"
+  },
+  "beet_salad.jpg": {
+    "image": "beet_salad.jpg",
+    "vit_prediction": "beet_salad",
+    "detected_labels": [
+      "sauce",
+      "pepper",
+      "lettuce",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "sauce": 12.33,
+      "pepper": 42.55,
+      "lettuce": 41.06,
+      "cilantro mint": 4.06
+    },
+    "total_energy_kcal": 12.53,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_beet_salad.jpg"
+  },
+  "beignets.jpg": {
+    "image": "beignets.jpg",
+    "vit_prediction": "beignets",
+    "detected_labels": [
+      "cake",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "cake": 0.04,
+      "bread": 99.96
+    },
+    "total_energy_kcal": 287.88,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_beignets.jpg"
+  },
+  "bibimbap.jpg": {
+    "image": "bibimbap.jpg",
+    "vit_prediction": "bibimbap",
+    "detected_labels": [
+      "cilantro mint",
+      "steak",
+      "sauce",
+      "cheese butter",
+      "cucumber"
+    ],
+    "pixel_percentages": {
+      "cilantro mint": 33.3,
+      "steak": 35.01,
+      "sauce": 6.33,
+      "cheese butter": 12.36,
+      "cucumber": 13.0
+    },
+    "total_energy_kcal": 63.61,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_bibimbap.jpg"
+  },
+  "bread_pudding.jpg": {
+    "image": "bread_pudding.jpg",
+    "vit_prediction": "scallops",
+    "detected_labels": [
+      "ice cream"
+    ],
+    "pixel_percentages": {
+      "ice cream": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_bread_pudding.jpg"
+  },
+  "breakfast_burrito.jpg": {
+    "image": "breakfast_burrito.jpg",
+    "vit_prediction": "hamburger",
+    "detected_labels": [
+      "sauce",
+      "bread",
+      "tomato",
+      "lettuce"
+    ],
+    "pixel_percentages": {
+      "sauce": 29.53,
+      "bread": 53.06,
+      "tomato": 11.98,
+      "lettuce": 5.43
+    },
+    "total_energy_kcal": 170.26,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_breakfast_burrito.jpg"
+  },
+  "bruschetta.jpg": {
+    "image": "bruschetta.jpg",
+    "vit_prediction": "bruschetta",
+    "detected_labels": [
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "cilantro mint": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_bruschetta.jpg"
+  },
+  "caesar_salad.jpg": {
+    "image": "caesar_salad.jpg",
+    "vit_prediction": "caesar_salad",
+    "detected_labels": [
+      "lettuce"
+    ],
+    "pixel_percentages": {
+      "lettuce": 100.0
+    },
+    "total_energy_kcal": 17.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_caesar_salad.jpg"
+  },
+  "cannoli.jpg": {
+    "image": "cannoli.jpg",
+    "vit_prediction": "cannoli",
+    "detected_labels": [
+      "bread"
+    ],
+    "pixel_percentages": {
+      "bread": 100.0
+    },
+    "total_energy_kcal": 288.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_cannoli.jpg"
+  },
+  "caprese_salad.jpg": {
+    "image": "caprese_salad.jpg",
+    "vit_prediction": "caprese_salad",
+    "detected_labels": [
+      "tomato",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "tomato": 85.01,
+      "cilantro mint": 14.99
+    },
+    "total_energy_kcal": 22.95,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_caprese_salad.jpg"
+  },
+  "carrot_cake.jpg": {
+    "image": "carrot_cake.jpg",
+    "vit_prediction": "carrot_cake",
+    "detected_labels": [
+      "carrot",
+      "ice cream",
+      "cherry"
+    ],
+    "pixel_percentages": {
+      "carrot": 3.63,
+      "ice cream": 95.92,
+      "cherry": 0.45
+    },
+    "total_energy_kcal": 1.34,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_carrot_cake.jpg"
+  },
+  "ceviche.jpg": {
+    "image": "ceviche.jpg",
+    "vit_prediction": "ceviche",
+    "detected_labels": [
+      "lettuce",
+      "wine"
+    ],
+    "pixel_percentages": {
+      "lettuce": 54.27,
+      "wine": 45.73
+    },
+    "total_energy_kcal": 9.23,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_ceviche.jpg"
+  },
+  "cheese_plate.jpg": {
+    "image": "cheese_plate.jpg",
+    "vit_prediction": "cheese_plate",
+    "detected_labels": [
+      "pineapple",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "pineapple": 71.99,
+      "cilantro mint": 28.01
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_cheese_plate.jpg"
+  },
+  "cheesecake.jpg": {
+    "image": "cheesecake.jpg",
+    "vit_prediction": "cheesecake",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_cheesecake.jpg"
+  },
+  "chicken_curry.jpg": {
+    "image": "chicken_curry.jpg",
+    "vit_prediction": "chicken_curry",
+    "detected_labels": [
+      "cilantro mint",
+      "onion",
+      "soup",
+      "rice"
+    ],
+    "pixel_percentages": {
+      "cilantro mint": 5.44,
+      "onion": 4.81,
+      "soup": 29.65,
+      "rice": 60.1
+    },
+    "total_energy_kcal": 118.43,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_chicken_curry.jpg"
+  },
+  "chicken_quesadilla.jpg": {
+    "image": "chicken_quesadilla.jpg",
+    "vit_prediction": "chicken_quesadilla",
+    "detected_labels": [
+      "sauce",
+      "ice cream"
+    ],
+    "pixel_percentages": {
+      "sauce": 54.52,
+      "ice cream": 45.48
+    },
+    "total_energy_kcal": 24.53,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_chicken_quesadilla.jpg"
+  },
+  "chicken_wings.jpg": {
+    "image": "chicken_wings.jpg",
+    "vit_prediction": "chicken_wings",
+    "detected_labels": [
+      "celery stick",
+      "chicken duck"
+    ],
+    "pixel_percentages": {
+      "celery stick": 17.09,
+      "chicken duck": 82.91
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_chicken_wings.jpg"
+  },
+  "chocolate_cake.jpg": {
+    "image": "chocolate_cake.jpg",
+    "vit_prediction": "chocolate_cake",
+    "detected_labels": [
+      "cake"
+    ],
+    "pixel_percentages": {
+      "cake": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_chocolate_cake.jpg"
+  },
+  "chocolate_mousse.jpg": {
+    "image": "chocolate_mousse.jpg",
+    "vit_prediction": "chocolate_mousse",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_chocolate_mousse.jpg"
+  },
+  "churros.jpg": {
+    "image": "churros.jpg",
+    "vit_prediction": "churros",
+    "detected_labels": [
+      "chicken duck",
+      "sauce"
+    ],
+    "pixel_percentages": {
+      "chicken duck": 79.81,
+      "sauce": 20.19
+    },
+    "total_energy_kcal": 9.09,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_churros.jpg"
+  },
+  "clam_chowder.jpg": {
+    "image": "clam_chowder.jpg",
+    "vit_prediction": "clam_chowder",
+    "detected_labels": [
+      "soup",
+      "chicken duck"
+    ],
+    "pixel_percentages": {
+      "soup": 78.72,
+      "chicken duck": 21.28
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_clam_chowder.jpg"
+  },
+  "club_sandwich.jpg": {
+    "image": "club_sandwich.jpg",
+    "vit_prediction": "club_sandwich",
+    "detected_labels": [
+      "bread"
+    ],
+    "pixel_percentages": {
+      "bread": 100.0
+    },
+    "total_energy_kcal": 288.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_club_sandwich.jpg"
+  },
+  "crab_cakes.jpg": {
+    "image": "crab_cakes.jpg",
+    "vit_prediction": "crab_cakes",
+    "detected_labels": [
+      "chicken duck",
+      "pie",
+      "sauce",
+      "cilantro mint",
+      "lemon"
+    ],
+    "pixel_percentages": {
+      "chicken duck": 0.17,
+      "pie": 60.82,
+      "sauce": 7.57,
+      "cilantro mint": 27.77,
+      "lemon": 3.68
+    },
+    "total_energy_kcal": 3.41,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_crab_cakes.jpg"
+  },
+  "creme_brulee.jpg": {
+    "image": "creme_brulee.jpg",
+    "vit_prediction": "creme_brulee",
+    "detected_labels": [
+      "soup",
+      "cilantro mint",
+      "strawberry"
+    ],
+    "pixel_percentages": {
+      "soup": 80.13,
+      "cilantro mint": 10.45,
+      "strawberry": 9.42
+    },
+    "total_energy_kcal": 7.82,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_creme_brulee.jpg"
+  },
+  "croque_madame.jpg": {
+    "image": "croque_madame.jpg",
+    "vit_prediction": "croque_madame",
+    "detected_labels": [
+      "french fries",
+      "onion",
+      "cilantro mint",
+      "tomato"
+    ],
+    "pixel_percentages": {
+      "french fries": 37.7,
+      "onion": 3.72,
+      "cilantro mint": 55.81,
+      "tomato": 2.77
+    },
+    "total_energy_kcal": 11.46,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_croque_madame.jpg"
+  },
+  "cup_cakes.jpg": {
+    "image": "cup_cakes.jpg",
+    "vit_prediction": "cup_cakes",
+    "detected_labels": [
+      "chocolate",
+      "ice cream",
+      "biscuit"
+    ],
+    "pixel_percentages": {
+      "chocolate": 44.93,
+      "ice cream": 31.24,
+      "biscuit": 23.83
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_cup_cakes.jpg"
+  },
+  "deviled_eggs.jpg": {
+    "image": "deviled_eggs.jpg",
+    "vit_prediction": "deviled_eggs",
+    "detected_labels": [
+      "egg"
+    ],
+    "pixel_percentages": {
+      "egg": 100.0
+    },
+    "total_energy_kcal": 627.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_deviled_eggs.jpg"
+  },
+  "donuts.jpg": {
+    "image": "donuts.jpg",
+    "vit_prediction": "donuts",
+    "detected_labels": [
+      "bread"
+    ],
+    "pixel_percentages": {
+      "bread": 100.0
+    },
+    "total_energy_kcal": 288.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_donuts.jpg"
+  },
+  "dumplings.jpg": {
+    "image": "dumplings.jpg",
+    "vit_prediction": "dumplings",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_dumplings.jpg"
+  },
+  "edamame.jpg": {
+    "image": "edamame.jpg",
+    "vit_prediction": "bibimbap",
+    "detected_labels": [
+      "carrot",
+      "cheese butter"
+    ],
+    "pixel_percentages": {
+      "carrot": 57.33,
+      "cheese butter": 42.67
+    },
+    "total_energy_kcal": 21.21,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_edamame.jpg"
+  },
+  "eggs_benedict.jpg": {
+    "image": "eggs_benedict.jpg",
+    "vit_prediction": "eggs_benedict",
+    "detected_labels": [
+      "cheese butter",
+      "sauce"
+    ],
+    "pixel_percentages": {
+      "cheese butter": 8.75,
+      "sauce": 91.25
+    },
+    "total_energy_kcal": 41.06,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_eggs_benedict.jpg"
+  },
+  "escargots.jpg": {
+    "image": "escargots.jpg",
+    "vit_prediction": "escargots",
+    "detected_labels": [
+      "french fries",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "french fries": 88.07,
+      "cilantro mint": 11.93
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_escargots.jpg"
+  },
+  "falafel.jpg": {
+    "image": "falafel.jpg",
+    "vit_prediction": "falafel",
+    "detected_labels": [
+      "biscuit"
+    ],
+    "pixel_percentages": {
+      "biscuit": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_falafel.jpg"
+  },
+  "filet_mignon.jpg": {
+    "image": "filet_mignon.jpg",
+    "vit_prediction": "filet_mignon",
+    "detected_labels": [
+      "potato"
+    ],
+    "pixel_percentages": {
+      "potato": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_filet_mignon.jpg"
+  },
+  "fish_and_chips.jpg": {
+    "image": "fish_and_chips.jpg",
+    "vit_prediction": "fish_and_chips",
+    "detected_labels": [
+      "french fries",
+      "sauce",
+      "lemon"
+    ],
+    "pixel_percentages": {
+      "french fries": 55.2,
+      "sauce": 19.59,
+      "lemon": 25.2
+    },
+    "total_energy_kcal": 8.82,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_fish_and_chips.jpg"
+  },
+  "foie_gras.jpg": {
+    "image": "foie_gras.jpg",
+    "vit_prediction": "foie_gras",
+    "detected_labels": [
+      "spring onion"
+    ],
+    "pixel_percentages": {
+      "spring onion": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_foie_gras.jpg"
+  },
+  "french_fries.jpg": {
+    "image": "french_fries.jpg",
+    "vit_prediction": "steak",
+    "detected_labels": [
+      "pasta"
+    ],
+    "pixel_percentages": {
+      "pasta": 100.0
+    },
+    "total_energy_kcal": 45.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_french_fries.jpg"
+  },
+  "french_onion_soup.jpg": {
+    "image": "french_onion_soup.jpg",
+    "vit_prediction": "hot_and_sour_soup",
+    "detected_labels": [
+      "soup",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "soup": 68.83,
+      "bread": 31.17
+    },
+    "total_energy_kcal": 89.77,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_french_onion_soup.jpg"
+  },
+  "french_toast.jpg": {
+    "image": "french_toast.jpg",
+    "vit_prediction": "french_toast",
+    "detected_labels": [
+      "ice cream"
+    ],
+    "pixel_percentages": {
+      "ice cream": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_french_toast.jpg"
+  },
+  "fried_calamari.jpg": {
+    "image": "fried_calamari.jpg",
+    "vit_prediction": "fried_calamari",
+    "detected_labels": [
+      "sauce",
+      "lettuce"
+    ],
+    "pixel_percentages": {
+      "sauce": 20.19,
+      "lettuce": 79.81
+    },
+    "total_energy_kcal": 22.65,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_fried_calamari.jpg"
+  },
+  "fried_rice.jpg": {
+    "image": "fried_rice.jpg",
+    "vit_prediction": "fried_rice",
+    "detected_labels": [
+      "spring onion",
+      "rice"
+    ],
+    "pixel_percentages": {
+      "spring onion": 0.0,
+      "rice": 100.0
+    },
+    "total_energy_kcal": 174.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_fried_rice.jpg"
+  },
+  "frozen_yogurt.jpg": {
+    "image": "frozen_yogurt.jpg",
+    "vit_prediction": "frozen_yogurt",
+    "detected_labels": [
+      "bread"
+    ],
+    "pixel_percentages": {
+      "bread": 100.0
+    },
+    "total_energy_kcal": 288.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_frozen_yogurt.jpg"
+  },
+  "garlic_bread.jpg": {
+    "image": "garlic_bread.jpg",
+    "vit_prediction": "garlic_bread",
+    "detected_labels": [
+      "cake",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "cake": 0.01,
+      "bread": 99.99
+    },
+    "total_energy_kcal": 287.97,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_garlic_bread.jpg"
+  },
+  "gnocchi.jpg": {
+    "image": "gnocchi.jpg",
+    "vit_prediction": "gnocchi",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_gnocchi.jpg"
+  },
+  "greek_salad.jpg": {
+    "image": "greek_salad.jpg",
+    "vit_prediction": "greek_salad",
+    "detected_labels": [
+      "french fries",
+      "steak",
+      "tomato",
+      "lettuce"
+    ],
+    "pixel_percentages": {
+      "french fries": 4.34,
+      "steak": 43.36,
+      "tomato": 3.01,
+      "lettuce": 49.28
+    },
+    "total_energy_kcal": 76.4,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_greek_salad.jpg"
+  },
+  "grilled_cheese_sandwich.jpg": {
+    "image": "grilled_cheese_sandwich.jpg",
+    "vit_prediction": "grilled_cheese_sandwich",
+    "detected_labels": [
+      "cheese butter",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "cheese butter": 3.44,
+      "bread": 96.56
+    },
+    "total_energy_kcal": 278.09,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_grilled_cheese_sandwich.jpg"
+  },
+  "grilled_salmon.jpg": {
+    "image": "grilled_salmon.jpg",
+    "vit_prediction": "grilled_salmon",
+    "detected_labels": [
+      "chicken duck",
+      "potato",
+      "tomato",
+      "cucumber"
+    ],
+    "pixel_percentages": {
+      "chicken duck": 59.39,
+      "potato": 9.7,
+      "tomato": 18.15,
+      "cucumber": 12.75
+    },
+    "total_energy_kcal": 11.28,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_grilled_salmon.jpg"
+  },
+  "guacamole.jpg": {
+    "image": "guacamole.jpg",
+    "vit_prediction": "guacamole",
+    "detected_labels": [
+      "pie",
+      "sauce"
+    ],
+    "pixel_percentages": {
+      "pie": 14.05,
+      "sauce": 85.95
+    },
+    "total_energy_kcal": 38.68,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_guacamole.jpg"
+  },
+  "gyoza.jpg": {
+    "image": "gyoza.jpg",
+    "vit_prediction": "gyoza",
+    "detected_labels": [
+      "pie"
+    ],
+    "pixel_percentages": {
+      "pie": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_gyoza.jpg"
+  },
+  "hamburger.jpg": {
+    "image": "hamburger.jpg",
+    "vit_prediction": "hamburger",
+    "detected_labels": [
+      "cheese butter",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "cheese butter": 22.81,
+      "bread": 77.19
+    },
+    "total_energy_kcal": 222.31,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_hamburger.jpg"
+  },
+  "hot_and_sour_soup.jpg": {
+    "image": "hot_and_sour_soup.jpg",
+    "vit_prediction": "hot_and_sour_soup",
+    "detected_labels": [
+      "soup",
+      "onion"
+    ],
+    "pixel_percentages": {
+      "soup": 97.96,
+      "onion": 2.04
+    },
+    "total_energy_kcal": 5.88,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_hot_and_sour_soup.jpg"
+  },
+  "hot_dog.jpg": {
+    "image": "hot_dog.jpg",
+    "vit_prediction": "hot_dog",
+    "detected_labels": [
+      "french fries",
+      "onion"
+    ],
+    "pixel_percentages": {
+      "french fries": 82.57,
+      "onion": 17.43
+    },
+    "total_energy_kcal": 50.2,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_hot_dog.jpg"
+  },
+  "huevos_rancheros.jpg": {
+    "image": "huevos_rancheros.jpg",
+    "vit_prediction": "huevos_rancheros",
+    "detected_labels": [
+      "chicken duck",
+      "sauce"
+    ],
+    "pixel_percentages": {
+      "chicken duck": 3.95,
+      "sauce": 96.05
+    },
+    "total_energy_kcal": 43.22,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_huevos_rancheros.jpg"
+  },
+  "hummus.jpg": {
+    "image": "hummus.jpg",
+    "vit_prediction": "hummus",
+    "detected_labels": [
+      "soup"
+    ],
+    "pixel_percentages": {
+      "soup": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_hummus.jpg"
+  },
+  "ice_cream.jpg": {
+    "image": "ice_cream.jpg",
+    "vit_prediction": "ice_cream",
+    "detected_labels": [
+      "biscuit"
+    ],
+    "pixel_percentages": {
+      "biscuit": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_ice_cream.jpg"
+  },
+  "lasagna.jpg": {
+    "image": "lasagna.jpg",
+    "vit_prediction": "lasagna",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_lasagna.jpg"
+  },
+  "lobster_bisque.jpg": {
+    "image": "lobster_bisque.jpg",
+    "vit_prediction": "lobster_bisque",
+    "detected_labels": [
+      "soup"
+    ],
+    "pixel_percentages": {
+      "soup": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_lobster_bisque.jpg"
+  },
+  "lobster_roll_sandwich.jpg": {
+    "image": "lobster_roll_sandwich.jpg",
+    "vit_prediction": "lobster_roll_sandwich",
+    "detected_labels": [
+      "french fries",
+      "sauce",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "french fries": 43.22,
+      "sauce": 7.99,
+      "bread": 48.79
+    },
+    "total_energy_kcal": 144.11,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_lobster_roll_sandwich.jpg"
+  },
+  "macaroni_and_cheese.jpg": {
+    "image": "macaroni_and_cheese.jpg",
+    "vit_prediction": "crab_cakes",
+    "detected_labels": [
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "cilantro mint": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_macaroni_and_cheese.jpg"
+  },
+  "macarons.jpg": {
+    "image": "macarons.jpg",
+    "vit_prediction": "macarons",
+    "detected_labels": [
+      "cake",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "cake": 0.02,
+      "bread": 99.98
+    },
+    "total_energy_kcal": 287.94,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_macarons.jpg"
+  },
+  "miso_soup.jpg": {
+    "image": "miso_soup.jpg",
+    "vit_prediction": "miso_soup",
+    "detected_labels": [
+      "rice"
+    ],
+    "pixel_percentages": {
+      "rice": 100.0
+    },
+    "total_energy_kcal": 174.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_miso_soup.jpg"
+  },
+  "mussels.jpg": {
+    "image": "mussels.jpg",
+    "vit_prediction": "mussels",
+    "detected_labels": [
+      "soup"
+    ],
+    "pixel_percentages": {
+      "soup": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_mussels.jpg"
+  },
+  "nachos.jpg": {
+    "image": "nachos.jpg",
+    "vit_prediction": "nachos",
+    "detected_labels": [
+      "cilantro mint",
+      "ice cream"
+    ],
+    "pixel_percentages": {
+      "cilantro mint": 39.48,
+      "ice cream": 60.52
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_nachos.jpg"
+  },
+  "omelette.jpg": {
+    "image": "omelette.jpg",
+    "vit_prediction": "omelette",
+    "detected_labels": [
+      "avocado"
+    ],
+    "pixel_percentages": {
+      "avocado": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_omelette.jpg"
+  },
+  "onion_rings.jpg": {
+    "image": "onion_rings.jpg",
+    "vit_prediction": "onion_rings",
+    "detected_labels": [
+      "sauce",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "sauce": 19.13,
+      "cilantro mint": 80.87
+    },
+    "total_energy_kcal": 8.61,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_onion_rings.jpg"
+  },
+  "oysters.jpg": {
+    "image": "oysters.jpg",
+    "vit_prediction": "oysters",
+    "detected_labels": [
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "cilantro mint": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_oysters.jpg"
+  },
+  "pad_thai.jpg": {
+    "image": "pad_thai.jpg",
+    "vit_prediction": "pad_thai",
+    "detected_labels": [
+      "chicken duck",
+      "sauce",
+      "cilantro mint",
+      "orange",
+      "carrot",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "chicken duck": 48.05,
+      "sauce": 10.82,
+      "cilantro mint": 8.44,
+      "orange": 9.1,
+      "carrot": 6.7,
+      "bread": 16.88
+    },
+    "total_energy_kcal": 60.24,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_pad_thai.jpg"
+  },
+  "paella.jpg": {
+    "image": "paella.jpg",
+    "vit_prediction": "paella",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_paella.jpg"
+  },
+  "pancakes.jpg": {
+    "image": "pancakes.jpg",
+    "vit_prediction": "pancakes",
+    "detected_labels": [
+      "pie",
+      "ice cream",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "pie": 0.12,
+      "ice cream": 3.82,
+      "bread": 96.06
+    },
+    "total_energy_kcal": 276.65,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_pancakes.jpg"
+  },
+  "panna_cotta.jpg": {
+    "image": "panna_cotta.jpg",
+    "vit_prediction": "panna_cotta",
+    "detected_labels": [
+      "sauce"
+    ],
+    "pixel_percentages": {
+      "sauce": 100.0
+    },
+    "total_energy_kcal": 45.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_panna_cotta.jpg"
+  },
+  "peking_duck.jpg": {
+    "image": "peking_duck.jpg",
+    "vit_prediction": "peking_duck",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_peking_duck.jpg"
+  },
+  "pho.jpg": {
+    "image": "pho.jpg",
+    "vit_prediction": "pho",
+    "detected_labels": [
+      "cilantro mint",
+      "onion"
+    ],
+    "pixel_percentages": {
+      "cilantro mint": 90.06,
+      "onion": 9.94
+    },
+    "total_energy_kcal": 28.63,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_pho.jpg"
+  },
+  "pizza.jpg": {
+    "image": "pizza.jpg",
+    "vit_prediction": "pizza",
+    "detected_labels": [
+      "sausage",
+      "pizza"
+    ],
+    "pixel_percentages": {
+      "sausage": 42.43,
+      "pizza": 57.57
+    },
+    "total_energy_kcal": 139.17,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_pizza.jpg"
+  },
+  "pork_chop.jpg": {
+    "image": "pork_chop.jpg",
+    "vit_prediction": "pork_chop",
+    "detected_labels": [
+      "lemon"
+    ],
+    "pixel_percentages": {
+      "lemon": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_pork_chop.jpg"
+  },
+  "poutine.jpg": {
+    "image": "poutine.jpg",
+    "vit_prediction": "poutine",
+    "detected_labels": [
+      "french fries",
+      "onion",
+      "bread"
+    ],
+    "pixel_percentages": {
+      "french fries": 55.57,
+      "onion": 14.84,
+      "bread": 29.58
+    },
+    "total_energy_kcal": 127.93,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_poutine.jpg"
+  },
+  "prime_rib.jpg": {
+    "image": "prime_rib.jpg",
+    "vit_prediction": "prime_rib",
+    "detected_labels": [
+      "sauce",
+      "coffee"
+    ],
+    "pixel_percentages": {
+      "sauce": 73.78,
+      "coffee": 26.22
+    },
+    "total_energy_kcal": 33.2,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_prime_rib.jpg"
+  },
+  "pulled_pork_sandwich.jpg": {
+    "image": "pulled_pork_sandwich.jpg",
+    "vit_prediction": "pulled_pork_sandwich",
+    "detected_labels": [
+      "bread"
+    ],
+    "pixel_percentages": {
+      "bread": 100.0
+    },
+    "total_energy_kcal": 288.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_pulled_pork_sandwich.jpg"
+  },
+  "ramen.jpg": {
+    "image": "ramen.jpg",
+    "vit_prediction": "ramen",
+    "detected_labels": [
+      "egg",
+      "spring onion"
+    ],
+    "pixel_percentages": {
+      "egg": 66.32,
+      "spring onion": 33.68
+    },
+    "total_energy_kcal": 415.83,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_ramen.jpg"
+  },
+  "ravioli.jpg": {
+    "image": "ravioli.jpg",
+    "vit_prediction": "ravioli",
+    "detected_labels": [
+      "chicken duck",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "chicken duck": 94.67,
+      "cilantro mint": 5.33
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_ravioli.jpg"
+  },
+  "red_velvet_cake.jpg": {
+    "image": "red_velvet_cake.jpg",
+    "vit_prediction": "red_velvet_cake",
+    "detected_labels": [
+      "cake",
+      "ice cream"
+    ],
+    "pixel_percentages": {
+      "cake": 71.94,
+      "ice cream": 28.06
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_red_velvet_cake.jpg"
+  },
+  "risotto.jpg": {
+    "image": "risotto.jpg",
+    "vit_prediction": "risotto",
+    "detected_labels": [
+      "chicken duck",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "chicken duck": 96.39,
+      "cilantro mint": 3.61
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_risotto.jpg"
+  },
+  "samosa.jpg": {
+    "image": "samosa.jpg",
+    "vit_prediction": "samosa",
+    "detected_labels": [
+      "cilantro mint",
+      "chicken duck",
+      "sauce",
+      "lettuce"
+    ],
+    "pixel_percentages": {
+      "cilantro mint": 1.58,
+      "chicken duck": 80.43,
+      "sauce": 3.99,
+      "lettuce": 14.01
+    },
+    "total_energy_kcal": 4.18,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_samosa.jpg"
+  },
+  "sashimi.jpg": {
+    "image": "sashimi.jpg",
+    "vit_prediction": "sashimi",
+    "detected_labels": [
+      "onion",
+      "tomato",
+      "cilantro mint"
+    ],
+    "pixel_percentages": {
+      "onion": 41.98,
+      "tomato": 27.26,
+      "cilantro mint": 30.76
+    },
+    "total_energy_kcal": 128.26,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_sashimi.jpg"
+  },
+  "scallops.jpg": {
+    "image": "scallops.jpg",
+    "vit_prediction": "scallops",
+    "detected_labels": [
+      "potato",
+      "green beans"
+    ],
+    "pixel_percentages": {
+      "potato": 25.89,
+      "green beans": 74.11
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_scallops.jpg"
+  },
+  "seaweed_salad.jpg": {
+    "image": "seaweed_salad.jpg",
+    "vit_prediction": "seaweed_salad",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_seaweed_salad.jpg"
+  },
+  "shrimp_and_grits.jpg": {
+    "image": "shrimp_and_grits.jpg",
+    "vit_prediction": "shrimp_and_grits",
+    "detected_labels": [
+      "French beans",
+      "pie"
+    ],
+    "pixel_percentages": {
+      "French beans": 34.43,
+      "pie": 65.57
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_shrimp_and_grits.jpg"
+  },
+  "spaghetti_bolognese.jpg": {
+    "image": "spaghetti_bolognese.jpg",
+    "vit_prediction": "spaghetti_bolognese",
+    "detected_labels": [
+      "noodles"
+    ],
+    "pixel_percentages": {
+      "noodles": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_spaghetti_bolognese.jpg"
+  },
+  "spaghetti_carbonara.jpg": {
+    "image": "spaghetti_carbonara.jpg",
+    "vit_prediction": "spaghetti_carbonara",
+    "detected_labels": [
+      "noodles"
+    ],
+    "pixel_percentages": {
+      "noodles": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_spaghetti_carbonara.jpg"
+  },
+  "spring_rolls.jpg": {
+    "image": "spring_rolls.jpg",
+    "vit_prediction": "spring_rolls",
+    "detected_labels": [
+      "sauce",
+      "lettuce"
+    ],
+    "pixel_percentages": {
+      "sauce": 14.96,
+      "lettuce": 85.04
+    },
+    "total_energy_kcal": 21.19,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_spring_rolls.jpg"
+  },
+  "steak.jpg": {
+    "image": "steak.jpg",
+    "vit_prediction": "filet_mignon",
+    "detected_labels": [
+      "sauce",
+      "steak",
+      "tomato",
+      "asparagus",
+      "ice cream",
+      "french fries"
+    ],
+    "pixel_percentages": {
+      "sauce": 0.06,
+      "steak": 18.1,
+      "tomato": 6.62,
+      "asparagus": 10.9,
+      "ice cream": 24.67,
+      "french fries": 39.66
+    },
+    "total_energy_kcal": 29.87,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_steak.jpg"
+  },
+  "strawberry_shortcake.jpg": {
+    "image": "strawberry_shortcake.jpg",
+    "vit_prediction": "strawberry_shortcake",
+    "detected_labels": [
+      "cake",
+      "kiwi",
+      "ice cream",
+      "strawberry"
+    ],
+    "pixel_percentages": {
+      "cake": 0.66,
+      "kiwi": 10.49,
+      "ice cream": 64.51,
+      "strawberry": 24.34
+    },
+    "total_energy_kcal": 26.29,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_strawberry_shortcake.jpg"
+  },
+  "sushi.jpg": {
+    "image": "sushi.jpg",
+    "vit_prediction": "sushi",
+    "detected_labels": [
+      "carrot"
+    ],
+    "pixel_percentages": {
+      "carrot": 100.0
+    },
+    "total_energy_kcal": 37.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_sushi.jpg"
+  },
+  "tacos.jpg": {
+    "image": "tacos.jpg",
+    "vit_prediction": "tacos",
+    "detected_labels": [
+      "wine",
+      "lemon"
+    ],
+    "pixel_percentages": {
+      "wine": 15.54,
+      "lemon": 84.46
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_tacos.jpg"
+  },
+  "takoyaki.jpg": {
+    "image": "takoyaki.jpg",
+    "vit_prediction": "takoyaki",
+    "detected_labels": [
+      "onion"
+    ],
+    "pixel_percentages": {
+      "onion": 100.0
+    },
+    "total_energy_kcal": 288.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_takoyaki.jpg"
+  },
+  "tiramisu.jpg": {
+    "image": "tiramisu.jpg",
+    "vit_prediction": "tiramisu",
+    "detected_labels": [
+      "cake"
+    ],
+    "pixel_percentages": {
+      "cake": 100.0
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_tiramisu.jpg"
+  },
+  "tuna_tartare.jpg": {
+    "image": "tuna_tartare.jpg",
+    "vit_prediction": "tuna_tartare",
+    "detected_labels": [],
+    "pixel_percentages": {},
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_tuna_tartare.jpg"
+  },
+  "waffles.jpg": {
+    "image": "waffles.jpg",
+    "vit_prediction": "waffles",
+    "detected_labels": [
+      "biscuit",
+      "ice cream"
+    ],
+    "pixel_percentages": {
+      "biscuit": 90.63,
+      "ice cream": 9.37
+    },
+    "total_energy_kcal": 0.0,
+    "vis_path": "FoodSeg_mask2former/visualized_outputs/vis_waffles.jpg"
+  }
+}
