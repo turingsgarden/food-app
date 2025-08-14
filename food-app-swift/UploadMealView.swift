@@ -74,6 +74,18 @@ struct UploadMealView: View {
                         }
                         .padding(.horizontal)
                         .padding(.top, 20)
+                        
+                        .overlay(
+                            ZStack {
+                                if showColdStartLoading {
+                                    ServerWarmupView()  // <-- Use renamed view
+                                }
+                                
+                                if let error = currentError {
+                                    ErrorToast(error: error, isShowing: .constant(true))
+                                }
+                            }
+                        )
 
                         if selectedImage == nil {
                             // Image Selection
@@ -594,21 +606,54 @@ struct UploadMealView: View {
         return imageData
     }
 
+    // In UploadMealView, update the analyzeImage function:
+
+    @State private var showColdStartLoading = false
+    @State private var currentError: AppError?
+
     func analyzeImage() {
         guard let image = selectedImage else { return }
         isLoading = true
         errorMessage = ""
+        currentError = nil
         
-        NetworkManager.shared.checkHealth { isHealthy, status in
-            if !isHealthy {
-                self.isLoading = false
-                self.errorMessage = "Server is not responding. Please try again later."
-                return
+        let resizedImage = resizeImage(image, maxDimension: 800) ?? image
+        guard let imageData = compressImage(resizedImage, maxSizeKB: 500) else {
+            isLoading = false
+            currentError = .validation("Failed to process image")
+            return
+        }
+        
+        NetworkManager.shared.uploadImageWithColdStartHandling(
+            imageData: imageData,
+            onColdStart: {
+                self.showColdStartLoading = true
             }
+        ) { result in
+            self.isLoading = false
+            self.showColdStartLoading = false
             
-            self.performImageAnalysis(image: image)
+            switch result {
+            case .success(let geminiResult):
+                withAnimation(.spring()) {
+                    self.detectedDish = geminiResult.dish_prediction
+                    self.editableDishName = geminiResult.dish_prediction
+                    // ... rest of success handling
+                }
+                
+            case .failure(let error):
+                if (error as NSError).code == NSURLErrorTimedOut {
+                    self.currentError = .network(.timeout)
+                } else if (error as NSError).code == NSURLErrorNotConnectedToInternet {
+                    self.currentError = .network(.noInternet)
+                } else {
+                    self.currentError = .unknown(error.localizedDescription)
+                }
+            }
         }
     }
+
+    // Add overlay to the main ZStack:
 
     func performImageAnalysis(image: UIImage) {
         detectedDish = ""

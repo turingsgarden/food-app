@@ -83,6 +83,58 @@ class NetworkManager {
         }.resume()
     }
     
+    // Add these methods to NetworkManager class:
+
+    // MARK: - Cold Start Detection
+    private var isFirstRequest = true
+    private var coldStartDetected = false
+
+    func checkHealthWithColdStart(completion: @escaping (Bool, String?, Bool) -> Void) {
+        let startTime = Date()
+        
+        checkHealth { [weak self] healthy, status in
+            let responseTime = Date().timeIntervalSince(startTime)
+            let isColdStart = responseTime > 5.0 && (self?.isFirstRequest ?? false)
+            
+            self?.isFirstRequest = false
+            self?.coldStartDetected = isColdStart
+            
+            DispatchQueue.main.async {
+                completion(healthy, status, isColdStart)
+            }
+        }
+    }
+
+    // Enhanced upload with cold start handling
+    func uploadImageWithColdStartHandling(
+        imageData: Data,
+        onColdStart: @escaping () -> Void,
+        completion: @escaping (Result<GeminiResult, Error>) -> Void
+    ) {
+        // Check if we need to warm up the server first
+        if isFirstRequest || coldStartDetected {
+            checkHealthWithColdStart { [weak self] healthy, _, isColdStart in
+                if isColdStart {
+                    DispatchQueue.main.async {
+                        onColdStart()
+                    }
+                }
+                
+                if healthy {
+                    self?.uploadImage(imageData: imageData, completion: completion)
+                } else {
+                    completion(.failure(NSError(
+                        domain: "NetworkManager",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Server is not responding"]
+                    )))
+                }
+            }
+        } else {
+            uploadImage(imageData: imageData, completion: completion)
+        }
+    }
+    
     // MARK: - Authentication
     
     func register(name: String, email: String, password: String, completion: @escaping (Result<(userId: String, name: String, token: String), Error>) -> Void) {
