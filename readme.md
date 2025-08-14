@@ -501,9 +501,10 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 - 📱 App Store: [Download NutriSnap](https://apps.apple.com/app/nutrisnap)
 - 🐙 GitHub: [Source Code](https://github.com/yourusername/FOOD-APP-SWIFT)
 
-## 📜 Privacy Policy Reference
+## 📜 Privacy Policy Reference ##
 
 Reference link: https://www.termsfeed.com/live/d4b4e1ed-8150-4ccb-a430-340180b7bc9d
+
 ---
 
 <div align="center">
