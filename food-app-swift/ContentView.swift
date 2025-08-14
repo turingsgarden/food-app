@@ -5,45 +5,53 @@
 //  Created by Utsav Doshi on 6/17/25.
 //
 
+// ContentView.swift - Updated version
 import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var session = SessionManager.shared
     @ObservedObject var profileManager = ProfileManager.shared
+    @StateObject private var networkMonitor = NetworkMonitor()  // Add this
     @State private var checkingProfile = true
     @State private var needsProfileSetup = false
     
     var body: some View {
         NavigationStack {
-            Group {
-                if session.isLoggedIn {
-                    if checkingProfile {
-                        // Loading state while checking profile
-                        LoadingView()
-                    } else if needsProfileSetup {
-                        // Redirect to profile setup for new users
-                        ProfileSetupView()
-                            .navigationBarHidden(true)
-                            .onDisappear {
-                                // Clear the new registration flag after profile setup
-                                SessionManager.shared.clearNewRegistrationFlag()
-                            }
+            ZStack {
+                Group {
+                    if session.isLoggedIn {
+                        if checkingProfile {
+                            LoadingView()
+                        } else if needsProfileSetup {
+                            ProfileSetupView()
+                                .navigationBarHidden(true)
+                                .onDisappear {
+                                    SessionManager.shared.clearNewRegistrationFlag()
+                                }
+                        } else {
+                            DashboardView()
+                                .navigationBarHidden(true)
+                                .environmentObject(networkMonitor)  // Pass to dashboard
+                        }
                     } else {
-                        // Normal dashboard for users with profiles
-                        DashboardView()
+                        OnboardingView()
                             .navigationBarHidden(true)
                     }
-                } else {
-                    OnboardingView()
-                        .navigationBarHidden(true)
                 }
-            }
-            .navigationDestination(isPresented: $session.shouldNavigateToLogin) {
-                OnboardingView()
-                    .navigationBarBackButtonHidden(true)
-                    .onAppear {
-                        SessionManager.shared.resetNavigationFlag()
-                    }
+                .navigationDestination(isPresented: $session.shouldNavigateToLogin) {
+                    OnboardingView()
+                        .navigationBarBackButtonHidden(true)
+                        .onAppear {
+                            SessionManager.shared.resetNavigationFlag()
+                        }
+                }
+                
+                // Offline Banner Overlay
+                VStack {
+                    OfflineBanner(networkMonitor: networkMonitor)
+                    Spacer()
+                }
+                .ignoresSafeArea(.all, edges: .horizontal)
             }
         }
         .onAppear {
