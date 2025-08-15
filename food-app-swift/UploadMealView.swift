@@ -1001,4 +1001,3 @@ struct AnalyzingView: View {
         }
     }
 }
-
