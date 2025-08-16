@@ -161,8 +161,24 @@ def search_hidden_ingredients(dish_names, visible_ingredients):
             
             for line in lines:
                 line = line.strip()
+                
+                # SKIP HEADER LINES AND DASHED SEPARATORS
+                if '------' in line or line.startswith('---'):
+                    continue
+                    
+                # Skip the header line
+                if line.lower().startswith('ingredient') and 'quantity' in line.lower():
+                    continue
+                
                 if '|' in line and len(line.split('|')) >= 4:
-                    formatted_lines.append(line)
+                    # Additional validation - ensure second part is numeric
+                    parts = line.split('|')
+                    try:
+                        float(parts[1].strip())  # Check if quantity is numeric
+                        formatted_lines.append(line)
+                    except ValueError:
+                        print(f"⚠️ Skipping non-numeric line: {line}")
+                        continue
             
             if formatted_lines:
                 result = '\n'.join(formatted_lines)
@@ -182,8 +198,24 @@ def search_hidden_ingredients(dish_names, visible_ingredients):
 def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_ingredients):
     """Estimate nutrition based on ALL dishes and ingredients"""
     
+    # Clean the ingredients before sending to Gemini
+    def clean_ingredients(ingredients_text):
+        lines = ingredients_text.split('\n')
+        cleaned = []
+        for line in lines:
+            if '------' in line or line.startswith('---'):
+                continue
+            if line.lower().startswith('ingredient') and 'quantity' in line.lower():
+                continue
+            if line.strip():
+                cleaned.append(line)
+        return '\n'.join(cleaned)
+    
+    visible_clean = clean_ingredients(visible_ingredients)
+    hidden_clean = clean_ingredients(hidden_ingredients)
+    
     # Combine both visible and hidden ingredients for nutrition calculation
-    all_ingredients = f"DISHES/ITEMS: {dish_names}\n\nVISIBLE INGREDIENTS:\n{visible_ingredients}\n\nHIDDEN INGREDIENTS:\n{hidden_ingredients}"
+    all_ingredients = f"DISHES/ITEMS: {dish_names}\n\nVISIBLE INGREDIENTS:\n{visible_clean}\n\nHIDDEN INGREDIENTS:\n{hidden_clean}"
     
     prompt = (
         f"You are a nutritionist calculating nutrition for ALL food items shown.\n\n"
@@ -193,6 +225,7 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
         "Output each nutrient on a new line in this exact format:\n"
         "Nutrient | Value | Unit | Reasoning\n"
         "Value must be a numeric value only.\n\n"
+        "DO NOT include header lines or dashed separators.\n"  # ADD THIS
         "Examples:\n"
         "Calories | 850 | kcal | Curry (400) + rice (300) + bread (150)\n"
         "Protein | 45 | g | From chicken in curry and grains\n"
@@ -204,7 +237,7 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
     )
     
     try:
-        print("🔍 Calculating nutrition for complete meal...")
+        print("📊 Calculating nutrition for complete meal...")
         response = gemini_model.generate_content(prompt)
         
         if response and response.text:
