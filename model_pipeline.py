@@ -379,29 +379,25 @@ def validate_image_for_analysis(image_path):
         return False, f"Invalid image: {str(e)}"
     
 def clean_nutrition_response(nutrition_text):
-    """Clean nutrition response by removing markdown headers and formatting properly"""
     lines = nutrition_text.strip().split('\n')
     cleaned_lines = []
     
     for line in lines:
         line = line.strip()
-        # Skip empty lines and markdown headers
+        # Skip problematic lines
         if not line or '------' in line or line.startswith('#') or line.startswith('**'):
             continue
         
-        # Ensure proper pipe separation and clean up
+        # Ensure proper pipe separation
         if '|' in line:
             parts = [part.strip() for part in line.split('|')]
             if len(parts) >= 3:
-                nutrient = parts[0]
-                value = parts[1]
-                unit = parts[2]
-                reasoning = parts[3] if len(parts) > 3 else ""
-                
-                # Reconstruct clean line
-                cleaned_line = f"{nutrient} | {value} | {unit}"
-                if reasoning:
-                    cleaned_line += f" | {reasoning}"
-                cleaned_lines.append(cleaned_line)
+                # Ensure the value is numeric
+                try:
+                    float(parts[1])  # Test if it's a valid number
+                    cleaned_lines.append(line)
+                except ValueError:
+                    print(f"⚠️ Skipping line with non-numeric value: {line}")
+                    continue
     
     return '\n'.join(cleaned_lines)
