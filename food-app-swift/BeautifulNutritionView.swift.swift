@@ -101,44 +101,71 @@ struct BeautifulNutritionView: View {
     private func parseNutritionSimple() {
         var items: [NutritionItem] = []
         
+        print("🔍 Parsing nutrition text: \(nutritionText)")
+        print("🔍 Text length: \(nutritionText.count)")
+        
         // Split by newlines
         let lines = nutritionText.components(separatedBy: .newlines)
+        print("📊 Found \(lines.count) lines")
         
-        for line in lines {
+        for (index, line) in lines.enumerated() {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             
             // Skip empty lines
-            if trimmed.isEmpty { continue }
+            if trimmed.isEmpty {
+                print("⏭️ Line \(index): Empty, skipping")
+                continue
+            }
+            
+            print("📊 Line \(index): '\(trimmed)'")
             
             // Try to parse lines with | separator
             if trimmed.contains("|") {
                 let parts = trimmed.components(separatedBy: "|")
                     .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 
+                print("📊 Parts count: \(parts.count), Parts: \(parts)")
+                
                 if parts.count >= 3 {
                     let name = parts[0]
                     let value = parts[1]
                     let unit = parts[2]
                     
-                    // Create nutrition item
-                    items.append(NutritionItem(
-                        name: name,
-                        value: value,
-                        unit: unit,
-                        reasoning: nil
-                    ))
+                    // Validate that value is numeric
+                    if !value.isEmpty && (Double(value) != nil || Int(value) != nil) {
+                        // Create nutrition item
+                        items.append(NutritionItem(
+                            name: name,
+                            value: value,
+                            unit: unit,
+                            reasoning: nil
+                        ))
+                        
+                        print("✅ Added nutrition item: \(name) = \(value) \(unit)")
+                    } else {
+                        print("⚠️ Invalid value '\(value)' for nutrient '\(name)'")
+                    }
+                } else {
+                    print("⚠️ Invalid parts count: \(parts.count) for line: '\(trimmed)'")
                 }
             } else {
+                print("📊 No pipe separator, trying alternative format")
                 // Try to parse other formats (e.g., "Calories: 500 kcal")
                 if let item = parseAlternativeFormat(trimmed) {
                     items.append(item)
+                    print("✅ Added nutrition item from alt format: \(item.name) = \(item.value) \(item.unit)")
+                } else {
+                    print("⚠️ Could not parse line: '\(trimmed)'")
                 }
             }
         }
         
         // If no items found, add defaults
         if items.isEmpty {
+            print("⚠️ No nutrition items found, using defaults")
             items = getDefaultNutrition()
+        } else {
+            print("✅ Total nutrition items parsed: \(items.count)")
         }
         
         withAnimation(.easeInOut(duration: 0.3)) {
