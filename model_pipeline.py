@@ -63,10 +63,11 @@ def analyze_image_with_gemini(image_path):
         prompt = (
             "You are a comprehensive food analyst. Look at this image and identify ALL food items present.\n\n"
             "INSTRUCTIONS:\n"
-            "1. First line: List all dishes/food items you see (e.g., 'Chicken curry, basmati rice, naan bread, mixed salad')\n"
+            "1. First line: List all dishes/food items you see WITHOUT NUMBERS (e.g., 'Chicken curry, basmati rice, naan bread, mixed salad')\n"
+            "   DO NOT number items like '1. Pizza' - just write 'Pizza'\n"
             "2. Then list ALL visible ingredients from ALL dishes/items in the image\n\n"
             "ANALYZE EVERYTHING:\n"
-            "- Main dishes (curries, stir-fries, pasta, etc.)\n"
+            "- Main dishes (curries, stir-fries, pasta, pizza, etc.)\n"
             "- Side dishes (rice, bread, salads, etc.)\n"
             "- Beverages (if visible)\n"
             "- Snacks or appetizers\n"
@@ -74,22 +75,22 @@ def analyze_image_with_gemini(image_path):
             "- Condiments or sauces in separate containers\n\n"
             "Format each VISIBLE ingredient from ALL items:\n"
             "Ingredient | Quantity Number | Unit | Which dish/item it's from\n\n"
+            "Example for pizza:\n"
+            "Mozzarella cheese | 150 | g | Pizza\n"
+            "Tomato sauce | 100 | g | Pizza\n"
+            "Basil leaves | 10 | g | Pizza\n"
+            "Cherry tomatoes | 50 | g | Pizza topping\n"
+            "Pizza dough | 200 | g | Pizza base\n\n"
             "VISIBLE means you can actually see it:\n"
+            "- Cheese you can see on pizza\n"
+            "- Toppings visible on pizza\n"
             "- Vegetables you can see in any dish\n"
             "- Proteins visible in any dish\n"
             "- Grains/starches you can see\n"
-            "- Visible garnishes, herbs, or toppings on any item\n"
-            "- Bread, naan, or other baked items\n"
-            "- Salad ingredients you can identify\n\n"
+            "- Visible garnishes, herbs, or toppings on any item\n\n"
             "DO NOT include cooking oils, salt, spices, or marinades (these are hidden).\n"
             "Quantity Number must be numeric only.\n"
-            "Be thorough - don't miss any food items in the image.\n\n"
-            "Example for multiple dishes:\n"
-            "Chicken pieces | 150 | g | Main curry dish\n"
-            "Basmati rice | 200 | g | Side dish\n"
-            "Naan bread | 1 | piece | Bread item\n"
-            "Lettuce | 50 | g | Salad\n"
-            "Tomatoes | 30 | g | Salad"
+            "Be thorough - don't miss any food items in the image."
         )
         
         print("🔍 Analyzing image with Gemini...")
@@ -101,6 +102,7 @@ def analyze_image_with_gemini(image_path):
         
         if response and response.text:
             print("✅ Gemini analysis successful")
+            print(f"📊 Raw Gemini response first 500 chars:\n{response.text[:500]}")
             return response.text
         else:
             raise Exception("Empty response from Gemini")
@@ -191,7 +193,7 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
     prompt = (
         f"Calculate total nutrition for: {dish_names}\n"
         f"Ingredients: {all_ingredients}\n\n"
-        "Reply with EXACTLY these 7 lines (replace numbers with actual values):\n"
+        "Reply with EXACTLY these 7 lines (replace numbers with actual calculated values):\n"
         "Calories|750|kcal\n"
         "Protein|35|g\n"
         "Fat|25|g\n"
@@ -206,6 +208,8 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
         response = gemini_model.generate_content(prompt)
         
         if response and response.text:
+            print(f"📊 Raw nutrition response:\n{response.text}")
+            
             # Parse the response and ensure it's in correct format
             lines = response.text.strip().split('\n')
             nutrition_data = []
@@ -227,7 +231,6 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
                 for nutrient, unit in expected:
                     if nutrient.lower() in line.lower():
                         # Extract number from line
-                        import re
                         numbers = re.findall(r'\d+', line)
                         if numbers:
                             values_found[nutrient] = numbers[0]
@@ -239,11 +242,12 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
                 nutrition_data.append(f"{nutrient}|{value}|{unit}")
             
             result = '\n'.join(nutrition_data)
-            print(f"✅ Nutrition calculated: {result[:100]}...")
+            print(f"✅ Final nutrition format:\n{result}")
             return result
             
         else:
             # Return default values if Gemini fails
+            print("⚠️ No response from Gemini, using defaults")
             return get_default_nutrition()
             
     except Exception as e:
@@ -255,12 +259,16 @@ def extract_dish_name(description):
     first_line = description.strip().split('\n')[0]
     dish_names = first_line.strip()
     
+    # Remove any numbering (e.g., "1. Pizza" -> "Pizza")
+    dish_names = re.sub(r'^\d+\.\s*', '', dish_names)
+    
     # Clean up common prefixes
     prefixes_to_remove = ["dishes:", "food items:", "items:", "dish:", "food:"]
     for prefix in prefixes_to_remove:
         if dish_names.lower().startswith(prefix):
             dish_names = dish_names[len(prefix):].strip()
     
+    print(f"📊 Extracted dish name: {dish_names}")
     return dish_names
 
 def parse_to_dict(text):
@@ -310,6 +318,11 @@ def full_image_analysis(image_path, user_id):
         # Step 5: Calculate nutrition (guaranteed to work)
         nutrition_info = estimate_nutrition_from_ingredients(dish_names, cleaned_ingredients, hidden_ingredients)
         
+        # ADD THIS DEBUG LOG
+        print(f"📊 RAW NUTRITION INFO:\n{nutrition_info}")
+        print(f"📊 Nutrition info length: {len(nutrition_info)}")
+        print(f"📊 First 200 chars: {nutrition_info[:200]}")
+        
         # Step 6: Parse data for potential storage
         visible_dict = parse_to_dict(cleaned_ingredients)
         hidden_dict = parse_to_dict(hidden_ingredients)
@@ -317,10 +330,10 @@ def full_image_analysis(image_path, user_id):
         analysis_time = time.time() - start_time
         
         print(f"✅ Analysis completed in {analysis_time:.2f} seconds")
-        print(f"📍 Dishes/Items: {dish_names}")
-        print(f"📍 Visible ingredients: {len(visible_dict)} items")
-        print(f"📍 Hidden ingredients: {len(hidden_dict)} items")
-        print(f"📍 Hidden ingredients text: {hidden_ingredients[:100]}...")
+        print(f"🍴 Dishes/Items: {dish_names}")
+        print(f"📋 Visible ingredients: {len(visible_dict)} items")
+        print(f"🔐 Hidden ingredients: {len(hidden_dict)} items")
+        print(f"🔐 Hidden ingredients text: {hidden_ingredients[:100]}...")
         
         return {
             'dish_prediction': dish_names,
@@ -354,6 +367,7 @@ def recalculate_nutrition_enhanced(ingredients_text):
     """Recalculate nutrition - simplified version"""
     try:
         print(f"🔄 Recalculating nutrition...")
+        print(f"📋 Input ingredients:\n{ingredients_text[:200]}...")
         
         prompt = (
             f"Calculate nutrition for: {ingredients_text}\n"
@@ -370,6 +384,8 @@ def recalculate_nutrition_enhanced(ingredients_text):
         response = gemini_model.generate_content(prompt)
         
         if response and response.text:
+            print(f"📊 Recalculation response:\n{response.text}")
+            
             # Clean and validate response
             lines = response.text.strip().split('\n')
             valid_lines = []
@@ -385,10 +401,14 @@ def recalculate_nutrition_enhanced(ingredients_text):
                             pass
             
             if valid_lines:
-                return '\n'.join(valid_lines)
+                result = '\n'.join(valid_lines)
+                print(f"✅ Recalculated nutrition:\n{result}")
+                return result
             else:
+                print("⚠️ No valid lines found, using defaults")
                 return get_default_nutrition()
         else:
+            print("⚠️ No response, using defaults")
             return get_default_nutrition()
             
     except Exception as e:
