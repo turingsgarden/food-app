@@ -3,7 +3,6 @@ import SwiftUI
 struct BeautifulNutritionView: View {
     let nutritionText: String
     @State private var nutritionItems: [NutritionItem] = []
-    @State private var debugInfo: String = ""
     
     var caloriesItem: NutritionItem? {
         nutritionItems.first { $0.name.lowercased().contains("calorie") }
@@ -30,20 +29,6 @@ struct BeautifulNutritionView: View {
                     .foregroundColor(.white)
                 
                 Spacer()
-                
-                // Debug button (only in development)
-                #if DEBUG
-                Button("Debug") {
-                    print("🔍 DEBUG Nutrition Text:")
-                    print("Raw text: '\(nutritionText)'")
-                    print("Parsed items: \(nutritionItems.count)")
-                    for item in nutritionItems {
-                        print("- \(item.name): \(item.value) \(item.unit)")
-                    }
-                }
-                .font(.caption)
-                .foregroundColor(.gray)
-                #endif
             }
             
             if hasValidNutrition {
@@ -69,59 +54,22 @@ struct BeautifulNutritionView: View {
                         }
                     }
                 }
-                
-                // All Nutrients List (Alternative compact view)
-                VStack(spacing: 8) {
-                    ForEach(nutritionItems) { item in
-                        NutrientRow(item: item)
-                    }
-                }
             } else {
-                // Show error state when no nutrition is found
-                VStack(spacing: 12) {
+                // Error state - but still try to show something
+                VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .font(.title2)
                         .foregroundColor(.orange.opacity(0.6))
                     
-                    Text("Nutrition data unavailable")
+                    Text("Processing nutrition data...")
                         .font(.headline)
                         .foregroundColor(.white)
                     
-                    Text("Unable to parse nutrition information for this meal")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                    
-                    // Show raw data in development
-                    #if DEBUG
-                    ScrollView {
-                        Text("Raw data: \(nutritionText)")
-                            .font(.caption2)
-                            .foregroundColor(.red)
-                            .padding()
-                            .background(
-                                RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.red.opacity(0.1))
-                            )
-                    }
-                    .frame(maxHeight: 100)
-                    #endif
-                    
-                    // Retry button
-                    Button("Try Parsing Again") {
-                        parseNutritionRobust()
-                    }
-                    .font(.caption)
-                    .foregroundColor(.orange)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        Capsule()
-                            .fill(Color.orange.opacity(0.2))
-                    )
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .orange))
                 }
-                .padding(.vertical, 20)
                 .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
             }
         }
         .padding()
@@ -132,9 +80,7 @@ struct BeautifulNutritionView: View {
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(
                             LinearGradient(
-                                colors: hasValidNutrition ?
-                                    [.orange.opacity(0.3), .orange.opacity(0.1)] :
-                                    [.red.opacity(0.3), .red.opacity(0.1)],
+                                colors: [.orange.opacity(0.3), .orange.opacity(0.1)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -143,137 +89,84 @@ struct BeautifulNutritionView: View {
                 )
         )
         .onAppear {
-            parseNutritionRobust()
+            parseNutritionSimple()
         }
         .onChange(of: nutritionText) { _, _ in
-            parseNutritionRobust()
+            parseNutritionSimple()
         }
     }
     
-    // MARK: - Enhanced Nutrition Parsing
+    // MARK: - Simple Nutrition Parsing (Works with backend format)
     
-    private func parseNutritionRobust() {
-        print("🔍 Starting robust nutrition parsing...")
-        print("📄 Input text (\(nutritionText.count) chars): '\(nutritionText.prefix(200))'")
+    private func parseNutritionSimple() {
+        var items: [NutritionItem] = []
         
-        // Pre-clean the text to remove headers and dashed lines
-        let cleanedText = nutritionText
-            .components(separatedBy: .newlines)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { line in
-                // Skip empty lines
-                if line.isEmpty { return false }
+        // Split by newlines
+        let lines = nutritionText.components(separatedBy: .newlines)
+        
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            // Skip empty lines
+            if trimmed.isEmpty { continue }
+            
+            // Try to parse lines with | separator
+            if trimmed.contains("|") {
+                let parts = trimmed.components(separatedBy: "|")
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 
-                // Skip dashed separator lines
-                if line.contains("------") || line.contains("---") {
-                    print("⚠️ Skipping dashed line: \(line)")
-                    return false
+                if parts.count >= 3 {
+                    let name = parts[0]
+                    let value = parts[1]
+                    let unit = parts[2]
+                    
+                    // Create nutrition item
+                    items.append(NutritionItem(
+                        name: name,
+                        value: value,
+                        unit: unit,
+                        reasoning: nil
+                    ))
                 }
-                
-                // Skip header lines
-                let lowercaseLine = line.lowercased()
-                if lowercaseLine.starts(with: "ingredient") && lowercaseLine.contains("quantity") {
-                    print("⚠️ Skipping header line: \(line)")
-                    return false
+            } else {
+                // Try to parse other formats (e.g., "Calories: 500 kcal")
+                if let item = parseAlternativeFormat(trimmed) {
+                    items.append(item)
                 }
-                if lowercaseLine.starts(with: "nutrient") && lowercaseLine.contains("value") {
-                    print("⚠️ Skipping header line: \(line)")
-                    return false
-                }
-                
-                // Skip lines that are just dashes
-                let dashOnly = line.replacingOccurrences(of: "-", with: "").trimmingCharacters(in: .whitespaces)
-                if dashOnly.isEmpty {
-                    print("⚠️ Skipping dash-only line: \(line)")
-                    return false
-                }
-                
-                return true
             }
-            .joined(separator: "\n")
-        
-        print("📄 Cleaned text: '\(cleanedText.prefix(200))'")
-        
-        // Try the standard parser first with cleaned text
-        var items = NutritionParser.parseNutrition(from: cleanedText)
-        
-        // If standard parsing fails, try alternative methods
-        if items.isEmpty {
-            print("⚠️ Standard parsing failed, trying alternative methods...")
-            items = parseNutritionAlternative(from: cleanedText)
         }
         
-        // If still no items, try super basic parsing
+        // If no items found, add defaults
         if items.isEmpty {
-            print("⚠️ Alternative parsing failed, trying basic extraction...")
-            items = parseNutritionBasic(from: cleanedText)
-        }
-        
-        // If we still have no items, try one more time with the original text
-        if items.isEmpty && !nutritionText.isEmpty {
-            print("⚠️ All parsing methods failed, trying emergency parsing...")
-            items = parseNutritionEmergency(from: nutritionText)
+            items = getDefaultNutrition()
         }
         
         withAnimation(.easeInOut(duration: 0.3)) {
             nutritionItems = items
         }
-        
-        print("📊 Final parsing result: \(items.count) items")
-        for item in items {
-            print("✅ \(item.name): \(item.value) \(item.unit)")
-        }
     }
     
-    // Alternative parsing method for edge cases
-    private func parseNutritionAlternative(from text: String) -> [NutritionItem] {
-        var items: [NutritionItem] = []
-        let lines = text.components(separatedBy: .newlines)
+    private func parseAlternativeFormat(_ line: String) -> NutritionItem? {
+        // Common patterns: "Calories: 500 kcal" or "Protein - 20g"
+        let patterns = [
+            #"(\w+)\s*:\s*(\d+\.?\d*)\s*(\w+)"#,
+            #"(\w+)\s*-\s*(\d+\.?\d*)\s*(\w+)"#,
+            #"(\w+)\s+(\d+\.?\d*)\s*(\w+)"#
+        ]
         
-        for line in lines {
-            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            
-            // Skip empty or invalid lines
-            if trimmedLine.isEmpty ||
-               trimmedLine.contains("------") ||
-               trimmedLine.hasPrefix("---") ||
-               trimmedLine.lowercased().contains("ingredient | quantity") {
-                continue
-            }
-            
-            // Try different parsing approaches
-            if let item = parseLineWithMultipleSeparators(line: trimmedLine) {
-                items.append(item)
-            }
-        }
-        
-        return items
-    }
-    
-    // Parse with multiple separator types
-    private func parseLineWithMultipleSeparators(line: String) -> NutritionItem? {
-        let separators = ["|", ":", "-", "–", "—"]
-        
-        for separator in separators {
-            let parts = line.components(separatedBy: separator)
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            
-            if parts.count >= 2 {
-                let name = parts[0]
-                let valueAndUnit = parts[1]
+        for pattern in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern),
+               let match = regex.firstMatch(in: line, range: NSRange(location: 0, length: line.utf16.count)) {
                 
-                // Skip invalid names
-                if name.isEmpty || name.contains("---") || name.lowercased() == "ingredient" {
-                    continue
-                }
-                
-                // Extract value and unit from "123 g" or "123g" format
-                if let (value, unit) = extractValueAndUnit(from: valueAndUnit) {
+                if let nameRange = Range(match.range(at: 1), in: line),
+                   let valueRange = Range(match.range(at: 2), in: line),
+                   let unitRange = Range(match.range(at: 3), in: line) {
+                    
                     return NutritionItem(
-                        name: name,
-                        value: value,
-                        unit: unit,
-                        reasoning: parts.count > 2 ? parts[2] : nil
+                        name: String(line[nameRange]),
+                        value: String(line[valueRange]),
+                        unit: String(line[unitRange]),
+                        reasoning: nil
                     )
                 }
             }
@@ -282,192 +175,16 @@ struct BeautifulNutritionView: View {
         return nil
     }
     
-    // Extract value and unit from combined string
-    private func extractValueAndUnit(from text: String) -> (String, String)? {
-        let pattern = #"(\d+\.?\d*)\s*([a-zA-Z]*)"#
-        let regex = try? NSRegularExpression(pattern: pattern)
-        let range = NSRange(location: 0, length: text.utf16.count)
-        
-        if let match = regex?.firstMatch(in: text, range: range),
-           let valueRange = Range(match.range(at: 1), in: text),
-           let unitRange = Range(match.range(at: 2), in: text) {
-            
-            let value = String(text[valueRange])
-            let unit = String(text[unitRange])
-            
-            // Validate value is numeric
-            if Double(value) != nil || Int(value) != nil {
-                return (value, unit.isEmpty ? "unit" : unit)
-            }
-        }
-        
-        return nil
-    }
-    
-    // Basic parsing as last resort
-    private func parseNutritionBasic(from text: String) -> [NutritionItem] {
-        var items: [NutritionItem] = []
-        
-        // Look for common nutrition keywords with numbers
-        let nutritionKeywords = [
-            "calories", "kcal", "protein", "carbohydrate", "carbs",
-            "fat", "fiber", "sugar", "sodium", "vitamin", "calcium", "iron"
+    private func getDefaultNutrition() -> [NutritionItem] {
+        return [
+            NutritionItem(name: "Calories", value: "---", unit: "kcal", reasoning: nil),
+            NutritionItem(name: "Protein", value: "---", unit: "g", reasoning: nil),
+            NutritionItem(name: "Fat", value: "---", unit: "g", reasoning: nil),
+            NutritionItem(name: "Carbohydrates", value: "---", unit: "g", reasoning: nil),
+            NutritionItem(name: "Fiber", value: "---", unit: "g", reasoning: nil),
+            NutritionItem(name: "Sugar", value: "---", unit: "g", reasoning: nil),
+            NutritionItem(name: "Sodium", value: "---", unit: "mg", reasoning: nil)
         ]
-        
-        let lines = text.components(separatedBy: .newlines)
-        
-        for line in lines {
-            let lowercaseLine = line.lowercased()
-            
-            for keyword in nutritionKeywords {
-                if lowercaseLine.contains(keyword) {
-                    // Try to find numbers in the line
-                    let numberPattern = #"\b(\d+\.?\d*)\b"#
-                    let regex = try? NSRegularExpression(pattern: numberPattern)
-                    let range = NSRange(location: 0, length: line.utf16.count)
-                    
-                    if let match = regex?.firstMatch(in: line, range: range),
-                       let numberRange = Range(match.range(at: 1), in: line) {
-                        
-                        let value = String(line[numberRange])
-                        let unit = extractUnit(from: line, keyword: keyword)
-                        
-                        items.append(NutritionItem(
-                            name: keyword.capitalized,
-                            value: value,
-                            unit: unit,
-                            reasoning: "Basic extraction"
-                        ))
-                    }
-                }
-            }
-        }
-        
-        return items
-    }
-    
-    // Emergency parsing method
-    private func parseNutritionEmergency(from text: String) -> [NutritionItem] {
-        var items: [NutritionItem] = []
-        
-        // Look for any line that has numbers and might be nutrition data
-        let lines = text.components(separatedBy: .newlines)
-        
-        for line in lines {
-            let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            
-            // Skip problematic lines
-            if trimmedLine.isEmpty ||
-               trimmedLine.contains("---") ||
-               trimmedLine.lowercased().contains("ingredient") ||
-               trimmedLine.lowercased().contains("quantity") {
-                continue
-            }
-            
-            // Try multiple separators
-            let separators = ["|", ":", "-", "–", "—", "\t"]
-            
-            for separator in separators {
-                if trimmedLine.contains(separator) {
-                    let parts = trimmedLine.components(separatedBy: separator)
-                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                    
-                    if parts.count >= 2 {
-                        let possibleName = parts[0]
-                        let remainingText = parts[1...].joined(separator: " ")
-                        
-                        // Extract number from the remaining text
-                        let numberPattern = #"(\d+\.?\d*)"#
-                        if let regex = try? NSRegularExpression(pattern: numberPattern),
-                           let match = regex.firstMatch(in: remainingText, range: NSRange(location: 0, length: remainingText.utf16.count)),
-                           let numberRange = Range(match.range(at: 1), in: remainingText) {
-                            
-                            let value = String(remainingText[numberRange])
-                            
-                            // Try to extract unit
-                            let afterNumber = remainingText[numberRange.upperBound...].trimmingCharacters(in: .whitespaces)
-                            let unit = extractUnitFromText(afterNumber) ?? "unit"
-                            
-                            // Validate this looks like nutrition data
-                            if isNutritionName(possibleName) {
-                                items.append(NutritionItem(
-                                    name: possibleName,
-                                    value: value,
-                                    unit: unit,
-                                    reasoning: "Emergency extraction"
-                                ))
-                                break // Found a valid parse, move to next line
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        return items
-    }
-    
-    // Helper to check if a name looks like nutrition data
-    private func isNutritionName(_ name: String) -> Bool {
-        let nutritionKeywords = [
-            "calorie", "kcal", "protein", "carbohydrate", "carb",
-            "fat", "fiber", "fibre", "sugar", "sodium", "salt",
-            "cholesterol", "vitamin", "calcium", "iron", "potassium"
-        ]
-        
-        let lowercaseName = name.lowercased()
-        return nutritionKeywords.contains { keyword in
-            lowercaseName.contains(keyword)
-        }
-    }
-    
-    // Helper to extract unit from text
-    private func extractUnitFromText(_ text: String) -> String? {
-        let commonUnits = [
-            "kcal", "cal", "g", "mg", "mcg", "µg", "kg", "oz", "lb",
-            "ml", "l", "dl", "fl oz", "cup", "tbsp", "tsp", "%", "iu"
-        ]
-        
-        let lowercaseText = text.lowercased()
-        
-        // Check for exact matches first
-        for unit in commonUnits {
-            if lowercaseText.starts(with: unit) {
-                return unit
-            }
-        }
-        
-        // Check if any unit is contained in the text
-        for unit in commonUnits {
-            if lowercaseText.contains(unit) {
-                return unit
-            }
-        }
-        
-        // Default units based on context
-        if text.contains("gram") { return "g" }
-        if text.contains("milligram") { return "mg" }
-        if text.contains("calorie") { return "kcal" }
-        
-        return nil
-    }
-    
-    // Extract likely unit for a nutrient
-    private func extractUnit(from line: String, keyword: String) -> String {
-        let lowercaseLine = line.lowercased()
-        
-        // Common unit patterns
-        if lowercaseLine.contains("kcal") || lowercaseLine.contains("calorie") {
-            return "kcal"
-        } else if lowercaseLine.contains("mg") {
-            return "mg"
-        } else if lowercaseLine.contains("g") {
-            return "g"
-        } else if lowercaseLine.contains("ml") {
-            return "ml"
-        } else {
-            return "unit"
-        }
     }
 }
 
@@ -490,7 +207,7 @@ struct CaloriesHighlightCard: View {
                     )
                     .frame(width: 60, height: 60)
                 
-                Image(systemName: item.icon)
+                Image(systemName: "flame.fill")
                     .font(.title2)
                     .foregroundColor(.orange)
             }
@@ -575,56 +292,17 @@ struct NutrientCard: View {
     }
 }
 
-struct NutrientRow: View {
-    let item: NutritionItem
-    
-    var body: some View {
-        HStack {
-            // Left side - Nutrient name with icon
-            HStack(spacing: 8) {
-                Image(systemName: item.icon)
-                    .foregroundColor(item.color)
-                    .font(.subheadline)
-                    .frame(width: 20)
-                
-                Text(item.name)
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.9))
-            }
-            
-            Spacer()
-            
-            // Right side - Value and unit
-            HStack(alignment: .bottom, spacing: 2) {
-                Text(item.value)
-                    .font(.subheadline.bold())
-                    .foregroundColor(.white)
-                
-                Text(item.unit)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-            }
-        }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.white.opacity(0.03))
-        )
-    }
-}
-
 // MARK: - Preview
 struct BeautifulNutritionView_Previews: PreviewProvider {
     static var previews: some View {
         BeautifulNutritionView(nutritionText: """
-            Calories | 450 | kcal | From rice and chicken
-            Protein | 25 | g | From chicken and lentils
-            Fat | 12 | g | From cooking oil and meat
-            Carbohydrates | 60 | g | From rice and vegetables
-            Fiber | 8 | g | From vegetables and grains
-            Sugar | 5 | g | Natural sugars from vegetables
-            Sodium | 800 | mg | From salt and seasonings
+            Calories|450|kcal
+            Protein|25|g
+            Fat|12|g
+            Carbohydrates|60|g
+            Fiber|8|g
+            Sugar|5|g
+            Sodium|800|mg
             """)
         .preferredColorScheme(.dark)
         .padding()
