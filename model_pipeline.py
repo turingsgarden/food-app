@@ -139,9 +139,14 @@ def search_hidden_ingredients(dish_names, visible_ingredients):
         "- Rice: water, salt, oil/butter\n"
         "- Bread: flour, yeast, oil, salt (if not visible)\n"
         "- Salads: dressing, oil, vinegar\n\n"
+        "IMPORTANT FORMATTING RULES:\n"
+        "- DO NOT include header lines\n"
+        "- DO NOT include dashed lines (--- or ------)\n"
+        "- DO NOT write 'Ingredient | Quantity Number | Unit | Used for which dish/purpose' as a header\n"
+        "- Start DIRECTLY with the ingredient data\n\n"
         "Format each hidden ingredient:\n"
         "Ingredient | Quantity Number | Unit | Used for which dish/purpose\n\n"
-        "Examples:\n"
+        "Example OUTPUT (start exactly like this, no headers):\n"
         "Cooking oil | 3 | tbsp | Used for curry and rice preparation\n"
         "Salt | 2 | tsp | Seasoning for curry and rice\n"
         "Cumin powder | 1 | tsp | Spice for curry dish\n"
@@ -162,22 +167,19 @@ def search_hidden_ingredients(dish_names, visible_ingredients):
             for line in lines:
                 line = line.strip()
                 
-                # SKIP HEADER LINES AND DASHED SEPARATORS
+                # Skip header and dashed lines
                 if '------' in line or line.startswith('---'):
                     continue
-                    
-                # Skip the header line
                 if line.lower().startswith('ingredient') and 'quantity' in line.lower():
                     continue
-                
+                    
                 if '|' in line and len(line.split('|')) >= 4:
-                    # Additional validation - ensure second part is numeric
+                    # Additional validation
                     parts = line.split('|')
                     try:
-                        float(parts[1].strip())  # Check if quantity is numeric
+                        float(parts[1].strip())
                         formatted_lines.append(line)
                     except ValueError:
-                        print(f"⚠️ Skipping non-numeric line: {line}")
                         continue
             
             if formatted_lines:
@@ -194,28 +196,12 @@ def search_hidden_ingredients(dish_names, visible_ingredients):
     except Exception as e:
         print(f"❌ Hidden ingredients error: {str(e)}")
         return "Cooking oil | 2 | tbsp | Used for cooking dishes\nSalt | 1 | tsp | Basic seasoning for dishes"
-
+    
 def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_ingredients):
     """Estimate nutrition based on ALL dishes and ingredients"""
     
-    # Clean the ingredients before sending to Gemini
-    def clean_ingredients(ingredients_text):
-        lines = ingredients_text.split('\n')
-        cleaned = []
-        for line in lines:
-            if '------' in line or line.startswith('---'):
-                continue
-            if line.lower().startswith('ingredient') and 'quantity' in line.lower():
-                continue
-            if line.strip():
-                cleaned.append(line)
-        return '\n'.join(cleaned)
-    
-    visible_clean = clean_ingredients(visible_ingredients)
-    hidden_clean = clean_ingredients(hidden_ingredients)
-    
     # Combine both visible and hidden ingredients for nutrition calculation
-    all_ingredients = f"DISHES/ITEMS: {dish_names}\n\nVISIBLE INGREDIENTS:\n{visible_clean}\n\nHIDDEN INGREDIENTS:\n{hidden_clean}"
+    all_ingredients = f"DISHES/ITEMS: {dish_names}\n\nVISIBLE INGREDIENTS:\n{visible_ingredients}\n\nHIDDEN INGREDIENTS:\n{hidden_ingredients}"
     
     prompt = (
         f"You are a nutritionist calculating nutrition for ALL food items shown.\n\n"
@@ -225,12 +211,21 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
         "Output each nutrient on a new line in this exact format:\n"
         "Nutrient | Value | Unit | Reasoning\n"
         "Value must be a numeric value only.\n\n"
-        "DO NOT include header lines or dashed separators.\n"  # ADD THIS
-        "Examples:\n"
-        "Calories | 850 | kcal | Curry (400) + rice (300) + bread (150)\n"
-        "Protein | 45 | g | From chicken in curry and grains\n"
-        "Fat | 25 | g | From cooking oil, meat, and dairy\n\n"
-        "Include these nutrients: Calories, Protein, Fat, Carbohydrates, Fiber, Sugar, Sodium.\n"
+        "IMPORTANT RULES:\n"
+        "- DO NOT include any header lines\n"
+        "- DO NOT include any dashed lines (--- or ------)\n"
+        "- DO NOT include markdown formatting\n"
+        "- DO NOT write 'Nutrient | Value | Unit | Reasoning' as a header\n"
+        "- Start DIRECTLY with the actual nutrient data\n\n"
+        "Example OUTPUT (start exactly like this, no headers):\n"
+        "Calories | 850 | kcal | From cheese and dough\n"
+        "Protein | 35 | g | From cheese and meat toppings\n"
+        "Fat | 40 | g | From cheese and oil\n"
+        "Carbohydrates | 95 | g | From pizza dough\n"
+        "Fiber | 4 | g | From vegetables\n"
+        "Sugar | 8 | g | From tomato sauce\n"
+        "Sodium | 1800 | mg | From cheese and seasonings\n\n"
+        "You MUST include ALL these nutrients: Calories, Protein, Fat, Carbohydrates, Fiber, Sugar, Sodium.\n"
         "Consider ALL items shown - main dishes, sides, beverages, etc.\n"
         "Account for both visible and hidden ingredients in your calculations.\n"
         "Provide realistic portion sizes for a typical meal."
