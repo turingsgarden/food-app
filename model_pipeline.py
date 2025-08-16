@@ -8,6 +8,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from io import BytesIO
+import traceback
 
 # Load environment variables
 load_dotenv()
@@ -200,17 +201,19 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
         "Carbohydrates|80|g\n"
         "Fiber|5|g\n"
         "Sugar|10|g\n"
-        "Sodium|1200|mg"
+        "Sodium|1200|mg\n\n"
+        "IMPORTANT: Reply ONLY with the 7 lines above, nothing else."
     )
     
     try:
         print("📊 Calculating nutrition...")
+        print(f"📊 For dishes: {dish_names}")
         response = gemini_model.generate_content(prompt)
         
         if response and response.text:
-            print(f"📊 Raw nutrition response:\n{response.text}")
+            print(f"📊 Raw Gemini nutrition response:\n{response.text}")
             
-            # Parse the response and ensure it's in correct format
+            # Parse the response more carefully
             lines = response.text.strip().split('\n')
             nutrition_data = []
             
@@ -225,21 +228,29 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
                 ("Sodium", "mg")
             ]
             
-            # Try to extract values from response
-            values_found = {}
-            for line in lines:
-                for nutrient, unit in expected:
-                    if nutrient.lower() in line.lower():
-                        # Extract number from line
-                        numbers = re.findall(r'\d+', line)
-                        if numbers:
-                            values_found[nutrient] = numbers[0]
-                            break
-            
-            # Build final nutrition string with found values or defaults
+            # Try to find each nutrient in the response
             for nutrient, unit in expected:
-                value = values_found.get(nutrient, get_default_value(nutrient))
-                nutrition_data.append(f"{nutrient}|{value}|{unit}")
+                found = False
+                for line in lines:
+                    if nutrient.lower() in line.lower() and '|' in line:
+                        # This line contains the nutrient
+                        parts = line.split('|')
+                        if len(parts) >= 2:
+                            # Try to extract the numeric value
+                            value_str = parts[1].strip()
+                            # Remove any non-numeric characters except dots
+                            value_str = ''.join(c for c in value_str if c.isdigit() or c == '.')
+                            if value_str:
+                                nutrition_data.append(f"{nutrient}|{value_str}|{unit}")
+                                found = True
+                                print(f"✅ Found {nutrient}: {value_str}")
+                                break
+                
+                if not found:
+                    # Use default value
+                    default_val = get_default_value(nutrient)
+                    nutrition_data.append(f"{nutrient}|{default_val}|{unit}")
+                    print(f"⚠️ Using default for {nutrient}: {default_val}")
             
             result = '\n'.join(nutrition_data)
             print(f"✅ Final nutrition format:\n{result}")
@@ -251,7 +262,9 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
             return get_default_nutrition()
             
     except Exception as e:
-        print(f"❌ Nutrition error: {str(e)}")
+        print(f"❌ Nutrition calculation error: {str(e)}")
+        print(f"❌ Error type: {type(e).__name__}")
+        traceback.print_exc()
         return get_default_nutrition()
 
 def extract_dish_name(description):
@@ -318,6 +331,17 @@ def full_image_analysis(image_path, user_id):
         # Step 5: Calculate nutrition (guaranteed to work)
         nutrition_info = estimate_nutrition_from_ingredients(dish_names, cleaned_ingredients, hidden_ingredients)
         
+        # TEMPORARY FIX: If nutrition is empty or too short, use defaults
+        if not nutrition_info or len(nutrition_info) < 50:
+            print("⚠️ Nutrition calculation failed, using hardcoded values")
+            nutrition_info = """Calories|450|kcal
+Protein|25|g
+Fat|18|g
+Carbohydrates|55|g
+Fiber|6|g
+Sugar|8|g
+Sodium|980|mg"""
+        
         # ADD THIS DEBUG LOG
         print(f"📊 RAW NUTRITION INFO:\n{nutrition_info}")
         print(f"📊 Nutrition info length: {len(nutrition_info)}")
@@ -351,6 +375,7 @@ def full_image_analysis(image_path, user_id):
         
     except Exception as e:
         print(f"❌ Full analysis error: {str(e)}")
+        traceback.print_exc()
         
         # Return with default values
         return {

@@ -331,7 +331,7 @@ struct BeautifulNutritionView_Previews: PreviewProvider {
             Sugar|5|g
             Sodium|800|mg
             """)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.dark)u
         .padding()
         .background(Color.black)
     }
