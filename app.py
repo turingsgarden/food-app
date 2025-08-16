@@ -434,6 +434,20 @@ def analyze():
         else:
             print("⚠️ No hidden ingredients in result")
         
+        # ADD THIS NEW DEBUG SECTION
+        print(f"📊 NUTRITION INFO DEBUG:")
+        nutrition_info = result.get('nutrition_info', '')
+        print(f"📊 Nutrition info exists: {bool(nutrition_info)}")
+        print(f"📊 Nutrition info length: {len(nutrition_info)}")
+        print(f"📊 Nutrition info content:\n{nutrition_info}")
+        
+        # Also check if it's properly formatted
+        if nutrition_info:
+            lines = nutrition_info.split('\n')
+            print(f"📊 Nutrition lines count: {len(lines)}")
+            for i, line in enumerate(lines[:3]):  # Show first 3 lines
+                print(f"📊 Line {i}: '{line}'")
+        
         # Clean up
         try:
             os.remove(image_path)
@@ -1067,7 +1081,7 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Starting Food Analyzer Backend on port {port}")
     print(f"✅ Enhanced with JWT authentication and bcrypt")
-    print(f"🔒 Security: JWT tokens + bcrypt passwords")
+    print(f"🔐 Security: JWT tokens + bcrypt passwords")
     print(f"📱 Compatible with Swift frontend")
     print(f"🗄️ MongoDB: {'✅ Connected' if client else '❌ Not connected'}")
     print(f"🤖 Gemini AI: {'✅ Ready' if gemini_model else '❌ Not configured'}")
