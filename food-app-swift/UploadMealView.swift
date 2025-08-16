@@ -31,6 +31,10 @@ struct UploadMealView: View {
     @State private var showCameraPermissionAlert = false
     @State private var cameraPermissionStatus: AVAuthorizationStatus = .notDetermined
     
+    // Cold start handling
+    @State private var showColdStartLoading = false
+    @State private var currentError: AppError?
+    
     let mealTypes = ["Breakfast", "Lunch", "Evening Snacks", "Dinner"]
     
     @Environment(\.dismiss) var dismiss
@@ -78,7 +82,7 @@ struct UploadMealView: View {
                         .overlay(
                             ZStack {
                                 if showColdStartLoading {
-                                    ServerWarmupView()  // <-- Use renamed view
+                                    ServerWarmupView()
                                 }
                                 
                                 if let error = currentError {
@@ -291,7 +295,7 @@ struct UploadMealView: View {
                                                     )
                                                 } else {
                                                     IngredientDisplay(
-                                                        text: "\(ingredient.name) — \(ingredient.quantity) \(ingredient.unit)"
+                                                        text: "\(ingredient.name) – \(ingredient.quantity) \(ingredient.unit)"
                                                     )
                                                 }
                                             }
@@ -330,7 +334,7 @@ struct UploadMealView: View {
                                                         )
                                                     } else {
                                                         IngredientDisplay(
-                                                            text: "\(ingredient.name) — \(ingredient.quantity) \(ingredient.unit)",
+                                                            text: "\(ingredient.name) – \(ingredient.quantity) \(ingredient.unit)",
                                                             isHidden: true
                                                         )
                                                     }
@@ -354,6 +358,23 @@ struct UploadMealView: View {
                                     // Beautiful Nutrition Display with Recalculate Option
                                     VStack(spacing: 16) {
                                         BeautifulNutritionView(nutritionText: rawNutritionInfo)
+                                        
+                                        // TEMPORARY DEBUG VIEW
+                                        if !rawNutritionInfo.isEmpty {
+                                            VStack(alignment: .leading, spacing: 8) {
+                                                Text("DEBUG - Raw Nutrition:")
+                                                    .font(.caption)
+                                                    .foregroundColor(.red)
+                                                
+                                                Text(rawNutritionInfo)
+                                                    .font(.caption2)
+                                                    .foregroundColor(.gray)
+                                                    .padding()
+                                                    .background(Color.black)
+                                                    .cornerRadius(8)
+                                            }
+                                            .padding(.horizontal)
+                                        }
                                         
                                         // Recalculate button (if editing)
                                         if (isEditingIngredients || isEditingHidden) {
@@ -606,11 +627,6 @@ struct UploadMealView: View {
         return imageData
     }
 
-    // In UploadMealView, update the analyzeImage function:
-
-    @State private var showColdStartLoading = false
-    @State private var currentError: AppError?
-
     func analyzeImage() {
         guard let image = selectedImage else { return }
         isLoading = true
@@ -638,7 +654,38 @@ struct UploadMealView: View {
                 withAnimation(.spring()) {
                     self.detectedDish = geminiResult.dish_prediction
                     self.editableDishName = geminiResult.dish_prediction
-                    // ... rest of success handling
+                    self.visibleIngredients = self.parseIngredientsToEditable(from: geminiResult.image_description)
+                    
+                    // Parse hidden ingredients
+                    if let hiddenText = geminiResult.hidden_ingredients, !hiddenText.isEmpty {
+                        self.hiddenIngredients = self.parseIngredientsToEditable(from: hiddenText)
+                        self.rawHiddenIngredients = hiddenText
+                        print("🔍 Hidden ingredients parsed: \(self.hiddenIngredients.count) items")
+                    } else {
+                        print("⚠️ No hidden ingredients received")
+                        self.hiddenIngredients = []
+                        self.rawHiddenIngredients = ""
+                    }
+                    
+                    // Set raw nutrition info for Beautiful Nutrition View
+                    self.rawNutritionInfo = geminiResult.nutrition_info
+                    
+                    // DEBUG: Log the nutrition info
+                    print("📊 FRONTEND - Received nutrition info:")
+                    print("📊 Length: \(geminiResult.nutrition_info.count)")
+                    print("📊 Content: \(geminiResult.nutrition_info)")
+                    
+                    // Force a refresh of the nutrition view
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        self.rawNutritionInfo = geminiResult.nutrition_info
+                    }
+                    
+                    // Also maintain legacy arrays for compatibility
+                    self.nutritionLines = self.parseNutritionLines(from: geminiResult.nutrition_info)
+                    self.calories = self.extractCalories(from: geminiResult.nutrition_info)
+                    
+                    print("📊 Parsed nutrition lines: \(self.nutritionLines)")
+                    print("📊 Extracted calories: \(String(describing: self.calories))")
                 }
                 
             case .failure(let error):
@@ -652,63 +699,6 @@ struct UploadMealView: View {
             }
         }
     }
-
-    // Add overlay to the main ZStack:
-
-    func performImageAnalysis(image: UIImage) {
-        detectedDish = ""
-        editableDishName = ""
-        visibleIngredients = []
-        hiddenIngredients = []
-        nutritionLines = []
-        calories = nil
-        rawNutritionInfo = ""
-        
-        let resizedImage = resizeImage(image, maxDimension: 800) ?? image
-            guard let imageData = compressImage(resizedImage, maxSizeKB: 500) else {
-                isLoading = false
-                errorMessage = "Failed to process image."
-                return
-            }
-            
-            NetworkManager.shared.uploadImage(imageData: imageData) { result in
-                self.isLoading = false
-                
-                switch result {
-                case .success(let geminiResult):
-                    withAnimation(.spring()) {
-                        self.detectedDish = geminiResult.dish_prediction
-                        self.editableDishName = geminiResult.dish_prediction
-                        self.visibleIngredients = self.parseIngredientsToEditable(from: geminiResult.image_description)
-                        
-                        // Parse hidden ingredients
-                        if let hiddenText = geminiResult.hidden_ingredients, !hiddenText.isEmpty {
-                            self.hiddenIngredients = self.parseIngredientsToEditable(from: hiddenText)
-                            self.rawHiddenIngredients = hiddenText
-                            print("🔍 Hidden ingredients parsed: \(self.hiddenIngredients.count) items")
-                        } else {
-                            print("⚠️ No hidden ingredients received")
-                            self.hiddenIngredients = []
-                            self.rawHiddenIngredients = ""
-                        }
-                        
-                        // Set raw nutrition info for Beautiful Nutrition View
-                        self.rawNutritionInfo = geminiResult.nutrition_info
-                        
-                        // Also maintain legacy arrays for compatibility
-                        self.nutritionLines = self.parseNutritionLines(from: geminiResult.nutrition_info)
-                        self.calories = self.extractCalories(from: geminiResult.nutrition_info)
-                    }
-                    
-                case .failure(let error):
-                    if (error as NSError).code == NSURLErrorTimedOut {
-                        self.errorMessage = "Analysis timed out. Try a clearer image."
-                    } else {
-                        self.errorMessage = error.localizedDescription
-                    }
-                }
-            }
-        }
 
     func saveMealToBackend() {
         guard !editableDishName.isEmpty else {
@@ -808,7 +798,7 @@ struct UploadMealView: View {
             let nutrient = parts[0].trimmingCharacters(in: .whitespaces)
             let value = parts[1].trimmingCharacters(in: .whitespaces)
             let unit = parts.count > 2 ? parts[2].trimmingCharacters(in: .whitespaces) : ""
-            return "\(nutrient) — \(value) \(unit)"
+            return "\(nutrient) – \(value) \(unit)"
         }
     }
 

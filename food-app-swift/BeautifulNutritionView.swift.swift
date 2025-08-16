@@ -3,6 +3,7 @@ import SwiftUI
 struct BeautifulNutritionView: View {
     let nutritionText: String
     @State private var nutritionItems: [NutritionItem] = []
+    @State private var hasInitialized = false
     
     var caloriesItem: NutritionItem? {
         nutritionItems.first { $0.name.lowercased().contains("calorie") }
@@ -67,6 +68,13 @@ struct BeautifulNutritionView: View {
                     
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                    
+                    // DEBUG: Show raw text
+                    if !nutritionText.isEmpty {
+                        Text("Raw data: \(nutritionText.prefix(50))...")
+                            .font(.caption2)
+                            .foregroundColor(.gray)
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
@@ -89,10 +97,17 @@ struct BeautifulNutritionView: View {
                 )
         )
         .onAppear {
-            parseNutritionSimple()
+            if !hasInitialized {
+                hasInitialized = true
+                parseNutritionSimple()
+            }
         }
-        .onChange(of: nutritionText) { _, _ in
-            parseNutritionSimple()
+        .onChange(of: nutritionText) { oldValue, newValue in
+            print("📊 BeautifulNutritionView - nutrition text changed")
+            print("📊 Old length: \(oldValue.count), New length: \(newValue.count)")
+            if newValue != oldValue {
+                parseNutritionSimple()
+            }
         }
     }
     
@@ -101,11 +116,11 @@ struct BeautifulNutritionView: View {
     private func parseNutritionSimple() {
         var items: [NutritionItem] = []
         
-        print("🔍 Parsing nutrition text: \(nutritionText)")
+        print("🔍 BeautifulNutritionView - Parsing nutrition text: \(nutritionText)")
         print("🔍 Text length: \(nutritionText.count)")
         
-        // Split by newlines
-        let lines = nutritionText.components(separatedBy: .newlines)
+        // Handle both \n and \r\n line endings
+        let lines = nutritionText.components(separatedBy: CharacterSet.newlines)
         print("📊 Found \(lines.count) lines")
         
         for (index, line) in lines.enumerated() {
@@ -134,12 +149,13 @@ struct BeautifulNutritionView: View {
                     // Validate that value is numeric
                     if !value.isEmpty && (Double(value) != nil || Int(value) != nil) {
                         // Create nutrition item
-                        items.append(NutritionItem(
+                        let item = NutritionItem(
                             name: name,
                             value: value,
                             unit: unit,
                             reasoning: nil
-                        ))
+                        )
+                        items.append(item)
                         
                         print("✅ Added nutrition item: \(name) = \(value) \(unit)")
                     } else {
@@ -166,10 +182,16 @@ struct BeautifulNutritionView: View {
             items = getDefaultNutrition()
         } else {
             print("✅ Total nutrition items parsed: \(items.count)")
+            for item in items {
+                print("  - \(item.name): \(item.value) \(item.unit)")
+            }
         }
         
-        withAnimation(.easeInOut(duration: 0.3)) {
-            nutritionItems = items
+        // Use main queue to update state
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                self.nutritionItems = items
+            }
         }
     }
     
@@ -331,7 +353,7 @@ struct BeautifulNutritionView_Previews: PreviewProvider {
             Sugar|5|g
             Sodium|800|mg
             """)
-        .preferredColorScheme(.dark)u
+        .preferredColorScheme(.dark)
         .padding()
         .background(Color.black)
     }
