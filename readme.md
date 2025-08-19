@@ -1,87 +1,83 @@
-# <div align="center">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/assets/nutrisnap-logo.png" alt="NutriSnap Logo" width="120" height="120">
+# 📸 NutriSnap - AI-Powered Nutrition Tracker
+
+<div align="center">
+  <img src="https://github.com/yourusername/nutrisnap/blob/main/assets/nutrisnap-logo.png" alt="NutriSnap Logo" width="200" height="200">
   
-  # NutriSnap - AI Food Tracker
+  <p align="center">
+    <strong>Your Personal AI Nutritionist in Your Pocket!</strong>
+  </p>
   
-  ### ✨ Point. Shoot. Know EVERYTHING!
-  #### AI food scanner reveals complete nutrition + hidden ingredients in seconds.
+  [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg)](https://swift.org)
+  [![iOS](https://img.shields.io/badge/iOS-17.0+-blue.svg)](https://www.apple.com/ios/)
+  [![Python](https://img.shields.io/badge/Python-3.9+-green.svg)](https://www.python.org)
+  [![License](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
+  [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
   
-  [![Swift](https://img.shields.io/badge/Swift-5.9-orange.svg?style=flat-square)](https://swift.org)
-  [![iOS](https://img.shields.io/badge/iOS-17%2B-blue.svg?style=flat-square)](https://www.apple.com/ios/)
-  [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg?style=flat-square)](https://python.org)
-  [![License](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
-  
-  [Download on App Store](#) • [Demo Video](#) • [Documentation](#)
+  <p align="center">
+    <a href="#✨-features">Features</a> •
+    <a href="#📱-screenshots">Screenshots</a> •
+    <a href="#🚀-quick-start">Quick Start</a> •
+    <a href="#🛠-tech-stack">Tech Stack</a> •
+    <a href="#📲-installation">Installation</a> •
+    <a href="#🌐-deployment">Deployment</a>
+  </p>
 </div>
+
+---
+
+## 🎯 Overview
+
+**NutriSnap** revolutionizes nutrition tracking through AI-powered food image analysis. Simply snap a photo of your meal, and our advanced Google Gemini AI will instantly identify ingredients, uncover hidden components like cooking oils and spices, and provide comprehensive nutritional information.
+
+### ✨ Point. Shoot. Know EVERYTHING! 
+AI food scanner reveals complete nutrition + hidden ingredients in seconds.
+
+---
+
+## ✨ Features
+
+### 🤖 Core AI Features
+- **📸 Instant Food Recognition** - Point, shoot, and get detailed meal analysis in seconds
+- **🔍 Hidden Ingredient Detection** - Discovers non-visible ingredients like oils, spices, and marinades
+- **📊 Smart Nutrition Calculation** - Accurate macro and micronutrient breakdown
+- **✏️ Editable Results** - Modify ingredients and recalculate nutrition instantly
+
+### 📱 App Features
+- **🌙 Beautiful Dark UI** - Elegant interface optimized for all lighting conditions
+- **📈 Comprehensive Dashboard** - Track calories, water, exercise, and weight in one place
+- **📊 Weekly Insights** - Beautiful charts showing your progress and trends
+- **🔥 Streak Tracking** - Stay motivated with consecutive day tracking
+- **🎯 Personalized Goals** - Set and monitor customized nutrition targets
+- **🔐 Secure Authentication** - JWT-based auth with encrypted data storage
 
 ---
 
 ## 📱 Screenshots
 
 <div align="center">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/onboarding.png" width="200" alt="Onboarding">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/dashboard.png" width="200" alt="Dashboard">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/camera.png" width="200" alt="Camera">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/analysis.png" width="200" alt="Analysis">
+  <table>
+    <tr>
+      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/dashboard.png" width="250" alt="Dashboard"/></td>
+      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/analysis.png" width="250" alt="AI Analysis"/></td>
+      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/meal-detail.png" width="250" alt="Meal Detail"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Dashboard</b></td>
+      <td align="center"><b>AI Analysis</b></td>
+      <td align="center"><b>Meal Details</b></td>
+    </tr>
+    <tr>
+      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/profile.png" width="250" alt="Profile"/></td>
+      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/history.png" width="250" alt="History"/></td>
+      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/tracking.png" width="250" alt="Tracking"/></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Profile Setup</b></td>
+      <td align="center"><b>Meal History</b></td>
+      <td align="center"><b>Health Tracking</b></td>
+    </tr>
+  </table>
 </div>
-
-<div align="center">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/meal-detail.png" width="200" alt="Meal Detail">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/nutrition.png" width="200" alt="Nutrition">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/profile.png" width="200" alt="Profile">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/history.png" width="200" alt="History">
-</div>
-
----
-
-## 🌟 About NutriSnap
-
-**Your Personal AI Nutritionist in Your Pocket!** 🚀
-
-NutriSnap revolutionizes nutrition tracking through AI-powered food image analysis. Simply snap a photo of your meal, and our advanced Google Gemini AI will instantly identify ingredients, uncover hidden components like cooking oils and spices, and provide comprehensive nutritional information.
-
-### 🎯 Key Highlights
-
-- **🤖 AI Food Scanner** - Point, shoot, and boom! Instant nutrition facts
-- **🔍 Hidden Ingredient Detector** - Uncovers secret calories lurking in your meals  
-- **📊 Smart Nutrition Tracking** - Calories, protein, carbs & more calculated automatically
-- **🌙 Beautiful Dark Mode** - Easy on the eyes, stunning visuals
-- **📈 Weekly Insights** - Gorgeous charts show your progress
-- **⚡ Lightning Fast** - Results in seconds, not minutes
-
----
-
-## ✨ Main Features
-
-### 🔍 AI-Powered Food Analysis
-<img align="right" src="https://github.com/yourusername/nutrisnap/blob/main/assets/ai-analysis-demo.gif" width="250" alt="AI Analysis Demo">
-
-- **Multi-Dish Recognition**: Identifies multiple dishes in a single photo
-- **Ingredient Detection**: Lists all visible ingredients with quantities
-- **Hidden Ingredients**: AI detects cooking methods and hidden ingredients
-- **Nutrition Calculation**: Accurate macro and micronutrient breakdown
-- **Editable Results**: Modify ingredients and recalculate nutrition instantly
-
-### 📊 Comprehensive Dashboard
-- **Daily Overview**: Track calories, water, exercise at a glance
-- **Progress Visualization**: Beautiful charts showing weekly/monthly trends
-- **Streak Tracking**: Stay motivated with consecutive day tracking
-- **Goal Management**: Set and monitor personalized nutrition targets
-- **Real-time Updates**: Instant sync across all your data
-
-### 🏃‍♂️ Health Tracking Suite
-- **Water Intake**: Visual progress with quick-add buttons
-- **Exercise Logging**: Track duration, intensity, and calories burned
-- **Weight Management**: Monitor trends with interactive charts
-- **Meal History**: Searchable database of all your meals
-- **Custom Meal Types**: Breakfast, Lunch, Dinner, Snacks
-
-### 👤 User Profile & Personalization
-- **Profile Setup**: Age, gender, activity level configuration
-- **Calorie Goals**: Automatic calculation based on your profile
-- **Dietary Preferences**: Vegetarian, Keto, Gluten-free options
-- **Secure Authentication**: JWT-based session management
-- **Data Privacy**: Your data is encrypted and secure
 
 ---
 
@@ -89,190 +85,65 @@ NutriSnap revolutionizes nutrition tracking through AI-powered food image analys
 
 ### Prerequisites
 
-- **macOS** with Xcode 15 or later
-- **iOS Device/Simulator** running iOS 17+
-- **Python 3.9+** installed
-- **MongoDB Atlas** account (free tier)
+- **macOS** with Xcode 15+
+- **iOS 17+** Device/Simulator
+- **Python 3.9+**
+- **MongoDB Atlas** account (free)
 - **Google AI Studio** account (free)
 
-### 🎮 How to Run
-
-#### 1️⃣ Clone the Repository
+### 🎯 3-Step Setup
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/yourusername/nutrisnap.git
 cd nutrisnap
-```
 
-#### 2️⃣ Backend Setup
-
-```bash
-# Navigate to backend directory (if separate)
+# 2. Set up the backend
 cd backend
-
-# Create virtual environment
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
 pip install -r requirements.txt
+cp .env.sample .env
+# Edit .env with your API keys
 
-# Create .env file
-cp .env_sample .env
-
-# Edit .env with your credentials
-# GEMINI_API_KEY=your_key_here
-# MONGO_URI=your_mongodb_uri_here
-# JWT_SECRET_KEY=your_secret_key_here
-
-# Run the backend
+# 3. Run the backend
 python app.py
 ```
 
-#### 3️⃣ iOS App Setup
-
-```bash
-# Open in Xcode
-cd ../food-app-swift
-open food-app-swift.xcodeproj
-
-# In NetworkManager.swift, update the baseURL:
-# For local testing: http://localhost:5000
-# For production: https://your-backend-url.com
-
-# Select your target device and press Cmd+R to run
-```
+**That's it!** Open `NutriSnap.xcodeproj` in Xcode and run the app! 🎉
 
 ---
 
-## 🛠️ Technology Stack
-
-<div align="center">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/assets/tech-stack.png" alt="Tech Stack" width="80%">
-</div>
-
-### iOS Frontend
-- **SwiftUI** - Modern declarative UI framework
-- **Combine** - Reactive programming for state management
-- **Charts** - Native iOS charts for data visualization
-- **PhotosUI** - Camera and photo library integration
-- **URLSession** - Robust networking with error handling
-
-### Python Backend
-- **Flask** - Lightweight REST API framework
-- **Google Gemini AI** - State-of-the-art vision AI model
-- **MongoDB + PyMongo** - NoSQL database with connection pooling
-- **Gunicorn** - Production-grade WSGI server
-- **JWT + Bcrypt** - Secure authentication system
-- **Pillow** - Advanced image processing
-- **Flask-CORS** - Cross-origin resource sharing
-
----
-
-## 📸 How It Works
-
-<div align="center">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/assets/how-it-works.png" alt="How It Works" width="80%">
-</div>
-
-1. **📸 Take a Photo** - Snap your meal using camera or gallery
-2. **🤖 AI Analyzes** - Gemini AI identifies all ingredients
-3. **📊 Get Results** - View complete nutrition breakdown
-4. **💾 Save & Track** - Store in your personal food diary
-
----
-
-## 🔧 API Endpoints
-
-| Endpoint | Method | Description | Auth Required |
-|----------|--------|-------------|---------------|
-| `/health` | GET | Health check | ❌ |
-| `/register` | POST | Create new account | ❌ |
-| `/login` | POST | User authentication | ❌ |
-| `/analyze` | POST | Analyze food image | ✅ |
-| `/save-meal` | POST | Save analyzed meal | ✅ |
-| `/user-meals` | GET | Get meal history | ✅ |
-| `/recalculate-nutrition` | POST | Recalculate nutrition | ✅ |
-| `/dashboard-stats` | GET | Dashboard statistics | ✅ |
-| `/user-insights` | GET | Personalized insights | ✅ |
-
----
-
-## 🔐 Security & Privacy
-
-<img align="right" src="https://github.com/yourusername/nutrisnap/blob/main/assets/security-icon.png" width="150" alt="Security">
-
-- **🔒 JWT Authentication** - Secure token-based sessions
-- **🔑 Bcrypt Password Hashing** - Industry-standard encryption
-- **🛡️ HTTPS Enforcement** - All data transmitted securely
-- **📱 Session Management** - Auto-logout on app termination
-- **🗄️ MongoDB Security** - TLS/SSL encryption enforced
-- **🚫 No Data Selling** - Your data is never sold to third parties
-
----
-
-## 📱 App Store
-
-<div align="center">
-  <a href="#"><img src="https://github.com/yourusername/nutrisnap/blob/main/assets/app-store-badge.png" alt="Download on App Store" width="200"></a>
-</div>
-
-### App Store Description
-
-> **NutriSnap - AI Food Tracker**
-> 
-> Your Personal AI Nutritionist in Your Pocket! 🚀
-> 
-> Snap. Analyze. Transform your health! 🎯
-> 
-> NutriSnap uses cutting-edge AI to instantly reveal EVERYTHING about your food - even the hidden stuff! Our AI detective spots invisible ingredients like cooking oils, spices, and marinades that other apps miss. 🕵️‍♂️
-
-**Keywords**: ai, food, tracker, nutrition, calorie, scanner, camera, diet, macro, health, weight, water, meal, photo, analyze
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please follow these steps:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Code Style
-- **Swift**: Follow [Swift API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
-- **Python**: PEP 8 compliance
-- **Comments**: Clear and concise
-- **Testing**: Add tests for new features
-
----
-
-## 👥 Team
+## 🛠 Tech Stack
 
 <div align="center">
   <table>
     <tr>
-      <td align="center">
-        <img src="https://github.com/utsavdoshi.png" width="100px;" alt="Utsav Doshi"/><br />
-        <sub><b>Utsav Doshi</b></sub><br />
-        <a href="https://github.com/utsavdoshi">Lead Developer</a>
+      <td align="center" width="50%">
+        <h3>📱 iOS Frontend</h3>
+        <img src="https://img.shields.io/badge/SwiftUI-FA7343?style=for-the-badge&logo=swift&logoColor=white" alt="SwiftUI"/>
+        <img src="https://img.shields.io/badge/Combine-FA7343?style=for-the-badge&logo=swift&logoColor=white" alt="Combine"/>
+        <br><br>
+        <ul align="left">
+          <li><b>SwiftUI</b> - Modern declarative UI</li>
+          <li><b>Combine</b> - Reactive state management</li>
+          <li><b>Charts</b> - Native iOS charts</li>
+          <li><b>PhotosUI</b> - Camera integration</li>
+          <li><b>URLSession</b> - Networking with JWT</li>
+        </ul>
       </td>
-      <td align="center">
-        <img src="https://github.com/junyaochen.png" width="100px;" alt="Junyao Chen"/><br />
-        <sub><b>Junyao Chen</b></sub><br />
-        <a href="https://github.com/junyaochen">iOS Developer</a>
-      </td>
-      <td align="center">
-        <img src="https://github.com/zhengyuanzhou.png" width="100px;" alt="Zhengyuan Zhou"/><br />
-        <sub><b>Zhengyuan Zhou</b></sub><br />
-        <a href="https://github.com/zhengyuanzhou">Backend Developer</a>
-      </td>
-      <td align="center">
-        <img src="https://github.com/yifanzhang.png" width="100px;" alt="Yifan Zhang"/><br />
-        <sub><b>Yifan Zhang</b></sub><br />
-        <a href="https://github.com/yifanzhang">AI/ML Engineer</a>
+      <td align="center" width="50%">
+        <h3>⚙️ Python Backend</h3>
+        <img src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask"/>
+        <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB"/>
+        <br><br>
+        <ul align="left">
+          <li><b>Flask</b> - REST API framework</li>
+          <li><b>Google Gemini AI</b> - Vision AI model</li>
+          <li><b>MongoDB</b> - NoSQL database</li>
+          <li><b>JWT</b> - Secure authentication</li>
+          <li><b>Gunicorn</b> - Production server</li>
+        </ul>
       </td>
     </tr>
   </table>
@@ -280,18 +151,144 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 📞 Support & Contact
+## 📲 Installation
 
-<div align="center">
-  
-  **Need Help?** We're here for you!
-  
-  📧 **Email**: [support@nutrisnap.app](mailto:nutrisnap@gmail.com)  
-  🐛 **Issues**: [GitHub Issues](https://github.com/yourusername/nutrisnap/issues)  
-  📖 **Wiki**: [Documentation](https://github.com/yourusername/nutrisnap/wiki)  
-  💬 **Discord**: [Community Server](https://discord.gg/nutrisnap)
-  
-</div>
+### 🔧 Backend Setup
+
+1. **Create Python Environment**
+   ```bash
+   cd backend
+   python3 -m venv venv
+   source venv/bin/activate  # macOS/Linux
+   # OR
+   venv\Scripts\activate     # Windows
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Configure Environment**
+   ```bash
+   cp .env.sample .env
+   ```
+   
+   Edit `.env` with your credentials:
+   ```env
+   GEMINI_API_KEY=your_google_ai_api_key
+   MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/
+   MONGO_DB=nutrisnap
+   JWT_SECRET_KEY=your-secret-key-change-this
+   PORT=5000
+   ```
+
+4. **Get API Keys**
+   - **Google Gemini**: Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - **MongoDB**: Create free cluster at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+
+5. **Start Backend**
+   ```bash
+   python app.py
+   ```
+
+### 📱 iOS App Setup
+
+1. **Open in Xcode**
+   ```bash
+   cd ios
+   open NutriSnap.xcodeproj
+   ```
+
+2. **Configure Backend URL**
+   
+   Edit `NetworkManager.swift`:
+   ```swift
+   private let baseURL = "http://localhost:5000"  // For local dev
+   // OR
+   private let baseURL = "https://your-app.onrender.com"  // For production
+   ```
+
+3. **Run the App**
+   - Select target device/simulator
+   - Press `Cmd + R` or click Run
+   - For physical device: Enable Developer Mode
+
+---
+
+## 🌐 Deployment
+
+### Deploy to Render (Free Hosting)
+
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Ready for deployment"
+   git push origin main
+   ```
+
+2. **Create Render Web Service**
+   - Go to [Render Dashboard](https://dashboard.render.com)
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repo
+   - Configure:
+     - **Name**: `nutrisnap-backend`
+     - **Build Command**: `pip install -r requirements.txt`
+     - **Start Command**: `gunicorn app:app`
+
+3. **Add Environment Variables**
+   ```
+   GEMINI_API_KEY=your_key
+   MONGO_URI=your_mongodb_uri
+   MONGO_DB=nutrisnap
+   JWT_SECRET_KEY=your_secret
+   ENVIRONMENT=production
+   ```
+
+4. **Update iOS App**
+   ```swift
+   private let baseURL = "https://nutrisnap-backend.onrender.com"
+   ```
+
+---
+
+## 🎮 How to Use
+
+1. **📸 Capture** - Take a photo of your meal
+2. **🤖 Analyze** - AI identifies all ingredients instantly
+3. **📊 Review** - Check nutrition breakdown and hidden ingredients
+4. **💾 Save** - Add to your food diary with one tap
+5. **📈 Track** - Monitor your progress with beautiful charts
+
+---
+
+## 🔐 Security & Privacy
+
+- **🔒 JWT Authentication** - Secure token-based auth
+- **🛡️ Encrypted Storage** - All data encrypted at rest
+- **🚫 No Data Selling** - Your data is never shared
+- **📱 On-Device Processing** - Image compression before upload
+- **🗑️ Data Deletion** - Delete your account anytime
+
+---
+
+## 🤝 Contributing
+
+We love contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+```bash
+# Fork the repo
+# Create your feature branch
+git checkout -b feature/AmazingFeature
+
+# Commit your changes
+git commit -m 'Add some AmazingFeature'
+
+# Push to the branch
+git push origin feature/AmazingFeature
+
+# Open a Pull Request
+```
 
 ---
 
@@ -301,18 +298,58 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 👥 Team
+
 <div align="center">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/assets/nutrisnap-banner.png" alt="NutriSnap Banner" width="100%">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="https://github.com/utsavdoshi.png" width="100px;" alt="Utsav Doshi"/>
+        <br />
+        <sub><b>Utsav Doshi</b></sub>
+      </td>
+      <td align="center">
+        <img src="https://github.com/junyaochen.png" width="100px;" alt="Junyao Chen"/>
+        <br />
+        <sub><b>Junyao Chen</b></sub>
+      </td>
+      <td align="center">
+        <img src="https://github.com/yifanzhang.png" width="100px;" alt="Yifan Zhang"/>
+        <br />
+        <sub><b>Yifan Zhang</b></sub>
+      </td>
+      <td align="center">
+        <img src="https://github.com/zhengyuanzhou.png" width="100px;" alt="Zhengyuan Zhou"/>
+        <br />
+        <sub><b>Zhengyuan Zhou</b></sub>
+      </td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## 🌟 Acknowledgments
+
+- **Google Gemini AI** - Advanced vision model for food recognition
+- **MongoDB Atlas** - Reliable cloud database platform
+- **Render** - Simple and powerful hosting
+- **SwiftUI Community** - For inspiration and support
+
+---
+
+<div align="center">
+  <p>
+    <b>NutriSnap</b> - Making nutrition tracking effortless with AI 🚀
+  </p>
   
-  <h3>Made with ❤️ by the NutriSnap Team</h3>
+  <p>
+    If you find this helpful, please ⭐ this repository!
+  </p>
   
-  **NutriSnap** - Making nutrition tracking effortless with AI 🚀
-  
-  If you find this project helpful, please consider giving it a ⭐️
-  
-  <br>
-  
-  [![GitHub stars](https://img.shields.io/github/stars/yourusername/nutrisnap?style=social)](https://github.com/yourusername/nutrisnap/stargazers)
-  [![GitHub forks](https://img.shields.io/github/forks/yourusername/nutrisnap?style=social)](https://github.com/yourusername/nutrisnap/network/members)
-  [![Twitter Follow](https://img.shields.io/twitter/follow/nutrisnap?style=social)](https://twitter.com/nutrisnap)
+  <p>
+    <a href="https://apps.apple.com/app/nutrisnap">
+      <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on App Store" height="60">
+    </a>
+  </p>
 </div>
