@@ -1,4 +1,4 @@
-# 📸 NutriSnap - AI-Powered Nutrition Tracker
+# 📸 NutriCam - AI-Powered Nutrition Tracker
 
 <div align="center">
   <img src="https://github.com/yourusername/nutrisnap/blob/main/assets/nutrisnap-logo.png" alt="NutriSnap Logo" width="200" height="200">
@@ -27,7 +27,7 @@
 
 ## 🎯 Overview
 
-**NutriSnap** revolutionizes nutrition tracking through AI-powered food image analysis. Simply snap a photo of your meal, and our advanced Google Gemini AI will instantly identify ingredients, uncover hidden components like cooking oils and spices, and provide comprehensive nutritional information.
+**NutriCam** revolutionizes nutrition tracking through AI-powered food image analysis. Simply snap a photo of your meal, and our advanced Google Gemini AI will instantly identify ingredients, uncover hidden components like cooking oils and spices, and provide comprehensive nutritional information.
 
 ### ✨ Point. Shoot. Know EVERYTHING! 
 AI food scanner reveals complete nutrition + hidden ingredients in seconds.
@@ -300,32 +300,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <img src="https://github.com/utsavdoshi.png" width="100px;" alt="Utsav Doshi"/>
-        <br />
-        <sub><b>Utsav Doshi</b></sub>
-      </td>
-      <td align="center">
-        <img src="https://github.com/junyaochen.png" width="100px;" alt="Junyao Chen"/>
-        <br />
-        <sub><b>Junyao Chen</b></sub>
-      </td>
-      <td align="center">
-        <img src="https://github.com/yifanzhang.png" width="100px;" alt="Yifan Zhang"/>
-        <br />
-        <sub><b>Yifan Zhang</b></sub>
-      </td>
-      <td align="center">
-        <img src="https://github.com/zhengyuanzhou.png" width="100px;" alt="Zhengyuan Zhou"/>
-        <br />
-        <sub><b>Zhengyuan Zhou</b></sub>
-      </td>
-    </tr>
-  </table>
-</div>
+- Utsav Doshi  
+- Junyao Chen  
+- Yifan Zhang  
+- Zhengyuan Zhou  
+
 
 ---
 
@@ -336,12 +315,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Render** - Simple and powerful hosting
 - **SwiftUI Community** - For inspiration and support
 
+=======
 ## 📜 Privacy Policy Reference ##
 
 Reference link: https://www.termsfeed.com/live/d4b4e1ed-8150-4ccb-a430-340180b7bc9d
 
 ---
-
-
-
 
