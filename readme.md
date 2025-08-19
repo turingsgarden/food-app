@@ -1,7 +1,7 @@
 # 📸 NutriCam - AI-Powered Nutrition Tracker
 
 <div align="center">
-  <img src="https://github.com/yourusername/nutrisnap/blob/main/assets/nutrisnap-logo.png" alt="NutriSnap Logo" width="200" height="200">
+  <img src="food-app-swift/screenshots/AppStoreLogo.png" alt="NutriSnap Logo" width="200" height="200">
   
   <p align="center">
     <strong>Your Personal AI Nutritionist in Your Pocket!</strong>
@@ -57,28 +57,25 @@ AI food scanner reveals complete nutrition + hidden ingredients in seconds.
 <div align="center">
   <table>
     <tr>
-      <td><img src="food-app-swift/screenshots/1.png" width="250" alt="Dashboard"/></td>
-      <td><img src="food-app-swift/screenshots/2.png" width="250" alt="Login Experience"/></td>
-      <td><img src="food-app-swift/screenshots/3.png" width="250" alt="AI Analysis"/></td>
-    </tr>
-    <tr>
       <td align="center"><b>Dashboard</b></td>
       <td align="center"><b>Login Experience</b></td>
       <td align="center"><b>AI Analysis</b></td>
     </tr>
     <tr>
-      <td><img src="food-app-swift/screenshots/4.png" width="250" alt="Personalized Hub"/></td>
-      <td><img src="food-app-swift/screenshots/5.png" width="250" alt="Meal Tracker"/></td>
-      <td></td> <!-- empty cell for balance -->
+      <td><img src="food-app-swift/screenshots/1.png" width="250" alt="Dashboard"/></td>
+      <td><img src="food-app-swift/screenshots/2.png" width="250" alt="Login Experience"/></td>
+      <td><img src="food-app-swift/screenshots/3.png" width="250" alt="AI Analysis"/></td>
     </tr>
     <tr>
       <td align="center"><b>Personalized Hub</b></td>
       <td align="center"><b>Meal Tracker</b></td>
-      <td></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="food-app-swift/screenshots/4.png" width="250" alt="Personalized Hub"/></td>
+      <td align="center"><img src="food-app-swift/screenshots/5.png" width="250" alt="Meal Tracker"/></td>
     </tr>
   </table>
 </div>
-
 
 ---
 
