@@ -57,27 +57,28 @@ AI food scanner reveals complete nutrition + hidden ingredients in seconds.
 <div align="center">
   <table>
     <tr>
-      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/dashboard.png" width="250" alt="Dashboard"/></td>
-      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/analysis.png" width="250" alt="AI Analysis"/></td>
-      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/meal-detail.png" width="250" alt="Meal Detail"/></td>
+      <td><img src="food-app-swift/screenshots/1.png" width="250" alt="Dashboard"/></td>
+      <td><img src="food-app-swift/screenshots/2.png" width="250" alt="Login Experience"/></td>
+      <td><img src="food-app-swift/screenshots/3.png" width="250" alt="AI Analysis"/></td>
     </tr>
     <tr>
       <td align="center"><b>Dashboard</b></td>
+      <td align="center"><b>Login Experience</b></td>
       <td align="center"><b>AI Analysis</b></td>
-      <td align="center"><b>Meal Details</b></td>
     </tr>
     <tr>
-      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/profile.png" width="250" alt="Profile"/></td>
-      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/history.png" width="250" alt="History"/></td>
-      <td><img src="https://github.com/yourusername/nutrisnap/blob/main/screenshots/tracking.png" width="250" alt="Tracking"/></td>
+      <td><img src="food-app-swift/screenshots/4.png" width="250" alt="Personalized Hub"/></td>
+      <td><img src="food-app-swift/screenshots/5.png" width="250" alt="Meal Tracker"/></td>
+      <td></td> <!-- empty cell for balance -->
     </tr>
     <tr>
-      <td align="center"><b>Profile Setup</b></td>
-      <td align="center"><b>Meal History</b></td>
-      <td align="center"><b>Health Tracking</b></td>
+      <td align="center"><b>Personalized Hub</b></td>
+      <td align="center"><b>Meal Tracker</b></td>
+      <td></td>
     </tr>
   </table>
 </div>
+
 
 ---
 
