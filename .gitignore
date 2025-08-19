@@ -9,7 +9,6 @@ __pycache__/
 # Ignore local image uploads/temp files
 *.jpg
 *.jpeg
-*.png
 uploads/
 
 .env
