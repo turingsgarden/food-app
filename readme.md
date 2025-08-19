@@ -336,20 +336,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Render** - Simple and powerful hosting
 - **SwiftUI Community** - For inspiration and support
 
+## 📜 Privacy Policy Reference ##
+
+Reference link: https://www.termsfeed.com/live/d4b4e1ed-8150-4ccb-a430-340180b7bc9d
+
 ---
 
-<div align="center">
-  <p>
-    <b>NutriSnap</b> - Making nutrition tracking effortless with AI 🚀
-  </p>
-  
-  <p>
-    If you find this helpful, please ⭐ this repository!
-  </p>
-  
-  <p>
-    <a href="https://apps.apple.com/app/nutrisnap">
-      <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on App Store" height="60">
-    </a>
-  </p>
-</div>
+
+
+
