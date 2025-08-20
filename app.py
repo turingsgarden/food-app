@@ -15,12 +15,19 @@ import google.generativeai as genai
 import bcrypt
 import jwt
 from functools import wraps
+import random
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import time
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
+verification_store = {}
 
 # JWT Configuration
 app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
@@ -1063,6 +1070,80 @@ def get_user_insights():
     except Exception as e:
         print(f"❌ Error in get_user_insights: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/send_verification", methods=["POST"])
+def send_verification():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    # 生成6位数字验证码
+    code = str(random.randint(100000, 999999))
+    expires = int(time.time()) + 300  # 5分钟有效
+
+    # 存储验证码
+    verification_store[email] = {"code": code, "expires": expires}
+
+    # 发送邮件
+    try:
+        sender_email = os.getenv("SENDER_EMAIL")   # 在环境变量中配置
+        password = os.getenv("EMAIL_PASSWORD")  
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Your Verification Code"
+        message["From"] = sender_email
+        message["To"] = email
+
+        text = f"Your verification code is {code}. It will expire in 5 minutes."
+        html = f"""
+        <html>
+          <body>
+            <p>Your verification code is <b>{code}</b></p>
+            <p>This code will expire in 5 minutes.</p>
+          </body>
+        </html>
+        """
+
+        message.attach(MIMEText(text, "plain"))
+        message.attach(MIMEText(html, "html"))
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, email, message.as_string())
+
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        print("Error sending email:", e)
+        return jsonify({"error": "Failed to send email"}), 500
+
+
+# 验证验证码
+@app.route("/verify_code", methods=["POST"])
+def verify_code():
+    data = request.get_json()
+    email = data.get("email")
+    code = data.get("code")
+
+    if not email or not code:
+        return jsonify({"error": "Email and code are required"}), 400
+
+    record = verification_store.get(email)
+    if not record:
+        return jsonify({"error": "No code sent"}), 400
+
+    if int(time.time()) > record["expires"]:
+        return jsonify({"error": "Code expired"}), 400
+
+    if record["code"] != code:
+        return jsonify({"error": "Invalid code"}), 400
+
+    # 验证通过后，可以删除或保留
+    del verification_store[email]
+    return jsonify({"status": "verified"}), 200
+
 
 # Error handlers
 @app.errorhandler(404)
