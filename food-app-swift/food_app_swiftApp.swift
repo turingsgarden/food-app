@@ -6,11 +6,21 @@
 //
 
 import SwiftUI
+import GoogleSignIn
+import GoogleSignInSwift
+
 
 @main
 struct food_app_swiftApp: App {
     @StateObject private var session = SessionManager.shared
     @Environment(\.scenePhase) var scenePhase
+    
+    init() {
+            // ✅ 在 App 启动时配置 Google Sign-In
+            GIDSignIn.sharedInstance.configuration = GIDConfiguration(
+                clientID: "97893618983-ierm2fkrfsmjmf421timffggri4fka3l.apps.googleusercontent.com"
+            )
+        }
     
     var body: some Scene {
         WindowGroup {

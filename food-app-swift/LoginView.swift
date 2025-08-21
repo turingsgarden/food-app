@@ -297,6 +297,7 @@ struct LoginView: View {
 
                                 Button(action: {
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    handleGoogleLogin()
                                 }) {
                                     HStack {
                                         Image(systemName: "globe")
@@ -390,6 +391,40 @@ struct LoginView: View {
             }
         }
     }
+    
+    // MARK: - Login with Google
+    func handleGoogleLogin() {
+        guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else {
+            print("❌ No root view controller")
+            return
+        }
+
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
+            if let error = error {
+                print("❌ Google Sign-In failed: \(error.localizedDescription)")
+                return
+            }
+
+            guard let result = signInResult else {
+                print("❌ Google Sign-In: no result")
+                return
+            }
+
+            let user = result.user
+            let idToken = user.idToken?.tokenString ?? ""
+            let email = user.profile?.email ?? ""
+            let fullName = user.profile?.name ?? ""
+
+            print("✅ Google login success")
+            print("📧 Email: \(email)")
+            print("🧑 Name: \(fullName)")
+            print("🔑 idToken: \(idToken.prefix(20))...")
+
+            // TODO: 把 token 传给后端验证
+            sendGoogleTokenToBackend(idToken: idToken, email: email)
+        }
+    }
+
 
 
     // MARK: - Login API Call with JWT

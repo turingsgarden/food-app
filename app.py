@@ -25,6 +25,8 @@ import requests
 import jwt as pyjwt  # 注意避免和 flask-jwt 冲突
 from jwt import PyJWKClient
 import json
+from google.oauth2 import id_token
+from google.auth.transport import requests as grequests
 
 # Load environment variables
 load_dotenv()
@@ -1316,6 +1318,75 @@ def apple_login():
     except Exception as e:
         print("❌ Apple login error:", str(e))
         return jsonify({"error": "Apple login failed"}), 500
+
+@app.route("/google_login", methods=["POST"])
+@db_required
+def google_login():
+    try:
+        data = request.get_json()
+        google_token = data.get("idToken")
+
+        print("🔍 Incoming /google_login request:", data)
+        print("🔍 Google token present?", bool(google_token))
+
+        if not google_token:
+            return jsonify({"error": "Missing idToken"}), 400
+
+        try:
+            print("🔍 Verifying Google idToken...")
+            idinfo = id_token.verify_oauth2_token(
+                google_token,
+                grequests.Request(),
+                os.getenv("GOOGLE_CLIENT_ID")  # 确保你在 .env 配置了 GOOGLE_CLIENT_ID
+            )
+            print("✅ Google token verified successfully")
+            print("📝 Full payload:", idinfo)
+
+            google_sub = idinfo["sub"]
+            email = idinfo.get("email", f"{google_sub}@google.local")
+            print("👤 UserID (sub):", google_sub)
+            print("📧 Email:", email)
+
+        except Exception as e:
+            print("❌ Google token verification failed:", str(e))
+            return jsonify({"error": "Invalid Google identityToken"}), 401
+
+        # 查找或创建用户
+        print("🔍 Looking up user by email:", email)
+        user = users_collection.find_one({"email": email})
+
+        if not user:
+            print("🔍 No user found, creating new account")
+            user_doc = {
+                "name": data.get("name", idinfo.get("name", "Google User")),
+                "email": email,
+                "google_sub": google_sub,
+                "password": None,
+                "created_at": datetime.now().isoformat()
+            }
+            result = users_collection.insert_one(user_doc)
+            user_id = result.inserted_id
+            user_name = user_doc["name"]
+            print(f"✅ New user created with _id={user_id}, email={email}")
+        else:
+            user_id = user["_id"]
+            user_name = user.get("name", "Google User")
+            print(f"✅ Existing user found _id={user_id}, email={email}")
+
+        # 生成 JWT
+        token = generate_token(user_id)
+        print("✅ Generated JWT for user:", token[:30], "...")
+
+        return jsonify({
+            "user_id": str(user_id),
+            "name": user_name,
+            "token": token
+        }), 200
+
+    except Exception as e:
+        print("❌ Google login error:", str(e))
+        return jsonify({"error": "Google login failed"}), 500
+
 
 
 # Error handlers
