@@ -23,7 +23,7 @@ from email.mime.multipart import MIMEMultipart
 import time
 import requests
 import jwt as pyjwt  # 注意避免和 flask-jwt 冲突
-from jwt.algorithms import RSAAlgorithm
+from jwt import PyJWKClient
 
 # Load environment variables
 load_dotenv()
@@ -1205,33 +1205,35 @@ def get_apple_public_keys():
 def verify_apple_identity_token(identity_token):
     """Verify Apple identity token and return decoded payload"""
     print("🔍 Verifying Apple identity token...")
-    keys = get_apple_public_keys()
-    header = pyjwt.get_unverified_header(identity_token)
+
+    # Apple 提供的 JWKS endpoint
+    jwks_url = "https://appleid.apple.com/auth/keys"
+    jwks_client = PyJWKClient(jwks_url)
+
+    # 获取 token header（debug）
+    header = jwt.get_unverified_header(identity_token)
     print("🔍 Token header:", header)
 
-    key = next((k for k in keys if k["kid"] == header["kid"]), None)
-    if not key:
-        print("❌ Key not found for kid:", header.get("kid"))
-        raise Exception("Invalid identity token: key not found")
-
-    print("🔍 Matching Apple key found for kid:", header["kid"])
-    public_key = RSAAlgorithm.from_jwk(key)
-
     try:
-        payload = pyjwt.decode(
+        # 根据 token 找到对应的公钥
+        signing_key = jwks_client.get_signing_key_from_jwt(identity_token)
+        print("🔍 Matching Apple key found for kid:", header.get("kid"))
+
+        # 验证并解码 token
+        payload = jwt.decode(
             identity_token,
-            public_key,
+            signing_key.key,
             algorithms=["RS256"],
             audience=os.getenv("APPLE_CLIENT_ID"),
             issuer="https://appleid.apple.com"
         )
         print("✅ Token verified successfully. Payload:", payload)
+
     except Exception as e:
         print("❌ Token verification failed:", str(e))
         raise
+
     return payload
-
-
 @app.route("/apple_login", methods=["POST"])
 @db_required
 def apple_login():
