@@ -228,9 +228,40 @@ struct LoginView: View {
 
                             // Social Login
                             VStack(spacing: 12) {
-                                SignInWithAppleButton(.signIn, onRequest: { _ in }, onCompletion: { _ in })
-                                    .frame(height: 50)
-                                    .cornerRadius(12)
+                                // Apple 登录按钮
+                                SignInWithAppleButton(.signIn) { request in
+                                    request.requestedScopes = [.fullName, .email]
+                                } onCompletion: { result in
+                                    switch result {
+                                    case .success(let authResults):
+                                        if let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
+                                            let userId = credential.user                // Apple 的 sub
+                                            let email = credential.email ?? "\(userId)@apple.local"
+                                            let identityToken = credential.identityToken
+                                            let authCode = credential.authorizationCode
+
+                                            print("🍏 Apple login success")
+                                            print("userId: \(userId)")
+                                            print("email: \(email)")
+
+                                            if let tokenData = identityToken, let tokenStr = String(data: tokenData, encoding: .utf8) {
+                                                // 传给后端：tokenStr + email
+                                                attemptAppleLogin(email: email, token: tokenStr)
+                                            } else {
+                                                self.loginFailed = true
+                                                self.loginErrorMessage = "Failed to get Apple identity token"
+                                            }
+                                        }
+
+                                    case .failure(let error):
+                                        print("❌ Sign in with Apple failed: \(error.localizedDescription)")
+                                        self.loginFailed = true
+                                        self.loginErrorMessage = error.localizedDescription
+                                    }
+                                }
+                                .frame(height: 50)
+                                .cornerRadius(12)
+
 
                                 Button(action: {
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -303,6 +334,31 @@ struct LoginView: View {
                 (trimmed.count < 6 ? "Password must be at least 6 characters" : "")
         }
     }
+    
+    // MARK: -Apple Login
+    private func attemptAppleLogin(email: String, token: String) {
+        isLoading = true
+        loginFailed = false
+        
+        NetworkManager.shared.appleLogin(email: email, identityToken: token) { result in
+            self.isLoading = false
+            
+            switch result {
+            case .success(let (userId, name, jwtToken)):
+                print("✅ Apple login successful")
+                SessionManager.shared.login(id: userId, name: name, token: jwtToken)
+                withAnimation(.spring()) {
+                    self.navigateToDashboard = true
+                }
+                
+            case .failure(let error):
+                print("❌ Apple login failed: \(error)")
+                self.loginFailed = true
+                self.loginErrorMessage = "Apple login failed. Please try again."
+            }
+        }
+    }
+
 
     // MARK: - Login API Call with JWT
     private func attemptLogin() {

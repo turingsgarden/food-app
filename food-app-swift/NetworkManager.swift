@@ -747,4 +747,67 @@ class NetworkManager {
         // Clear any cached data
         URLCache.shared.removeAllCachedResponses()
     }
+    
+    // MARK: - Apple Sign in
+    func appleLogin(email: String, identityToken: String, completion: @escaping (Result<(userId: String, name: String, token: String), Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/apple_login") else {
+            completion(.failure(NSError(domain: "NetworkManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let payload = [
+            "email": email,
+            "identityToken": identityToken
+        ]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        } catch {
+            completion(.failure(error))
+            return
+        }
+        
+        session.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                
+                guard let data = data else {
+                    completion(.failure(NSError(domain: "NetworkManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                    return
+                }
+                
+                do {
+                    let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                    
+                    if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                        let errorMessage = json?["error"] as? String ?? "Apple login failed"
+                        completion(.failure(NSError(domain: "API", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: errorMessage])))
+                        return
+                    }
+                    
+                    guard let userId = json?["user_id"] as? String,
+                          let name = json?["name"] as? String,
+                          let token = json?["token"] as? String else {
+                        completion(.failure(NSError(domain: "NetworkManager", code: -3, userInfo: [NSLocalizedDescriptionKey: "Invalid response format"])))
+                        return
+                    }
+                    
+                    self.saveToken(token)
+                    completion(.success((userId, name, token)))
+                    
+                } catch {
+                    completion(.failure(error))
+                }
+            }
+        }.resume()
+    }
+
+    
 }
