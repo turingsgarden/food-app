@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A4E58BFB2E57848E002B97B6 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A4E58BFA2E57848E002B97B6 /* GoogleSignIn */; };
+		A4E58BFD2E57848E002B97B6 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = A4E58BFC2E57848E002B97B6 /* GoogleSignInSwift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		7CE1A2132E0222600095E675 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -29,9 +34,22 @@
 		7CE1A21C2E0222600095E675 /* food-app-swiftUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "food-app-swiftUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A4E58C022E578C98002B97B6 /* Exceptions for "food-app-swift" folder in "food-app-swift" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7CE1A2042E02225E0095E675 /* food-app-swift */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7CE1A2072E02225E0095E675 /* food-app-swift */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A4E58C022E578C98002B97B6 /* Exceptions for "food-app-swift" folder in "food-app-swift" target */,
+			);
 			path = "food-app-swift";
 			sourceTree = "<group>";
 		};
@@ -52,6 +70,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A4E58BFB2E57848E002B97B6 /* GoogleSignIn in Frameworks */,
+				A4E58BFD2E57848E002B97B6 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +132,8 @@
 			);
 			name = "food-app-swift";
 			packageProductDependencies = (
+				A4E58BFA2E57848E002B97B6 /* GoogleSignIn */,
+				A4E58BFC2E57848E002B97B6 /* GoogleSignInSwift */,
 			);
 			productName = "food-app-swift";
 			productReference = 7CE1A2052E02225E0095E675 /* food-app-swift.app */;
@@ -195,6 +217,9 @@
 			);
 			mainGroup = 7CE1A1FC2E02225E0095E675;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A4E58BF92E57848E002B97B6 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7CE1A2062E02225E0095E675 /* Products */;
 			projectDirPath = "";
@@ -401,7 +426,7 @@
 				DEVELOPMENT_TEAM = XJ5899F6G7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = "food-app-swift/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "NutriSnap needs camera access to take photos of your meals for nutrition analysis.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "NutriSnap needs photo library access to let you select meal photos for nutrition analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -433,7 +458,7 @@
 				DEVELOPMENT_TEAM = XJ5899F6G7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = "food-app-swift/Info.plist";
 				INFOPLIST_KEY_NSCameraUsageDescription = "NutriSnap needs camera access to take photos of your meals for nutrition analysis.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "NutriSnap needs photo library access to let you select meal photos for nutrition analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -566,6 +591,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A4E58BF92E57848E002B97B6 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A4E58BFA2E57848E002B97B6 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A4E58BF92E57848E002B97B6 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		A4E58BFC2E57848E002B97B6 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A4E58BF92E57848E002B97B6 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7CE1A1FD2E02225E0095E675 /* Project object */;
 }

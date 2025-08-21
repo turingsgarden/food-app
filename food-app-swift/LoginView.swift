@@ -1,4 +1,6 @@
 import SwiftUI
+import GoogleSignIn
+import GoogleSignInSwift
 import AuthenticationServices
 
 struct LoginView: View {
@@ -6,7 +8,7 @@ struct LoginView: View {
     @State private var password = ""
     @State private var isSecure = true
     @State private var rememberMe = false
-
+    
     @State private var emailError = ""
     @State private var passwordError = ""
     @State private var loginFailed = false
@@ -14,7 +16,7 @@ struct LoginView: View {
     @State private var navigateToDashboard = false
     @State private var isLoading = false
     @State private var showRegister = false
-
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -29,7 +31,7 @@ struct LoginView: View {
                     endPoint: .bottom
                 )
                 .ignoresSafeArea()
-
+                
                 ScrollView {
                     VStack(spacing: 32) {
                         // Logo and Header
@@ -56,7 +58,7 @@ struct LoginView: View {
                             }
                         }
                         .padding(.top, 60)
-
+                        
                         // Login Form
                         VStack(spacing: 20) {
                             // Email Field
@@ -95,7 +97,7 @@ struct LoginView: View {
                                         .transition(.opacity)
                                 }
                             }
-
+                            
                             // Password Field
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
@@ -141,7 +143,7 @@ struct LoginView: View {
                                         .transition(.opacity)
                                 }
                             }
-
+                            
                             // Remember Me & Forgot Password
                             HStack {
                                 Toggle(isOn: $rememberMe) {
@@ -159,7 +161,7 @@ struct LoginView: View {
                                 .font(.caption)
                                 .foregroundColor(.orange)
                             }
-
+                            
                             // Login Button
                             Button(action: {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
@@ -195,7 +197,7 @@ struct LoginView: View {
                                 .shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
                             .disabled(isLoading)
-
+                            
                             if loginFailed {
                                 HStack {
                                     Image(systemName: "exclamationmark.circle.fill")
@@ -208,7 +210,7 @@ struct LoginView: View {
                                 .background(Color.red.opacity(0.1))
                                 .cornerRadius(8)
                             }
-
+                            
                             // Divider
                             HStack {
                                 Rectangle()
@@ -225,7 +227,7 @@ struct LoginView: View {
                                     .frame(height: 1)
                             }
                             .padding(.vertical, 8)
-
+                            
                             // Social Login
                             VStack(spacing: 12) {
                                 // Apple 登录按钮
@@ -235,7 +237,7 @@ struct LoginView: View {
                                     print("📩 Requested scopes: fullName & email")
                                 } onCompletion: { result in
                                     print("📩 onCompletion triggered with result: \(result)")
-
+                                    
                                     switch result {
                                     case .success(let authResults):
                                         print("✅ Authorization success, checking credential type...")
@@ -292,9 +294,9 @@ struct LoginView: View {
                                 .onTapGesture {
                                     print("🖱 Apple button tapped (raw tap)")
                                 }
-
-
-
+                                
+                                
+                                
                                 Button(action: {
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     handleGoogleLogin()
@@ -316,8 +318,9 @@ struct LoginView: View {
                                             )
                                     )
                                 }
+                                .padding()
                             }
-
+                            
                             // Register Link
                             HStack(spacing: 4) {
                                 Text("New to the app?")
@@ -350,21 +353,21 @@ struct LoginView: View {
             }
         }
     }
-
+    
     // MARK: - Validation
     private func validateEmail() {
         let trimmed = email.trimmingCharacters(in: .whitespaces)
         withAnimation(.easeInOut(duration: 0.2)) {
             emailError = trimmed.isEmpty ? "Email is required" :
-                (!trimmed.contains("@") || !trimmed.contains(".")) ? "Enter a valid email" : ""
+            (!trimmed.contains("@") || !trimmed.contains(".")) ? "Enter a valid email" : ""
         }
     }
-
+    
     private func validatePassword() {
         let trimmed = password.trimmingCharacters(in: .whitespaces)
         withAnimation(.easeInOut(duration: 0.2)) {
             passwordError = trimmed.isEmpty ? "Password is required" :
-                (trimmed.count < 6 ? "Password must be at least 6 characters" : "")
+            (trimmed.count < 6 ? "Password must be at least 6 characters" : "")
         }
     }
     
@@ -393,40 +396,86 @@ struct LoginView: View {
     }
     
     // MARK: - Login with Google
-    func handleGoogleLogin() {
-        guard let rootViewController = UIApplication.shared.windows.first?.rootViewController else {
+    private func handleGoogleLogin() {
+        guard let rootVC = UIApplication.shared.windows.first?.rootViewController else {
             print("❌ No root view controller")
             return
         }
-
-        GIDSignIn.sharedInstance.signIn(withPresenting: rootViewController) { signInResult, error in
+        
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
             if let error = error {
-                print("❌ Google Sign-In failed: \(error.localizedDescription)")
+                print("❌ Google Sign-In failed:", error.localizedDescription)
                 return
             }
-
-            guard let result = signInResult else {
-                print("❌ Google Sign-In: no result")
+            
+            guard let user = result?.user,
+                  let idToken = user.idToken?.tokenString else {
+                print("❌ Google Sign-In: no user or idToken")
                 return
             }
-
-            let user = result.user
-            let idToken = user.idToken?.tokenString ?? ""
+            
             let email = user.profile?.email ?? ""
             let fullName = user.profile?.name ?? ""
-
+            
             print("✅ Google login success")
-            print("📧 Email: \(email)")
-            print("🧑 Name: \(fullName)")
-            print("🔑 idToken: \(idToken.prefix(20))...")
-
-            // TODO: 把 token 传给后端验证
+            print("📧 Email:", email)
+            print("🧑 Name:", fullName)
+            print("🔑 idToken:", idToken.prefix(20), "...")
+            
+            // 把 token 传给后端验证
             sendGoogleTokenToBackend(idToken: idToken, email: email)
         }
     }
+    
+    /// 把 Google ID Token 发送到后端
+    private func sendGoogleTokenToBackend(idToken: String, email: String) {
+        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/google_login") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = ["idToken": idToken, "email": email]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("❌ Network error:", error.localizedDescription)
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("🌐 Backend response code:", httpResponse.statusCode)
+            }
+            
+            if let data = data {
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                        print("📦 Backend response:", json)
+                        
+                        if let userId = json["user_id"] as? String,
+                           let name = json["name"] as? String,
+                           let token = json["token"] as? String {
+                            print("✅ Google login successful - Saving session")
+                            DispatchQueue.main.async {
+                                SessionManager.shared.login(id: userId, name: name, token: token)
+                                withAnimation(.spring()) {
+                                    self.navigateToDashboard = true
+                                }
+                            }
+                        } else {
+                            print("❌ Missing fields in backend response")
+                        }
+                    }
+                } catch {
+                    print("❌ JSON parse error:", error.localizedDescription)
+                }
+            }
+        }.resume()
+    }
 
-
-
+    
+    
     // MARK: - Login API Call with JWT
     private func attemptLogin() {
         isLoading = true
@@ -441,7 +490,7 @@ struct LoginView: View {
                 
                 // Save user session with JWT token
                 SessionManager.shared.login(id: userId, name: name, token: token)
-
+                
                 // Navigate to dashboard
                 withAnimation(.spring()) {
                     self.navigateToDashboard = true
