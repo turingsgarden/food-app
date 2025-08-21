@@ -230,37 +230,69 @@ struct LoginView: View {
                             VStack(spacing: 12) {
                                 // Apple 登录按钮
                                 SignInWithAppleButton(.signIn) { request in
+                                    print("📩 Apple SignIn request started")
                                     request.requestedScopes = [.fullName, .email]
+                                    print("📩 Requested scopes: fullName & email")
                                 } onCompletion: { result in
+                                    print("📩 onCompletion triggered with result: \(result)")
+
                                     switch result {
                                     case .success(let authResults):
+                                        print("✅ Authorization success, checking credential type...")
+                                        
                                         if let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
-                                            let userId = credential.user                // Apple 的 sub
+                                            print("🔍 Credential received: \(credential)")
+                                            
+                                            let userId = credential.user                // Apple 的 sub（稳定ID）
                                             let email = credential.email ?? "\(userId)@apple.local"
                                             let identityToken = credential.identityToken
                                             let authCode = credential.authorizationCode
-
+                                            
                                             print("🍏 Apple login success")
-                                            print("userId: \(userId)")
-                                            print("email: \(email)")
-
-                                            if let tokenData = identityToken, let tokenStr = String(data: tokenData, encoding: .utf8) {
-                                                // 传给后端：tokenStr + email
-                                                attemptAppleLogin(email: email, token: tokenStr)
+                                            print("🔑 userId (Apple sub): \(userId)")
+                                            print("📧 email: \(email)")
+                                            
+                                            if let tokenData = identityToken {
+                                                print("📦 identityToken (raw data length): \(tokenData.count) bytes")
+                                                if let tokenStr = String(data: tokenData, encoding: .utf8) {
+                                                    print("📜 identityToken (string): \(tokenStr.prefix(80))...") // 只打印前80字符避免太长
+                                                    // 传给后端
+                                                    attemptAppleLogin(email: email, token: tokenStr)
+                                                } else {
+                                                    print("❌ Failed to convert identityToken to String")
+                                                    self.loginFailed = true
+                                                    self.loginErrorMessage = "Failed to parse Apple identity token"
+                                                }
                                             } else {
+                                                print("❌ No identityToken received")
                                                 self.loginFailed = true
                                                 self.loginErrorMessage = "Failed to get Apple identity token"
                                             }
+                                            
+                                            if let code = authCode, let codeStr = String(data: code, encoding: .utf8) {
+                                                print("📜 authorizationCode: \(codeStr)")
+                                            } else {
+                                                print("⚠️ No authorizationCode received")
+                                            }
+                                        } else {
+                                            print("❌ Credential is not ASAuthorizationAppleIDCredential")
+                                            self.loginFailed = true
+                                            self.loginErrorMessage = "Unexpected credential type"
                                         }
-
+                                        
                                     case .failure(let error):
                                         print("❌ Sign in with Apple failed: \(error.localizedDescription)")
                                         self.loginFailed = true
                                         self.loginErrorMessage = error.localizedDescription
                                     }
                                 }
+                                .signInWithAppleButtonStyle(.white)
                                 .frame(height: 50)
                                 .cornerRadius(12)
+                                .onTapGesture {
+                                    print("🖱 Apple button tapped (raw tap)")
+                                }
+
 
 
                                 Button(action: {

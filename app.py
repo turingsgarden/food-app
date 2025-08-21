@@ -24,6 +24,7 @@ import time
 import requests
 import jwt as pyjwt  # 注意避免和 flask-jwt 冲突
 from jwt import PyJWKClient
+import json
 
 # Load environment variables
 load_dotenv()
@@ -1234,6 +1235,21 @@ def verify_apple_identity_token(identity_token):
         raise
 
     return payload
+
+
+def print_identity_token_payload(identity_token: str):
+    """Decode Apple identity token payload without verifying signature"""
+    try:
+        # 只解码，不验证
+        payload = jwt.decode(identity_token, options={"verify_signature": False})
+        print("🔍 Decoded Apple identity token payload:")
+        print(json.dumps(payload, indent=4))
+        return payload
+    except Exception as e:
+        print("❌ Failed to decode identity token:", str(e))
+        return None
+    
+
 @app.route("/apple_login", methods=["POST"])
 @db_required
 def apple_login():
@@ -1245,6 +1261,8 @@ def apple_login():
         print("🔍 Incoming /apple_login request:", data)
         print("🔍 Identity token present?", bool(identity_token))
         print("🔍 Email provided:", email)
+
+        print_identity_token_payload(identity_token)
 
         if not identity_token:
             return jsonify({"error": "Missing identityToken"}), 400
