@@ -1102,15 +1102,48 @@ def send_verification():
         message["From"] = sender_email
         message["To"] = email
 
-        text = f"Your verification code is {code}. It will expire in 5 minutes."
-        html = f"""
-        <html>
-          <body>
-            <p>Your verification code is <b>{code}</b></p>
-            <p>This code will expire in 5 minutes.</p>
-          </body>
-        </html>
-        """
+        text = f"""\
+Welcome to NutriCam - AI Food Tracker! 🎉
+
+Your verification code is: {code}
+
+This code will expire in 5 minutes. Please enter it soon to complete your registration.
+
+We’re excited to have you join NutriCam — helping you track your meals, understand nutrition, 
+and enjoy a smarter journey towards healthy eating.
+
+— The NutriCam Team
+"""
+
+        html = f"""\
+<html>
+  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #2c7be5; text-align: center;">Welcome to <span style="color:#28a745;">NutriCam</span> 🎉</h2>
+      <p style="font-size: 16px; color: #333;">
+        Thank you for signing up for <b>NutriCam - AI Food Tracker</b>!  
+      </p>
+      <p style="font-size: 16px; color: #333;">Your verification code is:</p>
+      <div style="text-align: center; margin: 20px 0;">
+        <span style="font-size: 28px; font-weight: bold; color: #28a745; letter-spacing: 3px;">{code}</span>
+      </div>
+      <p style="font-size: 14px; color: #666; text-align: center;">
+        (This code will expire in <b>5 minutes</b>.)
+      </p>
+      <hr style="margin: 30px 0;">
+      <p style="font-size: 16px; color: #333;">
+        We’re excited to have you join the NutriCam community.  
+        Get ready to track your meals, analyze nutrition, and enjoy a smarter journey towards healthy eating.  
+      </p>
+      <p style="font-size: 16px; color: #333;">
+        See you inside the app! 🍎  
+        <br><br>
+        — The <b>NutriCam Team</b>
+      </p>
+    </div>
+  </body>
+</html>
+"""
 
         message.attach(MIMEText(text, "plain"))
         message.attach(MIMEText(html, "html"))
