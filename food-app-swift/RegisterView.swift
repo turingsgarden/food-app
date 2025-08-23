@@ -21,6 +21,16 @@ struct RegisterView: View {
     @State private var navigateToDashboard = false
     @State private var isLoading = false
     @State private var agreedToTerms = false
+    
+    
+    //email verification
+    @State private var isEmailVerified = false
+    @State private var verificationCode = ""
+    @State private var verificationError = ""
+    @State private var isSendingCode = false
+    @State private var isVerifyingCode = false
+    @State private var codeSent = false
+
 
     var body: some View {
         NavigationStack {
@@ -77,7 +87,7 @@ struct RegisterView: View {
                                 error: $nameError,
                                 validate: validateName
                             )
-
+                            
                             // Email Field
                             FormField(
                                 title: "Email",
@@ -88,6 +98,79 @@ struct RegisterView: View {
                                 validate: validateEmail,
                                 keyboardType: .emailAddress
                             )
+
+                            HStack {
+                                Button(action: {
+                                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                    validateEmail()
+                                    if emailError.isEmpty {
+                                        sendVerificationCode()
+                                    }
+                                }) {
+                                    if isSendingCode {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            .frame(height: 20)
+                                    } else {
+                                        Text(codeSent ? "Resend Code" : "Send Code")
+                                            .font(.caption)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 6)
+                                            .background(Color.orange.opacity(0.8))
+                                            .cornerRadius(8)
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                                .disabled(isSendingCode || emailError != "")
+                                
+                                Spacer()
+                            }
+
+                            // 验证码输入框
+                            if codeSent {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack {
+                                        TextField("Enter verification code", text: $verificationCode)
+                                            .keyboardType(.numberPad)
+                                            .foregroundColor(.white)
+                                            .padding()
+                                            .background(Color.white.opacity(0.08))
+                                            .cornerRadius(8)
+                                        
+                                        Button(action: {
+                                            verifyCode()
+                                        }) {
+                                            if isVerifyingCode {
+                                                ProgressView()
+                                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                    .frame(height: 20)
+                                            } else {
+                                                Text("Verify")
+                                                    .font(.caption)
+                                                    .padding(.horizontal, 12)
+                                                    .padding(.vertical, 6)
+                                                    .background(Color.green.opacity(0.8))
+                                                    .cornerRadius(8)
+                                                    .foregroundColor(.white)
+                                            }
+                                        }
+                                        .disabled(isVerifyingCode || verificationCode.isEmpty)
+                                    }
+                                    
+                                    if !verificationError.isEmpty {
+                                        Text(verificationError)
+                                            .font(.caption)
+                                            .foregroundColor(.red)
+                                    }
+                                    
+                                    if isEmailVerified {
+                                        Text("✅ Email verified")
+                                            .font(.caption)
+                                            .foregroundColor(.green)
+                                    }
+                                }
+                            }
+
 
                             // Password Field
                             SecureFormField(
@@ -285,6 +368,60 @@ struct RegisterView: View {
             confirmPasswordError = confirmPassword != password ? "Passwords do not match" : ""
         }
     }
+    
+    // 发送验证码
+    func sendVerificationCode() {
+        isSendingCode = true
+        verificationError = ""
+        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/send_verification") else { return }
+        
+        let payload = ["email": email]
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                isSendingCode = false
+                if error != nil {
+                    verificationError = "Failed to send code. Please try again."
+                    return
+                }
+                codeSent = true
+            }
+        }.resume()
+    }
+
+    // 验证验证码
+    func verifyCode() {
+        isVerifyingCode = true
+        verificationError = ""
+        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/verify_code") else { return }
+        
+        let payload = ["email": email, "code": verificationCode]
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                isVerifyingCode = false
+                if error != nil {
+                    verificationError = "Verification failed. Try again."
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                    isEmailVerified = true
+                } else {
+                    verificationError = "Invalid code. Please try again."
+                }
+            }
+        }.resume()
+    }
+
 
     func validateAll() {
         validateName()
@@ -305,6 +442,13 @@ struct RegisterView: View {
     // MARK: - API Call
     
     func attemptRegister() {
+        if !isEmailVerified {
+                registrationError = "Please verify your email before registering."
+                registrationFailed = true
+                return
+            }
+        
+        
         isLoading = true
         registrationFailed = false
         

@@ -15,12 +15,28 @@ import google.generativeai as genai
 import bcrypt
 import jwt
 from functools import wraps
+import random
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+import time
+import requests
+import jwt as pyjwt  # 注意避免和 flask-jwt 冲突
+from jwt import PyJWKClient
+import json
+from google.oauth2 import id_token
+from google.auth.transport import requests as grequests
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
+verification_store = {}
+
+APPLE_KEYS = None
+APPLE_KEYS_LAST_FETCH = 0
 
 # JWT Configuration
 app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
@@ -1063,6 +1079,315 @@ def get_user_insights():
     except Exception as e:
         print(f"❌ Error in get_user_insights: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route("/send_verification", methods=["POST"])
+def send_verification():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    # 生成6位数字验证码
+    code = str(random.randint(100000, 999999))
+    expires = int(time.time()) + 300  # 5分钟有效
+
+    # 存储验证码
+    verification_store[email] = {"code": code, "expires": expires}
+
+    # 发送邮件
+    try:
+        sender_email = os.getenv("SENDER_EMAIL")   # 在环境变量中配置
+        password = os.getenv("EMAIL_PASSWORD")  
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Your Verification Code"
+        message["From"] = sender_email
+        message["To"] = email
+
+        text = f"""\
+Welcome to NutriCam - AI Food Tracker! 🎉
+
+Your verification code is: {code}
+
+This code will expire in 5 minutes. Please enter it soon to complete your registration.
+
+We’re excited to have you join NutriCam — helping you track your meals, understand nutrition, 
+and enjoy a smarter journey towards healthy eating.
+
+— The NutriCam Team
+"""
+
+        html = f"""\
+<html>
+  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #2c7be5; text-align: center;">Welcome to <span style="color:#28a745;">NutriCam</span> 🎉</h2>
+      <p style="font-size: 16px; color: #333;">
+        Thank you for signing up for <b>NutriCam - AI Food Tracker</b>!  
+      </p>
+      <p style="font-size: 16px; color: #333;">Your verification code is:</p>
+      <div style="text-align: center; margin: 20px 0;">
+        <span style="font-size: 28px; font-weight: bold; color: #28a745; letter-spacing: 3px;">{code}</span>
+      </div>
+      <p style="font-size: 14px; color: #666; text-align: center;">
+        (This code will expire in <b>5 minutes</b>.)
+      </p>
+      <hr style="margin: 30px 0;">
+      <p style="font-size: 16px; color: #333;">
+        We’re excited to have you join the NutriCam community.  
+        Get ready to track your meals, analyze nutrition, and enjoy a smarter journey towards healthy eating.  
+      </p>
+      <p style="font-size: 16px; color: #333;">
+        See you inside the app! 🍎  
+        <br><br>
+        — The <b>NutriCam Team</b>
+      </p>
+    </div>
+  </body>
+</html>
+"""
+
+        message.attach(MIMEText(text, "plain"))
+        message.attach(MIMEText(html, "html"))
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, email, message.as_string())
+
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        print("Error sending email:", e)
+        return jsonify({"error": "Failed to send email"}), 500
+
+
+# 验证验证码
+@app.route("/verify_code", methods=["POST"])
+def verify_code():
+    data = request.get_json()
+    email = data.get("email")
+    code = data.get("code")
+
+    if not email or not code:
+        return jsonify({"error": "Email and code are required"}), 400
+
+    record = verification_store.get(email)
+    if not record:
+        return jsonify({"error": "No code sent"}), 400
+
+    if int(time.time()) > record["expires"]:
+        return jsonify({"error": "Code expired"}), 400
+
+    if record["code"] != code:
+        return jsonify({"error": "Invalid code"}), 400
+
+    # 验证通过后，可以删除或保留
+    del verification_store[email]
+    return jsonify({"status": "verified"}), 200
+
+
+def get_apple_public_keys():
+    """Fetch and cache Apple's public keys"""
+    global APPLE_KEYS, APPLE_KEYS_LAST_FETCH
+    now = time.time()
+    if APPLE_KEYS and now - APPLE_KEYS_LAST_FETCH < 60 * 60:  # 1小时缓存
+        print("🔍 Using cached Apple public keys")
+        return APPLE_KEYS
+    print("🔍 Fetching Apple public keys from Apple...")
+    resp = requests.get("https://appleid.apple.com/auth/keys")
+    if resp.status_code == 200:
+        APPLE_KEYS = resp.json()["keys"]
+        APPLE_KEYS_LAST_FETCH = now
+        print("✅ Apple public keys fetched successfully")
+        return APPLE_KEYS
+    print("❌ Failed to fetch Apple public keys:", resp.text)
+    raise Exception("Failed to fetch Apple public keys")
+
+
+def verify_apple_identity_token(identity_token):
+    """Verify Apple identity token and return decoded payload"""
+    print("🔍 Verifying Apple identity token...")
+
+    # Apple 提供的 JWKS endpoint
+    jwks_url = "https://appleid.apple.com/auth/keys"
+    jwks_client = PyJWKClient(jwks_url)
+
+    # 获取 token header（debug）
+    header = jwt.get_unverified_header(identity_token)
+    print("🔍 Token header:", header)
+
+    try:
+        # 根据 token 找到对应的公钥
+        signing_key = jwks_client.get_signing_key_from_jwt(identity_token)
+        print("🔍 Matching Apple key found for kid:", header.get("kid"))
+
+        # 验证并解码 token
+        payload = jwt.decode(
+            identity_token,
+            signing_key.key,
+            algorithms=["RS256"],
+            audience=os.getenv("APPLE_CLIENT_ID"),
+            issuer="https://appleid.apple.com"
+        )
+        print("✅ Token verified successfully. Payload:", payload)
+
+    except Exception as e:
+        print("❌ Token verification failed:", str(e))
+        raise
+
+    return payload
+
+
+def print_identity_token_payload(identity_token: str):
+    """Decode Apple identity token payload without verifying signature"""
+    try:
+        # 只解码，不验证
+        payload = jwt.decode(identity_token, options={"verify_signature": False})
+        print("🔍 Decoded Apple identity token payload:")
+        print(json.dumps(payload, indent=4))
+        return payload
+    except Exception as e:
+        print("❌ Failed to decode identity token:", str(e))
+        return None
+    
+
+@app.route("/apple_login", methods=["POST"])
+@db_required
+def apple_login():
+    try:
+        data = request.get_json()
+        identity_token = data.get("identityToken")
+        email = data.get("email")
+
+        print("🔍 Incoming /apple_login request:", data)
+        print("🔍 Identity token present?", bool(identity_token))
+        print("🔍 Email provided:", email)
+
+        print_identity_token_payload(identity_token)
+
+        if not identity_token:
+            return jsonify({"error": "Missing identityToken"}), 400
+
+        # 验证 identityToken
+        try:
+            payload = verify_apple_identity_token(identity_token)
+            apple_sub = payload["sub"]
+            print("✅ Apple token verified. sub =", apple_sub)
+        except Exception as e:
+            print("❌ Apple token verification failed:", str(e))
+            return jsonify({"error": "Invalid Apple identityToken"}), 401
+
+        # 如果 email 为空，生成 fallback
+        if not email:
+            email = f"{apple_sub}@apple.local"
+            print("🔍 No email provided, using fallback:", email)
+
+        # 查找或创建用户
+        print("🔍 Looking up user by email:", email)
+        user = users_collection.find_one({"email": email})
+
+        if not user:
+            print("🔍 No user found, creating new account")
+            user_doc = {
+                "name": data.get("name", "Apple User"),
+                "email": email,
+                "apple_sub": apple_sub,
+                "password": None,
+                "created_at": datetime.now().isoformat()
+            }
+            result = users_collection.insert_one(user_doc)
+            user_id = result.inserted_id
+            user_name = user_doc["name"]
+            print(f"✅ New user created with _id={user_id}, email={email}")
+        else:
+            user_id = user["_id"]
+            user_name = user.get("name", "Apple User")
+            print(f"✅ Existing user found _id={user_id}, email={email}")
+
+        # 生成 JWT
+        token = generate_token(user_id)
+        print("✅ Generated JWT for user:", token[:30], "...")
+
+        return jsonify({
+            "user_id": str(user_id),
+            "name": user_name,
+            "token": token
+        }), 200
+
+    except Exception as e:
+        print("❌ Apple login error:", str(e))
+        return jsonify({"error": "Apple login failed"}), 500
+
+@app.route("/google_login", methods=["POST"])
+@db_required
+def google_login():
+    try:
+        data = request.get_json()
+        google_token = data.get("idToken")
+
+        print("🔍 Incoming /google_login request:", data)
+        print("🔍 Google token present?", bool(google_token))
+
+        if not google_token:
+            return jsonify({"error": "Missing idToken"}), 400
+
+        try:
+            print("🔍 Verifying Google idToken...")
+            idinfo = id_token.verify_oauth2_token(
+                google_token,
+                grequests.Request(),
+                os.getenv("GOOGLE_CLIENT_ID")  # 确保你在 .env 配置了 GOOGLE_CLIENT_ID
+            )
+            print("✅ Google token verified successfully")
+            print("📝 Full payload:", idinfo)
+
+            google_sub = idinfo["sub"]
+            email = idinfo.get("email", f"{google_sub}@google.local")
+            print("👤 UserID (sub):", google_sub)
+            print("📧 Email:", email)
+
+        except Exception as e:
+            print("❌ Google token verification failed:", str(e))
+            return jsonify({"error": "Invalid Google identityToken"}), 401
+
+        # 查找或创建用户
+        print("🔍 Looking up user by email:", email)
+        user = users_collection.find_one({"email": email})
+
+        if not user:
+            print("🔍 No user found, creating new account")
+            user_doc = {
+                "name": data.get("name", idinfo.get("name", "Google User")),
+                "email": email,
+                "google_sub": google_sub,
+                "password": None,
+                "created_at": datetime.now().isoformat()
+            }
+            result = users_collection.insert_one(user_doc)
+            user_id = result.inserted_id
+            user_name = user_doc["name"]
+            print(f"✅ New user created with _id={user_id}, email={email}")
+        else:
+            user_id = user["_id"]
+            user_name = user.get("name", "Google User")
+            print(f"✅ Existing user found _id={user_id}, email={email}")
+
+        # 生成 JWT
+        token = generate_token(user_id)
+        print("✅ Generated JWT for user:", token[:30], "...")
+
+        return jsonify({
+            "user_id": str(user_id),
+            "name": user_name,
+            "token": token
+        }), 200
+
+    except Exception as e:
+        print("❌ Google login error:", str(e))
+        return jsonify({"error": "Google login failed"}), 500
+
+
 
 # Error handlers
 @app.errorhandler(404)
