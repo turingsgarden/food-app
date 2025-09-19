@@ -115,4 +115,16 @@ class SessionManager: ObservableObject {
         print("✅ Session validated successfully")
         return true
     }
+    
+    func tryAutoLogin() {
+        let rememberMe = UserDefaults.standard.bool(forKey: "rememberMe")
+        
+        if rememberMe,
+           let token = KeychainHelper.shared.read(service: "auth", account: "jwt"),
+           let userId = UserDefaults.standard.string(forKey: "userId"),
+           let name = UserDefaults.standard.string(forKey: "userName") {
+            SessionManager.shared.login(id: userId, name: name, token: token)
+        }
+    }
+
 }
