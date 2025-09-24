@@ -34,6 +34,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 verification_store = {}
+reset_store = {}
 
 APPLE_KEYS = None
 APPLE_KEYS_LAST_FETCH = 0
@@ -1386,6 +1387,134 @@ def google_login():
     except Exception as e:
         print("❌ Google login error:", str(e))
         return jsonify({"error": "Google login failed"}), 500
+
+
+@app.route("/forgot_password", methods=["POST"])
+def forgot_password():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    # Generate reset code (6-digit)
+    code = str(random.randint(100000, 999999))
+    expires = int(time.time()) + 600  # valid for 10 minutes
+
+    # Store reset code (you can use a dedicated dict or DB table)
+    reset_store[email] = {"code": code, "expires": expires}
+
+    # Send reset email
+    try:
+        sender_email = os.getenv("SENDER_EMAIL")
+        password = os.getenv("EMAIL_PASSWORD")
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "NutriCam Password Reset Request"
+        message["From"] = sender_email
+        message["To"] = email
+
+        text = f"""\
+You requested to reset your NutriCam password.
+
+Your password reset code is: {code}
+
+This code will expire in 10 minutes. If you didn’t request a reset, you can safely ignore this email.
+"""
+
+        html = f"""\
+<html>
+  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #dc3545; text-align: center;">NutriCam Password Reset</h2>
+      <p style="font-size: 16px; color: #333;">
+        You requested to reset your password for <b>NutriCam</b>.
+      </p>
+      <p style="font-size: 16px; color: #333;">Your reset code is:</p>
+      <div style="text-align: center; margin: 20px 0;">
+        <span style="font-size: 28px; font-weight: bold; color: #dc3545; letter-spacing: 3px;">{code}</span>
+      </div>
+      <p style="font-size: 14px; color: #666; text-align: center;">
+        (This code will expire in <b>10 minutes</b>.)
+      </p>
+      <hr style="margin: 30px 0;">
+      <p style="font-size: 16px; color: #333;">
+        If you didn’t request this, please ignore this email — your account is safe.  
+      </p>
+      <p style="font-size: 16px; color: #333;">
+        — The <b>NutriCam Team</b>
+      </p>
+    </div>
+  </body>
+</html>
+"""
+
+        message.attach(MIMEText(text, "plain"))
+        message.attach(MIMEText(html, "html"))
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, email, message.as_string())
+
+        return jsonify({"status": "ok"}), 200
+    except Exception as e:
+        print("Error sending reset email:", e)
+        return jsonify({"error": "Failed to send email"}), 500
+
+
+@app.route("/verify_reset_code", methods=["POST"])
+def verify_reset_code():
+    data = request.get_json()
+    email = data.get("email")
+    code = data.get("code")
+
+    if not email or not code:
+        return jsonify({"error": "Email and code required"}), 400
+
+    record = reset_store.get(email)
+    if not record or record["code"] != code:
+        return jsonify({"error": "Invalid code"}), 400
+    if int(time.time()) > record["expires"]:
+        return jsonify({"error": "Code expired"}), 400
+
+    return jsonify({"status": "verified"}), 200
+
+
+@app.route("/reset_password", methods=["POST"])
+@db_required
+def reset_password():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+
+        email = data.get("email")
+        new_password = data.get("new_password")
+
+        if not email or not new_password:
+            return jsonify({"error": "Email and new password are required"}), 400
+
+        # Find the user by email
+        user = users_collection.find_one({"email": email})
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Hash the new password
+        hashed_pw = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt())
+
+        # Update password in MongoDB
+        users_collection.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"password": hashed_pw}}
+        )
+
+        print(f"✅ Password updated for {email}")
+        return jsonify({"status": "password_updated"}), 200
+
+    except Exception as e:
+        print(f"❌ Reset password error: {str(e)}")
+        return jsonify({"error": "Password reset failed"}), 500
 
 
 
