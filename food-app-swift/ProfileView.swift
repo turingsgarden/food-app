@@ -17,7 +17,7 @@ struct ProfileView: View {
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
     @State private var hasAppeared = false
-    @State private var showHelpSupport = false  // NEW: For help & support sheet
+    @State private var showHelpSupport = false
     
     var body: some View {
         NavigationView {
@@ -118,7 +118,7 @@ struct ProfileView: View {
                                     .font(.title2.bold())
                                     .foregroundColor(.white)
                                 
-                                Text("Complete your profile setup to get started")
+                                Text("Complete your profile setup to get personalized recommendations")
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                                     .multilineTextAlignment(.center)
@@ -141,6 +141,14 @@ struct ProfileView: View {
                                     )
                                 )
                                 .cornerRadius(12)
+                            }
+                            
+                            // Allow logout even without profile
+                            Button(action: { showLogoutAlert = true }) {
+                                Text("Logout")
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                                    .padding(.top, 20)
                             }
                         }
                     }
@@ -176,8 +184,8 @@ struct ProfileView: View {
             .onAppear {
                 if !hasAppeared {
                     hasAppeared = true
-                    print("👤 ProfileView appeared - forcing profile refresh")
-                    profileManager.fetchProfile(force: true)
+                    print("👤 ProfileView appeared - fetching profile")
+                    profileManager.fetchProfile(force: false)
                 }
             }
             .alert("Logout", isPresented: $showLogoutAlert) {
@@ -197,7 +205,7 @@ struct ProfileView: View {
                 ProfileSetupView(existingProfile: profileManager.userProfile)
                     .onDisappear {
                         // Force refresh after profile setup/edit
-                        print("📝 Profile setup/edit completed, refreshing profile")
+                        print("🔍 Profile setup/edit completed, refreshing profile")
                         profileManager.fetchProfile(force: true)
                     }
             }
@@ -414,13 +422,14 @@ struct ProfileView: View {
         }
     }
     
+    // FIXED: Remove profile checks from logout
     func performLogout() {
         isLoggingOut = true
         
         // Clear profile data
         profileManager.clearProfile()
         
-        // Clear session
+        // Clear session - this should always work regardless of profile status
         session.logout()
         
         // Small delay for UX
@@ -431,8 +440,7 @@ struct ProfileView: View {
     }
 }
 
-// MARK: - NEW: Help & Support View
-
+// MARK: - Help & Support View (keeping existing implementation)
 struct HelpSupportView: View {
     @Environment(\.dismiss) var dismiss
     @State private var showFullPrivacyPolicy = false
@@ -467,8 +475,6 @@ struct HelpSupportView: View {
             }
         }
     }
-    
-    // MARK: - View Components
     
     private var backgroundGradient: some View {
         LinearGradient(
@@ -677,7 +683,7 @@ struct HelpSupportView: View {
     }
 }
 
-// MARK: - Supporting Views for Help & Support
+// MARK: - Supporting Views
 
 struct PrivacyPolicyPoint: View {
     let icon: String
@@ -814,8 +820,6 @@ struct FullPrivacyPolicyView: View {
         .preferredColorScheme(.dark)
     }
 }
-
-// MARK: - Supporting Views (StatCard and SettingsRow remain the same)
 
 struct StatCard: View {
     let title: String

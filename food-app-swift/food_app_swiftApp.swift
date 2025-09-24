@@ -9,7 +9,6 @@ import SwiftUI
 import GoogleSignIn
 import GoogleSignInSwift
 
-
 @main
 struct food_app_swiftApp: App {
     @StateObject private var session = SessionManager.shared
@@ -24,11 +23,7 @@ struct food_app_swiftApp: App {
                     switch newPhase {
                     case .background:
                         print("📱 App moved to background")
-                        // Option 1: Logout immediately when app goes to background
-                        // Uncomment the next line if you want immediate logout
-                        // performLogout()
-                        
-                        // Option 2: Save timestamp for session timeout
+                        // Save timestamp for session timeout
                         UserDefaults.standard.set(Date(), forKey: "app_background_time")
                         
                     case .inactive:
@@ -47,11 +42,6 @@ struct food_app_swiftApp: App {
                     print("🔴 App will terminate - logging out")
                     performLogout()
                 }
-                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
-                    // Alternative: Logout when app enters background
-                    // Uncomment if you want this behavior
-                    // performLogout()
-                }
         }
     }
     
@@ -64,11 +54,12 @@ struct food_app_swiftApp: App {
     }
     
     private func checkSessionTimeout() {
-        // Check if app was in background for too long (e.g., 5 minutes)
+        // Only check for timeout, not profile status
         if let backgroundTime = UserDefaults.standard.object(forKey: "app_background_time") as? Date {
             let timeInBackground = Date().timeIntervalSince(backgroundTime)
             let timeoutDuration: TimeInterval = 300 // 5 minutes
             
+            // Only logout if the session has actually timed out
             if timeInBackground > timeoutDuration {
                 print("⏰ Session timeout - app was in background for \(Int(timeInBackground)) seconds")
                 performLogout()
