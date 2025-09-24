@@ -396,7 +396,6 @@ struct LoginView: View {
                         
                         Button("Send Verification Code") {
                             sendForgotPasswordRequest()
-                            forgotPasswordStep = 2
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -662,19 +661,39 @@ struct LoginView: View {
             
             if let error = error {
                 DispatchQueue.main.async {
+                    print("❌ ForgotPassword Network error:", error.localizedDescription)
                     forgotPasswordError = "Network error: \(error.localizedDescription)"
                     statusMessage = ""
                 }
                 return
             }
             
+            if let httpResponse = response as? HTTPURLResponse {
+                print("🌐 ForgotPassword HTTP Status:", httpResponse.statusCode)
+            } else {
+                print("⚠️ ForgotPassword: No valid HTTPURLResponse")
+            }
+            
+            if let data = data {
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("📦 ForgotPassword Response body:", jsonString)
+                } else {
+                    print("⚠️ ForgotPassword: Could not decode response body")
+                }
+            } else {
+                print("⚠️ ForgotPassword: No response data")
+            }
+            
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                 DispatchQueue.main.async {
+                    print("✅ ForgotPassword success: Verification code sent")
                     forgotPasswordError = ""
                     statusMessage = "✅ Verification code sent! Check your email."
+                    forgotPasswordStep = 2
                 }
             } else {
                 DispatchQueue.main.async {
+                    print("❌ ForgotPassword failure: Invalid status code or response")
                     forgotPasswordError = "❌ Failed to send reset code"
                     statusMessage = ""
                 }
