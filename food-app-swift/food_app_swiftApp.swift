@@ -17,6 +17,10 @@ struct food_app_swiftApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
+    init() {
+        tryAutoLogin()
+    }
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
