@@ -9,7 +9,7 @@ struct ProfileSetupView: View {
     let existingProfile: UserProfile?
     
     @State private var age: Double = 25
-    @State private var gender: String = "Select"
+    @State private var gender: String = ""
     @State private var activityLevel = "2"
     @State private var calorieTarget: Double = 2200
     @State private var isVegetarian = false
@@ -23,8 +23,7 @@ struct ProfileSetupView: View {
     @State private var loadingMessage = "Setting up your profile..."
     
     // Validation states
-    @State private var validationErrors: [String] = []
-    @State private var showValidationAlert = false
+    @State private var showValidationErrors = false
     @State private var genderError = false
     @State private var ageError = false
     @State private var calorieError = false
@@ -44,23 +43,25 @@ struct ProfileSetupView: View {
         self.existingProfile = existingProfile
     }
     
-    // Computed property for form validation
+    // Form validation with real-time feedback
     var isFormValid: Bool {
         return age >= 10 && age <= 120 &&
-               gender != "Select" &&
+               !gender.isEmpty &&
                calorieTarget >= 1000 && calorieTarget <= 5000
     }
     
-    var validationMessage: String {
-        if gender == "Select" {
-            return "Please select your gender"
-        } else if age < 10 || age > 120 {
-            return "Age must be between 10 and 120"
-        } else if calorieTarget < 1000 || calorieTarget > 5000 {
-            return "Calorie target must be between 1000 and 5000"
-        } else {
-            return ""
+    var validationMessages: [String] {
+        var messages: [String] = []
+        if gender.isEmpty {
+            messages.append("Please select your gender")
         }
+        if age < 10 || age > 120 {
+            messages.append("Age must be between 10 and 120")
+        }
+        if calorieTarget < 1000 || calorieTarget > 5000 {
+            messages.append("Calorie target must be between 1000 and 5000")
+        }
+        return messages
     }
 
     var body: some View {
@@ -107,14 +108,19 @@ struct ProfileSetupView: View {
                         }
                         .padding(.top, 20)
 
-                        // Validation Warning
-                        if !isFormValid && !validationMessage.isEmpty {
-                            HStack {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .foregroundColor(.yellow)
-                                Text(validationMessage)
-                                    .font(.caption)
-                                    .foregroundColor(.yellow)
+                        // Real-time validation feedback
+                        if showValidationErrors && !validationMessages.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(validationMessages, id: \.self) { message in
+                                    HStack {
+                                        Image(systemName: "exclamationmark.circle.fill")
+                                            .foregroundColor(.yellow)
+                                            .font(.caption)
+                                        Text(message)
+                                            .font(.caption)
+                                            .foregroundColor(.yellow)
+                                    }
+                                }
                             }
                             .padding()
                             .background(
@@ -133,7 +139,7 @@ struct ProfileSetupView: View {
                         VStack(alignment: .leading, spacing: 20) {
                             SectionHeader(title: "Personal Information", icon: "person.fill", color: Color.orange)
                             
-                            // Age Slider
+                            // Age Slider with validation
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
                                     Text("Age")
@@ -150,7 +156,8 @@ struct ProfileSetupView: View {
                                 Slider(value: $age, in: 10...120, step: 1)
                                     .accentColor(ageError ? .red : .orange)
                                     .onChange(of: age) { _, _ in
-                                        validateAge()
+                                        ageError = age < 10 || age > 120
+                                        updateValidationState()
                                     }
                             }
                             .padding()
@@ -163,7 +170,7 @@ struct ProfileSetupView: View {
                                     )
                             )
 
-                            // Gender Selector with validation styling
+                            // Gender Selector with validation
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack {
                                     Text("Gender")
@@ -182,10 +189,11 @@ struct ProfileSetupView: View {
                                         GenderButton(
                                             title: option,
                                             isSelected: gender == option,
-                                            hasError: genderError && gender == "Select",
-                                            action: { 
+                                            hasError: genderError && gender.isEmpty,
+                                            action: {
                                                 gender = option
-                                                validateGender()
+                                                genderError = false
+                                                updateValidationState()
                                             }
                                         )
                                     }
@@ -233,7 +241,8 @@ struct ProfileSetupView: View {
                                 Slider(value: $calorieTarget, in: 1000...5000, step: 50)
                                     .accentColor(calorieError ? .red : .orange)
                                     .onChange(of: calorieTarget) { _, _ in
-                                        validateCalories()
+                                        calorieError = calorieTarget < 1000 || calorieTarget > 5000
+                                        updateValidationState()
                                     }
                                 
                                 HStack {
@@ -288,48 +297,56 @@ struct ProfileSetupView: View {
                         }
                         .padding(.horizontal)
 
-                        // Save Button with validation state
-                        Button(action: {
-                            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                            if validateForm() {
-                                saveProfile()
-                            } else {
-                                showValidationAlert = true
-                            }
-                        }) {
-                            HStack {
-                                if isSaving {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                } else {
-                                    Text(isEditMode ? "Save Changes" : "Complete Setup")
-                                        .fontWeight(.semibold)
-                                    Image(systemName: isEditMode ? "checkmark" : "arrow.right")
+                        // Save Button with validation feedback
+                        VStack(spacing: 8) {
+                            Button(action: {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                if validateForm() {
+                                    saveProfile()
                                 }
-                            }
-                            .foregroundColor(isFormValid ? .white : .white.opacity(0.6))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(
-                                LinearGradient(
-                                    gradient: Gradient(colors: isFormValid ? 
-                                        [.orange, .orange.opacity(0.8)] : 
-                                        [.gray, .gray.opacity(0.8)]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
+                            }) {
+                                HStack {
+                                    if isSaving {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    } else {
+                                        Text(isEditMode ? "Save Changes" : "Complete Setup")
+                                            .fontWeight(.semibold)
+                                        Image(systemName: isEditMode ? "checkmark" : "arrow.right")
+                                    }
+                                }
+                                .foregroundColor(isFormValid ? .white : .white.opacity(0.6))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: isFormValid ?
+                                            [.orange, .orange.opacity(0.8)] :
+                                            [.gray, .gray.opacity(0.8)]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
-                            )
-                            .cornerRadius(12)
-                            .shadow(color: isFormValid ? .orange.opacity(0.3) : .clear, 
-                                    radius: 8, x: 0, y: 4)
+                                .cornerRadius(12)
+                                .shadow(color: isFormValid ? .orange.opacity(0.3) : .clear,
+                                        radius: 8, x: 0, y: 4)
+                            }
+                            .disabled(isSaving)
+                            
+                            // Visual feedback for disabled state
+                            if !isFormValid && !showValidationErrors {
+                                Text("Complete all required fields to continue")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                            }
                         }
-                        .disabled(isSaving)
                         .padding(.horizontal)
                         
-                        // Skip option for optional setup (only for new users)
+                        // Skip option for new users (not for edit mode)
                         if !isEditMode {
                             Button(action: {
-                                navigateToDashboard = true
+                                SessionManager.shared.clearNewRegistrationFlag()
+                                dismiss()
                             }) {
                                 Text("Skip for now")
                                     .font(.caption)
@@ -356,15 +373,6 @@ struct ProfileSetupView: View {
             }
             .onAppear {
                 loadExistingProfile()
-            }
-            .navigationDestination(isPresented: $navigateToDashboard) {
-                DashboardView()
-                    .navigationBarBackButtonHidden(true)
-            }
-            .alert("Complete Required Fields", isPresented: $showValidationAlert) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(validationErrors.joined(separator: "\n"))
             }
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) { }
@@ -407,44 +415,29 @@ struct ProfileSetupView: View {
         }
     }
     
-    // MARK: - Validation Functions
+    // MARK: - Helper Functions
     
-    func validateGender() {
-        genderError = gender == "Select"
-    }
-    
-    func validateAge() {
-        ageError = age < 10 || age > 120
-    }
-    
-    func validateCalories() {
-        calorieError = calorieTarget < 1000 || calorieTarget > 5000
+    func updateValidationState() {
+        if showValidationErrors {
+            showValidationErrors = !isFormValid
+        }
     }
     
     func validateForm() -> Bool {
-        validationErrors.removeAll()
+        // Reset errors
+        genderError = gender.isEmpty
+        ageError = age < 10 || age > 120
+        calorieError = calorieTarget < 1000 || calorieTarget > 5000
         
-        validateGender()
-        validateAge()
-        validateCalories()
+        showValidationErrors = genderError || ageError || calorieError
         
-        if gender == "Select" {
-            validationErrors.append("• Please select your gender")
-        }
-        
-        if age < 10 || age > 120 {
-            validationErrors.append("• Age must be between 10 and 120 years")
-        }
-        
-        if calorieTarget < 1000 || calorieTarget > 5000 {
-            validationErrors.append("• Daily calorie target must be between 1000 and 5000")
-        }
-        
-        return validationErrors.isEmpty
+        return !showValidationErrors
     }
     
     func loadExistingProfile() {
-        guard let profile = existingProfile else { return }
+        guard let profile = existingProfile else {
+            return
+        }
         
         // Load existing values
         age = Double(profile.age)
@@ -455,12 +448,11 @@ struct ProfileSetupView: View {
         isKeto = profile.is_keto ?? false
         isGlutenFree = profile.is_gluten_free ?? false
         
-        print("📍 Loaded existing profile for editing")
+        print("📋 Loaded existing profile for editing")
     }
 
     func saveProfile() {
         guard validateForm() else {
-            showValidationAlert = true
             return
         }
         
@@ -496,13 +488,9 @@ struct ProfileSetupView: View {
                 // Clear new registration flag after successful profile save
                 SessionManager.shared.clearNewRegistrationFlag()
                 
-                if self.isEditMode {
-                    // Just dismiss for edit mode
-                    self.dismiss()
-                } else {
-                    // Navigate to dashboard for new setup
-                    self.navigateToDashboard = true
-                }
+                // Always just dismiss - navigation is handled by parent
+                self.dismiss()
+                
             } else {
                 self.errorMessage = error ?? "Failed to save profile. Please try again."
                 self.showError = true
@@ -512,8 +500,10 @@ struct ProfileSetupView: View {
     }
 }
 
-// MARK: - Supporting Views with validation states
+// Keep all supporting views unchanged...
+// [Rest of supporting views remain the same]
 
+// Supporting views remain the same...
 struct GenderButton: View {
     let title: String
     let isSelected: Bool
@@ -534,8 +524,8 @@ struct GenderButton: View {
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
                                 .stroke(
-                                    hasError ? Color.red.opacity(0.5) : 
-                                    (isSelected ? Color.clear : Color.white.opacity(0.2)), 
+                                    hasError ? Color.red.opacity(0.5) :
+                                    (isSelected ? Color.clear : Color.white.opacity(0.2)),
                                     lineWidth: 1
                                 )
                         )
@@ -554,7 +544,6 @@ struct ActivityLevelCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
-                // Level indicator
                 ZStack {
                     Circle()
                         .fill(isSelected ? Color.orange : Color.white.opacity(0.1))

@@ -31,7 +31,7 @@ struct food_app_swiftApp: App {
                         
                     case .active:
                         print("📱 App became active")
-                        // Check for session timeout when app returns
+                        // Only check for session timeout, not profile status
                         checkSessionTimeout()
                         
                     @unknown default:
@@ -39,28 +39,20 @@ struct food_app_swiftApp: App {
                     }
                 }
                 .onReceive(NotificationCenter.default.publisher(for: UIApplication.willTerminateNotification)) { _ in
-                    print("🔴 App will terminate - logging out")
-                    performLogout()
+                    print("🔴 App will terminate")
+                    // Don't auto-logout on termination
                 }
         }
     }
     
-    private func performLogout() {
-        print("🚪 Performing auto logout")
-        session.logout()
-        
-        // Clear all sensitive data
-        clearSensitiveData()
-    }
-    
     private func checkSessionTimeout() {
-        // Only check for timeout, not profile status
+        // Only check for actual timeout, not profile status
         if let backgroundTime = UserDefaults.standard.object(forKey: "app_background_time") as? Date {
             let timeInBackground = Date().timeIntervalSince(backgroundTime)
             let timeoutDuration: TimeInterval = 300 // 5 minutes
             
-            // Only logout if the session has actually timed out
-            if timeInBackground > timeoutDuration {
+            // Only logout if session has actually timed out
+            if timeInBackground > timeoutDuration && session.isLoggedIn {
                 print("⏰ Session timeout - app was in background for \(Int(timeInBackground)) seconds")
                 performLogout()
             }
@@ -70,8 +62,14 @@ struct food_app_swiftApp: App {
         }
     }
     
+    private func performLogout() {
+        print("🚪 Performing session timeout logout")
+        session.logout()
+        clearSensitiveData()
+    }
+    
     private func clearSensitiveData() {
-        // Clear any cached images or sensitive data
+        // Clear cached data
         URLCache.shared.removeAllCachedResponses()
         
         // Clear image cache if you have one

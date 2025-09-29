@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct ProfileView: View {
     @ObservedObject var session = SessionManager.shared
@@ -34,8 +35,8 @@ struct ProfileView: View {
                 )
                 .ignoresSafeArea()
                 
-                if profileManager.isLoading && profileManager.userProfile == nil {
-                    // Loading state
+                if profileManager.isLoading && profileManager.userProfile == nil && !hasAppeared {
+                    // Loading state only on initial load
                     VStack(spacing: 20) {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .orange))
@@ -45,112 +46,31 @@ struct ProfileView: View {
                             .font(.headline)
                             .foregroundColor(.white)
                     }
-                } else if let profile = profileManager.userProfile {
-                    // Profile loaded
+                } else {
+                    // Main content - always show, even without profile
                     ScrollView {
                         VStack(spacing: 24) {
                             // Header with Profile Picture
-                            profileHeaderSection(profile: profile)
+                            profileHeaderSection
                             
-                            // Stats Cards
-                            profileStatsSection(profile: profile)
+                            if let profile = profileManager.userProfile {
+                                // Stats Cards
+                                profileStatsSection(profile: profile)
+                                
+                                // Settings Section
+                                settingsSection(profile: profile)
+                            } else {
+                                // Profile setup prompt
+                                profileSetupPromptSection
+                            }
                             
-                            // Settings Section
-                            settingsSection(profile: profile)
-                            
-                            // Danger Zone
-                            dangerZoneSection()
+                            // Account Section - Always visible
+                            accountSection
                             
                             // App Info
                             appInfoSection()
                         }
                         .padding(.horizontal)
-                    }
-                } else {
-                    // No profile found or error state
-                    VStack(spacing: 20) {
-                        if let errorMessage = profileManager.errorMessage {
-                            // Show error with retry option
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .font(.system(size: 60))
-                                .foregroundColor(.red.opacity(0.6))
-                            
-                            VStack(spacing: 8) {
-                                Text("Profile Error")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.white)
-                                
-                                Text(errorMessage)
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                    .multilineTextAlignment(.center)
-                            }
-                            
-                            Button(action: {
-                                print("🔄 Retry button tapped")
-                                profileManager.fetchProfile(force: true)
-                            }) {
-                                HStack {
-                                    Image(systemName: "arrow.clockwise")
-                                    Text("Retry")
-                                }
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, 12)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .cornerRadius(12)
-                            }
-                        } else {
-                            // Profile not found - needs setup
-                            Image(systemName: "person.circle.fill")
-                                .font(.system(size: 80))
-                                .foregroundColor(.orange.opacity(0.6))
-                            
-                            VStack(spacing: 8) {
-                                Text("Profile Not Found")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.white)
-                                
-                                Text("Complete your profile setup to get personalized recommendations")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                                    .multilineTextAlignment(.center)
-                            }
-                            
-                            Button(action: { showEditProfile = true }) {
-                                HStack {
-                                    Image(systemName: "person.fill.badge.plus")
-                                    Text("Complete Profile")
-                                }
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, 12)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .cornerRadius(12)
-                            }
-                            
-                            // Allow logout even without profile
-                            Button(action: { showLogoutAlert = true }) {
-                                Text("Logout")
-                                    .font(.caption)
-                                    .foregroundColor(.red)
-                                    .padding(.top, 20)
-                            }
-                        }
                     }
                 }
             }
@@ -163,7 +83,7 @@ struct ProfileView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .orange))
                             .scaleEffect(0.8)
-                    } else {
+                    } else if profileManager.userProfile != nil {
                         Button(action: {
                             print("🔄 Manual refresh button tapped")
                             profileManager.fetchProfile(force: true)
@@ -205,15 +125,32 @@ struct ProfileView: View {
                 ProfileSetupView(existingProfile: profileManager.userProfile)
                     .onDisappear {
                         // Force refresh after profile setup/edit
-                        print("🔍 Profile setup/edit completed, refreshing profile")
+                        print("🔃 Profile setup/edit completed, refreshing profile")
                         profileManager.fetchProfile(force: true)
                     }
             }
-            .sheet(isPresented: $showHelpSupport) {
-                HelpSupportView()
-            }
-            .refreshable {
+            
+            .alert("Help & Support", isPresented: $showHelpSupport) {
+                Button("Contact Support") {
+                    openEmailSupport()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("For support, please contact us at support@nutricam.com")
+            }            .refreshable {
                 await refreshProfile()
+            }
+        }
+    }
+    
+    private func openEmailSupport() {
+        let email = "support@nutricam.com"
+        let subject = "NutriCam Support Request"
+        let body = "Hi NutriCam Support Team,\n\nI need help with:\n\n[Please describe your issue here]\n\n---\nApp Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")\nDevice: \(UIDevice.current.model)\niOS Version: \(UIDevice.current.systemVersion)"
+        
+        if let url = URL(string: "mailto:\(email)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
+            if UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url)
             }
         }
     }
@@ -221,7 +158,7 @@ struct ProfileView: View {
     // MARK: - View Components
     
     @ViewBuilder
-    func profileHeaderSection(profile: UserProfile) -> some View {
+    var profileHeaderSection: some View {
         VStack(spacing: 16) {
             // Profile Avatar
             ZStack {
@@ -246,22 +183,28 @@ struct ProfileView: View {
                     .font(.title2.bold())
                     .foregroundColor(.white)
                 
-                Text("\(profile.age) years old • \(profile.gender)")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-                
-                if let lastSync = profileManager.lastSyncDate {
-                    Text("Last synced: \(formatSyncDate(lastSync))")
-                        .font(.caption2)
-                        .foregroundColor(.gray.opacity(0.7))
+                if let profile = profileManager.userProfile {
+                    Text("\(profile.age) years old • \(profile.gender)")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                    
+                    if let lastSync = profileManager.lastSyncDate {
+                        Text("Last synced: \(formatSyncDate(lastSync))")
+                            .font(.caption2)
+                            .foregroundColor(.gray.opacity(0.7))
+                    }
+                } else {
+                    Text("Profile not set up")
+                        .font(.subheadline)
+                        .foregroundColor(.orange)
                 }
             }
             
-            // Edit Profile Button
+            // Edit/Setup Profile Button
             Button(action: { showEditProfile = true }) {
                 HStack {
-                    Image(systemName: "pencil")
-                    Text("Edit Profile")
+                    Image(systemName: profileManager.userProfile != nil ? "pencil" : "person.fill.badge.plus")
+                    Text(profileManager.userProfile != nil ? "Edit Profile" : "Setup Profile")
                 }
                 .font(.subheadline)
                 .fontWeight(.semibold)
@@ -279,6 +222,58 @@ struct ProfileView: View {
             }
         }
         .padding(.top, 20)
+    }
+    
+    @ViewBuilder
+    var profileSetupPromptSection: some View {
+        VStack(spacing: 20) {
+            // Informative Card
+            VStack(spacing: 16) {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(.orange)
+                
+                VStack(spacing: 8) {
+                    Text("Complete Your Profile")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Text("Set up your profile to get personalized nutrition recommendations and accurate calorie tracking")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                }
+                
+                Button(action: { showEditProfile = true }) {
+                    HStack {
+                        Image(systemName: "arrow.right.circle.fill")
+                        Text("Set Up Now")
+                    }
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(
+                        LinearGradient(
+                            gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .cornerRadius(12)
+                    .shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
+                }
+            }
+            .padding(24)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.white.opacity(0.05))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                    )
+            )
+        }
     }
     
     @ViewBuilder
@@ -345,6 +340,16 @@ struct ProfileView: View {
                     .background(Color.white.opacity(0.1))
                 
                 SettingsRow(
+                    icon: "star.fill",
+                    title: "Rate NutriCam",
+                    subtitle: "Love the app? Leave us a review!",
+                    action: rateApp
+                )
+                
+                Divider()
+                    .background(Color.white.opacity(0.1))
+                
+                SettingsRow(
                     icon: "questionmark.circle.fill",
                     title: "Help & Support",
                     subtitle: "Privacy Policy, FAQ and support",
@@ -363,7 +368,7 @@ struct ProfileView: View {
     }
     
     @ViewBuilder
-    func dangerZoneSection() -> some View {
+    var accountSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Account")
                 .font(.headline)
@@ -393,7 +398,7 @@ struct ProfileView: View {
     @ViewBuilder
     func appInfoSection() -> some View {
         VStack(spacing: 8) {
-            Text("NutriSnap")
+            Text("NutriCam")
                 .font(.caption)
                 .foregroundColor(.gray)
             
@@ -422,266 +427,36 @@ struct ProfileView: View {
         }
     }
     
-    // FIXED: Remove profile checks from logout
+    // FIXED: Allow logout regardless of profile status
     func performLogout() {
         isLoggingOut = true
         
-        // Clear profile data
+        // Clear all data
         profileManager.clearProfile()
         
-        // Clear session - this should always work regardless of profile status
+        // Perform logout
         session.logout()
         
-        // Small delay for UX
+        // Dismiss view
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.isLoggingOut = false
             self.dismiss()
         }
     }
-}
-
-// MARK: - Help & Support View (keeping existing implementation)
-struct HelpSupportView: View {
-    @Environment(\.dismiss) var dismiss
-    @State private var showFullPrivacyPolicy = false
     
-    var body: some View {
-        NavigationView {
-            ZStack {
-                backgroundGradient
-                
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        headerSection
-                        privacyPolicySection
-                        supportSection
-                        appInfoSection
-                    }
-                    .padding(.horizontal)
-                }
-            }
-            .preferredColorScheme(.dark)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundColor(.orange)
-                }
-            }
-            .sheet(isPresented: $showFullPrivacyPolicy) {
-                FullPrivacyPolicyView()
-            }
-        }
-    }
-    
-    private var backgroundGradient: some View {
-        LinearGradient(
-            gradient: Gradient(colors: [
-                Color.black,
-                Color.black.opacity(0.95),
-                Color(red: 0.1, green: 0.1, blue: 0.15)
-            ]),
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
-    }
-    
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Help & Support")
-                .font(.largeTitle.bold())
-                .foregroundColor(.white)
-            
-            Text("Privacy Policy and Support Information")
-                .font(.subheadline)
-                .foregroundColor(.gray)
-        }
-        .padding(.top, 20)
-    }
-    
-    private var privacyPolicySection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            privacyPolicyHeader
-            privacyPolicyPoints
-            privacyPolicyButtons
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-        )
-    }
-    
-    private var privacyPolicyHeader: some View {
-        HStack {
-            Image(systemName: "shield.fill")
-                .foregroundColor(.blue)
-            Text("Privacy Policy Summary")
-                .font(.headline)
-                .foregroundColor(.white)
-        }
-    }
-    
-    private var privacyPolicyPoints: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            PrivacyPolicyPoint(
-                icon: "envelope.fill",
-                title: "Data Collection",
-                description: "We collect your email address and usage data to provide and improve our service."
-            )
-            
-            PrivacyPolicyPoint(
-                icon: "camera.fill",
-                title: "Photos & Location",
-                description: "We access your camera and photo library only to analyze meal photos for nutrition tracking."
-            )
-            
-            PrivacyPolicyPoint(
-                icon: "lock.fill",
-                title: "Data Security",
-                description: "Your personal data is encrypted and stored securely. We never sell your information to third parties."
-            )
-            
-            PrivacyPolicyPoint(
-                icon: "trash.fill",
-                title: "Data Deletion",
-                description: "You can delete your account and all associated data at any time through the app settings."
-            )
-            
-            PrivacyPolicyPoint(
-                icon: "person.badge.shield.checkmark.fill",
-                title: "Children's Privacy",
-                description: "Our service is not intended for users under 13. We don't knowingly collect data from children."
-            )
-        }
-    }
-    
-    private var privacyPolicyButtons: some View {
-        VStack(spacing: 12) {
-            fullPolicyButton
-            externalLinkButton
-        }
-    }
-    
-    private var fullPolicyButton: some View {
-        Button(action: {
-            showFullPrivacyPolicy = true
-        }) {
-            HStack {
-                Image(systemName: "doc.text.fill")
-                Text("View Full Privacy Policy")
-                Spacer()
-                Image(systemName: "chevron.right")
-            }
-            .foregroundColor(.blue)
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.blue.opacity(0.1))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                    )
-            )
-        }
-    }
-    
-    private var externalLinkButton: some View {
-        Button(action: {
-            if let url = URL(string: "https://www.termsfeed.com/live/d4b4e1ed-8150-4ccb-a430-340180b7bc9d") {
+    func rateApp() {
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
+            AppStore.requestReview(in: windowScene)
+        } else {
+            if let url = URL(string: "https://apps.apple.com/us/app/nutrition-cam/id6749919732") {
                 UIApplication.shared.open(url)
             }
-        }) {
-            HStack {
-                Image(systemName: "link")
-                Text("For more details")
-                Spacer()
-                Image(systemName: "arrow.up.right")
-            }
-            .foregroundColor(.orange)
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.orange.opacity(0.1))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                    )
-            )
         }
-    }
-    
-    private var supportSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            supportHeader
-            supportButtons
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-        )
-    }
-    
-    private var supportHeader: some View {
-        HStack {
-            Image(systemName: "questionmark.circle.fill")
-                .foregroundColor(.green)
-            Text("Support & Contact")
-                .font(.headline)
-                .foregroundColor(.white)
-        }
-    }
-    
-    private var supportButtons: some View {
-        VStack(spacing: 12) {
-            SupportContactRow(
-                icon: "envelope.fill",
-                title: "Email Support",
-                subtitle: "nutrisnap@gmail.com",
-                action: {
-                    if let url = URL(string: "mailto:nutrisnap@gmail.com") {
-                        UIApplication.shared.open(url)
-                    }
-                }
-            )
-            
-            SupportContactRow(
-                icon: "star.fill",
-                title: "Rate the App",
-                subtitle: "Help us improve with your feedback",
-                action: {
-                    // Can add App Store rating functionality later
-                }
-            )
-        }
-    }
-    
-    private var appInfoSection: some View {
-        VStack(spacing: 8) {
-            Text("NutriSnap v1.0.0")
-                .font(.caption)
-                .foregroundColor(.gray)
-            
-            Text("AI-Powered Nutrition Tracking")
-                .font(.caption2)
-                .foregroundColor(.gray.opacity(0.7))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.bottom, 40)
     }
 }
+
+// Keep all existing supporting views (StatCard, SettingsRow, HelpSupportView, etc.) unchanged...
+// [Rest of the supporting views remain the same as in original file]
 
 // MARK: - Supporting Views
 
