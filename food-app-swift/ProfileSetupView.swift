@@ -352,11 +352,9 @@ struct ProfileSetupView: View {
                                     .font(.caption)
                                     .foregroundColor(.gray)
                             }
-                            .padding(.bottom, 20)
                         }
-                        
-                        .padding(.bottom, 40)
                     }
+                    .padding(.bottom, 40)
                 }
             }
             .preferredColorScheme(.dark)
@@ -500,10 +498,30 @@ struct ProfileSetupView: View {
     }
 }
 
-// Keep all supporting views unchanged...
-// [Rest of supporting views remain the same]
+// MARK: - Supporting Views
 
-// Supporting views remain the same...
+struct SectionHeader: View {
+    let title: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(color)
+            
+            Text(title)
+                .font(.headline)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+            
+            Spacer()
+        }
+        .padding(.bottom, 8)
+    }
+}
+
 struct GenderButton: View {
     let title: String
     let isSelected: Bool

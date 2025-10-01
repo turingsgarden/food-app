@@ -423,7 +423,7 @@
 				CODE_SIGN_ENTITLEMENTS = "food-app-swift/food-app-swiftDebug.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 2X428LHR67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "food-app-swift/Info.plist";
@@ -455,7 +455,7 @@
 				CODE_SIGN_ENTITLEMENTS = "food-app-swift/food-app-swiftRelease.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 2X428LHR67;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "food-app-swift/Info.plist";
