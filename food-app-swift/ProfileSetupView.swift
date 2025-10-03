@@ -137,6 +137,7 @@ struct ProfileSetupView: View {
 
                         // Personal Info Section
                         VStack(alignment: .leading, spacing: 20) {
+                            // Using the shared SectionHeader from SharedComponents
                             SectionHeader(title: "Personal Information", icon: "person.fill", color: Color.orange)
                             
                             // Age Slider with validation
@@ -204,6 +205,7 @@ struct ProfileSetupView: View {
 
                         // Activity Level Section
                         VStack(alignment: .leading, spacing: 20) {
+                            // Using the shared SectionHeader from SharedComponents
                             SectionHeader(title: "Activity Level", icon: "figure.run", color: Color.green)
                             
                             VStack(spacing: 12) {
@@ -222,6 +224,7 @@ struct ProfileSetupView: View {
 
                         // Nutrition Goals Section
                         VStack(alignment: .leading, spacing: 20) {
+                            // Using the shared SectionHeader from SharedComponents
                             SectionHeader(title: "Nutrition Goals", icon: "target", color: Color.purple)
                             
                             // Calorie Target with validation
@@ -499,28 +502,7 @@ struct ProfileSetupView: View {
 }
 
 // MARK: - Supporting Views
-
-struct SectionHeader: View {
-    let title: String
-    let icon: String
-    let color: Color
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(color)
-            
-            Text(title)
-                .font(.headline)
-                .fontWeight(.bold)
-                .foregroundColor(.white)
-            
-            Spacer()
-        }
-        .padding(.bottom, 8)
-    }
-}
+// Note: SectionHeader is removed from here as it should be imported from SharedComponents
 
 struct GenderButton: View {
     let title: String

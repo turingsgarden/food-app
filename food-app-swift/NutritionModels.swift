@@ -11,7 +11,7 @@ import SwiftUI  // Add this line
 // MARK: - Nutrition Data Models
 
 struct NutritionItem: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     let name: String
     let value: String
     let unit: String
