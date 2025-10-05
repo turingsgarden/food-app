@@ -1,0 +1,6 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1759186853.166068   54020 alts_credentials.cc:93] ALTS creds ignored. Not running on GCP and untrusted ALTS is not enabled.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1759254334.047613   55647 alts_credentials.cc:93] ALTS creds ignored. Not running on GCP and untrusted ALTS is not enabled.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+E0000 00:00:1759254354.983214   55715 alts_credentials.cc:93] ALTS creds ignored. Not running on GCP and untrusted ALTS is not enabled.
