@@ -5,6 +5,9 @@ from PIL import Image
 import glob
 from get_image import ensure_subset_data
 
+
+ensure_subset_data()
+
 # Page configuration
 st.set_page_config(
     page_title="Food Image Analysis Display",
