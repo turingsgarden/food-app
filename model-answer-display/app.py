@@ -46,11 +46,12 @@ def load_model_data():
 
 def get_all_images():
     image_dir = "subset"  
-    image_files = glob.glob(os.path.join(image_dir, "*.jpg"))
+    image_files = glob.glob(os.path.join(image_dir, "**", "*.jpg"), recursive=True)
     if not image_files:
         return None
     image_files.sort()
     return image_files
+
 
 def build_image_index(model_data, available_models):
     image_has_response = set()
