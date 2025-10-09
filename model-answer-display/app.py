@@ -12,8 +12,8 @@ st.set_page_config(
 
 def load_model_data():
     model_files = {
-        "gemini-2.5-flash": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\food-app\\output\\food_dataset_analysis_1.json",
-        "gemini-2.5-pro": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\food-app\\Gemini-2.5-pro_food-101_analysis.json"
+        "gemini-2.5-flash": "output/Gemini-2.5-flash_food-101_analysis.json",
+        "gemini-2.5-pro": "output/Gemini-2.5-pro_food-101_analysis.json"
     }
     
     model_data = {}
@@ -41,7 +41,7 @@ def load_model_data():
     return model_data, available_models
 
 def get_all_images():
-    image_dir = "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\subset"
+    image_dir = "food101-subset"
     image_files = glob.glob(os.path.join(image_dir, "*.jpg"))
     if not image_files:
         return None
@@ -269,4 +269,5 @@ def main():
 
 
 if __name__ == "__main__":
+
     main()
