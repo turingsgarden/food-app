@@ -65,10 +65,15 @@ def build_image_index(model_data, available_models):
     for model_name in available_models:
         model_file_mapping[model_name] = {}
         for item in model_data.get(model_name, []):
-            filename = os.path.basename(item.get("image_path", ""))
+            raw_path = item.get("image_path", "")
+            filename = os.path.basename(raw_path.replace("\\", "/"))  # 替换 \ 为 /
             model_file_mapping[model_name][filename] = item
             image_has_response.add(filename)
+
+        print(f"DEBUG - {model_name} loaded {len(model_file_mapping[model_name])} items.")
+        print(f"DEBUG - Example filenames: {list(model_file_mapping[model_name].keys())[:5]}")
     return image_has_response, model_file_mapping
+
 
 def find_model_response_fast(image_path, model_file_mapping, model_name):
     if model_name not in model_file_mapping:
