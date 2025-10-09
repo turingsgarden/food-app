@@ -52,7 +52,7 @@ def load_model_data():
     return model_data, available_models
 
 def get_all_images():
-    image_dir = "food101-100images"
+    image_dir = "food-101_100images"
     image_files = glob.glob(os.path.join(image_dir, "*.jpg"))
     if not image_files:
         return None
