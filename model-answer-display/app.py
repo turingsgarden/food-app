@@ -3,7 +3,7 @@ import json
 import os
 from PIL import Image
 import glob
-from get_image import ensure_subset_data
+from get_images import ensure_subset_data
 
 
 ensure_subset_data()
