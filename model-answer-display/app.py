@@ -2,11 +2,17 @@ import streamlit as st
 import json
 import os
 from PIL import Image
-import glob
 from get_images import ensure_subset_data
 
+# 页面配置
+st.set_page_config(page_title="Food Image Analysis Display", layout="wide")
 
-ensure_subset_data()
+image_files = ensure_subset_data(max_images=100)
+if not image_files:
+    st.warning("No images found.")
+else:
+    st.success(f"Found {len(image_files)} images.")
+
 
 # Page configuration
 st.set_page_config(
@@ -45,13 +51,7 @@ def load_model_data():
     return model_data, available_models
 
 def get_all_images():
-    image_dir = "subset"  
-    image_files = glob.glob(os.path.join(image_dir, "**", "*.jpg"), recursive=True)
-    if not image_files:
-        return None
-    image_files.sort()
-    return image_files
-
+    return image_files 
 
 def build_image_index(model_data, available_models):
     image_has_response = set()
