@@ -130,7 +130,7 @@ def display_model_response(response, model_name, page_num):
         return
     
     #show model name
-    st.markdown(f"### {model_name}")
+    st.markdown(f"<h4 style='margin-top:0; margin-bottom:10px;'>{model_name}</h4>", unsafe_allow_html=True)
     
     section_style = "font-weight:bold; font-size:16px; color:#1f77b4; margin: 15px 0 8px 0;"
     content_style = "white-space: pre; font-family: 'Courier New', monospace; margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; line-height: 1.4; border: 1px solid #e1e4e8;"
@@ -222,15 +222,15 @@ def main():
     nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6 = st.columns([3, 1, 1, 1, 1, 1])
     
     with nav_col1:
-
         st.write("")
     
     with nav_col2:
-
-        st.markdown(f"<div style='font-size:12px; text-align:center; padding: 8px 0;'>{current_page+1}/{total_pages}</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div style='font-size:10px; text-align:center; padding: 4px 0;'>{current_page+1}/{total_pages}</div>",
+            unsafe_allow_html=True
+        )
     
     with nav_col3:
-
         page_input = st.number_input(
             "Page", 
             min_value=1, 
@@ -241,24 +241,20 @@ def main():
         )
     
     with nav_col4:
-
         if st.button("Go", use_container_width=True, key=f"jump_btn_{current_page}"):
             if 1 <= page_input <= total_pages:
                 st.session_state.current_page = page_input-1
                 st.rerun()
     
     with nav_col5:
-
         if st.button("◀", use_container_width=True, disabled=current_page<=0, key=f"prev_{current_page}"):
             st.session_state.current_page -= 1
             st.rerun()
     
     with nav_col6:
-
         if st.button("▶", use_container_width=True, disabled=current_page>=total_pages-1, key=f"next_{current_page}"):
             st.session_state.current_page += 1
             st.rerun()
-    
 
     col_left, col_mid, col_right = st.columns([1,1,1])
     
