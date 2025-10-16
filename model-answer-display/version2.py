@@ -289,11 +289,27 @@ def display_model_response(response, model_name, page_num):
     visible_text = "\n".join(visible_list) if visible_list else "N/A"
 
     # 隐藏食材
+    # hidden_list = []
+    # for ing in hidden_ingredients:
+    #     line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
+    #     hidden_list.append(line)
+    # hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
+
     hidden_list = []
-    for ing in hidden_ingredients:
-        line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
+    for i, ing in enumerate(hidden_ingredients):
+        # 调试输出：打印每个条目的索引、类型和内容
+        print(f"DEBUG hidden_ingredient[{i}]: type={type(ing)}, value={ing}")
+    
+        if isinstance(ing, dict):
+            line = f"• {ing.get('name', ''):<20} {ing.get('quantity', ''):>6} {ing.get('unit', ''):<6}"
+        else:
+            # 如果不是字典，说明数据格式有问题，用repr打印更直观
+            line = f"• {repr(ing)}"
+            print(f"⚠️ WARNING: Unexpected ingredient format at index {i}: {ing}")
         hidden_list.append(line)
+    
     hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
+
 
     # 营养成分
     nutri_lines = []
