@@ -5,346 +5,344 @@ from PIL import Image
 import glob
 
 
-def main():
-    st.header("Version 2")
-    # Page configuration
-    st.set_page_config(
-        page_title="Food Image Analysis Display",
-        layout="wide"
-    )
-    
-    def load_model_data():
-        model_files = {
-            "gemini-2.5-flash": "output/Gemini-2.5-flash_pydantic_food_dataset_analysis.json",
-            "gemini-2.5-pro": "output/Gemini-2.5-pro_pydantic_food_dataset_analysis.json"
-        }
-        
-        model_data = {}
-        available_models = []
-        
-        for model_name, file_path in model_files.items():
-            try:
-                encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
-                loaded = False
-                for encoding in encodings:
-                    try:
-                        with open(file_path, 'r', encoding=encoding) as f:
-                            model_data[model_name] = json.load(f)
-                            available_models.append(model_name)
-                            loaded = True
-                            break
-                    except (UnicodeDecodeError, json.JSONDecodeError):
-                        continue
-                if not loaded:
-                    pass
-            except FileNotFoundError:
-                pass
-            except Exception:
-                pass
-        return model_data, available_models
-    
-    def get_all_images():
-        image_dir = "food-101_100images"
-        image_files = glob.glob(os.path.join(image_dir, "*.jpg"))
-        if not image_files:
-            return None
-        image_files.sort()
-        return image_files
-    
-    def build_image_index(model_data, available_models):
-        image_has_response = set()
-        model_file_mapping = {}
-        for model_name in available_models:
-            model_file_mapping[model_name] = {}
-            for item in model_data.get(model_name, []):
-                filename = os.path.basename(item.get("image_path", ""))
-                model_file_mapping[model_name][filename] = item
-                image_has_response.add(filename)
-        return image_has_response, model_file_mapping
-    
-    def find_model_response_fast(image_path, model_file_mapping, model_name):
-        if model_name not in model_file_mapping:
-            return None
-        filename = os.path.basename(image_path)
-        return model_file_mapping[model_name].get(filename)
-    
-    def format_analysis_time(seconds):
-        """Format analysis time in human-readable format: 1m30s, 40s, etc."""
-        if seconds is None:
-            return "N/A"
-        if seconds < 60:
-            return f"{seconds:.1f}s"
-        else:
-            minutes = int(seconds // 60)
-            remaining_seconds = seconds % 60
-            return f"{minutes}m{remaining_seconds:.1f}s"
-    
-    # 添加自适应CSS样式
-    st.markdown("""
-    <style>
-        /* 整体页面缩放控制 */
-        .main-container {
-            min-height: 100vh;
-            width: 100%;
-        }
-        
-        /* 模型容器 - 完全自适应 */
-        .model-container {
-            height: auto !important;
-            min-height: 400px;
-            max-height: none !important;
-            overflow: visible !important;
-            border: 1px solid #e1e4e8;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            background: white;
-        }
-        
-        /* 响应式字体大小 */
-        .section-title {
-            font-weight: 600;
-            font-size: 1.1em;
-            color: #2c3e50;
-            margin: 12px 0 6px 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        
-        .content-box {
-            white-space: pre-wrap;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 6px 0;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            line-height: 1.5;
-            border: 1px solid #e1e4e8;
-            font-size: 0.95em;
-            color: #333;
-        }
-        
-        .analysis-time {
-            font-size: 1em !important;
-            color: #666;
-            margin-left: 8px;
-            font-weight: 500;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        
-        /* 模型标题样式 - 现在放在框内 */
-        .model-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #1f77b4;
-            margin-bottom: 15px;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e1e4e8;
-        }
-        
-        /* 图片容器 - 添加居中样式 */
-        .image-container {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #e1e4e8;
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-        }
-        
-        /* 图片样式 */
-        .centered-image {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-        }
-        
-        /* 文件名样式 */
-        .filename-text {
-            text-align: center;
-            margin-top: 10px;
-            font-weight: 500;
-        }
-        
-        /* 导航栏样式 - 修复空白问题 */
-        .compact-nav {
-            margin-bottom: 5px !important;
-            padding: 0 !important;
-        }
-        .nav-button {
-            height: 30px !important;
-            min-height: 30px !important;
-            padding: 0 6px !important;
-            font-size: 11px !important;
-            margin: 0 !important;
-        }
-        .nav-input {
-            height: 30px !important;
-            min-height: 30px !important;
-            margin: 0 !important;
-        }
-        .nav-label {
-            font-size: 11px !important;
-            padding: 2px 0 !important;
-            margin: 0 !important;
-            text-align: center;
-        }
-        
-        /* 移除 Streamlit 默认列间距与空白框 */
-        div[data-testid="stHorizontalBlock"] {
-            gap: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-    
-        div[data-testid="stVerticalBlock"] {
-            gap: 0 !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-    
-        /* 移除整个图片区域上下额外空白 */
-        .image-container {
-            background: white;
-            padding: 10px 10px 5px 10px;
-            border-radius: 8px;
-            border: 1px solid #e1e4e8;
-            margin: 0 !important;
-        }
-        
-        /* 响应式布局调整 */
-        @media (max-height: 800px) {
-            .model-container {
-                min-height: 350px;
-                padding: 12px;
-            }
-            .section-title {
-                font-size: 1.05em;
-                margin: 10px 0 5px 0;
-            }
-            .content-box {
-                font-size: 0.9em;
-                padding: 8px;
-            }
-        }
-        
-        @media (max-height: 600px) {
-            .model-container {
-                min-height: 300px;
-                padding: 10px;
-            }
-            .section-title {
-                font-size: 1em;
-            }
-            .content-box {
-                font-size: 0.85em;
-                padding: 6px;
-            }
-        }
-                
-        /* 让图片列内容垂直居中 */
-        .left-column {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;  /* 垂直居中 */
-            align-items: center;      /* 水平居中 */
-            height: 100%;
-        }
-        
-        /* 确保所有元素使用现代字体 */
-        * {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    def display_model_response(response, model_name, page_num):
-        if not response:
-            return
-    
-        # Get analysis time
-        analysis_time_seconds = response.get("analysis_time_seconds")
-        analysis_time_formatted = response.get("analysis_time", format_analysis_time(analysis_time_seconds))
-        
-        # 基本字段
-        dish_names = response.get("dish_names", [])
-        visible_ingredients = response.get("visible_ingredients", [])
-        hidden_ingredients = response.get("hidden_ingredients", [])
-        nutrition = response.get("nutrition", {})
-        console_output = response.get("console_output", "N/A")
-        success = response.get("success", False)
-    
-        # 菜品名称
-        dish_list = "\n".join([f"• {d}" for d in dish_names]) if dish_names else "N/A"
-        
-        # 时间显示
-        time_display = f"({analysis_time_formatted})" if analysis_time_formatted and analysis_time_formatted != "N/A" else ""
-    
-        # 可见食材
-        visible_list = []
-        for ing in visible_ingredients:
-            line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
-            visible_list.append(line)
-        visible_text = "\n".join(visible_list) if visible_list else "N/A"
-    
-        # 隐藏食材
-        hidden_list = []
-        for ing in hidden_ingredients:
-            line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
-            hidden_list.append(line)
-        hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
-    
-        # 营养成分
-        nutri_lines = []
-        nutri_units = {
-            'calories': 'kcal',
-            'protein': 'g',
-            'fat': 'g',
-            'carbohydrates': 'g',
-            'fiber': 'g',
-            'sugar': 'g',
-            'sodium': 'mg'
-        }
-        
-        for k, v in nutrition.items():
-            unit = nutri_units.get(k, '')
-            nutri_lines.append(f"• {k.capitalize():<15} {v} {unit}")
-        nutrition_text = "\n".join(nutri_lines) if nutri_lines else "N/A"
-    
-        # 使用改进的HTML结构 - 模型名称现在放在框内
-        content_html = f"""
-    <div class='model-content'>
-    <div class='model-title'>{model_name}</div>
-    
-    <div class='section-title'>Dish Prediction <span class='analysis-time'>{time_display}</span></div>
-    <div class='content-box'>{dish_list}</div>
-    
-    <div class='section-title'>Visible Ingredients</div>
-    <div class='content-box'>{visible_text}</div>
-    
-    <div class='section-title'>Hidden Ingredients</div>
-    <div class='content-box'>{hidden_text}</div>
-    
-    <div class='section-title'>Nutrition Information</div>
-    <div class='content-box'>{nutrition_text}</div>
-    </div>
-    """
-    
-        # 直接显示模型容器，不再在外面单独显示模型标题
-        st.markdown(
-            f"""
-        <div class="model-container">
-            {content_html}
-        """,
-            unsafe_allow_html=True,
-        )
 
-    # 主逻辑代码
+st.set_page_config(
+    page_title="Food Image Analysis Display",
+    layout="wide"
+)
+
+def load_model_data():
+    model_files = {
+        "gemini-2.5-flash": "output/Gemini-2.5-flash_pydantic_food_dataset_analysis.json",
+        "gemini-2.5-pro": "output/Gemini-2.5-pro_pydantic_food_dataset_analysis.json"
+    }
+    
+    model_data = {}
+    available_models = []
+    
+    for model_name, file_path in model_files.items():
+        try:
+            encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
+            loaded = False
+            for encoding in encodings:
+                try:
+                    with open(file_path, 'r', encoding=encoding) as f:
+                        model_data[model_name] = json.load(f)
+                        available_models.append(model_name)
+                        loaded = True
+                        break
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    continue
+            if not loaded:
+                pass
+        except FileNotFoundError:
+            pass
+        except Exception:
+            pass
+    return model_data, available_models
+
+def get_all_images():
+    image_dir = "food-101_100images"
+    image_files = glob.glob(os.path.join(image_dir, "*.jpg"))
+    if not image_files:
+        return None
+    image_files.sort()
+    return image_files
+
+def build_image_index(model_data, available_models):
+    image_has_response = set()
+    model_file_mapping = {}
+    for model_name in available_models:
+        model_file_mapping[model_name] = {}
+        for item in model_data.get(model_name, []):
+            filename = os.path.basename(item.get("image_path", ""))
+            model_file_mapping[model_name][filename] = item
+            image_has_response.add(filename)
+    return image_has_response, model_file_mapping
+
+def find_model_response_fast(image_path, model_file_mapping, model_name):
+    if model_name not in model_file_mapping:
+        return None
+    filename = os.path.basename(image_path)
+    return model_file_mapping[model_name].get(filename)
+
+def format_analysis_time(seconds):
+    """Format analysis time in human-readable format: 1m30s, 40s, etc."""
+    if seconds is None:
+        return "N/A"
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    else:
+        minutes = int(seconds // 60)
+        remaining_seconds = seconds % 60
+        return f"{minutes}m{remaining_seconds:.1f}s"
+
+# 添加自适应CSS样式
+st.markdown("""
+<style>
+    /* 整体页面缩放控制 */
+    .main-container {
+        min-height: 100vh;
+        width: 100%;
+    }
+    
+    /* 模型容器 - 完全自适应 */
+    .model-container {
+        height: auto !important;
+        min-height: 400px;
+        max-height: none !important;
+        overflow: visible !important;
+        border: 1px solid #e1e4e8;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background: white;
+    }
+    
+    /* 响应式字体大小 */
+    .section-title {
+        font-weight: 600;
+        font-size: 1.1em;
+        color: #2c3e50;
+        margin: 12px 0 6px 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    .content-box {
+        white-space: pre-wrap;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 6px 0;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        line-height: 1.5;
+        border: 1px solid #e1e4e8;
+        font-size: 0.95em;
+        color: #333;
+    }
+    
+    .analysis-time {
+        font-size: 1em !important;
+        color: #666;
+        margin-left: 8px;
+        font-weight: 500;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    
+    /* 模型标题样式 - 现在放在框内 */
+    .model-title {
+        font-size: 1.3em;
+        font-weight: 600;
+        color: #1f77b4;
+        margin-bottom: 15px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e1e4e8;
+    }
+    
+    /* 图片容器 - 添加居中样式 */
+    .image-container {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+    
+    /* 图片样式 */
+    .centered-image {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    
+    /* 文件名样式 */
+    .filename-text {
+        text-align: center;
+        margin-top: 10px;
+        font-weight: 500;
+    }
+    
+    /* 导航栏样式 - 修复空白问题 */
+    .compact-nav {
+        margin-bottom: 5px !important;
+        padding: 0 !important;
+    }
+    .nav-button {
+        height: 30px !important;
+        min-height: 30px !important;
+        padding: 0 6px !important;
+        font-size: 11px !important;
+        margin: 0 !important;
+    }
+    .nav-input {
+        height: 30px !important;
+        min-height: 30px !important;
+        margin: 0 !important;
+    }
+    .nav-label {
+        font-size: 11px !important;
+        padding: 2px 0 !important;
+        margin: 0 !important;
+        text-align: center;
+    }
+    
+    /* 移除 Streamlit 默认列间距与空白框 */
+    div[data-testid="stHorizontalBlock"] {
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    div[data-testid="stVerticalBlock"] {
+        gap: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 移除整个图片区域上下额外空白 */
+    .image-container {
+        background: white;
+        padding: 10px 10px 5px 10px;
+        border-radius: 8px;
+        border: 1px solid #e1e4e8;
+        margin: 0 !important;
+    }
+    
+    /* 响应式布局调整 */
+    @media (max-height: 800px) {
+        .model-container {
+            min-height: 350px;
+            padding: 12px;
+        }
+        .section-title {
+            font-size: 1.05em;
+            margin: 10px 0 5px 0;
+        }
+        .content-box {
+            font-size: 0.9em;
+            padding: 8px;
+        }
+    }
+    
+    @media (max-height: 600px) {
+        .model-container {
+            min-height: 300px;
+            padding: 10px;
+        }
+        .section-title {
+            font-size: 1em;
+        }
+        .content-box {
+            font-size: 0.85em;
+            padding: 6px;
+        }
+    }
+            
+    /* 让图片列内容垂直居中 */
+    .left-column {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;  /* 垂直居中 */
+        align-items: center;      /* 水平居中 */
+        height: 100%;
+    }
+    
+    /* 确保所有元素使用现代字体 */
+    * {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+def display_model_response(response, model_name, page_num):
+    if not response:
+        return
+
+    # Get analysis time
+    analysis_time_seconds = response.get("analysis_time_seconds")
+    analysis_time_formatted = response.get("analysis_time", format_analysis_time(analysis_time_seconds))
+    
+    # 基本字段
+    dish_names = response.get("dish_names", [])
+    visible_ingredients = response.get("visible_ingredients", [])
+    hidden_ingredients = response.get("hidden_ingredients", [])
+    nutrition = response.get("nutrition", {})
+    console_output = response.get("console_output", "N/A")
+    success = response.get("success", False)
+
+    # 菜品名称
+    dish_list = "\n".join([f"• {d}" for d in dish_names]) if dish_names else "N/A"
+    
+    # 时间显示
+    time_display = f"({analysis_time_formatted})" if analysis_time_formatted and analysis_time_formatted != "N/A" else ""
+
+    # 可见食材
+    visible_list = []
+    for ing in visible_ingredients:
+        line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
+        visible_list.append(line)
+    visible_text = "\n".join(visible_list) if visible_list else "N/A"
+
+    # 隐藏食材
+    hidden_list = []
+    for ing in hidden_ingredients:
+        line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
+        hidden_list.append(line)
+    hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
+
+    # 营养成分
+    nutri_lines = []
+    nutri_units = {
+        'calories': 'kcal',
+        'protein': 'g',
+        'fat': 'g',
+        'carbohydrates': 'g',
+        'fiber': 'g',
+        'sugar': 'g',
+        'sodium': 'mg'
+    }
+    
+    for k, v in nutrition.items():
+        unit = nutri_units.get(k, '')
+        nutri_lines.append(f"• {k.capitalize():<15} {v} {unit}")
+    nutrition_text = "\n".join(nutri_lines) if nutri_lines else "N/A"
+
+    # 使用改进的HTML结构 - 模型名称现在放在框内
+    content_html = f"""
+<div class='model-content'>
+<div class='model-title'>{model_name}</div>
+
+<div class='section-title'>Dish Prediction <span class='analysis-time'>{time_display}</span></div>
+<div class='content-box'>{dish_list}</div>
+
+<div class='section-title'>Visible Ingredients</div>
+<div class='content-box'>{visible_text}</div>
+
+<div class='section-title'>Hidden Ingredients</div>
+<div class='content-box'>{hidden_text}</div>
+
+<div class='section-title'>Nutrition Information</div>
+<div class='content-box'>{nutrition_text}</div>
+</div>
+"""
+
+    # 直接显示模型容器，不再在外面单独显示模型标题
+    st.markdown(
+        f"""
+    <div class="model-container">
+        {content_html}
+    """,
+        unsafe_allow_html=True,
+    )
+
+def main():
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 0
     if 'valid_images' not in st.session_state:
@@ -560,5 +558,5 @@ def main():
             st.warning("No model responses available for this image.")
 
 
-if __name__ == "__main__":
+def run_version2():
     main()
