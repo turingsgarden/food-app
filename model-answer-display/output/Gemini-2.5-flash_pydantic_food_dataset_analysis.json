@@ -1,6 +1,6 @@
 [
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\baklava_399226.jpg",
+        "image_path": "food-101_100images/baklava_399226.jpg",
         "image_filename": "baklava_399226.jpg",
         "dish_names": [
             "Baklava"
@@ -57,11 +57,11 @@
         "processing_timestamp": "2025-10-15T22:52:52.329320",
         "analysis_time_seconds": 27.31775665283203,
         "analysis_time": "27.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\baklava_399226.jpg\nImage preprocessed: 382x512\nPydantic analysis completed in 27.32 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/baklava_399226.jpg\nImage preprocessed: 382x512\nPydantic analysis completed in 27.32 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beef_carpaccio_405691.jpg",
+        "image_path": "food-101_100images/beef_carpaccio_405691.jpg",
         "image_filename": "beef_carpaccio_405691.jpg",
         "dish_names": [
             "Beef Carpaccio"
@@ -133,11 +133,11 @@
         "processing_timestamp": "2025-10-15T22:53:19.046330",
         "analysis_time_seconds": 24.70958161354065,
         "analysis_time": "24.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beef_carpaccio_405691.jpg\nImage preprocessed: 512x287\nPydantic analysis completed in 24.71 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/beef_carpaccio_405691.jpg\nImage preprocessed: 512x287\nPydantic analysis completed in 24.71 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beef_tartare_2944816.jpg",
+        "image_path": "food-101_100images/beef_tartare_2944816.jpg",
         "image_filename": "beef_tartare_2944816.jpg",
         "dish_names": [
             "Steak Tartare"
@@ -214,11 +214,11 @@
         "processing_timestamp": "2025-10-15T22:53:35.029266",
         "analysis_time_seconds": 13.9819917678833,
         "analysis_time": "14.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beef_tartare_2944816.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 13.98 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/beef_tartare_2944816.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 13.98 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beef_tartare_578209.jpg",
+        "image_path": "food-101_100images/beef_tartare_578209.jpg",
         "image_filename": "beef_tartare_578209.jpg",
         "dish_names": [
             "Beef Tartare"
@@ -305,11 +305,11 @@
         "processing_timestamp": "2025-10-15T22:53:58.230024",
         "analysis_time_seconds": 21.198883771896362,
         "analysis_time": "21.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beef_tartare_578209.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 21.20 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/beef_tartare_578209.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 21.20 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beet_salad_803804.jpg",
+        "image_path": "food-101_100images/beet_salad_803804.jpg",
         "image_filename": "beet_salad_803804.jpg",
         "dish_names": [
             "Goat Cheese Salad"
@@ -381,11 +381,11 @@
         "processing_timestamp": "2025-10-15T22:54:19.847160",
         "analysis_time_seconds": 19.614979028701782,
         "analysis_time": "19.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beet_salad_803804.jpg\nImage preprocessed: 512x307\nPydantic analysis completed in 19.61 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/beet_salad_803804.jpg\nImage preprocessed: 512x307\nPydantic analysis completed in 19.61 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beignets_3506219.jpg",
+        "image_path": "food-101_100images/beignets_3506219.jpg",
         "image_filename": "beignets_3506219.jpg",
         "dish_names": [
             "Beignets"
@@ -462,11 +462,11 @@
         "processing_timestamp": "2025-10-15T22:54:30.508982",
         "analysis_time_seconds": 8.66032099723816,
         "analysis_time": "8.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\beignets_3506219.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 8.66 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/beignets_3506219.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 8.66 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\bibimbap_1053624.jpg",
+        "image_path": "food-101_100images/bibimbap_1053624.jpg",
         "image_filename": "bibimbap_1053624.jpg",
         "dish_names": [
             "Bibimbap"
@@ -553,11 +553,11 @@
         "processing_timestamp": "2025-10-15T22:54:47.594304",
         "analysis_time_seconds": 15.083306074142456,
         "analysis_time": "15.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\bibimbap_1053624.jpg\nImage preprocessed: 512x383\nPydantic analysis completed in 15.07 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/bibimbap_1053624.jpg\nImage preprocessed: 512x383\nPydantic analysis completed in 15.07 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\bread_pudding_2357403.jpg",
+        "image_path": "food-101_100images/bread_pudding_2357403.jpg",
         "image_filename": "bread_pudding_2357403.jpg",
         "dish_names": [
             "Bread Pudding"
@@ -644,11 +644,11 @@
         "processing_timestamp": "2025-10-15T22:55:10.514453",
         "analysis_time_seconds": 20.91917109489441,
         "analysis_time": "20.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\bread_pudding_2357403.jpg\nImage preprocessed: 512x366\nPydantic analysis completed in 20.92 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/bread_pudding_2357403.jpg\nImage preprocessed: 512x366\nPydantic analysis completed in 20.92 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\breakfast_burrito_228270.jpg",
+        "image_path": "food-101_100images/breakfast_burrito_228270.jpg",
         "image_filename": "breakfast_burrito_228270.jpg",
         "dish_names": [
             "Breakfast Burrito"
@@ -720,11 +720,11 @@
         "processing_timestamp": "2025-10-15T22:55:28.768527",
         "analysis_time_seconds": 16.246777296066284,
         "analysis_time": "16.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\breakfast_burrito_228270.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 16.25 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/breakfast_burrito_228270.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 16.25 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\bruschetta_2515404.jpg",
+        "image_path": "food-101_100images/bruschetta_2515404.jpg",
         "image_filename": "bruschetta_2515404.jpg",
         "dish_names": [
             "Bruschetta"
@@ -786,11 +786,11 @@
         "processing_timestamp": "2025-10-15T22:55:49.141108",
         "analysis_time_seconds": 18.36748194694519,
         "analysis_time": "18.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\bruschetta_2515404.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 18.37 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/bruschetta_2515404.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 18.37 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\caesar_salad_2318780.jpg",
+        "image_path": "food-101_100images/caesar_salad_2318780.jpg",
         "image_filename": "caesar_salad_2318780.jpg",
         "dish_names": [
             "Caesar Salad"
@@ -872,11 +872,11 @@
         "processing_timestamp": "2025-10-15T22:56:16.490015",
         "analysis_time_seconds": 25.33331322669983,
         "analysis_time": "25.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\caesar_salad_2318780.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 25.33 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/caesar_salad_2318780.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 25.33 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\cannoli_2502615.jpg",
+        "image_path": "food-101_100images/cannoli_2502615.jpg",
         "image_filename": "cannoli_2502615.jpg",
         "dish_names": [
             "Chocolate Cannoli"
@@ -953,11 +953,11 @@
         "processing_timestamp": "2025-10-15T22:56:29.419841",
         "analysis_time_seconds": 10.928415060043335,
         "analysis_time": "10.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\cannoli_2502615.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 10.93 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/cannoli_2502615.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 10.93 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\caprese_salad_2953563.jpg",
+        "image_path": "food-101_100images/caprese_salad_2953563.jpg",
         "image_filename": "caprese_salad_2953563.jpg",
         "dish_names": [
             "Mixed Green Salad with Feta and Tomatoes"
@@ -1019,11 +1019,11 @@
         "processing_timestamp": "2025-10-15T22:56:48.160526",
         "analysis_time_seconds": 16.73461127281189,
         "analysis_time": "16.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\caprese_salad_2953563.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 16.73 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/caprese_salad_2953563.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 16.73 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\carrot_cake_1834618.jpg",
+        "image_path": "food-101_100images/carrot_cake_1834618.jpg",
         "image_filename": "carrot_cake_1834618.jpg",
         "dish_names": [
             "Carrot Cake"
@@ -1145,11 +1145,11 @@
         "processing_timestamp": "2025-10-15T22:57:03.696426",
         "analysis_time_seconds": 13.524928331375122,
         "analysis_time": "13.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\carrot_cake_1834618.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 13.52 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/carrot_cake_1834618.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 13.52 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\ceviche_1907854.jpg",
+        "image_path": "food-101_100images/ceviche_1907854.jpg",
         "image_filename": "ceviche_1907854.jpg",
         "dish_names": [
             "Ceviche Platter"
@@ -1241,11 +1241,11 @@
         "processing_timestamp": "2025-10-15T22:57:20.913626",
         "analysis_time_seconds": 15.208889961242676,
         "analysis_time": "15.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\ceviche_1907854.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.21 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/ceviche_1907854.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.21 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\cheesecake_1509393.jpg",
+        "image_path": "food-101_100images/cheesecake_1509393.jpg",
         "image_filename": "cheesecake_1509393.jpg",
         "dish_names": [
             "Strawberry Cheesecake Parfait"
@@ -1312,11 +1312,11 @@
         "processing_timestamp": "2025-10-15T22:57:45.921397",
         "analysis_time_seconds": 23.002259254455566,
         "analysis_time": "23.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\cheesecake_1509393.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 23.00 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/cheesecake_1509393.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 23.00 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\cheese_plate_1642751.jpg",
+        "image_path": "food-101_100images/cheese_plate_1642751.jpg",
         "image_filename": "cheese_plate_1642751.jpg",
         "dish_names": [
             "Cheese Board"
@@ -1408,11 +1408,11 @@
         "processing_timestamp": "2025-10-15T22:58:06.805421",
         "analysis_time_seconds": 18.88325834274292,
         "analysis_time": "18.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\cheese_plate_1642751.jpg\nImage preprocessed: 512x390\nPydantic analysis completed in 18.88 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/cheese_plate_1642751.jpg\nImage preprocessed: 512x390\nPydantic analysis completed in 18.88 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chicken_curry_99631.jpg",
+        "image_path": "food-101_100images/chicken_curry_99631.jpg",
         "image_filename": "chicken_curry_99631.jpg",
         "dish_names": [
             "Katsu Curry"
@@ -1499,11 +1499,11 @@
         "processing_timestamp": "2025-10-15T22:58:37.449610",
         "analysis_time_seconds": 28.63097882270813,
         "analysis_time": "28.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chicken_curry_99631.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 28.63 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/chicken_curry_99631.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 28.63 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chicken_quesadilla_1339626.jpg",
+        "image_path": "food-101_100images/chicken_quesadilla_1339626.jpg",
         "image_filename": "chicken_quesadilla_1339626.jpg",
         "dish_names": [
             "Quesadillas"
@@ -1580,11 +1580,11 @@
         "processing_timestamp": "2025-10-15T22:59:08.209505",
         "analysis_time_seconds": 28.7586350440979,
         "analysis_time": "28.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chicken_quesadilla_1339626.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 28.76 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/chicken_quesadilla_1339626.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 28.76 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chicken_wings_966200.jpg",
+        "image_path": "food-101_100images/chicken_wings_966200.jpg",
         "image_filename": "chicken_wings_966200.jpg",
         "dish_names": [
             "Buffalo Wings"
@@ -1651,11 +1651,11 @@
         "processing_timestamp": "2025-10-15T22:59:25.484379",
         "analysis_time_seconds": 15.271560668945312,
         "analysis_time": "15.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chicken_wings_966200.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.27 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/chicken_wings_966200.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.27 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chocolate_cake_2231564.jpg",
+        "image_path": "food-101_100images/chocolate_cake_2231564.jpg",
         "image_filename": "chocolate_cake_2231564.jpg",
         "dish_names": [
             "Chocolate Cake"
@@ -1757,11 +1757,11 @@
         "processing_timestamp": "2025-10-15T22:59:43.000290",
         "analysis_time_seconds": 15.498459815979004,
         "analysis_time": "15.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chocolate_cake_2231564.jpg\nImage preprocessed: 512x341\nPydantic analysis completed in 15.50 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/chocolate_cake_2231564.jpg\nImage preprocessed: 512x341\nPydantic analysis completed in 15.50 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chocolate_mousse_1238815.jpg",
+        "image_path": "food-101_100images/chocolate_mousse_1238815.jpg",
         "image_filename": "chocolate_mousse_1238815.jpg",
         "dish_names": [
             "Chocolate Mousse Cake"
@@ -1868,11 +1868,11 @@
         "processing_timestamp": "2025-10-15T23:00:05.608819",
         "analysis_time_seconds": 20.598469257354736,
         "analysis_time": "20.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\chocolate_mousse_1238815.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.60 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/chocolate_mousse_1238815.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.60 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\churros_904536.jpg",
+        "image_path": "food-101_100images/churros_904536.jpg",
         "image_filename": "churros_904536.jpg",
         "dish_names": [
             "Churro with Hot Chocolate"
@@ -1944,11 +1944,11 @@
         "processing_timestamp": "2025-10-15T23:00:18.973596",
         "analysis_time_seconds": 11.361177921295166,
         "analysis_time": "11.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\churros_904536.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 11.36 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/churros_904536.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 11.36 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\clam_chowder_3395591.jpg",
+        "image_path": "food-101_100images/clam_chowder_3395591.jpg",
         "image_filename": "clam_chowder_3395591.jpg",
         "dish_names": [
             "Clam Chowder"
@@ -2040,11 +2040,11 @@
         "processing_timestamp": "2025-10-15T23:00:49.400878",
         "analysis_time_seconds": 28.42511510848999,
         "analysis_time": "28.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\clam_chowder_3395591.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 28.43 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/clam_chowder_3395591.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 28.43 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\club_sandwich_677502.jpg",
+        "image_path": "food-101_100images/club_sandwich_677502.jpg",
         "image_filename": "club_sandwich_677502.jpg",
         "dish_names": [
             "Club Sandwich with Fries"
@@ -2121,11 +2121,11 @@
         "processing_timestamp": "2025-10-15T23:01:12.580939",
         "analysis_time_seconds": 21.17198419570923,
         "analysis_time": "21.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\club_sandwich_677502.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 21.17 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/club_sandwich_677502.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 21.17 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\crab_cakes_3742187.jpg",
+        "image_path": "food-101_100images/crab_cakes_3742187.jpg",
         "image_filename": "crab_cakes_3742187.jpg",
         "dish_names": [
             "Fried Crab Cakes"
@@ -2247,11 +2247,11 @@
         "processing_timestamp": "2025-10-15T23:01:38.073220",
         "analysis_time_seconds": 23.49093794822693,
         "analysis_time": "23.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\crab_cakes_3742187.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 23.49 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/crab_cakes_3742187.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 23.49 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\creme_brulee_2803791.jpg",
+        "image_path": "food-101_100images/creme_brulee_2803791.jpg",
         "image_filename": "creme_brulee_2803791.jpg",
         "dish_names": [
             "Creme Brulee"
@@ -2313,11 +2313,11 @@
         "processing_timestamp": "2025-10-15T23:02:03.218856",
         "analysis_time_seconds": 23.126610279083252,
         "analysis_time": "23.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\creme_brulee_2803791.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 23.13 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/creme_brulee_2803791.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 23.13 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\croque_madame_1198642.jpg",
+        "image_path": "food-101_100images/croque_madame_1198642.jpg",
         "image_filename": "croque_madame_1198642.jpg",
         "dish_names": [
             "Croque Madame"
@@ -2409,11 +2409,11 @@
         "processing_timestamp": "2025-10-15T23:02:23.199845",
         "analysis_time_seconds": 17.98031973838806,
         "analysis_time": "18.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\croque_madame_1198642.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.98 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/croque_madame_1198642.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.98 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\cup_cakes_2323830.jpg",
+        "image_path": "food-101_100images/cup_cakes_2323830.jpg",
         "image_filename": "cup_cakes_2323830.jpg",
         "dish_names": [
             "Chocolate Cupcake"
@@ -2505,11 +2505,11 @@
         "processing_timestamp": "2025-10-15T23:02:59.768828",
         "analysis_time_seconds": 34.5674991607666,
         "analysis_time": "34.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\cup_cakes_2323830.jpg\nImage preprocessed: 511x512\nPydantic analysis completed in 34.57 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/cup_cakes_2323830.jpg\nImage preprocessed: 511x512\nPydantic analysis completed in 34.57 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\deviled_eggs_3827299.jpg",
+        "image_path": "food-101_100images/deviled_eggs_3827299.jpg",
         "image_filename": "deviled_eggs_3827299.jpg",
         "dish_names": [
             "Deviled Eggs"
@@ -2581,11 +2581,11 @@
         "processing_timestamp": "2025-10-15T23:03:19.285162",
         "analysis_time_seconds": 17.513980627059937,
         "analysis_time": "17.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\deviled_eggs_3827299.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.51 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/deviled_eggs_3827299.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.51 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\donuts_309356.jpg",
+        "image_path": "food-101_100images/donuts_309356.jpg",
         "image_filename": "donuts_309356.jpg",
         "dish_names": [
             "Donuts"
@@ -2672,11 +2672,11 @@
         "processing_timestamp": "2025-10-15T23:03:44.967022",
         "analysis_time_seconds": 23.667749881744385,
         "analysis_time": "23.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\donuts_309356.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 23.67 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/donuts_309356.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 23.67 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\dumplings_2788552.jpg",
+        "image_path": "food-101_100images/dumplings_2788552.jpg",
         "image_filename": "dumplings_2788552.jpg",
         "dish_names": [
             "Xiaolongbao"
@@ -2748,11 +2748,11 @@
         "processing_timestamp": "2025-10-15T23:03:57.301289",
         "analysis_time_seconds": 10.331331968307495,
         "analysis_time": "10.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\dumplings_2788552.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 10.33 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/dumplings_2788552.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 10.33 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\edamame_2035309.jpg",
+        "image_path": "food-101_100images/edamame_2035309.jpg",
         "image_filename": "edamame_2035309.jpg",
         "dish_names": [
             "Edamame"
@@ -2783,11 +2783,11 @@
         "processing_timestamp": "2025-10-15T23:04:08.437671",
         "analysis_time_seconds": 9.134031772613525,
         "analysis_time": "9.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\edamame_2035309.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 9.13 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/edamame_2035309.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 9.13 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\eggs_benedict_2454885.jpg",
+        "image_path": "food-101_100images/eggs_benedict_2454885.jpg",
         "image_filename": "eggs_benedict_2454885.jpg",
         "dish_names": [
             "Eggs Benedict"
@@ -2869,11 +2869,11 @@
         "processing_timestamp": "2025-10-15T23:04:28.695135",
         "analysis_time_seconds": 18.25492024421692,
         "analysis_time": "18.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\eggs_benedict_2454885.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 18.25 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/eggs_benedict_2454885.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 18.25 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\escargots_463711.jpg",
+        "image_path": "food-101_100images/escargots_463711.jpg",
         "image_filename": "escargots_463711.jpg",
         "dish_names": [
             "Escargots"
@@ -2930,11 +2930,11 @@
         "processing_timestamp": "2025-10-15T23:04:46.889935",
         "analysis_time_seconds": 16.193525314331055,
         "analysis_time": "16.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\escargots_463711.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 16.19 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/escargots_463711.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 16.19 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\falafel_987526.jpg",
+        "image_path": "food-101_100images/falafel_987526.jpg",
         "image_filename": "falafel_987526.jpg",
         "dish_names": [
             "Kebab Wrap"
@@ -3011,11 +3011,11 @@
         "processing_timestamp": "2025-10-15T23:05:10.988816",
         "analysis_time_seconds": 22.09502863883972,
         "analysis_time": "22.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\falafel_987526.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 22.10 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/falafel_987526.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 22.10 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\filet_mignon_188570.jpg",
+        "image_path": "food-101_100images/filet_mignon_188570.jpg",
         "image_filename": "filet_mignon_188570.jpg",
         "dish_names": [
             "Seared Beef Medallions with Herb Butter and Red Wine Reduction"
@@ -3122,11 +3122,11 @@
         "processing_timestamp": "2025-10-15T23:05:45.294667",
         "analysis_time_seconds": 32.295841217041016,
         "analysis_time": "32.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\filet_mignon_188570.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 32.30 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/filet_mignon_188570.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 32.30 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\fish_and_chips_724722.jpg",
+        "image_path": "food-101_100images/fish_and_chips_724722.jpg",
         "image_filename": "fish_and_chips_724722.jpg",
         "dish_names": [
             "Fish and Chips"
@@ -3188,11 +3188,11 @@
         "processing_timestamp": "2025-10-15T23:06:05.324990",
         "analysis_time_seconds": 18.0275297164917,
         "analysis_time": "18.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\fish_and_chips_724722.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 18.03 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/fish_and_chips_724722.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 18.03 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\foie_gras_912000.jpg",
+        "image_path": "food-101_100images/foie_gras_912000.jpg",
         "image_filename": "foie_gras_912000.jpg",
         "dish_names": [
             "Pork Roulade"
@@ -3279,11 +3279,11 @@
         "processing_timestamp": "2025-10-15T23:06:27.625851",
         "analysis_time_seconds": 20.295605421066284,
         "analysis_time": "20.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\foie_gras_912000.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.30 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/foie_gras_912000.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.30 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\french_fries_3049746.jpg",
+        "image_path": "food-101_100images/french_fries_3049746.jpg",
         "image_filename": "french_fries_3049746.jpg",
         "dish_names": [
             "French Fries"
@@ -3320,11 +3320,11 @@
         "processing_timestamp": "2025-10-15T23:06:34.025639",
         "analysis_time_seconds": 4.398055076599121,
         "analysis_time": "4.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\french_fries_3049746.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 4.40 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/french_fries_3049746.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 4.40 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\french_onion_soup_2601719.jpg",
+        "image_path": "food-101_100images/french_onion_soup_2601719.jpg",
         "image_filename": "french_onion_soup_2601719.jpg",
         "dish_names": [
             "French Onion Soup"
@@ -3396,11 +3396,11 @@
         "processing_timestamp": "2025-10-15T23:06:54.943008",
         "analysis_time_seconds": 18.914106369018555,
         "analysis_time": "18.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\french_onion_soup_2601719.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 18.91 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/french_onion_soup_2601719.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 18.91 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\french_toast_1598853.jpg",
+        "image_path": "food-101_100images/french_toast_1598853.jpg",
         "image_filename": "french_toast_1598853.jpg",
         "dish_names": [
             "French Toast"
@@ -3472,11 +3472,11 @@
         "processing_timestamp": "2025-10-15T23:07:17.062610",
         "analysis_time_seconds": 20.110090494155884,
         "analysis_time": "20.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\french_toast_1598853.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.11 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/french_toast_1598853.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.11 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\fried_calamari_233317.jpg",
+        "image_path": "food-101_100images/fried_calamari_233317.jpg",
         "image_filename": "fried_calamari_233317.jpg",
         "dish_names": [
             "Fried Calamari"
@@ -3568,11 +3568,11 @@
         "processing_timestamp": "2025-10-15T23:07:31.492263",
         "analysis_time_seconds": 12.416792154312134,
         "analysis_time": "12.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\fried_calamari_233317.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 12.42 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/fried_calamari_233317.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 12.42 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\fried_rice_2872064.jpg",
+        "image_path": "food-101_100images/fried_rice_2872064.jpg",
         "image_filename": "fried_rice_2872064.jpg",
         "dish_names": [
             "Fried Rice"
@@ -3634,11 +3634,11 @@
         "processing_timestamp": "2025-10-15T23:07:50.234396",
         "analysis_time_seconds": 16.73203945159912,
         "analysis_time": "16.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\fried_rice_2872064.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 16.73 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/fried_rice_2872064.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 16.73 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\frozen_yogurt_1650642.jpg",
+        "image_path": "food-101_100images/frozen_yogurt_1650642.jpg",
         "image_filename": "frozen_yogurt_1650642.jpg",
         "dish_names": [
             "Frozen Yogurt"
@@ -3705,11 +3705,11 @@
         "processing_timestamp": "2025-10-15T23:08:18.947390",
         "analysis_time_seconds": 26.708690643310547,
         "analysis_time": "26.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\frozen_yogurt_1650642.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 26.71 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/frozen_yogurt_1650642.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 26.71 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\garlic_bread_2443423.jpg",
+        "image_path": "food-101_100images/garlic_bread_2443423.jpg",
         "image_filename": "garlic_bread_2443423.jpg",
         "dish_names": [
             "Garlic Bread"
@@ -3761,11 +3761,11 @@
         "processing_timestamp": "2025-10-15T23:08:35.399159",
         "analysis_time_seconds": 14.449319124221802,
         "analysis_time": "14.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\garlic_bread_2443423.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 14.45 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/garlic_bread_2443423.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 14.45 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\gnocchi_2450148.jpg",
+        "image_path": "food-101_100images/gnocchi_2450148.jpg",
         "image_filename": "gnocchi_2450148.jpg",
         "dish_names": [
             "Gnocchi with Tomato Sauce"
@@ -3852,11 +3852,11 @@
         "processing_timestamp": "2025-10-15T23:08:52.491627",
         "analysis_time_seconds": 15.08699083328247,
         "analysis_time": "15.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\gnocchi_2450148.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.09 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/gnocchi_2450148.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.09 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\greek_salad_2517209.jpg",
+        "image_path": "food-101_100images/greek_salad_2517209.jpg",
         "image_filename": "greek_salad_2517209.jpg",
         "dish_names": [
             "Greek Salad"
@@ -3938,11 +3938,11 @@
         "processing_timestamp": "2025-10-15T23:09:06.584803",
         "analysis_time_seconds": 12.077747583389282,
         "analysis_time": "12.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\greek_salad_2517209.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 12.08 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/greek_salad_2517209.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 12.08 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\grilled_cheese_sandwich_198462.jpg",
+        "image_path": "food-101_100images/grilled_cheese_sandwich_198462.jpg",
         "image_filename": "grilled_cheese_sandwich_198462.jpg",
         "dish_names": [
             "Grilled Cheese Sandwich"
@@ -4014,11 +4014,11 @@
         "processing_timestamp": "2025-10-15T23:09:31.643149",
         "analysis_time_seconds": 23.054871797561646,
         "analysis_time": "23.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\grilled_cheese_sandwich_198462.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 23.05 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/grilled_cheese_sandwich_198462.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 23.05 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\grilled_salmon_3353342.jpg",
+        "image_path": "food-101_100images/grilled_salmon_3353342.jpg",
         "image_filename": "grilled_salmon_3353342.jpg",
         "dish_names": [
             "Grilled Salmon with Citrus Avocado Salad"
@@ -4085,11 +4085,11 @@
         "processing_timestamp": "2025-10-15T23:09:51.177857",
         "analysis_time_seconds": 17.532392024993896,
         "analysis_time": "17.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\grilled_salmon_3353342.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.53 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/grilled_salmon_3353342.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.53 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\guacamole_309276.jpg",
+        "image_path": "food-101_100images/guacamole_309276.jpg",
         "image_filename": "guacamole_309276.jpg",
         "dish_names": [
             "Guacamole with Tortilla Chips"
@@ -4146,11 +4146,11 @@
         "processing_timestamp": "2025-10-15T23:10:12.867072",
         "analysis_time_seconds": 19.676598072052002,
         "analysis_time": "19.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\guacamole_309276.jpg\nImage preprocessed: 512x500\nPydantic analysis completed in 19.68 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/guacamole_309276.jpg\nImage preprocessed: 512x500\nPydantic analysis completed in 19.68 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\gyoza_2936854.jpg",
+        "image_path": "food-101_100images/gyoza_2936854.jpg",
         "image_filename": "gyoza_2936854.jpg",
         "dish_names": [
             "Gyoza"
@@ -4242,11 +4242,11 @@
         "processing_timestamp": "2025-10-15T23:10:36.493730",
         "analysis_time_seconds": 21.61942458152771,
         "analysis_time": "21.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\gyoza_2936854.jpg\nImage preprocessed: 512x306\nPydantic analysis completed in 21.62 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/gyoza_2936854.jpg\nImage preprocessed: 512x306\nPydantic analysis completed in 21.62 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\hamburger_2130925.jpg",
+        "image_path": "food-101_100images/hamburger_2130925.jpg",
         "image_filename": "hamburger_2130925.jpg",
         "dish_names": [
             "Hamburger"
@@ -4333,11 +4333,11 @@
         "processing_timestamp": "2025-10-15T23:10:56.625901",
         "analysis_time_seconds": 18.128227949142456,
         "analysis_time": "18.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\hamburger_2130925.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 18.13 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/hamburger_2130925.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 18.13 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\hot_and_sour_soup_2415615.jpg",
+        "image_path": "food-101_100images/hot_and_sour_soup_2415615.jpg",
         "image_filename": "hot_and_sour_soup_2415615.jpg",
         "dish_names": [
             "Hot and Sour Soup"
@@ -4429,11 +4429,11 @@
         "processing_timestamp": "2025-10-15T23:11:11.818647",
         "analysis_time_seconds": 13.191189050674438,
         "analysis_time": "13.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\hot_and_sour_soup_2415615.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 13.19 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/hot_and_sour_soup_2415615.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 13.19 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\hot_dog_3701301.jpg",
+        "image_path": "food-101_100images/hot_dog_3701301.jpg",
         "image_filename": "hot_dog_3701301.jpg",
         "dish_names": [
             "Hot Dog"
@@ -4479,11 +4479,11 @@
         "processing_timestamp": "2025-10-15T23:11:23.884092",
         "analysis_time_seconds": 10.06386137008667,
         "analysis_time": "10.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\hot_dog_3701301.jpg\nImage preprocessed: 512x288\nPydantic analysis completed in 10.06 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/hot_dog_3701301.jpg\nImage preprocessed: 512x288\nPydantic analysis completed in 10.06 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\huevos_rancheros_2022323.jpg",
+        "image_path": "food-101_100images/huevos_rancheros_2022323.jpg",
         "image_filename": "huevos_rancheros_2022323.jpg",
         "dish_names": [
             "Enchiladas Plate"
@@ -4590,11 +4590,11 @@
         "processing_timestamp": "2025-10-15T23:11:55.888929",
         "analysis_time_seconds": 29.99610924720764,
         "analysis_time": "30.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\huevos_rancheros_2022323.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 30.00 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/huevos_rancheros_2022323.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 30.00 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\hummus_3751556.jpg",
+        "image_path": "food-101_100images/hummus_3751556.jpg",
         "image_filename": "hummus_3751556.jpg",
         "dish_names": [
             "Spicy Three Pepper Hummus"
@@ -4665,11 +4665,11 @@
         "processing_timestamp": "2025-10-15T23:12:17.544355",
         "analysis_time_seconds": 19.65395951271057,
         "analysis_time": "19.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\hummus_3751556.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 19.65 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/hummus_3751556.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 19.65 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\ice_cream_1404936.jpg",
+        "image_path": "food-101_100images/ice_cream_1404936.jpg",
         "image_filename": "ice_cream_1404936.jpg",
         "dish_names": [
             "Ice Cream"
@@ -4710,11 +4710,11 @@
         "processing_timestamp": "2025-10-15T23:12:28.063599",
         "analysis_time_seconds": 8.51772689819336,
         "analysis_time": "8.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\ice_cream_1404936.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 8.52 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/ice_cream_1404936.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 8.52 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\lasagna_1971499.jpg",
+        "image_path": "food-101_100images/lasagna_1971499.jpg",
         "image_filename": "lasagna_1971499.jpg",
         "dish_names": [
             "Lasagna"
@@ -4796,11 +4796,11 @@
         "processing_timestamp": "2025-10-15T23:12:59.409501",
         "analysis_time_seconds": 29.338615655899048,
         "analysis_time": "29.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\lasagna_1971499.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 29.34 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/lasagna_1971499.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 29.34 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\lobster_bisque_245094.jpg",
+        "image_path": "food-101_100images/lobster_bisque_245094.jpg",
         "image_filename": "lobster_bisque_245094.jpg",
         "dish_names": [
             "Lobster Bisque"
@@ -4887,11 +4887,11 @@
         "processing_timestamp": "2025-10-15T23:13:19.950675",
         "analysis_time_seconds": 18.537447929382324,
         "analysis_time": "18.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\lobster_bisque_245094.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 18.54 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/lobster_bisque_245094.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 18.54 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\lobster_roll_sandwich_121543.jpg",
+        "image_path": "food-101_100images/lobster_roll_sandwich_121543.jpg",
         "image_filename": "lobster_roll_sandwich_121543.jpg",
         "dish_names": [
             "Lobster Roll Platter"
@@ -4993,11 +4993,11 @@
         "processing_timestamp": "2025-10-15T23:13:58.006402",
         "analysis_time_seconds": 36.0494327545166,
         "analysis_time": "36.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\lobster_roll_sandwich_121543.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 36.05 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/lobster_roll_sandwich_121543.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 36.05 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\macaroni_and_cheese_2871337.jpg",
+        "image_path": "food-101_100images/macaroni_and_cheese_2871337.jpg",
         "image_filename": "macaroni_and_cheese_2871337.jpg",
         "dish_names": [
             "Creamy Pasta with Bacon"
@@ -5074,11 +5074,11 @@
         "processing_timestamp": "2025-10-15T23:14:21.213906",
         "analysis_time_seconds": 21.20569348335266,
         "analysis_time": "21.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\macaroni_and_cheese_2871337.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 21.21 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/macaroni_and_cheese_2871337.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 21.21 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\macarons_1627847.jpg",
+        "image_path": "food-101_100images/macarons_1627847.jpg",
         "image_filename": "macarons_1627847.jpg",
         "dish_names": [
             "Macaron"
@@ -5145,11 +5145,11 @@
         "processing_timestamp": "2025-10-15T23:14:39.026570",
         "analysis_time_seconds": 15.796603441238403,
         "analysis_time": "15.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\macarons_1627847.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 15.80 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/macarons_1627847.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 15.80 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\miso_soup_2954059.jpg",
+        "image_path": "food-101_100images/miso_soup_2954059.jpg",
         "image_filename": "miso_soup_2954059.jpg",
         "dish_names": [
             "Clear Soup"
@@ -5191,11 +5191,11 @@
         "processing_timestamp": "2025-10-15T23:14:57.471433",
         "analysis_time_seconds": 16.442726135253906,
         "analysis_time": "16.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\miso_soup_2954059.jpg\nImage preprocessed: 512x289\nPydantic analysis completed in 16.44 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/miso_soup_2954059.jpg\nImage preprocessed: 512x289\nPydantic analysis completed in 16.44 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\mussels_2099188.jpg",
+        "image_path": "food-101_100images/mussels_2099188.jpg",
         "image_filename": "mussels_2099188.jpg",
         "dish_names": [
             "Mussels"
@@ -5252,11 +5252,11 @@
         "processing_timestamp": "2025-10-15T23:15:11.782770",
         "analysis_time_seconds": 12.309402227401733,
         "analysis_time": "12.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\mussels_2099188.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 12.31 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/mussels_2099188.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 12.31 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\nachos_297114.jpg",
+        "image_path": "food-101_100images/nachos_297114.jpg",
         "image_filename": "nachos_297114.jpg",
         "dish_names": [
             "Nachos"
@@ -5343,11 +5343,11 @@
         "processing_timestamp": "2025-10-15T23:15:40.027245",
         "analysis_time_seconds": 26.243201732635498,
         "analysis_time": "26.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\nachos_297114.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 26.24 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/nachos_297114.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 26.24 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\omelette_1585214.jpg",
+        "image_path": "food-101_100images/omelette_1585214.jpg",
         "image_filename": "omelette_1585214.jpg",
         "dish_names": [
             "Japanese Omelet"
@@ -5409,11 +5409,11 @@
         "processing_timestamp": "2025-10-15T23:15:57.647440",
         "analysis_time_seconds": 15.606053352355957,
         "analysis_time": "15.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\omelette_1585214.jpg\nImage preprocessed: 512x289\nPydantic analysis completed in 15.61 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/omelette_1585214.jpg\nImage preprocessed: 512x289\nPydantic analysis completed in 15.61 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\onion_rings_3773120.jpg",
+        "image_path": "food-101_100images/onion_rings_3773120.jpg",
         "image_filename": "onion_rings_3773120.jpg",
         "dish_names": [
             "Tornado Potato"
@@ -5465,11 +5465,11 @@
         "processing_timestamp": "2025-10-15T23:16:11.716563",
         "analysis_time_seconds": 12.066325902938843,
         "analysis_time": "12.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\onion_rings_3773120.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 12.07 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/onion_rings_3773120.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 12.07 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\oysters_3444000.jpg",
+        "image_path": "food-101_100images/oysters_3444000.jpg",
         "image_filename": "oysters_3444000.jpg",
         "dish_names": [
             "Oysters on the Half Shell"
@@ -5500,11 +5500,11 @@
         "processing_timestamp": "2025-10-15T23:16:21.163862",
         "analysis_time_seconds": 7.438558578491211,
         "analysis_time": "7.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\oysters_3444000.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 7.44 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/oysters_3444000.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 7.44 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pad_thai_2268231.jpg",
+        "image_path": "food-101_100images/pad_thai_2268231.jpg",
         "image_filename": "pad_thai_2268231.jpg",
         "dish_names": [
             "Pad Thai"
@@ -5606,11 +5606,11 @@
         "processing_timestamp": "2025-10-15T23:16:40.164575",
         "analysis_time_seconds": 16.996108293533325,
         "analysis_time": "17.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pad_thai_2268231.jpg\nImage preprocessed: 512x395\nPydantic analysis completed in 17.00 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/pad_thai_2268231.jpg\nImage preprocessed: 512x395\nPydantic analysis completed in 17.00 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\paella_1612720.jpg",
+        "image_path": "food-101_100images/paella_1612720.jpg",
         "image_filename": "paella_1612720.jpg",
         "dish_names": [
             "Paella"
@@ -5712,11 +5712,11 @@
         "processing_timestamp": "2025-10-15T23:17:07.791636",
         "analysis_time_seconds": 25.599000215530396,
         "analysis_time": "25.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\paella_1612720.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 25.60 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/paella_1612720.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 25.60 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pancakes_2048659.jpg",
+        "image_path": "food-101_100images/pancakes_2048659.jpg",
         "image_filename": "pancakes_2048659.jpg",
         "dish_names": [
             "Blueberry Pancakes"
@@ -5793,11 +5793,11 @@
         "processing_timestamp": "2025-10-15T23:17:39.890160",
         "analysis_time_seconds": 30.09515953063965,
         "analysis_time": "30.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pancakes_2048659.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 30.10 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/pancakes_2048659.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 30.10 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\panna_cotta_1755583.jpg",
+        "image_path": "food-101_100images/panna_cotta_1755583.jpg",
         "image_filename": "panna_cotta_1755583.jpg",
         "dish_names": [
             "Panna Cotta"
@@ -5864,11 +5864,11 @@
         "processing_timestamp": "2025-10-15T23:17:54.969660",
         "analysis_time_seconds": 13.074842929840088,
         "analysis_time": "13.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\panna_cotta_1755583.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 13.07 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/panna_cotta_1755583.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 13.07 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\peking_duck_469467.jpg",
+        "image_path": "food-101_100images/peking_duck_469467.jpg",
         "image_filename": "peking_duck_469467.jpg",
         "dish_names": [
             "Peking Duck"
@@ -5945,11 +5945,11 @@
         "processing_timestamp": "2025-10-15T23:18:07.664338",
         "analysis_time_seconds": 10.682379484176636,
         "analysis_time": "10.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\peking_duck_469467.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 10.68 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/peking_duck_469467.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 10.68 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pho_1034222.jpg",
+        "image_path": "food-101_100images/pho_1034222.jpg",
         "image_filename": "pho_1034222.jpg",
         "dish_names": [
             "Dumpling Soup"
@@ -6011,11 +6011,11 @@
         "processing_timestamp": "2025-10-15T23:18:29.608416",
         "analysis_time_seconds": 19.93637990951538,
         "analysis_time": "19.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pho_1034222.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 19.94 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/pho_1034222.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 19.94 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pizza_1245628.jpg",
+        "image_path": "food-101_100images/pizza_1245628.jpg",
         "image_filename": "pizza_1245628.jpg",
         "dish_names": [
             "Pizza"
@@ -6107,11 +6107,11 @@
         "processing_timestamp": "2025-10-15T23:18:46.924085",
         "analysis_time_seconds": 15.312649250030518,
         "analysis_time": "15.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pizza_1245628.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.31 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/pizza_1245628.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.31 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pork_chop_3923842.jpg",
+        "image_path": "food-101_100images/pork_chop_3923842.jpg",
         "image_filename": "pork_chop_3923842.jpg",
         "dish_names": [
             "Roasted Duck Breast"
@@ -6188,11 +6188,11 @@
         "processing_timestamp": "2025-10-15T23:19:06.352960",
         "analysis_time_seconds": 17.419376373291016,
         "analysis_time": "17.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pork_chop_3923842.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.42 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/pork_chop_3923842.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.42 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\poutine_3562347.jpg",
+        "image_path": "food-101_100images/poutine_3562347.jpg",
         "image_filename": "poutine_3562347.jpg",
         "dish_names": [
             "Poutine"
@@ -6264,11 +6264,11 @@
         "processing_timestamp": "2025-10-15T23:19:19.119033",
         "analysis_time_seconds": 10.761508464813232,
         "analysis_time": "10.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\poutine_3562347.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 10.76 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/poutine_3562347.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 10.76 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\prime_rib_419411.jpg",
+        "image_path": "food-101_100images/prime_rib_419411.jpg",
         "image_filename": "prime_rib_419411.jpg",
         "dish_names": [
             "Steak Dinner"
@@ -6370,11 +6370,11 @@
         "processing_timestamp": "2025-10-15T23:19:43.666532",
         "analysis_time_seconds": 22.53599452972412,
         "analysis_time": "22.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\prime_rib_419411.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 22.54 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/prime_rib_419411.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 22.54 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pulled_pork_sandwich_748992.jpg",
+        "image_path": "food-101_100images/pulled_pork_sandwich_748992.jpg",
         "image_filename": "pulled_pork_sandwich_748992.jpg",
         "dish_names": [
             "Pulled Pork Sandwich"
@@ -6431,11 +6431,11 @@
         "processing_timestamp": "2025-10-15T23:19:58.166395",
         "analysis_time_seconds": 12.497599601745605,
         "analysis_time": "12.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\pulled_pork_sandwich_748992.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 12.50 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/pulled_pork_sandwich_748992.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 12.50 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\ramen_3052285.jpg",
+        "image_path": "food-101_100images/ramen_3052285.jpg",
         "image_filename": "ramen_3052285.jpg",
         "dish_names": [
             "Ramen"
@@ -6517,11 +6517,11 @@
         "processing_timestamp": "2025-10-15T23:20:20.871318",
         "analysis_time_seconds": 20.680047035217285,
         "analysis_time": "20.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\ramen_3052285.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.68 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/ramen_3052285.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.68 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\ravioli_63189.jpg",
+        "image_path": "food-101_100images/ravioli_63189.jpg",
         "image_filename": "ravioli_63189.jpg",
         "dish_names": [
             "Braised Pork with Roasted Potatoes"
@@ -6593,11 +6593,11 @@
         "processing_timestamp": "2025-10-15T23:20:40.776636",
         "analysis_time_seconds": 17.903438568115234,
         "analysis_time": "17.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\ravioli_63189.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 17.90 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/ravioli_63189.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 17.90 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\red_velvet_cake_127891.jpg",
+        "image_path": "food-101_100images/red_velvet_cake_127891.jpg",
         "image_filename": "red_velvet_cake_127891.jpg",
         "dish_names": [
             "Red Velvet Cake"
@@ -6704,11 +6704,11 @@
         "processing_timestamp": "2025-10-15T23:20:58.824569",
         "analysis_time_seconds": 16.034128427505493,
         "analysis_time": "16.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\red_velvet_cake_127891.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 16.03 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/red_velvet_cake_127891.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 16.03 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\risotto_2915662.jpg",
+        "image_path": "food-101_100images/risotto_2915662.jpg",
         "image_filename": "risotto_2915662.jpg",
         "dish_names": [
             "Barley Risotto"
@@ -6790,11 +6790,11 @@
         "processing_timestamp": "2025-10-15T23:21:18.909013",
         "analysis_time_seconds": 18.072092056274414,
         "analysis_time": "18.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\risotto_2915662.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 18.07 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/risotto_2915662.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 18.07 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\samosa_639388.jpg",
+        "image_path": "food-101_100images/samosa_639388.jpg",
         "image_filename": "samosa_639388.jpg",
         "dish_names": [
             "Samosas"
@@ -6851,11 +6851,11 @@
         "processing_timestamp": "2025-10-15T23:21:38.626606",
         "analysis_time_seconds": 17.713281869888306,
         "analysis_time": "17.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\samosa_639388.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.71 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/samosa_639388.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 17.71 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\sashimi_3067162.jpg",
+        "image_path": "food-101_100images/sashimi_3067162.jpg",
         "image_filename": "sashimi_3067162.jpg",
         "dish_names": [
             "Salmon Sashimi"
@@ -6902,11 +6902,11 @@
         "processing_timestamp": "2025-10-15T23:21:49.199435",
         "analysis_time_seconds": 8.571246862411499,
         "analysis_time": "8.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\sashimi_3067162.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 8.57 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/sashimi_3067162.jpg\nImage preprocessed: 512x384\nPydantic analysis completed in 8.57 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\scallops_2016381.jpg",
+        "image_path": "food-101_100images/scallops_2016381.jpg",
         "image_filename": "scallops_2016381.jpg",
         "dish_names": [
             "Seared Scallops"
@@ -6978,11 +6978,11 @@
         "processing_timestamp": "2025-10-15T23:22:06.366025",
         "analysis_time_seconds": 15.152533292770386,
         "analysis_time": "15.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\scallops_2016381.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.15 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/scallops_2016381.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.15 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\seaweed_salad_1664268.jpg",
+        "image_path": "food-101_100images/seaweed_salad_1664268.jpg",
         "image_filename": "seaweed_salad_1664268.jpg",
         "dish_names": [
             "Assorted Asian Pickles and Seaweed Salad"
@@ -7069,11 +7069,11 @@
         "processing_timestamp": "2025-10-15T23:22:43.404391",
         "analysis_time_seconds": 35.03584814071655,
         "analysis_time": "35.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\seaweed_salad_1664268.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 35.04 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/seaweed_salad_1664268.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 35.04 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\shrimp_and_grits_1681600.jpg",
+        "image_path": "food-101_100images/shrimp_and_grits_1681600.jpg",
         "image_filename": "shrimp_and_grits_1681600.jpg",
         "dish_names": [
             "Creamy Shrimp"
@@ -7150,11 +7150,11 @@
         "processing_timestamp": "2025-10-15T23:23:06.071355",
         "analysis_time_seconds": 20.661579370498657,
         "analysis_time": "20.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\shrimp_and_grits_1681600.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.66 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/shrimp_and_grits_1681600.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.66 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\spaghetti_bolognese_610783.jpg",
+        "image_path": "food-101_100images/spaghetti_bolognese_610783.jpg",
         "image_filename": "spaghetti_bolognese_610783.jpg",
         "dish_names": [
             "Spaghetti with Marinara Sauce"
@@ -7231,11 +7231,11 @@
         "processing_timestamp": "2025-10-15T23:23:21.202945",
         "analysis_time_seconds": 13.120743751525879,
         "analysis_time": "13.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\spaghetti_bolognese_610783.jpg\nImage preprocessed: 512x471\nPydantic analysis completed in 13.12 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/spaghetti_bolognese_610783.jpg\nImage preprocessed: 512x471\nPydantic analysis completed in 13.12 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\spaghetti_carbonara_1070957.jpg",
+        "image_path": "food-101_100images/spaghetti_carbonara_1070957.jpg",
         "image_filename": "spaghetti_carbonara_1070957.jpg",
         "dish_names": [
             "Spaghetti Carbonara"
@@ -7302,11 +7302,11 @@
         "processing_timestamp": "2025-10-15T23:23:48.466452",
         "analysis_time_seconds": 25.242491960525513,
         "analysis_time": "25.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\spaghetti_carbonara_1070957.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 25.24 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/spaghetti_carbonara_1070957.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 25.24 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\spring_rolls_2789502.jpg",
+        "image_path": "food-101_100images/spring_rolls_2789502.jpg",
         "image_filename": "spring_rolls_2789502.jpg",
         "dish_names": [
             "Spring Rolls"
@@ -7428,11 +7428,11 @@
         "processing_timestamp": "2025-10-15T23:24:16.675188",
         "analysis_time_seconds": 26.20696234703064,
         "analysis_time": "26.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\spring_rolls_2789502.jpg\nImage preprocessed: 512x288\nPydantic analysis completed in 26.21 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/spring_rolls_2789502.jpg\nImage preprocessed: 512x288\nPydantic analysis completed in 26.21 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\steak_3901703.jpg",
+        "image_path": "food-101_100images/steak_3901703.jpg",
         "image_filename": "steak_3901703.jpg",
         "dish_names": [
             "Steak"
@@ -7484,11 +7484,11 @@
         "processing_timestamp": "2025-10-15T23:24:40.569747",
         "analysis_time_seconds": 21.882155179977417,
         "analysis_time": "21.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\steak_3901703.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 21.88 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/steak_3901703.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 21.88 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\strawberry_shortcake_353563.jpg",
+        "image_path": "food-101_100images/strawberry_shortcake_353563.jpg",
         "image_filename": "strawberry_shortcake_353563.jpg",
         "dish_names": [
             "Strawberry Cream Cake"
@@ -7560,11 +7560,11 @@
         "processing_timestamp": "2025-10-15T23:25:00.866534",
         "analysis_time_seconds": 18.294842958450317,
         "analysis_time": "18.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\strawberry_shortcake_353563.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 18.29 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/strawberry_shortcake_353563.jpg\nImage preprocessed: 512x382\nPydantic analysis completed in 18.29 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\sushi_2049021.jpg",
+        "image_path": "food-101_100images/sushi_2049021.jpg",
         "image_filename": "sushi_2049021.jpg",
         "dish_names": [
             "California Roll"
@@ -7651,11 +7651,11 @@
         "processing_timestamp": "2025-10-15T23:25:23.370480",
         "analysis_time_seconds": 20.487217664718628,
         "analysis_time": "20.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\sushi_2049021.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 20.49 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/sushi_2049021.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 20.49 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\tacos_2102616.jpg",
+        "image_path": "food-101_100images/tacos_2102616.jpg",
         "image_filename": "tacos_2102616.jpg",
         "dish_names": [
             "Fish Tacos"
@@ -7757,11 +7757,11 @@
         "processing_timestamp": "2025-10-15T23:25:51.009926",
         "analysis_time_seconds": 25.62966752052307,
         "analysis_time": "25.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\tacos_2102616.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 25.63 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/tacos_2102616.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 25.63 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\takoyaki_822322.jpg",
+        "image_path": "food-101_100images/takoyaki_822322.jpg",
         "image_filename": "takoyaki_822322.jpg",
         "dish_names": [
             "Takoyaki"
@@ -7848,11 +7848,11 @@
         "processing_timestamp": "2025-10-15T23:26:06.531991",
         "analysis_time_seconds": 13.51537799835205,
         "analysis_time": "13.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\takoyaki_822322.jpg\nImage preprocessed: 512x342\nPydantic analysis completed in 13.52 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/takoyaki_822322.jpg\nImage preprocessed: 512x342\nPydantic analysis completed in 13.52 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\tiramisu_618123.jpg",
+        "image_path": "food-101_100images/tiramisu_618123.jpg",
         "image_filename": "tiramisu_618123.jpg",
         "dish_names": [
             "Tiramisu Cake"
@@ -7924,11 +7924,11 @@
         "processing_timestamp": "2025-10-15T23:26:24.113455",
         "analysis_time_seconds": 15.572021961212158,
         "analysis_time": "15.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\tiramisu_618123.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.57 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/tiramisu_618123.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 15.57 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\tuna_tartare_3091207.jpg",
+        "image_path": "food-101_100images/tuna_tartare_3091207.jpg",
         "image_filename": "tuna_tartare_3091207.jpg",
         "dish_names": [
             "Tuna Poke"
@@ -8010,11 +8010,11 @@
         "processing_timestamp": "2025-10-15T23:26:46.421278",
         "analysis_time_seconds": 20.3044171333313,
         "analysis_time": "20.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\tuna_tartare_3091207.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.30 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/tuna_tartare_3091207.jpg\nImage preprocessed: 512x512\nPydantic analysis completed in 20.30 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\waffles_28437.jpg",
+        "image_path": "food-101_100images/waffles_28437.jpg",
         "image_filename": "waffles_28437.jpg",
         "dish_names": [
             "Strawberry Waffle"
@@ -8096,7 +8096,7 @@
         "processing_timestamp": "2025-10-15T23:26:59.469866",
         "analysis_time_seconds": 11.031354665756226,
         "analysis_time": "11.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\\\Users\\\\PC\\\\OneDrive\\\\Desktop\\\\Nutrify\\\\food-101_100images\\waffles_28437.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 11.03 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: food-101_100images/waffles_28437.jpg\nImage preprocessed: 384x512\nPydantic analysis completed in 11.03 seconds\n",
         "success": true
     }
 ]
