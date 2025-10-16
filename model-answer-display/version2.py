@@ -6,11 +6,6 @@ import glob
 
 
 
-st.set_page_config(
-    page_title="Food Image Analysis Display",
-    layout="wide"
-)
-
 def load_model_data():
     model_files = {
         "gemini-2.5-flash": "output/Gemini-2.5-flash_pydantic_food_dataset_analysis.json",
@@ -559,4 +554,10 @@ def main():
 
 
 def run_version2():
+    
+    st.set_page_config(
+        page_title="Food Image Analysis Display",
+        layout="wide"
+    )
+
     main()
