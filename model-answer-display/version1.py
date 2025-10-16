@@ -285,20 +285,20 @@ def main():
     
     
     if __name__ == "__main__":
-    st.markdown(
-        """
-        <style>
-            .app-scale {
-                zoom: 0.8; 
-                -moz-transform: scale(0.8); 
-                -moz-transform-origin: 0 0;
-            }
-        </style>
-        <div class="app-scale">
-        """,
-        unsafe_allow_html=True
-    )
-
-    main()  # 调用你的 main() 函数
-
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown(
+            """
+            <style>
+                .app-scale {
+                    zoom: 0.8; 
+                    -moz-transform: scale(0.8); 
+                    -moz-transform-origin: 0 0;
+                }
+            </style>
+            <div class="app-scale">
+            """,
+            unsafe_allow_html=True
+        )
+    
+        main()  # 调用你的 main() 函数
+    
+        st.markdown("</div>", unsafe_allow_html=True)
