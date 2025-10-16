@@ -55,8 +55,13 @@ def build_image_index(model_data, available_models):
         model_file_mapping[model_name] = {}
         for item in model_data.get(model_name, []):
             filename = os.path.basename(item.get("image_path", ""))
+            if not filename:
+                print(f"[Warning] Empty image_path in model {model_name}: {item}")
+                continue
+            print(f"[Info] Adding image {filename} for model {model_name}")
             model_file_mapping[model_name][filename] = item
             image_has_response.add(filename)
+    print(f"Total images with responses: {len(image_has_response)}")
     return image_has_response, model_file_mapping
 
 def find_model_response_fast(image_path, model_file_mapping, model_name):
@@ -342,6 +347,8 @@ def display_model_response(response, model_name, page_num):
     )
 
 def main():
+    print("All images found:", len(all_images))
+    print("Valid images with responses:", valid_images)
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 0
     if 'valid_images' not in st.session_state:
