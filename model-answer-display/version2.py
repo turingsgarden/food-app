@@ -48,6 +48,7 @@ def get_all_images():
     image_files.sort()
     return image_files
 
+
 def build_image_index(model_data, available_models):
     image_has_response = set()
     model_file_mapping = {}
