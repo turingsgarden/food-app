@@ -356,12 +356,10 @@ def main():
                 st.error("No model data found")
                 return
             all_images = get_all_images()
-            print("DEBUG - all_images found:", all_images)
             if not all_images:
                 st.error("No images found")
                 return
             image_has_response, model_file_mapping = build_image_index(model_data, available_models)
-            print("DEBUG - image_has_response set:", image_has_response)
             valid_images = [img for img in all_images if os.path.basename(img) in image_has_response]
             
             st.session_state.valid_images = valid_images
@@ -551,6 +549,7 @@ def main():
                 st.error("Unable to load image")
             st.markdown("</div>", unsafe_allow_html=True)
             st.warning("No model responses available for this image.")
+
 
 
 def run_version2():
