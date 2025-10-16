@@ -1,164 +1,182 @@
-import streamlit as st
+
 import json
 import os
 from PIL import Image
 import glob
+# from get_images import ensure_subset_data
 
+
+# st.set_page_config(page_title="Food Image Analysis Display", layout="wide")
+
+# image_files = ensure_subset_data(max_images=100)
+# if not image_files:
+#     st.warning("No images found.")
+# else:
+#     st.success(f"Found {len(image_files)} images.")
+
+
+# Page configuration
+
+
+
+st.set_page_config(
+    page_title="Food Image Analysis Display",
+    layout="wide"
+)
+
+def load_model_data():
+    model_files = {
+        "gemini-2.5-flash": "output/Gemini-2.5-flash_food-101_analysis.json",
+        "gemini-2.5-pro": "output/Gemini-2.5-pro_food-101_analysis.json"
+    }
+    
+    model_data = {}
+    available_models = []
+    
+    for model_name, file_path in model_files.items():
+        try:
+            encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
+            loaded = False
+            for encoding in encodings:
+                try:
+                    with open(file_path, 'r', encoding=encoding) as f:
+                        model_data[model_name] = json.load(f)
+                        available_models.append(model_name)
+                        loaded = True
+                        break
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    continue
+            if not loaded:
+                pass
+        except FileNotFoundError:
+            pass
+        except Exception:
+            pass
+    return model_data, available_models
+
+def get_all_images():
+    image_dir = "food-101_100images"
+    image_files = glob.glob(os.path.join(image_dir, "*.jpg"))
+    if not image_files:
+        return None
+    image_files.sort()
+    return image_files
+
+def build_image_index(model_data, available_models):
+    image_has_response = set()
+    model_file_mapping = {}
+    for model_name in available_models:
+        model_file_mapping[model_name] = {}
+        for item in model_data.get(model_name, []):
+            raw_path = item.get("image_path", "")
+            filename = os.path.basename(raw_path.replace("\\", "/"))  # 替换 \ 为 /
+            model_file_mapping[model_name][filename] = item
+            image_has_response.add(filename)
+
+        print(f"DEBUG - {model_name} loaded {len(model_file_mapping[model_name])} items.")
+        print(f"DEBUG - Example filenames: {list(model_file_mapping[model_name].keys())[:5]}")
+    return image_has_response, model_file_mapping
+
+
+def find_model_response_fast(image_path, model_file_mapping, model_name):
+    if model_name not in model_file_mapping:
+        return None
+    filename = os.path.basename(image_path)
+    return model_file_mapping[model_name].get(filename)
+
+def format_ingredients_text(text):
+    if not text or text == "N/A":
+        return "N/A"
+    
+    lines = text.split('\n')
+    formatted_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        if line:
+            if '|' in line:
+                parts = [p.strip() for p in line.split('|')]
+                while len(parts) < 4:
+                    parts.append('')
+                
+                formatted_line = f"• {parts[0]:<25} {parts[1]:>6} {parts[2]:<6} {parts[3]}"
+                formatted_lines.append(formatted_line)
+            else:
+                formatted_lines.append(f"• {line}")
+    
+    return '\n'.join(formatted_lines)
+
+def format_nutrition_text(text):
+    if not text or text == "N/A":
+        return "N/A"
+    
+    lines = text.split('\n')
+    formatted_lines = []
+    
+    for line in lines:
+        line = line.strip()
+        if line:
+            if '|' in line:
+                parts = [p.strip() for p in line.split('|')]
+                nutrient = parts[0]
+                value = parts[1]
+                unit = parts[2] if len(parts) > 2 else ""
+                formatted_line = f"• {nutrient:<18} {value:>8} {unit}"
+                formatted_lines.append(formatted_line)
+            else:
+                formatted_lines.append(f"• {line}")
+    
+    return '\n'.join(formatted_lines)
+
+def display_model_response(response, model_name, page_num):
+    if not response:
+        return
+    
+    #show model name
+    st.markdown(f"<h4 style='margin-top:0; margin-bottom:10px;'>{model_name}</h4>", unsafe_allow_html=True)
+    
+    section_style = "font-weight:bold; font-size:16px; color:#1f77b4; margin: 15px 0 8px 0;"
+    content_style = "white-space: pre; font-family: 'Courier New', monospace; margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; line-height: 1.4; border: 1px solid #e1e4e8;"
+    
+    analysis_time = response.get("analysis_time", "N/A")
+    time_text = f" ({float(analysis_time):.2f}s)" if analysis_time != "N/A" and analysis_time is not None else ""
+    
+    dish_prediction = response.get("dish_prediction", "N/A")
+    image_description = response.get("image_description", "N/A")
+    hidden_ingredients = response.get("hidden_ingredients", "N/A")
+    nutrition_info = response.get("nutrition_info", "N/A")
+    
+    formatted_description = format_ingredients_text(image_description)
+    formatted_hidden = format_ingredients_text(hidden_ingredients)
+    formatted_nutrition = format_nutrition_text(nutrition_info)
+    
+    
+    content_html = f"""
+<div style='margin-bottom:15px;'>
+
+<div style='{section_style}'>Dish Prediction{time_text}</div>
+<div style='{content_style}'>{dish_prediction if dish_prediction != 'N/A' else 'N/A'}</div>
+
+<div style='{section_style}'>Image Description</div>
+<div style='{content_style}'>{formatted_description}</div>
+
+<div style='{section_style}'>Hidden Ingredients</div>
+<div style='{content_style}'>{formatted_hidden}</div>
+
+<div style='{section_style}'>Nutrition Information</div>
+<div style='{content_style}'>{formatted_nutrition}</div>
+
+</div>
+"""
+    
+    
+    st.markdown(f"""
+    <div style="height: 650px; overflow-y: auto; border: 1px solid #e1e4e8; border-radius: 8px; padding: 15px;">
+        {content_html}
+
+    """, unsafe_allow_html=True)
+    # </div>
 def main():
-    st.header("Version 1")
-    st.set_page_config(
-        page_title="Food Image Analysis Display",
-        layout="wide"
-    )
-    
-    def load_model_data():
-        model_files = {
-            "gemini-2.5-flash": "output/Gemini-2.5-flash_food-101_analysis.json",
-            "gemini-2.5-pro": "output/Gemini-2.5-pro_food-101_analysis.json"
-        }
-        
-        model_data = {}
-        available_models = []
-        
-        for model_name, file_path in model_files.items():
-            try:
-                encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
-                loaded = False
-                for encoding in encodings:
-                    try:
-                        with open(file_path, 'r', encoding=encoding) as f:
-                            model_data[model_name] = json.load(f)
-                            available_models.append(model_name)
-                            loaded = True
-                            break
-                    except (UnicodeDecodeError, json.JSONDecodeError):
-                        continue
-                if not loaded:
-                    pass
-            except FileNotFoundError:
-                pass
-            except Exception:
-                pass
-        return model_data, available_models
-    
-    def get_all_images():
-        image_dir = "food-101_100images"
-        image_files = glob.glob(os.path.join(image_dir, "*.jpg"))
-        if not image_files:
-            return None
-        image_files.sort()
-        return image_files
-    
-    def build_image_index(model_data, available_models):
-        image_has_response = set()
-        model_file_mapping = {}
-        for model_name in available_models:
-            model_file_mapping[model_name] = {}
-            for item in model_data.get(model_name, []):
-                raw_path = item.get("image_path", "")
-                filename = os.path.basename(raw_path.replace("\\", "/"))
-                model_file_mapping[model_name][filename] = item
-                image_has_response.add(filename)
-    
-            print(f"DEBUG - {model_name} loaded {len(model_file_mapping[model_name])} items.")
-            print(f"DEBUG - Example filenames: {list(model_file_mapping[model_name].keys())[:5]}")
-        return image_has_response, model_file_mapping
-    
-    def find_model_response_fast(image_path, model_file_mapping, model_name):
-        if model_name not in model_file_mapping:
-            return None
-        filename = os.path.basename(image_path)
-        return model_file_mapping[model_name].get(filename)
-    
-    def format_ingredients_text(text):
-        if not text or text == "N/A":
-            return "N/A"
-        
-        lines = text.split('\n')
-        formatted_lines = []
-        
-        for line in lines:
-            line = line.strip()
-            if line:
-                if '|' in line:
-                    parts = [p.strip() for p in line.split('|')]
-                    while len(parts) < 4:
-                        parts.append('')
-                    
-                    formatted_line = f"• {parts[0]:<25} {parts[1]:>6} {parts[2]:<6} {parts[3]}"
-                    formatted_lines.append(formatted_line)
-                else:
-                    formatted_lines.append(f"• {line}")
-        
-        return '\n'.join(formatted_lines)
-    
-    def format_nutrition_text(text):
-        if not text or text == "N/A":
-            return "N/A"
-        
-        lines = text.split('\n')
-        formatted_lines = []
-        
-        for line in lines:
-            line = line.strip()
-            if line:
-                if '|' in line:
-                    parts = [p.strip() for p in line.split('|')]
-                    nutrient = parts[0]
-                    value = parts[1]
-                    unit = parts[2] if len(parts) > 2 else ""
-                    formatted_line = f"• {nutrient:<18} {value:>8} {unit}"
-                    formatted_lines.append(formatted_line)
-                else:
-                    formatted_lines.append(f"• {line}")
-        
-        return '\n'.join(formatted_lines)
-    
-    def display_model_response(response, model_name, page_num):
-        if not response:
-            return
-        
-        st.markdown(f"<h4 style='margin-top:0; margin-bottom:10px;'>{model_name}</h4>", unsafe_allow_html=True)
-        
-        section_style = "font-weight:bold; font-size:16px; color:#1f77b4; margin: 15px 0 8px 0;"
-        content_style = "white-space: pre; font-family: 'Courier New', monospace; margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; line-height: 1.4; border: 1px solid #e1e4e8;"
-        
-        analysis_time = response.get("analysis_time", "N/A")
-        time_text = f" ({float(analysis_time):.2f}s)" if analysis_time != "N/A" and analysis_time is not None else ""
-        
-        dish_prediction = response.get("dish_prediction", "N/A")
-        image_description = response.get("image_description", "N/A")
-        hidden_ingredients = response.get("hidden_ingredients", "N/A")
-        nutrition_info = response.get("nutrition_info", "N/A")
-        
-        formatted_description = format_ingredients_text(image_description)
-        formatted_hidden = format_ingredients_text(hidden_ingredients)
-        formatted_nutrition = format_nutrition_text(nutrition_info)
-        
-        content_html = f"""
-    <div style='margin-bottom:15px;'>
-    
-    <div style='{section_style}'>Dish Prediction{time_text}</div>
-    <div style='{content_style}'>{dish_prediction if dish_prediction != 'N/A' else 'N/A'}</div>
-    
-    <div style='{section_style}'>Image Description</div>
-    <div style='{content_style}'>{formatted_description}</div>
-    
-    <div style='{section_style}'>Hidden Ingredients</div>
-    <div style='{content_style}'>{formatted_hidden}</div>
-    
-    <div style='{section_style}'>Nutrition Information</div>
-    <div style='{content_style}'>{formatted_nutrition}</div>
-    
-    </div>
-    """
-        
-        st.markdown(f"""
-        <div style="height: 650px; overflow-y: auto; border: 1px solid #e1e4e8; border-radius: 8px; padding: 15px;">
-            {content_html}
-        """, unsafe_allow_html=True)
-
-    # 主逻辑代码
     if 'current_page' not in st.session_state:
         st.session_state.current_page = 0
     if 'valid_images' not in st.session_state:
@@ -203,6 +221,7 @@ def main():
     
     current_responses = {m: find_model_response_fast(current_image_path, model_file_mapping, m) for m in available_models if find_model_response_fast(current_image_path, model_file_mapping, m)}
     
+
     nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6 = st.columns([3, 1, 1, 1, 1, 1])
     
     with nav_col1:
@@ -243,6 +262,7 @@ def main():
     col_left, col_mid, col_right = st.columns([1,1,1])
     
     with col_left:
+
         st.markdown("<br><br>", unsafe_allow_html=True)  
         st.markdown("<br><br>", unsafe_allow_html=True) 
         try:
@@ -262,7 +282,8 @@ def main():
         with col_right:
             display_model_response(current_responses["gemini-2.5-flash"], "gemini-2.5-flash", current_page)
 
-if __name__ == "__main__":
+
+def run_version1():
     st.markdown(
         """
         <style>
@@ -276,7 +297,25 @@ if __name__ == "__main__":
         """,
         unsafe_allow_html=True
     )
-    
+
     main()
-    
     st.markdown("</div>", unsafe_allow_html=True)
+
+# if __name__ == "__main__":
+#     st.markdown(
+#         """
+#         <style>
+#             .app-scale {
+#                 zoom: 0.8; 
+#                 -moz-transform: scale(0.8); 
+#                 -moz-transform-origin: 0 0;
+#             }
+#         </style>
+#         <div class="app-scale">
+#         """,
+#         unsafe_allow_html=True
+#     )
+
+#     main()  
+
+#     st.markdown("</div>", unsafe_allow_html=True) 
