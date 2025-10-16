@@ -1,4 +1,6 @@
 import streamlit as st
+from version2 import run_version2
+from version1 import run_version1
 
 # 初始化 session_state
 if "selected_version" not in st.session_state:
