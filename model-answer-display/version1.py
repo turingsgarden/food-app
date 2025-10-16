@@ -18,12 +18,6 @@ import glob
 # Page configuration
 
 
-
-st.set_page_config(
-    page_title="Food Image Analysis Display",
-    layout="wide"
-)
-
 def load_model_data():
     model_files = {
         "gemini-2.5-flash": "output/Gemini-2.5-flash_food-101_analysis.json",
@@ -284,6 +278,14 @@ def main():
 
 
 def run_version1():
+    
+
+    st.set_page_config(
+        page_title="Food Image Analysis Display",
+        layout="wide"
+    )
+
+    
     st.markdown(
         """
         <style>
