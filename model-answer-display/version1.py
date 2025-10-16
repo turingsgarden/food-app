@@ -3,20 +3,6 @@ import json
 import os
 from PIL import Image
 import glob
-# from get_images import ensure_subset_data
-
-
-# st.set_page_config(page_title="Food Image Analysis Display", layout="wide")
-
-# image_files = ensure_subset_data(max_images=100)
-# if not image_files:
-#     st.warning("No images found.")
-# else:
-#     st.success(f"Found {len(image_files)} images.")
-
-
-# Page configuration
-
 
 def main():
     st.header("Version 1")
@@ -70,14 +56,13 @@ def main():
             model_file_mapping[model_name] = {}
             for item in model_data.get(model_name, []):
                 raw_path = item.get("image_path", "")
-                filename = os.path.basename(raw_path.replace("\\", "/"))  # 替换 \ 为 /
+                filename = os.path.basename(raw_path.replace("\\", "/"))
                 model_file_mapping[model_name][filename] = item
                 image_has_response.add(filename)
     
             print(f"DEBUG - {model_name} loaded {len(model_file_mapping[model_name])} items.")
             print(f"DEBUG - Example filenames: {list(model_file_mapping[model_name].keys())[:5]}")
         return image_has_response, model_file_mapping
-    
     
     def find_model_response_fast(image_path, model_file_mapping, model_name):
         if model_name not in model_file_mapping:
@@ -133,7 +118,6 @@ def main():
         if not response:
             return
         
-        #show model name
         st.markdown(f"<h4 style='margin-top:0; margin-bottom:10px;'>{model_name}</h4>", unsafe_allow_html=True)
         
         section_style = "font-weight:bold; font-size:16px; color:#1f77b4; margin: 15px 0 8px 0;"
@@ -150,7 +134,6 @@ def main():
         formatted_description = format_ingredients_text(image_description)
         formatted_hidden = format_ingredients_text(hidden_ingredients)
         formatted_nutrition = format_nutrition_text(nutrition_info)
-        
         
         content_html = f"""
     <div style='margin-bottom:15px;'>
@@ -170,135 +153,130 @@ def main():
     </div>
     """
         
-        
         st.markdown(f"""
         <div style="height: 650px; overflow-y: auto; border: 1px solid #e1e4e8; border-radius: 8px; padding: 15px;">
             {content_html}
-    
         """, unsafe_allow_html=True)
-        # </div>
-    def main():
-        if 'current_page' not in st.session_state:
-            st.session_state.current_page = 0
-        if 'valid_images' not in st.session_state:
-            st.session_state.valid_images = None
-        if 'model_file_mapping' not in st.session_state:
-            st.session_state.model_file_mapping = None
-        if 'available_models' not in st.session_state:
-            st.session_state.available_models = None
-        if 'data_loaded' not in st.session_state:
-            st.session_state.data_loaded = False
-        
-        if not st.session_state.data_loaded:
-            with st.spinner("Loading data..."):
-                model_data, available_models = load_model_data()
-                if not available_models:
-                    st.error("No model data found")
-                    return
-                all_images = get_all_images()
-                if not all_images:
-                    st.error("No images found")
-                    return
-                image_has_response, model_file_mapping = build_image_index(model_data, available_models)
-                valid_images = [img for img in all_images if os.path.basename(img) in image_has_response]
-                
-                st.session_state.valid_images = valid_images
-                st.session_state.model_file_mapping = model_file_mapping
-                st.session_state.available_models = available_models
-                st.session_state.data_loaded = True
-        
-        valid_images = st.session_state.valid_images
-        model_file_mapping = st.session_state.model_file_mapping
-        available_models = st.session_state.available_models
-        
-        if not valid_images:
-            st.warning("No valid images with responses.")
-            return
-        
-        total_pages = len(valid_images)
-        current_page = st.session_state.current_page
-        current_image_path = valid_images[current_page]
-        image_name = os.path.basename(current_image_path)
-        
-        current_responses = {m: find_model_response_fast(current_image_path, model_file_mapping, m) for m in available_models if find_model_response_fast(current_image_path, model_file_mapping, m)}
-        
+
+    # 主逻辑代码
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = 0
+    if 'valid_images' not in st.session_state:
+        st.session_state.valid_images = None
+    if 'model_file_mapping' not in st.session_state:
+        st.session_state.model_file_mapping = None
+    if 'available_models' not in st.session_state:
+        st.session_state.available_models = None
+    if 'data_loaded' not in st.session_state:
+        st.session_state.data_loaded = False
     
-        nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6 = st.columns([3, 1, 1, 1, 1, 1])
-        
-        with nav_col1:
-            st.write("")
-        
-        with nav_col2:
-            st.markdown(
-                f"<div style='font-size:10px; text-align:center; padding: 4px 0;'>{current_page+1}/{total_pages}</div>",
-                unsafe_allow_html=True
-            )
-        
-        with nav_col3:
-            page_input = st.number_input(
-                "Page", 
-                min_value=1, 
-                max_value=total_pages, 
-                value=current_page+1,
-                label_visibility="collapsed",
-                key=f"page_jump_{current_page}"
-            )
-        
-        with nav_col4:
-            if st.button("Go", use_container_width=True, key=f"jump_btn_{current_page}"):
-                if 1 <= page_input <= total_pages:
-                    st.session_state.current_page = page_input-1
-                    st.rerun()
-        
-        with nav_col5:
-            if st.button("◀", use_container_width=True, disabled=current_page<=0, key=f"prev_{current_page}"):
-                st.session_state.current_page -= 1
-                st.rerun()
-        
-        with nav_col6:
-            if st.button("▶", use_container_width=True, disabled=current_page>=total_pages-1, key=f"next_{current_page}"):
-                st.session_state.current_page += 1
-                st.rerun()
+    if not st.session_state.data_loaded:
+        with st.spinner("Loading data..."):
+            model_data, available_models = load_model_data()
+            if not available_models:
+                st.error("No model data found")
+                return
+            all_images = get_all_images()
+            if not all_images:
+                st.error("No images found")
+                return
+            image_has_response, model_file_mapping = build_image_index(model_data, available_models)
+            valid_images = [img for img in all_images if os.path.basename(img) in image_has_response]
+            
+            st.session_state.valid_images = valid_images
+            st.session_state.model_file_mapping = model_file_mapping
+            st.session_state.available_models = available_models
+            st.session_state.data_loaded = True
     
-        col_left, col_mid, col_right = st.columns([1,1,1])
-        
-        with col_left:
+    valid_images = st.session_state.valid_images
+    model_file_mapping = st.session_state.model_file_mapping
+    available_models = st.session_state.available_models
     
-            st.markdown("<br><br>", unsafe_allow_html=True)  
-            st.markdown("<br><br>", unsafe_allow_html=True) 
-            try:
-                image = Image.open(current_image_path)
-                st.image(image, width='stretch')
-            except:
-                st.error("Unable to load image")
-            st.write(f"**Filename:** {image_name}")
-        
-        model_names = list(current_responses.keys())
+    if not valid_images:
+        st.warning("No valid images with responses.")
+        return
     
-        if "gemini-2.5-pro" in current_responses:
-            with col_mid:
-                display_model_response(current_responses["gemini-2.5-pro"], "gemini-2.5-pro", current_page)
+    total_pages = len(valid_images)
+    current_page = st.session_state.current_page
+    current_image_path = valid_images[current_page]
+    image_name = os.path.basename(current_image_path)
     
-        if "gemini-2.5-flash" in current_responses:
-            with col_right:
-                display_model_response(current_responses["gemini-2.5-flash"], "gemini-2.5-flash", current_page)
+    current_responses = {m: find_model_response_fast(current_image_path, model_file_mapping, m) for m in available_models if find_model_response_fast(current_image_path, model_file_mapping, m)}
     
+    nav_col1, nav_col2, nav_col3, nav_col4, nav_col5, nav_col6 = st.columns([3, 1, 1, 1, 1, 1])
     
-    if __name__ == "__main__":
+    with nav_col1:
+        st.write("")
+    
+    with nav_col2:
         st.markdown(
-            """
-            <style>
-                .app-scale {
-                    zoom: 0.8; 
-                    -moz-transform: scale(0.8); 
-                    -moz-transform-origin: 0 0;
-                }
-            </style>
-            <div class="app-scale">
-            """,
+            f"<div style='font-size:10px; text-align:center; padding: 4px 0;'>{current_page+1}/{total_pages}</div>",
             unsafe_allow_html=True
         )
     
-        main()  # 调用你的 main() 函数
+    with nav_col3:
+        page_input = st.number_input(
+            "Page", 
+            min_value=1, 
+            max_value=total_pages, 
+            value=current_page+1,
+            label_visibility="collapsed",
+            key=f"page_jump_{current_page}"
+        )
     
-        st.markdown("</div>", unsafe_allow_html=True)
+    with nav_col4:
+        if st.button("Go", use_container_width=True, key=f"jump_btn_{current_page}"):
+            if 1 <= page_input <= total_pages:
+                st.session_state.current_page = page_input-1
+                st.rerun()
+    
+    with nav_col5:
+        if st.button("◀", use_container_width=True, disabled=current_page<=0, key=f"prev_{current_page}"):
+            st.session_state.current_page -= 1
+            st.rerun()
+    
+    with nav_col6:
+        if st.button("▶", use_container_width=True, disabled=current_page>=total_pages-1, key=f"next_{current_page}"):
+            st.session_state.current_page += 1
+            st.rerun()
+
+    col_left, col_mid, col_right = st.columns([1,1,1])
+    
+    with col_left:
+        st.markdown("<br><br>", unsafe_allow_html=True)  
+        st.markdown("<br><br>", unsafe_allow_html=True) 
+        try:
+            image = Image.open(current_image_path)
+            st.image(image, width='stretch')
+        except:
+            st.error("Unable to load image")
+        st.write(f"**Filename:** {image_name}")
+    
+    model_names = list(current_responses.keys())
+
+    if "gemini-2.5-pro" in current_responses:
+        with col_mid:
+            display_model_response(current_responses["gemini-2.5-pro"], "gemini-2.5-pro", current_page)
+
+    if "gemini-2.5-flash" in current_responses:
+        with col_right:
+            display_model_response(current_responses["gemini-2.5-flash"], "gemini-2.5-flash", current_page)
+
+if __name__ == "__main__":
+    st.markdown(
+        """
+        <style>
+            .app-scale {
+                zoom: 0.8; 
+                -moz-transform: scale(0.8); 
+                -moz-transform-origin: 0 0;
+            }
+        </style>
+        <div class="app-scale">
+        """,
+        unsafe_allow_html=True
+    )
+    
+    main()
+    
+    st.markdown("</div>", unsafe_allow_html=True)
