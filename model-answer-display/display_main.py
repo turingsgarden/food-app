@@ -17,11 +17,10 @@ if st.session_state.selected_version is None:
 else:
     if st.session_state.selected_version == "Version 1":
         from version1 import main as version1_main
-        version1_main()
+        run_version1()
     elif st.session_state.selected_version == "Version 2":
         from version2 import main as version2_main
-        version2_main()
-
+        run_version2()
     # 提供一个返回按钮
     if st.button("⬅ Back to version selection"):
         st.session_state.selected_version = None
