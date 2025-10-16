@@ -278,30 +278,28 @@ def main():
 
 
 def run_version1():
-    
-
+    # 必须放在函数最前面调用
     st.set_page_config(
         page_title="Food Image Analysis Display",
         layout="wide"
     )
 
-    
+    # 使用 safer CSS 方式，而不是包裹整个 DOM
     st.markdown(
         """
         <style>
-            .app-scale {
-                zoom: 0.8; 
-                -moz-transform: scale(0.8); 
-                -moz-transform-origin: 0 0;
+            /* 仅对主内容区域缩放 */
+            .block-container {
+                transform: scale(0.8);
+                transform-origin: top left;
             }
         </style>
-        <div class="app-scale">
         """,
         unsafe_allow_html=True
     )
 
+    # 正常执行布局
     main()
-    st.markdown("</div>", unsafe_allow_html=True)
 
 # if __name__ == "__main__":
 #     st.markdown(
