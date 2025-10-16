@@ -367,16 +367,19 @@ def main():
                 st.error("No model data found")
                 return
             all_images = get_all_images()
+            print("All images found:", len(all_images) if all_images else 0)  # ✅ 放这里
             if not all_images:
                 st.error("No images found")
                 return
             image_has_response, model_file_mapping = build_image_index(model_data, available_models)
             valid_images = [img for img in all_images if os.path.basename(img) in image_has_response]
-            
+            print("Valid images with responses:", valid_images)  # ✅ 放这里
+    
             st.session_state.valid_images = valid_images
             st.session_state.model_file_mapping = model_file_mapping
             st.session_state.available_models = available_models
             st.session_state.data_loaded = True
+
     
     valid_images = st.session_state.valid_images
     model_file_mapping = st.session_state.model_file_mapping
