@@ -12,8 +12,8 @@ st.set_page_config(
 
 def load_model_data():
     model_files = {
-        "gemini-2.5-flash": "output/Gemini-2.5-flash_pydantic_food-101_analysis.json",
-        "gemini-2.5-pro": "output/Gemini-2.5-pro_pydantic_food-101_analysis.json"
+        "gemini-2.5-flash": "output/Gemini-2.5-flash_pydantic_food_dataset_analysis.json",
+        "gemini-2.5-pro": "output/Gemini-2.5-pro_pydantic_food_dataset_analysis.json"
     }
     
     model_data = {}
