@@ -343,176 +343,65 @@ def main():
         """,
             unsafe_allow_html=True,
         )
+
+    # 主逻辑代码
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = 0
+    if 'valid_images' not in st.session_state:
+        st.session_state.valid_images = None
+    if 'model_file_mapping' not in st.session_state:
+        st.session_state.model_file_mapping = None
+    if 'available_models' not in st.session_state:
+        st.session_state.available_models = None
+    if 'data_loaded' not in st.session_state:
+        st.session_state.data_loaded = False
     
-    def main():
-        if 'current_page' not in st.session_state:
-            st.session_state.current_page = 0
-        if 'valid_images' not in st.session_state:
-            st.session_state.valid_images = None
-        if 'model_file_mapping' not in st.session_state:
-            st.session_state.model_file_mapping = None
-        if 'available_models' not in st.session_state:
-            st.session_state.available_models = None
-        if 'data_loaded' not in st.session_state:
-            st.session_state.data_loaded = False
-        
-        if not st.session_state.data_loaded:
-            with st.spinner("Loading data..."):
-                model_data, available_models = load_model_data()
-                if not available_models:
-                    st.error("No model data found")
-                    return
-                all_images = get_all_images()
-                print("DEBUG - all_images found:", all_images)
-                if not all_images:
-                    st.error("No images found")
-                    return
-                image_has_response, model_file_mapping = build_image_index(model_data, available_models)
-                print("DEBUG - image_has_response set:", image_has_response)
-                valid_images = [img for img in all_images if os.path.basename(img) in image_has_response]
-                
-                st.session_state.valid_images = valid_images
-                st.session_state.model_file_mapping = model_file_mapping
-                st.session_state.available_models = available_models
-                st.session_state.data_loaded = True
-        
-        valid_images = st.session_state.valid_images
-        model_file_mapping = st.session_state.model_file_mapping
-        available_models = st.session_state.available_models
-        
-        if not valid_images:
-            st.warning("No valid images with responses.")
-            return
-        
-        total_pages = len(valid_images)
-        current_page = st.session_state.current_page
-        current_image_path = valid_images[current_page]
-        image_name = os.path.basename(current_image_path)
-        
-        current_responses = {m: find_model_response_fast(current_image_path, model_file_mapping, m) for m in available_models if find_model_response_fast(current_image_path, model_file_mapping, m)}
-        
-        # 使用容器包装整个内容区域
-        with st.container():
-            model_names = list(current_responses.keys())
+    if not st.session_state.data_loaded:
+        with st.spinner("Loading data..."):
+            model_data, available_models = load_model_data()
+            if not available_models:
+                st.error("No model data found")
+                return
+            all_images = get_all_images()
+            print("DEBUG - all_images found:", all_images)
+            if not all_images:
+                st.error("No images found")
+                return
+            image_has_response, model_file_mapping = build_image_index(model_data, available_models)
+            print("DEBUG - image_has_response set:", image_has_response)
+            valid_images = [img for img in all_images if os.path.basename(img) in image_has_response]
             
-            # 根据屏幕宽度和模型数量动态调整布局
-            if len(model_names) == 2:
-                # 有两个模型时，使用1:1:1的三列布局
-                col_left, col_mid, col_right = st.columns([1, 1, 1])
-                
-                with col_left:
-                    # 在图片列上方添加紧凑导航栏 - 使用更紧凑的布局
-                    nav_cols = st.columns([1.5, 1, 1, 1, 1])
-                    
-                    with nav_cols[0]:
-                        st.markdown(f"<div class='nav-label'>{current_page+1}/{total_pages}</div>", unsafe_allow_html=True)
-                    
-                    with nav_cols[1]:
-                        page_input = st.number_input(
-                            "Page", 
-                            min_value=1, 
-                            max_value=total_pages, 
-                            value=current_page+1,
-                            label_visibility="collapsed",
-                            key=f"page_jump_{current_page}"
-                        )
-                    
-                    with nav_cols[2]:
-                        if st.button("Go", width='stretch', key=f"jump_btn_{current_page}"):
-                            if 1 <= page_input <= total_pages:
-                                st.session_state.current_page = page_input-1
-                                st.rerun()
-                    
-                    with nav_cols[3]:
-                        if st.button("◀", width='stretch', disabled=current_page<=0, key=f"prev_{current_page}"):
-                            st.session_state.current_page -= 1
-                            st.rerun()
-                    
-                    with nav_cols[4]:
-                        if st.button("▶", width='stretch', disabled=current_page>=total_pages-1, key=f"next_{current_page}"):
-                            st.session_state.current_page += 1
-                            st.rerun()
-                    
-                    # 图片列 - 使用居中的图片容器
-                    st.markdown("<div class='left-column'>", unsafe_allow_html=True)
-                    st.markdown("<div class='image-container'>", unsafe_allow_html=True)
-                    try:
-                        image = Image.open(current_image_path)
-                        st.markdown("<div class='centered-image'>", unsafe_allow_html=True)
-                        st.image(image, width='stretch')
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        st.markdown(f"<div class='filename-text'>Filename: {image_name}</div>", unsafe_allow_html=True)
-                    except:
-                        st.error("Unable to load image")
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
-                
-                # 模型回答列 - 直接显示，没有空白
-                if "gemini-2.5-pro" in current_responses:
-                    with col_mid:
-                        display_model_response(current_responses["gemini-2.5-pro"], "gemini-2.5-pro", current_page)
+            st.session_state.valid_images = valid_images
+            st.session_state.model_file_mapping = model_file_mapping
+            st.session_state.available_models = available_models
+            st.session_state.data_loaded = True
     
-                if "gemini-2.5-flash" in current_responses:
-                    with col_right:
-                        display_model_response(current_responses["gemini-2.5-flash"], "gemini-2.5-flash", current_page)
-                        
-            elif len(model_names) == 1:
-                # 只有一个模型时，使用1:2的两列布局
-                col_left, col_model = st.columns([1, 2])
-                
-                with col_left:
-                    # 在图片列上方添加紧凑导航栏 - 使用更紧凑的布局
-                    nav_cols = st.columns([1.5, 1, 1, 1, 1])
-                    
-                    with nav_cols[0]:
-                        st.markdown(f"<div class='nav-label'>{current_page+1}/{total_pages}</div>", unsafe_allow_html=True)
-                    
-                    with nav_cols[1]:
-                        page_input = st.number_input(
-                            "Page", 
-                            min_value=1, 
-                            max_value=total_pages, 
-                            value=current_page+1,
-                            label_visibility="collapsed",
-                            key=f"page_jump_{current_page}"
-                        )
-                    
-                    with nav_cols[2]:
-                        if st.button("Go", width='stretch', key=f"jump_btn_{current_page}"):
-                            if 1 <= page_input <= total_pages:
-                                st.session_state.current_page = page_input-1
-                                st.rerun()
-                    
-                    with nav_cols[3]:
-                        if st.button("◀", width='stretch', disabled=current_page<=0, key=f"prev_{current_page}"):
-                            st.session_state.current_page -= 1
-                            st.rerun()
-                    
-                    with nav_cols[4]:
-                        if st.button("▶", width='stretch', disabled=current_page>=total_pages-1, key=f"next_{current_page}"):
-                            st.session_state.current_page += 1
-                            st.rerun()
-                    
-                    # 图片列 - 使用居中的图片容器
-                    st.markdown("<div class='image-container'>", unsafe_allow_html=True)
-                    try:
-                        image = Image.open(current_image_path)
-                        # 使用居中的图片显示
-                        st.markdown("<div class='centered-image'>", unsafe_allow_html=True)
-                        st.image(image, width='stretch')
-                        st.markdown("</div>", unsafe_allow_html=True)
-                        # 居中的文件名
-                        st.markdown(f"<div class='filename-text'>Filename: {image_name}</div>", unsafe_allow_html=True)
-                    except:
-                        st.error("Unable to load image")
-                    st.markdown("</div>", unsafe_allow_html=True)
-                
-                with col_model:
-                    model_name = model_names[0]
-                    display_model_response(current_responses[model_name], model_name, current_page)
-                    
-            else:
-                # 没有模型响应时，只显示图片和导航栏
+    valid_images = st.session_state.valid_images
+    model_file_mapping = st.session_state.model_file_mapping
+    available_models = st.session_state.available_models
+    
+    if not valid_images:
+        st.warning("No valid images with responses.")
+        return
+    
+    total_pages = len(valid_images)
+    current_page = st.session_state.current_page
+    current_image_path = valid_images[current_page]
+    image_name = os.path.basename(current_image_path)
+    
+    current_responses = {m: find_model_response_fast(current_image_path, model_file_mapping, m) for m in available_models if find_model_response_fast(current_image_path, model_file_mapping, m)}
+    
+    # 使用容器包装整个内容区域
+    with st.container():
+        model_names = list(current_responses.keys())
+        
+        # 根据屏幕宽度和模型数量动态调整布局
+        if len(model_names) == 2:
+            # 有两个模型时，使用1:1:1的三列布局
+            col_left, col_mid, col_right = st.columns([1, 1, 1])
+            
+            with col_left:
+                # 在图片列上方添加紧凑导航栏 - 使用更紧凑的布局
                 nav_cols = st.columns([1.5, 1, 1, 1, 1])
                 
                 with nav_cols[0]:
@@ -544,7 +433,67 @@ def main():
                         st.session_state.current_page += 1
                         st.rerun()
                 
-                # 没有模型时的图片显示也居中
+                # 图片列 - 使用居中的图片容器
+                st.markdown("<div class='left-column'>", unsafe_allow_html=True)
+                st.markdown("<div class='image-container'>", unsafe_allow_html=True)
+                try:
+                    image = Image.open(current_image_path)
+                    st.markdown("<div class='centered-image'>", unsafe_allow_html=True)
+                    st.image(image, width='stretch')
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='filename-text'>Filename: {image_name}</div>", unsafe_allow_html=True)
+                except:
+                    st.error("Unable to load image")
+                st.markdown("</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+            
+            # 模型回答列 - 直接显示，没有空白
+            if "gemini-2.5-pro" in current_responses:
+                with col_mid:
+                    display_model_response(current_responses["gemini-2.5-pro"], "gemini-2.5-pro", current_page)
+
+            if "gemini-2.5-flash" in current_responses:
+                with col_right:
+                    display_model_response(current_responses["gemini-2.5-flash"], "gemini-2.5-flash", current_page)
+                    
+        elif len(model_names) == 1:
+            # 只有一个模型时，使用1:2的两列布局
+            col_left, col_model = st.columns([1, 2])
+            
+            with col_left:
+                # 在图片列上方添加紧凑导航栏 - 使用更紧凑的布局
+                nav_cols = st.columns([1.5, 1, 1, 1, 1])
+                
+                with nav_cols[0]:
+                    st.markdown(f"<div class='nav-label'>{current_page+1}/{total_pages}</div>", unsafe_allow_html=True)
+                
+                with nav_cols[1]:
+                    page_input = st.number_input(
+                        "Page", 
+                        min_value=1, 
+                        max_value=total_pages, 
+                        value=current_page+1,
+                        label_visibility="collapsed",
+                        key=f"page_jump_{current_page}"
+                    )
+                
+                with nav_cols[2]:
+                    if st.button("Go", width='stretch', key=f"jump_btn_{current_page}"):
+                        if 1 <= page_input <= total_pages:
+                            st.session_state.current_page = page_input-1
+                            st.rerun()
+                
+                with nav_cols[3]:
+                    if st.button("◀", width='stretch', disabled=current_page<=0, key=f"prev_{current_page}"):
+                        st.session_state.current_page -= 1
+                        st.rerun()
+                
+                with nav_cols[4]:
+                    if st.button("▶", width='stretch', disabled=current_page>=total_pages-1, key=f"next_{current_page}"):
+                        st.session_state.current_page += 1
+                        st.rerun()
+                
+                # 图片列 - 使用居中的图片容器
                 st.markdown("<div class='image-container'>", unsafe_allow_html=True)
                 try:
                     image = Image.open(current_image_path)
@@ -557,7 +506,59 @@ def main():
                 except:
                     st.error("Unable to load image")
                 st.markdown("</div>", unsafe_allow_html=True)
-                st.warning("No model responses available for this image.")
+            
+            with col_model:
+                model_name = model_names[0]
+                display_model_response(current_responses[model_name], model_name, current_page)
+                
+        else:
+            # 没有模型响应时，只显示图片和导航栏
+            nav_cols = st.columns([1.5, 1, 1, 1, 1])
+            
+            with nav_cols[0]:
+                st.markdown(f"<div class='nav-label'>{current_page+1}/{total_pages}</div>", unsafe_allow_html=True)
+            
+            with nav_cols[1]:
+                page_input = st.number_input(
+                    "Page", 
+                    min_value=1, 
+                    max_value=total_pages, 
+                    value=current_page+1,
+                    label_visibility="collapsed",
+                    key=f"page_jump_{current_page}"
+                )
+            
+            with nav_cols[2]:
+                if st.button("Go", width='stretch', key=f"jump_btn_{current_page}"):
+                    if 1 <= page_input <= total_pages:
+                        st.session_state.current_page = page_input-1
+                        st.rerun()
+            
+            with nav_cols[3]:
+                if st.button("◀", width='stretch', disabled=current_page<=0, key=f"prev_{current_page}"):
+                    st.session_state.current_page -= 1
+                    st.rerun()
+            
+            with nav_cols[4]:
+                if st.button("▶", width='stretch', disabled=current_page>=total_pages-1, key=f"next_{current_page}"):
+                    st.session_state.current_page += 1
+                    st.rerun()
+            
+            # 没有模型时的图片显示也居中
+            st.markdown("<div class='image-container'>", unsafe_allow_html=True)
+            try:
+                image = Image.open(current_image_path)
+                # 使用居中的图片显示
+                st.markdown("<div class='centered-image'>", unsafe_allow_html=True)
+                st.image(image, width='stretch')
+                st.markdown("</div>", unsafe_allow_html=True)
+                # 居中的文件名
+                st.markdown(f"<div class='filename-text'>Filename: {image_name}</div>", unsafe_allow_html=True)
+            except:
+                st.error("Unable to load image")
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.warning("No model responses available for this image.")
+
 
 if __name__ == "__main__":
     main()
