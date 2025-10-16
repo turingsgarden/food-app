@@ -4,7 +4,10 @@ import os
 from PIL import Image
 import glob
 
-
+st.set_page_config(
+    page_title="Food Image Analysis Display",
+    layout="wide"
+)
 
 def load_model_data():
     model_files = {
@@ -553,10 +556,4 @@ def main():
 
 
 def run_version2():
-    
-    st.set_page_config(
-        page_title="Food Image Analysis Display",
-        layout="wide"
-    )
-
     main()
