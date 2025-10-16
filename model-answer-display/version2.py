@@ -9,11 +9,10 @@ st.set_page_config(
     page_title="Food Image Analysis Display",
     layout="wide"
 )
-
 def load_model_data():
     model_files = {
-        "gemini-2.5-flash": "output/Gemini-2.5-flash_pydantic_food_dataset_analysis.json",
-        "gemini-2.5-pro": "output/Gemini-2.5-pro_pydantic_food_dataset_analysis.json"
+        "gemini-2.5-flash": "output/Gemini-2.5-flash_food-101_analysis.json",
+        "gemini-2.5-pro": "output/Gemini-2.5-pro_food-101_analysis.json"
     }
     
     model_data = {}
@@ -26,19 +25,40 @@ def load_model_data():
             for encoding in encodings:
                 try:
                     with open(file_path, 'r', encoding=encoding) as f:
-                        model_data[model_name] = json.load(f)
+                        content = json.load(f)
+                        model_data[model_name] = content
                         available_models.append(model_name)
                         loaded = True
+                        
+                        # 调试信息：打印文件加载成功和数据结构
+                        print(f"✅ 成功加载 {model_name} 数据")
+                        print(f"📁 文件路径: {file_path}")
+                        print(f"📊 数据条数: {len(content) if isinstance(content, list) else '不是列表'}")
+                        
+                        # 打印前3条数据的结构（如果有的话）
+                        if isinstance(content, list) and len(content) > 0:
+                            print(f"🔍 前3条数据的 image_path:")
+                            for i, item in enumerate(content[:3]):
+                                image_path = item.get("image_path", "未找到image_path字段")
+                                print(f"   {i+1}. {image_path}")
+                                
+                                # 打印所有字段名
+                                if i == 0:
+                                    print(f"📋 第一条数据的所有字段: {list(item.keys())}")
                         break
-                except (UnicodeDecodeError, json.JSONDecodeError):
+                except (UnicodeDecodeError, json.JSONDecodeError) as e:
+                    print(f"❌ {model_name} 编码 {encoding} 失败: {e}")
                     continue
             if not loaded:
-                pass
+                print(f"❌ 无法加载 {model_name} 文件: {file_path}")
         except FileNotFoundError:
-            pass
-        except Exception:
-            pass
+            print(f"❌ 文件不存在: {file_path}")
+        except Exception as e:
+            print(f"❌ 加载 {model_name} 时出错: {e}")
+    
+    print(f"🎯 最终可用的模型: {available_models}")
     return model_data, available_models
+
 
 def get_all_images():
     image_dir = "food-101_100images"
@@ -52,13 +72,33 @@ def get_all_images():
 def build_image_index(model_data, available_models):
     image_has_response = set()
     model_file_mapping = {}
+    
+    print("🔨 开始构建图片索引...")
+    
     for model_name in available_models:
+        print(f"📖 处理模型: {model_name}")
         model_file_mapping[model_name] = {}
-        for item in model_data.get(model_name, []):
-            filename = os.path.basename(item.get("image_path", ""))
+        model_responses = model_data.get(model_name, [])
+        
+        print(f"  该模型有 {len(model_responses)} 条响应数据")
+        
+        for idx, item in enumerate(model_responses):
+            raw_path = item.get("image_path", "")
+            filename = os.path.basename(raw_path.replace("\\", "/"))  # 替换 \ 为 /
+            
+            # 调试信息
+            if idx < 5:  # 只打印前5条避免信息过多
+                print(f"  数据 {idx+1}: 原始路径='{raw_path}', 文件名='{filename}'")
+            
             model_file_mapping[model_name][filename] = item
             image_has_response.add(filename)
+    
+    print(f"📊 构建完成: 总共有 {len(image_has_response)} 个唯一图片文件有响应")
+    if image_has_response:
+        print(f"📝 前10个有响应的图片: {list(image_has_response)[:10]}")
+    
     return image_has_response, model_file_mapping
+
 
 def find_model_response_fast(image_path, model_file_mapping, model_name):
     if model_name not in model_file_mapping:
