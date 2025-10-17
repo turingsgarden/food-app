@@ -47,6 +47,8 @@ if "selected_version" not in st.session_state:
     st.session_state.selected_version = ""  # Currently selected version
 if "page_select" not in st.session_state:
     st.session_state.page_select = "Version 1"  # Default option
+if "version_initialized" not in st.session_state:
+    st.session_state.version_initialized = False  # Track if version is freshly initialized
 
 
 # -------------------------------
@@ -65,8 +67,9 @@ if not st.session_state.selected_version:
         elif prev_version == "Version 2":
             clear_version_state("v2")
 
-        # ✅ Update selection and refresh immediately
+        # ✅ Update selection and mark as freshly initialized
         st.session_state.selected_version = new_version
+        st.session_state.version_initialized = True
         st.rerun()
 
 
@@ -74,6 +77,11 @@ if not st.session_state.selected_version:
 # 🔹 Load different subpages based on selection
 # -------------------------------
 if st.session_state.selected_version:
+    # Reset initialization flag after first render
+    if st.session_state.version_initialized:
+        st.session_state.version_initialized = False
+        st.rerun()  # Force a rerun to ensure clean state
+    
     try:
         if st.session_state.selected_version == "Version 1":
             run_version1()
@@ -91,4 +99,5 @@ if st.session_state.selected_version:
             clear_version_state("v2")
 
         st.session_state.selected_version = ""
+        st.session_state.version_initialized = False
         st.rerun()
