@@ -3,13 +3,11 @@ import traceback
 from version1 import run_version1
 from version2 import run_version2
 
-
 # -------------------------------
 # 🔹 清理旧版本专属状态键
 # -------------------------------
 def clear_version_state(version_prefix):
     """清除指定版本的 session_state key，避免两个版本切换时冲突"""
-    # === Version 1 专属 keys（来自 version1.py）===
     keywords_v1 = [
         "current_page", "data_loaded", "valid_images",
         "model_file_mapping", "available_models",
@@ -19,7 +17,6 @@ def clear_version_state(version_prefix):
         "result_display", "response_data"
     ]
 
-    # === Version 2 专属 keys（来自 version2.py）===
     keywords_v2 = [
         "pydantic_output", "structured_output", "parsed_data",
         "schema_data", "json_display", "selected_model",
@@ -39,7 +36,7 @@ def clear_version_state(version_prefix):
         del st.session_state[key]
 
     if to_delete:
-        print(f"🧹 已清理 {version_prefix} 状态键: {to_delete}")
+        print(f"🧹 Clean {version_prefix} keys: {to_delete}")
 
 
 # -------------------------------
@@ -69,9 +66,9 @@ if st.button("✅ Confirm"):
     elif prev_version == "Version 2":
         clear_version_state("v2")
 
-    # 更新当前选择并刷新页面
+    # ✅ 更新选择并立即刷新（清空旧输出）
     st.session_state.selected_version = new_version
-    st.rerun()
+    st.experimental_rerun()  # 👈 用 experimental_rerun 强制立即刷新
 
 
 # -------------------------------
@@ -90,13 +87,12 @@ if st.session_state.selected_version:
         st.error("❌ 子页面执行时发生异常，请查看 traceback：")
         st.text(traceback.format_exc())
 
-    # 返回按钮：只重置 selected_version，不清空全局状态
+    # 🔙 返回按钮：清理当前版本状态并重回选择页
     if st.button("⬅ 返回版本选择"):
-        # 清理当前版本的缓存
         if st.session_state.selected_version == "Version 1":
             clear_version_state("v1")
         elif st.session_state.selected_version == "Version 2":
             clear_version_state("v2")
 
         st.session_state.selected_version = ""
-        st.rerun()
+        st.experimental_rerun()
