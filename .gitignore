@@ -15,3 +15,5 @@ uploads/
 __pycache__/
 uploads/
 *.sqlite3
+*.xcuserstate
+xcuserdata/
