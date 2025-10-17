@@ -50,7 +50,7 @@ def build_image_index(model_data, available_models):
         model_file_mapping[model_name] = {}
         for item in model_data.get(model_name, []):
             raw_path = item.get("image_path", "")
-            filename = os.path.basename(raw_path.replace("\\", "/"))  # 替换 \ 为 /
+            filename = os.path.basename(raw_path.replace("\\", "/")) 
             model_file_mapping[model_name][filename] = item
             image_has_response.add(filename)
 
@@ -69,7 +69,7 @@ def format_ingredients_text(text):
     if not text or text == "N/A":
         return "N/A"
 
-    # 🔹 如果是 list
+   
     if isinstance(text, list):
         formatted_items = []
         for item in text:
@@ -81,7 +81,7 @@ def format_ingredients_text(text):
                 note = item.get("note", "")
                 formatted_items.append(f"{name} | {amount} | {unit} | {note}")
             else:
-                # 普通字符串
+                
                 formatted_items.append(str(item))
         text = "\n".join(formatted_items)
     
@@ -139,7 +139,7 @@ def display_model_response(response, model_name, page_num):
     
     try:
         if analysis_time not in ("N/A", None):
-            # 去掉末尾的 's'，再转成 float
+           
             time_value = float(str(analysis_time).replace("s", "").strip())
             time_text = f" ({time_value:.2f}s)"
         else:
@@ -227,11 +227,11 @@ def main():
     
     current_responses = {m: find_model_response_fast(current_image_path, model_file_mapping, m) for m in available_models if find_model_response_fast(current_image_path, model_file_mapping, m)}
     
-    # 创建三列布局
+   
     col_left, col_mid, col_right = st.columns([1, 1, 1])
     
     with col_left:
-        # 在图片列上方添加紧凑导航栏 - 使用更紧凑的布局
+       
         nav_cols = st.columns([1.5, 1, 1, 1, 1])
         
         with nav_cols[0]:
@@ -289,7 +289,7 @@ def run_version1():
         layout="wide"
     )
 
-    # ✅ 注入 Version2 风格 CSS（不使用 transform/zoom）
+
     st.markdown("""
     <style>
         /* 整体页面布局优化 */
@@ -356,5 +356,5 @@ def run_version1():
     </style>
     """, unsafe_allow_html=True)
 
-    # ✅ 调用主逻辑
+   
     main()
