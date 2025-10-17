@@ -15,7 +15,7 @@ def clear_version_state(version_prefix):
         "current_responses", "selected_image", "uploaded_file",
         "analysis_time", "display_mode", "image_display_mode",
         "image_index", "model_responses", "json_str",
-        "result_display", "response_data"
+        "result_display", "response_data",  "analysis_time" 
     ]
 
     keywords_v2 = [
