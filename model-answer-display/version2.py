@@ -259,6 +259,103 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# def display_model_response(response, model_name, page_num):
+#     if not response:
+#         return
+
+#     # Get analysis time
+#     analysis_time_seconds = response.get("analysis_time_seconds")
+#     analysis_time_formatted = response.get("analysis_time", format_analysis_time(analysis_time_seconds))
+    
+#     # 基本字段
+#     dish_names = response.get("dish_names", [])
+#     visible_ingredients = response.get("visible_ingredients", [])
+#     hidden_ingredients = response.get("hidden_ingredients", [])
+#     nutrition = response.get("nutrition", {})
+#     console_output = response.get("console_output", "N/A")
+#     success = response.get("success", False)
+
+#     # 菜品名称
+#     dish_list = "\n".join([f"• {d}" for d in dish_names]) if dish_names else "N/A"
+    
+#     # 时间显示
+#     time_display = f"({analysis_time_formatted})" if analysis_time_formatted and analysis_time_formatted != "N/A" else ""
+
+#     # 可见食材
+#     visible_list = []
+#     for ing in visible_ingredients:
+#         line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
+#         visible_list.append(line)
+#     visible_text = "\n".join(visible_list) if visible_list else "N/A"
+
+#     # 隐藏食材
+#     # hidden_list = []
+#     # for ing in hidden_ingredients:
+#     #     line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
+#     #     hidden_list.append(line)
+#     # hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
+
+#     hidden_list = []
+#     for i, ing in enumerate(hidden_ingredients):
+#         # 调试输出：打印每个条目的索引、类型和内容
+#         print(f"DEBUG hidden_ingredient[{i}]: type={type(ing)}, value={ing}")
+    
+#         if isinstance(ing, dict):
+#             line = f"• {ing.get('name', ''):<20} {ing.get('quantity', ''):>6} {ing.get('unit', ''):<6}"
+#         else:
+#             # 如果不是字典，说明数据格式有问题，用repr打印更直观
+#             line = f"• {repr(ing)}"
+#             print(f"⚠️ WARNING: Unexpected ingredient format at index {i}: {ing}")
+#         hidden_list.append(line)
+    
+#     hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
+
+
+#     # 营养成分
+#     nutri_lines = []
+#     nutri_units = {
+#         'calories': 'kcal',
+#         'protein': 'g',
+#         'fat': 'g',
+#         'carbohydrates': 'g',
+#         'fiber': 'g',
+#         'sugar': 'g',
+#         'sodium': 'mg'
+#     }
+    
+#     for k, v in nutrition.items():
+#         unit = nutri_units.get(k, '')
+#         nutri_lines.append(f"• {k.capitalize():<15} {v} {unit}")
+#     nutrition_text = "\n".join(nutri_lines) if nutri_lines else "N/A"
+
+#     # 使用改进的HTML结构 - 模型名称现在放在框内
+#     content_html = f"""
+# <div class='model-content'>
+# <div class='model-title'>{model_name}</div>
+
+# <div class='section-title'>Dish Prediction <span class='analysis-time'>{time_display}</span></div>
+# <div class='content-box'>{dish_list}</div>
+
+# <div class='section-title'>Visible Ingredients</div>
+# <div class='content-box'>{visible_text}</div>
+
+# <div class='section-title'>Hidden Ingredients</div>
+# <div class='content-box'>{hidden_text}</div>
+
+# <div class='section-title'>Nutrition Information</div>
+# <div class='content-box'>{nutrition_text}</div>
+# </div>
+# """
+
+#     # 直接显示模型容器，不再在外面单独显示模型标题
+#     st.markdown(
+#         f"""
+#     <div class="model-container">
+#         {content_html}
+#     """,
+#         unsafe_allow_html=True,
+#     )
+
 def display_model_response(response, model_name, page_num):
     if not response:
         return
@@ -281,37 +378,49 @@ def display_model_response(response, model_name, page_num):
     # 时间显示
     time_display = f"({analysis_time_formatted})" if analysis_time_formatted and analysis_time_formatted != "N/A" else ""
 
-    # 可见食材
+    # 可见食材 - 添加类型检查和默认值处理
     visible_list = []
     for ing in visible_ingredients:
-        line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
-        visible_list.append(line)
+        if isinstance(ing, dict):
+            name = str(ing.get('name', 'Unknown')) if ing.get('name') is not None else 'Unknown'
+            quantity = ing.get('quantity', 0)
+            unit = str(ing.get('unit', '')) if ing.get('unit') is not None else ''
+            
+            # 格式化数量显示
+            if isinstance(quantity, (int, float)):
+                if quantity == int(quantity):
+                    quantity_str = f"{int(quantity)}"
+                else:
+                    quantity_str = f"{quantity:.1f}"
+            else:
+                quantity_str = str(quantity)
+                
+            line = f"• {name:<20} {quantity_str:>6} {unit:<6}"
+            visible_list.append(line)
     visible_text = "\n".join(visible_list) if visible_list else "N/A"
 
-    # 隐藏食材
-    # hidden_list = []
-    # for ing in hidden_ingredients:
-    #     line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
-    #     hidden_list.append(line)
-    # hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
-
+    # 隐藏食材 - 添加类型检查和默认值处理
     hidden_list = []
-    for i, ing in enumerate(hidden_ingredients):
-        # 调试输出：打印每个条目的索引、类型和内容
-        print(f"DEBUG hidden_ingredient[{i}]: type={type(ing)}, value={ing}")
-    
+    for ing in hidden_ingredients:
         if isinstance(ing, dict):
-            line = f"• {ing.get('name', ''):<20} {ing.get('quantity', ''):>6} {ing.get('unit', ''):<6}"
-        else:
-            # 如果不是字典，说明数据格式有问题，用repr打印更直观
-            line = f"• {repr(ing)}"
-            print(f"⚠️ WARNING: Unexpected ingredient format at index {i}: {ing}")
-        hidden_list.append(line)
-    
+            name = str(ing.get('name', 'Unknown')) if ing.get('name') is not None else 'Unknown'
+            quantity = ing.get('quantity', 0)
+            unit = str(ing.get('unit', '')) if ing.get('unit') is not None else ''
+            
+            # 格式化数量显示
+            if isinstance(quantity, (int, float)):
+                if quantity == int(quantity):
+                    quantity_str = f"{int(quantity)}"
+                else:
+                    quantity_str = f"{quantity:.1f}"
+            else:
+                quantity_str = str(quantity)
+                
+            line = f"• {name:<20} {quantity_str:>6} {unit:<6}"
+            hidden_list.append(line)
     hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
 
-
-    # 营养成分
+    # 营养成分 - 添加类型检查
     nutri_lines = []
     nutri_units = {
         'calories': 'kcal',
@@ -324,8 +433,18 @@ def display_model_response(response, model_name, page_num):
     }
     
     for k, v in nutrition.items():
-        unit = nutri_units.get(k, '')
-        nutri_lines.append(f"• {k.capitalize():<15} {v} {unit}")
+        if v is not None:
+            unit = nutri_units.get(k, '')
+            # 格式化数值显示
+            if isinstance(v, (int, float)):
+                if v == int(v):
+                    value_str = f"{int(v)}"
+                else:
+                    value_str = f"{v:.1f}"
+            else:
+                value_str = str(v)
+            nutri_lines.append(f"• {k.capitalize():<15} {value_str} {unit}")
+    
     nutrition_text = "\n".join(nutri_lines) if nutri_lines else "N/A"
 
     # 使用改进的HTML结构 - 模型名称现在放在框内
