@@ -133,7 +133,17 @@ def display_model_response(response, model_name, page_num):
     content_style = "white-space: pre; font-family: 'Courier New', monospace; margin: 8px 0; padding: 8px; background: #f8f9fa; border-radius: 4px; line-height: 1.4; border: 1px solid #e1e4e8;"
     
     analysis_time = response.get("analysis_time", "N/A")
-    time_text = f" ({float(analysis_time):.2f}s)" if analysis_time != "N/A" and analysis_time is not None else ""
+    # time_text = f" ({float(analysis_time):.2f}s)" if analysis_time != "N/A" and analysis_time is not None else ""
+    
+    try:
+        if analysis_time not in ("N/A", None):
+            # 去掉末尾的 's'，再转成 float
+            time_value = float(str(analysis_time).replace("s", "").strip())
+            time_text = f" ({time_value:.2f}s)"
+        else:
+            time_text = ""
+    except Exception:
+        time_text = ""
     
     dish_prediction = response.get("dish_prediction", "N/A")
     image_description = response.get("image_description", "N/A")
