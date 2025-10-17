@@ -3,6 +3,7 @@ import traceback
 from version1 import run_version1
 from version2 import run_version2
 
+
 # -------------------------------
 # 🔹 清理旧版本专属状态键
 # -------------------------------
@@ -66,9 +67,9 @@ if st.button("✅ Confirm"):
     elif prev_version == "Version 2":
         clear_version_state("v2")
 
-    # ✅ 更新选择并立即刷新（清空旧输出）
+    # ✅ 更新选择并立即刷新
     st.session_state.selected_version = new_version
-    st.experimental_rerun()  # 👈 用 experimental_rerun 强制立即刷新
+    st.rerun()  # ✅ 新版 Streamlit 用这个
 
 
 # -------------------------------
@@ -95,4 +96,4 @@ if st.session_state.selected_version:
             clear_version_state("v2")
 
         st.session_state.selected_version = ""
-        st.experimental_rerun()
+        st.rerun()
