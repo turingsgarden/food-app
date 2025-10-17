@@ -283,25 +283,68 @@ def run_version1():
         layout="wide"
     )
 
-    # 使用更安全的 CSS 缩放方式
-    st.markdown(
-        """
-        <style>
-            /* 只对特定内容区域缩放，而不是整个页面 */
-            .scaled-content {
-                transform: scale(0.8);
-                transform-origin: top left;
-                width: 125%; /* 补偿缩放带来的宽度减少 */
-            }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    # 在 main() 函数中，将主要内容包裹在 scaled-content 类中
-    st.markdown('<div class="scaled-content">', unsafe_allow_html=True)
+    # ✅ 注入 Version2 风格 CSS（不使用 transform/zoom）
+    st.markdown("""
+    <style>
+        /* 整体页面布局优化 */
+        .main .block-container {
+            padding: 1rem 2rem 5rem !important;
+            max-width: 95% !important;
+        }
+
+        /* 三列布局：左图居中，两侧模型结果 */
+        .image-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 100%;
+        }
+
+        .filename-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* 模型输出框滚动样式 */
+        .model-response-box {
+            height: 650px;
+            overflow-y: auto;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 15px;
+            background: #fafafa;
+        }
+
+        /* 导航栏样式 */
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 让 Streamlit 默认容器自适应 */
+        div[data-testid="stHorizontalBlock"] {
+            align-items: flex-start !important;
+        }
+
+        /* 调整左右栏内容对齐 */
+        [data-testid="stVerticalBlock"] {
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+    </style>
+    """, unsafe_allow_html=True)
+
+    # ✅ 调用主逻辑
     main()
-    st.markdown('</div>', unsafe_allow_html=True)
+
 
 # if __name__ == "__main__":
 #     st.markdown(
