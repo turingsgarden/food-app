@@ -102,14 +102,26 @@ def find_model_response_fast(image_path, model_file_mapping, model_name):
 def format_ingredients_text(text):
     if not text or text == "N/A":
         return "N/A"
-    
-    # 🔹 如果是 list，则先 join 成字符串
+
+    # 🔹 如果是 list
     if isinstance(text, list):
-        text = "\n".join(text)
+        formatted_items = []
+        for item in text:
+            if isinstance(item, dict):
+                # 假设 dict 里有 name, amount, unit, note 字段
+                name = item.get("name", "")
+                amount = item.get("amount", "")
+                unit = item.get("unit", "")
+                note = item.get("note", "")
+                formatted_items.append(f"{name} | {amount} | {unit} | {note}")
+            else:
+                # 普通字符串
+                formatted_items.append(str(item))
+        text = "\n".join(formatted_items)
     
     lines = text.split('\n')
     formatted_lines = []
-    
+
     for line in lines:
         line = line.strip()
         if line:
@@ -117,14 +129,12 @@ def format_ingredients_text(text):
                 parts = [p.strip() for p in line.split('|')]
                 while len(parts) < 4:
                     parts.append('')
-                
                 formatted_line = f"• {parts[0]:<25} {parts[1]:>6} {parts[2]:<6} {parts[3]}"
                 formatted_lines.append(formatted_line)
             else:
                 formatted_lines.append(f"• {line}")
-    
-    return '\n'.join(formatted_lines)
 
+    return '\n'.join(formatted_lines)
 
 
 def format_nutrition_text(text):
