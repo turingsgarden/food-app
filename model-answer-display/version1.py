@@ -78,9 +78,34 @@ def find_model_response_fast(image_path, model_file_mapping, model_name):
     filename = os.path.basename(image_path)
     return model_file_mapping[model_name].get(filename)
 
+# def format_ingredients_text(text):
+#     if not text or text == "N/A":
+#         return "N/A"
+    
+#     lines = text.split('\n')
+#     formatted_lines = []
+    
+#     for line in lines:
+#         line = line.strip()
+#         if line:
+#             if '|' in line:
+#                 parts = [p.strip() for p in line.split('|')]
+#                 while len(parts) < 4:
+#                     parts.append('')
+                
+#                 formatted_line = f"• {parts[0]:<25} {parts[1]:>6} {parts[2]:<6} {parts[3]}"
+#                 formatted_lines.append(formatted_line)
+#             else:
+#                 formatted_lines.append(f"• {line}")
+    
+#     return '\n'.join(formatted_lines)
 def format_ingredients_text(text):
     if not text or text == "N/A":
         return "N/A"
+    
+    # 🔹 如果是 list，则先 join 成字符串
+    if isinstance(text, list):
+        text = "\n".join(text)
     
     lines = text.split('\n')
     formatted_lines = []
@@ -99,6 +124,8 @@ def format_ingredients_text(text):
                 formatted_lines.append(f"• {line}")
     
     return '\n'.join(formatted_lines)
+
+
 
 def format_nutrition_text(text):
     if not text or text == "N/A":
