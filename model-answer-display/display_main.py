@@ -50,23 +50,24 @@ if "page_select" not in st.session_state:
 
 
 # -------------------------------
-# 🔹 UI: Version Selector
+# 🔹 UI: Version Selector (Only show when no version is selected)
 # -------------------------------
-st.selectbox("Select version to display:", ["Version 1", "Version 2"], key="page_select")
+if not st.session_state.selected_version:
+    st.selectbox("Select version to display:", ["Version 1", "Version 2"], key="page_select")
 
-if st.button("✅ Confirm Selection"):
-    new_version = st.session_state.page_select
-    prev_version = st.session_state.selected_version
+    if st.button("✅ Confirm Selection"):
+        new_version = st.session_state.page_select
+        prev_version = st.session_state.selected_version
 
-    # ✅ Clean previous version state before switching
-    if prev_version == "Version 1":
-        clear_version_state("v1")
-    elif prev_version == "Version 2":
-        clear_version_state("v2")
+        # ✅ Clean previous version state before switching
+        if prev_version == "Version 1":
+            clear_version_state("v1")
+        elif prev_version == "Version 2":
+            clear_version_state("v2")
 
-    # ✅ Update selection and refresh immediately
-    st.session_state.selected_version = new_version
-    st.rerun()
+        # ✅ Update selection and refresh immediately
+        st.session_state.selected_version = new_version
+        st.rerun()
 
 
 # -------------------------------
