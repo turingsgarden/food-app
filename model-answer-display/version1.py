@@ -69,23 +69,25 @@ def find_model_response_fast(image_path, model_file_mapping, model_name):
 # 🔹 格式化配料文本
 # -------------------------------
 def format_ingredients_text(text):
-    if not text or text == "N/A":
+    if not text:
         return "N/A"
 
-    # list -> dict 格式化
+    # 统一把 list -> str
     if isinstance(text, list):
-        formatted_items = []
-        for item in text:
-            if isinstance(item, dict):
-                name = item.get("name", "")
-                amount = item.get("amount", "")
-                unit = item.get("unit", "")
-                note = item.get("note", "")
-                formatted_items.append(f"{name} | {amount} | {unit} | {note}")
+        items = []
+        for t in text:
+            if isinstance(t, dict):
+                items.append(f"{t.get('name','')} | {t.get('amount','')} | {t.get('unit','')} | {t.get('note','')}")
             else:
-                formatted_items.append(str(item))
-        text = "\n".join(formatted_items)
-    
+                items.append(str(t))
+        text = "\n".join(items)
+    else:
+        # 如果是字符串但有不可见空格
+        text = str(text).strip()
+
+    if text in ("", "N/A"):
+        return "N/A"
+
     lines = text.split('\n')
     formatted_lines = []
     for line in lines:
