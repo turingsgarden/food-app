@@ -278,28 +278,30 @@ def main():
 
 
 def run_version1():
-    # 必须放在函数最前面调用
     st.set_page_config(
         page_title="Food Image Analysis Display",
         layout="wide"
     )
 
-    # 使用 safer CSS 方式，而不是包裹整个 DOM
+    # 使用更安全的 CSS 缩放方式
     st.markdown(
         """
         <style>
-            /* 仅对主内容区域缩放 */
-            .block-container {
+            /* 只对特定内容区域缩放，而不是整个页面 */
+            .scaled-content {
                 transform: scale(0.8);
                 transform-origin: top left;
+                width: 125%; /* 补偿缩放带来的宽度减少 */
             }
         </style>
         """,
         unsafe_allow_html=True
     )
-
-    # 正常执行布局
+    
+    # 在 main() 函数中，将主要内容包裹在 scaled-content 类中
+    st.markdown('<div class="scaled-content">', unsafe_allow_html=True)
     main()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # if __name__ == "__main__":
 #     st.markdown(
