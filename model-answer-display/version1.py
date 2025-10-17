@@ -308,8 +308,8 @@ def run_version1():
 #         """
 #         <style>
 #             .app-scale {
-#                 zoom: 0.8; 
-#                 -moz-transform: scale(0.8); 
+#                 zoom: 0.9; 
+#                 -moz-transform: scale(0.9); 
 #                 -moz-transform-origin: 0 0;
 #             }
 #         </style>
