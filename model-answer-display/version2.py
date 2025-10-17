@@ -170,13 +170,187 @@ def main():
         layout="wide"
     )
     
-    # 在函数内部添加 CSS 样式
+    # 添加自适应CSS样式
     st.markdown("""
     <style>
-        /* 你的所有 CSS 样式代码 */
-        .main-container { min-height: 100vh; width: 100%; }
-        .model-container { height: auto !important; min-height: 400px; max-height: none !important; overflow: visible !important; border: 1px solid #e1e4e8; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: white; }
-        /* ... 其余 CSS 样式 ... */
+        /* 整体页面缩放控制 */
+        .main-container {
+            min-height: 100vh;
+            width: 100%;
+        }
+        
+        /* 模型容器 - 完全自适应 */
+        .model-container {
+            height: auto !important;
+            min-height: 400px;
+            max-height: none !important;
+            overflow: visible !important;
+            border: 1px solid #e1e4e8;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: white;
+        }
+        
+        /* 响应式字体大小 */
+        .section-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            color: #2c3e50;
+            margin: 12px 0 6px 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .content-box {
+            white-space: pre-wrap;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 6px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            line-height: 1.5;
+            border: 1px solid #e1e4e8;
+            font-size: 0.95em;
+            color: #333;
+        }
+        
+        .analysis-time {
+            font-size: 1em !important;
+            color: #666;
+            margin-left: 8px;
+            font-weight: 500;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* 模型标题样式 - 现在放在框内 */
+        .model-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #1f77b4;
+            margin-bottom: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e4e8;
+        }
+        
+        /* 图片容器 - 添加居中样式 */
+        .image-container {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        /* 图片样式 */
+        .centered-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        
+        /* 文件名样式 */
+        .filename-text {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        
+        /* 导航栏样式 - 修复空白问题 */
+        .compact-nav {
+            margin-bottom: 5px !important;
+            padding: 0 !important;
+        }
+        .nav-button {
+            height: 30px !important;
+            min-height: 30px !important;
+            padding: 0 6px !important;
+            font-size: 11px !important;
+            margin: 0 !important;
+        }
+        .nav-input {
+            height: 30px !important;
+            min-height: 30px !important;
+            margin: 0 !important;
+        }
+        .nav-label {
+            font-size: 11px !important;
+            padding: 2px 0 !important;
+            margin: 0 !important;
+            text-align: center;
+        }
+        
+        /* 移除 Streamlit 默认列间距与空白框 */
+        div[data-testid="stHorizontalBlock"] {
+            gap: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    
+        div[data-testid="stVerticalBlock"] {
+            gap: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    
+        /* 移除整个图片区域上下额外空白 */
+        .image-container {
+            background: white;
+            padding: 10px 10px 5px 10px;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
+            margin: 0 !important;
+        }
+        
+        /* 响应式布局调整 */
+        @media (max-height: 800px) {
+            .model-container {
+                min-height: 350px;
+                padding: 12px;
+            }
+            .section-title {
+                font-size: 1.05em;
+                margin: 10px 0 5px 0;
+            }
+            .content-box {
+                font-size: 0.9em;
+                padding: 8px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .model-container {
+                min-height: 300px;
+                padding: 10px;
+            }
+            .section-title {
+                font-size: 1em;
+            }
+            .content-box {
+                font-size: 0.85em;
+                padding: 6px;
+            }
+        }
+                
+        /* 让图片列内容垂直居中 */
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;  /* 垂直居中 */
+            align-items: center;      /* 水平居中 */
+            height: 100%;
+        }
+        
+        /* 确保所有元素使用现代字体 */
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+        }
     </style>
     """, unsafe_allow_html=True)
     
