@@ -5,17 +5,17 @@ from version2 import run_version2
 
 
 # -------------------------------
-# 🔹 清理旧版本专属状态键
+# 🔹 Clean version-specific state keys
 # -------------------------------
 def clear_version_state(version_prefix):
-    """清除指定版本的 session_state key，避免两个版本切换时冲突"""
+    """Clear session_state keys for specified version to avoid conflicts"""
     keywords_v1 = [
         "current_page", "data_loaded", "valid_images",
         "model_file_mapping", "available_models",
         "current_responses", "selected_image", "uploaded_file",
         "analysis_time", "display_mode", "image_display_mode",
         "image_index", "model_responses", "json_str",
-        "result_display", "response_data",  "analysis_time" 
+        "result_display", "response_data", "analysis_time" 
     ]
 
     keywords_v2 = [
@@ -41,55 +41,49 @@ def clear_version_state(version_prefix):
 
 
 # -------------------------------
-# 🔹 初始化
+# 🔹 Initialize
 # -------------------------------
 if "selected_version" not in st.session_state:
-    st.session_state.selected_version = ""  # 当前已选择的版本
+    st.session_state.selected_version = ""  # Currently selected version
 if "page_select" not in st.session_state:
-    st.session_state.page_select = "Version 1"  # 默认选项
+    st.session_state.page_select = "Version 1"  # Default option
 
 
 # -------------------------------
-# 🔹 UI：版本选择器
+# 🔹 UI: Version Selector
 # -------------------------------
-st.title("📊 Model Answer Display")
-st.markdown("---")
+st.selectbox("Select version to display:", ["Version 1", "Version 2"], key="page_select")
 
-st.selectbox("选择要展示的版本：", ["Version 1", "Version 2"], key="page_select")
-
-if st.button("✅ Confirm"):
+if st.button("✅ Confirm Selection"):
     new_version = st.session_state.page_select
     prev_version = st.session_state.selected_version
 
-    # ✅ 切换前清理上一个版本的状态
+    # ✅ Clean previous version state before switching
     if prev_version == "Version 1":
         clear_version_state("v1")
     elif prev_version == "Version 2":
         clear_version_state("v2")
 
-    # ✅ 更新选择并立即刷新
+    # ✅ Update selection and refresh immediately
     st.session_state.selected_version = new_version
-    st.rerun()  # ✅ 新版 Streamlit 用这个
+    st.rerun()
 
 
 # -------------------------------
-# 🔹 根据选择加载不同子页面
+# 🔹 Load different subpages based on selection
 # -------------------------------
 if st.session_state.selected_version:
-    st.markdown(f"### 🔄 当前展示：{st.session_state.selected_version}")
-    st.markdown("---")
-
     try:
         if st.session_state.selected_version == "Version 1":
             run_version1()
         elif st.session_state.selected_version == "Version 2":
             run_version2()
     except Exception:
-        st.error("❌ 子页面执行时发生异常，请查看 traceback：")
+        st.error("❌ Error occurred while executing subpage, please check traceback:")
         st.text(traceback.format_exc())
 
-    # 🔙 返回按钮：清理当前版本状态并重回选择页
-    if st.button("⬅ 返回版本选择"):
+    # 🔙 Return button: Clean current version state and return to selection page
+    if st.button("⬅ Back to Version Selection"):
         if st.session_state.selected_version == "Version 1":
             clear_version_state("v1")
         elif st.session_state.selected_version == "Version 2":
