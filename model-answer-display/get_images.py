@@ -8,7 +8,7 @@ def ensure_subset_data(max_images=100):
     data_dir = "subset"
     os.makedirs(data_dir, exist_ok=True)
 
-    # 已有图片
+
     existing_images = glob.glob(os.path.join(data_dir, "*.jpg"))
     existing_count = len(existing_images)
     if existing_count >= max_images:
@@ -43,6 +43,4 @@ def ensure_subset_data(max_images=100):
             break
 
     print(f"Downloaded and extracted {extracted_count - existing_count} new images. Total now: {extracted_count}")
-
-    # 返回所有图片路径
     return sorted(glob.glob(os.path.join(data_dir, "*.jpg")))
