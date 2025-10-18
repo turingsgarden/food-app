@@ -20,7 +20,7 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Gradient background matching dashboard
+                // Gradient background
                 LinearGradient(
                     gradient: Gradient(colors: [
                         Color.black,
@@ -146,12 +146,18 @@ struct LoginView: View {
                             
                             // Remember Me & Forgot Password
                             HStack {
-                                Toggle(isOn: $rememberMe) {
-                                    Text("Remember me")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
+                                Button(action: { rememberMe.toggle() }) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: rememberMe ? "checkmark.square.fill" : "square")
+                                            .foregroundColor(rememberMe ? .orange : .gray)
+                                            .font(.title3)
+                                        
+                                        Text("Remember me")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
                                 }
-                                .toggleStyle(CheckboxToggleStyle())
+                                .buttonStyle(PlainButtonStyle())
                                 
                                 Spacer()
                                 
@@ -162,7 +168,7 @@ struct LoginView: View {
                                 .foregroundColor(.orange)
                             }
                             
-                            // Login Button
+                            // Login Button - FIXED RESPONSIVENESS
                             Button(action: {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 validateEmail()
@@ -197,6 +203,7 @@ struct LoginView: View {
                                 .shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
                             .disabled(isLoading)
+                            .buttonStyle(PlainButtonStyle()) // Add this for better touch response
                             
                             if loginFailed {
                                 HStack {
@@ -228,15 +235,15 @@ struct LoginView: View {
                             }
                             .padding(.vertical, 8)
                             
-                            // Social Login
+                            // Social Login - Keep existing Apple and Google login code
                             VStack(spacing: 12) {
-                                // Apple 登录按钮
+                                // Apple login button - NO CHANGES
                                 SignInWithAppleButton(.signIn) { request in
-                                    print("📩 Apple SignIn request started")
+                                    print("🔩 Apple SignIn request started")
                                     request.requestedScopes = [.fullName, .email]
-                                    print("📩 Requested scopes: fullName & email")
+                                    print("🔩 Requested scopes: fullName & email")
                                 } onCompletion: { result in
-                                    print("📩 onCompletion triggered with result: \(result)")
+                                    print("🔩 onCompletion triggered with result: \(result)")
                                     
                                     switch result {
                                     case .success(let authResults):
@@ -245,20 +252,19 @@ struct LoginView: View {
                                         if let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
                                             print("🔍 Credential received: \(credential)")
                                             
-                                            let userId = credential.user                // Apple 的 sub（稳定ID）
+                                            let userId = credential.user
                                             let email = credential.email ?? "\(userId)@apple.local"
                                             let identityToken = credential.identityToken
                                             let authCode = credential.authorizationCode
                                             
-                                            print("🍏 Apple login success")
+                                            print("🍎 Apple login success")
                                             print("🔑 userId (Apple sub): \(userId)")
                                             print("📧 email: \(email)")
                                             
                                             if let tokenData = identityToken {
                                                 print("📦 identityToken (raw data length): \(tokenData.count) bytes")
                                                 if let tokenStr = String(data: tokenData, encoding: .utf8) {
-                                                    print("📜 identityToken (string): \(tokenStr.prefix(80))...") // 只打印前80字符避免太长
-                                                    // 传给后端
+                                                    print("📜 identityToken (string): \(tokenStr.prefix(80))...")
                                                     attemptAppleLogin(email: email, token: tokenStr)
                                                 } else {
                                                     print("❌ Failed to convert identityToken to String")
@@ -291,12 +297,8 @@ struct LoginView: View {
                                 .signInWithAppleButtonStyle(.white)
                                 .frame(height: 50)
                                 .cornerRadius(12)
-                                .onTapGesture {
-                                    print("🖱 Apple button tapped (raw tap)")
-                                }
                                 
-                                
-                                
+                                // Google login button - NO CHANGES
                                 Button(action: {
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     handleGoogleLogin()
@@ -318,7 +320,7 @@ struct LoginView: View {
                                             )
                                     )
                                 }
-                                .padding()
+                                .buttonStyle(PlainButtonStyle()) // Add for better touch response
                             }
                             
                             // Register Link
@@ -339,6 +341,7 @@ struct LoginView: View {
                         Spacer(minLength: 50)
                     }
                 }
+                .scrollDismissesKeyboard(.interactively) // Add this for better keyboard handling
             }
             .preferredColorScheme(.dark)
             .onTapGesture {
@@ -354,7 +357,7 @@ struct LoginView: View {
         }
     }
     
-    // MARK: - Validation
+    // Keep all existing validation and login methods unchanged
     private func validateEmail() {
         let trimmed = email.trimmingCharacters(in: .whitespaces)
         withAnimation(.easeInOut(duration: 0.2)) {
@@ -371,7 +374,7 @@ struct LoginView: View {
         }
     }
     
-    // MARK: -Apple Login
+    // Keep all existing login methods (attemptAppleLogin, handleGoogleLogin, etc.) unchanged
     private func attemptAppleLogin(email: String, token: String) {
         isLoading = true
         loginFailed = false
@@ -395,7 +398,6 @@ struct LoginView: View {
         }
     }
     
-    // MARK: - Login with Google
     private func handleGoogleLogin() {
         guard let rootVC = UIApplication.shared.windows.first?.rootViewController else {
             print("❌ No root view controller")
@@ -422,12 +424,10 @@ struct LoginView: View {
             print("🧑 Name:", fullName)
             print("🔑 idToken:", idToken.prefix(20), "...")
             
-            // 把 token 传给后端验证
             sendGoogleTokenToBackend(idToken: idToken, email: email)
         }
     }
     
-    /// 把 Google ID Token 发送到后端
     private func sendGoogleTokenToBackend(idToken: String, email: String) {
         guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/google_login") else { return }
         
@@ -473,10 +473,7 @@ struct LoginView: View {
             }
         }.resume()
     }
-
     
-    
-    // MARK: - Login API Call with JWT
     private func attemptLogin() {
         isLoading = true
         loginFailed = false
@@ -487,11 +484,7 @@ struct LoginView: View {
             switch result {
             case .success(let (userId, name, token)):
                 print("✅ Login successful - Token received")
-                
-                // Save user session with JWT token
                 SessionManager.shared.login(id: userId, name: name, token: token)
-                
-                // Navigate to dashboard
                 withAnimation(.spring()) {
                     self.navigateToDashboard = true
                 }
@@ -511,23 +504,5 @@ struct LoginView: View {
                 }
             }
         }
-    }
-}
-
-// Custom Checkbox Toggle Style
-struct CheckboxToggleStyle: ToggleStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        Button(action: {
-            configuration.isOn.toggle()
-        }) {
-            HStack(spacing: 8) {
-                Image(systemName: configuration.isOn ? "checkmark.square.fill" : "square")
-                    .foregroundColor(configuration.isOn ? .orange : .gray)
-                    .font(.system(size: 20))
-                
-                configuration.label
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
     }
 }

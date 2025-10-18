@@ -21,16 +21,6 @@ struct RegisterView: View {
     @State private var navigateToDashboard = false
     @State private var isLoading = false
     @State private var agreedToTerms = false
-    
-    
-    //email verification
-    @State private var isEmailVerified = false
-    @State private var verificationCode = ""
-    @State private var verificationError = ""
-    @State private var isSendingCode = false
-    @State private var isVerifyingCode = false
-    @State private var codeSent = false
-
 
     var body: some View {
         NavigationStack {
@@ -99,79 +89,6 @@ struct RegisterView: View {
                                 keyboardType: .emailAddress
                             )
 
-                            HStack {
-                                Button(action: {
-                                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                    validateEmail()
-                                    if emailError.isEmpty {
-                                        sendVerificationCode()
-                                    }
-                                }) {
-                                    if isSendingCode {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            .frame(height: 20)
-                                    } else {
-                                        Text(codeSent ? "Resend Code" : "Send Code")
-                                            .font(.caption)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 6)
-                                            .background(Color.orange.opacity(0.8))
-                                            .cornerRadius(8)
-                                            .foregroundColor(.white)
-                                    }
-                                }
-                                .disabled(isSendingCode || emailError != "")
-                                
-                                Spacer()
-                            }
-
-                            // 验证码输入框
-                            if codeSent {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    HStack {
-                                        TextField("Enter verification code", text: $verificationCode)
-                                            .keyboardType(.numberPad)
-                                            .foregroundColor(.white)
-                                            .padding()
-                                            .background(Color.white.opacity(0.08))
-                                            .cornerRadius(8)
-                                        
-                                        Button(action: {
-                                            verifyCode()
-                                        }) {
-                                            if isVerifyingCode {
-                                                ProgressView()
-                                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                                    .frame(height: 20)
-                                            } else {
-                                                Text("Verify")
-                                                    .font(.caption)
-                                                    .padding(.horizontal, 12)
-                                                    .padding(.vertical, 6)
-                                                    .background(Color.green.opacity(0.8))
-                                                    .cornerRadius(8)
-                                                    .foregroundColor(.white)
-                                            }
-                                        }
-                                        .disabled(isVerifyingCode || verificationCode.isEmpty)
-                                    }
-                                    
-                                    if !verificationError.isEmpty {
-                                        Text(verificationError)
-                                            .font(.caption)
-                                            .foregroundColor(.red)
-                                    }
-                                    
-                                    if isEmailVerified {
-                                        Text("✅ Email verified")
-                                            .font(.caption)
-                                            .foregroundColor(.green)
-                                    }
-                                }
-                            }
-
-
                             // Password Field
                             SecureFormField(
                                 title: "Password",
@@ -206,6 +123,7 @@ struct RegisterView: View {
                                         .foregroundColor(agreedToTerms ? .orange : .gray)
                                         .font(.title3)
                                 }
+                                .buttonStyle(PlainButtonStyle())
                                 
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("I agree to the ")
@@ -225,7 +143,7 @@ struct RegisterView: View {
                                 Spacer()
                             }
 
-                            // Register Button
+                            // Register Button - FIXED RESPONSIVENESS
                             Button(action: {
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 validateAll()
@@ -260,6 +178,7 @@ struct RegisterView: View {
                                 .opacity(agreedToTerms ? 1.0 : 0.6)
                             }
                             .disabled(isLoading || !agreedToTerms)
+                            .buttonStyle(PlainButtonStyle()) // Add for better touch response
 
                             if registrationFailed {
                                 ErrorCard(message: registrationError)
@@ -282,7 +201,7 @@ struct RegisterView: View {
                             }
                             .padding(.vertical, 8)
 
-                            // Social Registration
+                            // Social Registration - Keep existing
                             VStack(spacing: 12) {
                                 SignInWithAppleButton(.signUp, onRequest: { _ in }, onCompletion: { _ in })
                                     .frame(height: 50)
@@ -306,6 +225,7 @@ struct RegisterView: View {
                                             )
                                     )
                                 }
+                                .buttonStyle(PlainButtonStyle()) // Add for better touch response
                             }
 
                             // Login Link
@@ -326,6 +246,7 @@ struct RegisterView: View {
                         Spacer(minLength: 50)
                     }
                 }
+                .scrollDismissesKeyboard(.interactively) // Add for better keyboard handling
             }
             .preferredColorScheme(.dark)
             .navigationDestination(isPresented: $navigateToDashboard) {
@@ -368,60 +289,6 @@ struct RegisterView: View {
             confirmPasswordError = confirmPassword != password ? "Passwords do not match" : ""
         }
     }
-    
-    // 发送验证码
-    func sendVerificationCode() {
-        isSendingCode = true
-        verificationError = ""
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/send_verification") else { return }
-        
-        let payload = ["email": email]
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                isSendingCode = false
-                if error != nil {
-                    verificationError = "Failed to send code. Please try again."
-                    return
-                }
-                codeSent = true
-            }
-        }.resume()
-    }
-
-    // 验证验证码
-    func verifyCode() {
-        isVerifyingCode = true
-        verificationError = ""
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/verify_code") else { return }
-        
-        let payload = ["email": email, "code": verificationCode]
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: payload)
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            DispatchQueue.main.async {
-                isVerifyingCode = false
-                if error != nil {
-                    verificationError = "Verification failed. Try again."
-                    return
-                }
-                
-                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                    isEmailVerified = true
-                } else {
-                    verificationError = "Invalid code. Please try again."
-                }
-            }
-        }.resume()
-    }
-
 
     func validateAll() {
         validateName()
@@ -439,16 +306,9 @@ struct RegisterView: View {
         nameError.isEmpty && emailError.isEmpty && passwordError.isEmpty && confirmPasswordError.isEmpty
     }
 
-    // MARK: - API Call
+    // MARK: - API Call (WITHOUT OTP)
     
     func attemptRegister() {
-        if !isEmailVerified {
-                registrationError = "Please verify your email before registering."
-                registrationFailed = true
-                return
-            }
-        
-        
         isLoading = true
         registrationFailed = false
         
@@ -488,7 +348,7 @@ struct RegisterView: View {
                     }
                 }
                 
-                // Decode the response properly
+                // Decode the response
                 do {
                     let response = try JSONDecoder().decode(RegisterResponse.self, from: data)
                     withAnimation(.spring()) {
@@ -504,179 +364,174 @@ struct RegisterView: View {
     }
 }
 
-// Supporting Views (keep existing - FormField, SecureFormField, PasswordStrengthIndicator, ErrorCard)
-// ... (rest of the supporting views remain unchanged)
+// Keep all supporting views unchanged
+struct FormField: View {
+    let title: String
+    let icon: String
+    let placeholder: String
+    @Binding var text: String
+    @Binding var error: String
+    let validate: () -> Void
+    var keyboardType: UIKeyboardType = .default
     
-    // Supporting Views
-    
-    struct FormField: View {
-        let title: String
-        let icon: String
-        let placeholder: String
-        @Binding var text: String
-        @Binding var error: String
-        let validate: () -> Void
-        var keyboardType: UIKeyboardType = .default
-        
-        var body: some View {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .textCase(.uppercase)
-                    .tracking(1)
-                
-                HStack {
-                    Image(systemName: icon)
-                        .foregroundColor(.gray)
-                        .frame(width: 20)
-                    
-                    TextField(placeholder, text: $text)
-                        .keyboardType(keyboardType)
-                        .autocapitalization(keyboardType == .emailAddress ? .none : .words)
-                        .foregroundColor(.white)
-                        .onChange(of: text) { _, _ in validate() }
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(error.isEmpty ? Color.white.opacity(0.1) : Color.red.opacity(0.5), lineWidth: 1)
-                        )
-                )
-                
-                if !error.isEmpty {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .transition(.opacity)
-                }
-            }
-        }
-    }
-    
-    struct SecureFormField: View {
-        let title: String
-        let icon: String
-        let placeholder: String
-        @Binding var text: String
-        @Binding var isSecure: Bool
-        @Binding var error: String
-        let validate: () -> Void
-        
-        var body: some View {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .textCase(.uppercase)
-                    .tracking(1)
-                
-                HStack {
-                    Image(systemName: icon)
-                        .foregroundColor(.gray)
-                        .frame(width: 20)
-                    
-                    if isSecure {
-                        SecureField(placeholder, text: $text)
-                            .foregroundColor(.white)
-                    } else {
-                        TextField(placeholder, text: $text)
-                            .foregroundColor(.white)
-                    }
-                    
-                    Button(action: { isSecure.toggle() }) {
-                        Image(systemName: isSecure ? "eye.slash.fill" : "eye.fill")
-                            .foregroundColor(.gray)
-                            .font(.caption)
-                    }
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.white.opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(error.isEmpty ? Color.white.opacity(0.1) : Color.red.opacity(0.5), lineWidth: 1)
-                        )
-                )
-                .onChange(of: text) { _, _ in validate() }
-                
-                if !error.isEmpty {
-                    Text(error)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .transition(.opacity)
-                }
-            }
-        }
-    }
-    
-    struct PasswordStrengthIndicator: View {
-        let password: String
-        
-        var strength: (text: String, color: Color, progress: Double) {
-            if password.count < 6 { return ("Weak", .red, 0.25) }
-            else if password.count < 10 { return ("Fair", .orange, 0.5) }
-            else if password.count < 14 { return ("Good", .yellow, 0.75) }
-            else { return ("Strong", .green, 1.0) }
-        }
-        
-        var body: some View {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Password strength:")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                    
-                    Text(strength.text)
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(strength.color)
-                }
-                
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.white.opacity(0.1))
-                            .frame(height: 4)
-                        
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(strength.color)
-                            .frame(width: geometry.size.width * strength.progress, height: 4)
-                            .animation(.spring(), value: strength.progress)
-                    }
-                }
-                .frame(height: 4)
-            }
-        }
-    }
-    
-    struct ErrorCard: View {
-        let message: String
-        
-        var body: some View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.gray)
+                .textCase(.uppercase)
+                .tracking(1)
+            
             HStack {
-                Image(systemName: "exclamationmark.circle.fill")
-                    .foregroundColor(.red)
+                Image(systemName: icon)
+                    .foregroundColor(.gray)
+                    .frame(width: 20)
                 
-                Text(message)
-                    .foregroundColor(.red)
-                    .font(.caption)
-                
-                Spacer()
+                TextField(placeholder, text: $text)
+                    .keyboardType(keyboardType)
+                    .autocapitalization(keyboardType == .emailAddress ? .none : .words)
+                    .foregroundColor(.white)
+                    .onChange(of: text) { _, _ in validate() }
             }
             .padding()
             .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.red.opacity(0.1))
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white.opacity(0.08))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(error.isEmpty ? Color.white.opacity(0.1) : Color.red.opacity(0.5), lineWidth: 1)
                     )
             )
+            
+            if !error.isEmpty {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .transition(.opacity)
+            }
         }
     }
+}
 
+struct SecureFormField: View {
+    let title: String
+    let icon: String
+    let placeholder: String
+    @Binding var text: String
+    @Binding var isSecure: Bool
+    @Binding var error: String
+    let validate: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.gray)
+                .textCase(.uppercase)
+                .tracking(1)
+            
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(.gray)
+                    .frame(width: 20)
+                
+                if isSecure {
+                    SecureField(placeholder, text: $text)
+                        .foregroundColor(.white)
+                } else {
+                    TextField(placeholder, text: $text)
+                        .foregroundColor(.white)
+                }
+                
+                Button(action: { isSecure.toggle() }) {
+                    Image(systemName: isSecure ? "eye.slash.fill" : "eye.fill")
+                        .foregroundColor(.gray)
+                        .font(.caption)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(error.isEmpty ? Color.white.opacity(0.1) : Color.red.opacity(0.5), lineWidth: 1)
+                    )
+            )
+            .onChange(of: text) { _, _ in validate() }
+            
+            if !error.isEmpty {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+                    .transition(.opacity)
+            }
+        }
+    }
+}
+
+struct PasswordStrengthIndicator: View {
+    let password: String
+    
+    var strength: (text: String, color: Color, progress: Double) {
+        if password.count < 6 { return ("Weak", .red, 0.25) }
+        else if password.count < 10 { return ("Fair", .orange, 0.5) }
+        else if password.count < 14 { return ("Good", .yellow, 0.75) }
+        else { return ("Strong", .green, 1.0) }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Password strength:")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                
+                Text(strength.text)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(strength.color)
+            }
+            
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color.white.opacity(0.1))
+                        .frame(height: 4)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(strength.color)
+                        .frame(width: geometry.size.width * strength.progress, height: 4)
+                        .animation(.spring(), value: strength.progress)
+                }
+            }
+            .frame(height: 4)
+        }
+    }
+}
+
+struct ErrorCard: View {
+    let message: String
+    
+    var body: some View {
+        HStack {
+            Image(systemName: "exclamationmark.circle.fill")
+                .foregroundColor(.red)
+            
+            Text(message)
+                .foregroundColor(.red)
+                .font(.caption)
+            
+            Spacer()
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color.red.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+}
