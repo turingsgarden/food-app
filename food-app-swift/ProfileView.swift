@@ -13,7 +13,10 @@ struct ProfileView: View {
     @ObservedObject var profileManager = ProfileManager.shared
     @Environment(\.dismiss) var dismiss
     @State private var showLogoutAlert = false
+    @State private var showDeleteAccountAlert = false
+    @State private var showDeleteConfirmation = false
     @State private var isLoggingOut = false
+    @State private var isDeletingAccount = false
     @State private var showEditProfile = false
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
@@ -73,6 +76,35 @@ struct ProfileView: View {
                         .padding(.horizontal)
                     }
                 }
+                
+                // Loading overlay for account deletion
+                if isDeletingAccount {
+                    Color.black.opacity(0.7)
+                        .ignoresSafeArea()
+                    
+                    VStack(spacing: 20) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                            .scaleEffect(1.5)
+                        
+                        Text("Deleting your account...")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        Text("Please wait")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
+                    .padding(40)
+                    .background(
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.black.opacity(0.9))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                }
             }
             .preferredColorScheme(.dark)
             .navigationTitle("Profile")
@@ -116,6 +148,22 @@ struct ProfileView: View {
             } message: {
                 Text("Are you sure you want to logout? You'll need to login again to access your meals.")
             }
+            .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete", role: .destructive) {
+                    showDeleteConfirmation = true
+                }
+            } message: {
+                Text("Are you sure you want to delete your account? This will permanently delete all your data including meals, nutrition history, and profile information. This action cannot be undone.")
+            }
+            .alert("Final Confirmation", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) { }
+                Button("Delete Forever", role: .destructive) {
+                    performAccountDeletion()
+                }
+            } message: {
+                Text("This is your last chance. Deleting your account is permanent and irreversible. All your data will be lost forever.")
+            }
             .alert("Error", isPresented: $showErrorAlert) {
                 Button("OK", role: .cancel) { }
             } message: {
@@ -129,7 +177,6 @@ struct ProfileView: View {
                         profileManager.fetchProfile(force: true)
                     }
             }
-            
             .alert("Help & Support", isPresented: $showHelpSupport) {
                 Button("Contact Support") {
                     openEmailSupport()
@@ -137,7 +184,8 @@ struct ProfileView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("For support, please contact us at support@nutricam.com")
-            }            .refreshable {
+            }
+            .refreshable {
                 await refreshProfile()
             }
         }
@@ -383,6 +431,17 @@ struct ProfileView: View {
                     titleColor: .red,
                     action: { showLogoutAlert = true }
                 )
+                
+                Divider()
+                    .background(Color.white.opacity(0.1))
+                
+                SettingsRow(
+                    icon: "trash.fill",
+                    title: "Delete Account",
+                    subtitle: "Permanently delete your account and all data",
+                    titleColor: .red,
+                    action: { showDeleteAccountAlert = true }
+                )
             }
             .background(
                 RoundedRectangle(cornerRadius: 16)
@@ -444,6 +503,81 @@ struct ProfileView: View {
         }
     }
     
+    // NEW: Account Deletion
+    func performAccountDeletion() {
+        isDeletingAccount = true
+        
+        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/delete_account") else {
+            DispatchQueue.main.async {
+                self.isDeletingAccount = false
+                self.errorMessage = "Failed to connect to server"
+                self.showErrorAlert = true
+            }
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Add JWT token for authentication
+        if let token = session.jwtToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+        
+        print("🗑️ Sending account deletion request...")
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                self.isDeletingAccount = false
+                
+                if let error = error {
+                    print("❌ Account deletion network error: \(error.localizedDescription)")
+                    self.errorMessage = "Network error. Please try again."
+                    self.showErrorAlert = true
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("🌐 Account deletion response code: \(httpResponse.statusCode)")
+                    
+                    if httpResponse.statusCode == 200 {
+                        print("✅ Account deleted successfully")
+                        
+                        // Clear all local data
+                        self.profileManager.clearProfile()
+                        
+                        // Logout and return to login screen
+                        self.session.logout()
+                        
+                        // Dismiss view
+                        self.dismiss()
+                        
+                    } else if httpResponse.statusCode == 401 {
+                        print("❌ Unauthorized - token may be expired")
+                        self.errorMessage = "Session expired. Please login again."
+                        self.showErrorAlert = true
+                        
+                        // Force logout
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            self.session.logout()
+                            self.dismiss()
+                        }
+                        
+                    } else {
+                        print("❌ Account deletion failed with status: \(httpResponse.statusCode)")
+                        self.errorMessage = "Failed to delete account. Please contact support."
+                        self.showErrorAlert = true
+                    }
+                } else {
+                    print("❌ Invalid response from server")
+                    self.errorMessage = "Invalid server response. Please try again."
+                    self.showErrorAlert = true
+                }
+            }
+        }.resume()
+    }
+    
     func rateApp() {
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
             AppStore.requestReview(in: windowScene)
@@ -454,9 +588,6 @@ struct ProfileView: View {
         }
     }
 }
-
-// Keep all existing supporting views (StatCard, SettingsRow, HelpSupportView, etc.) unchanged...
-// [Rest of the supporting views remain the same as in original file]
 
 // MARK: - Supporting Views
 
@@ -560,12 +691,15 @@ struct FullPrivacyPolicyView: View {
     • Right to delete your personal data
     • Right to data portability
 
+    ACCOUNT DELETION
+    You can delete your account at any time through the app settings. Account deletion will permanently remove all your data including meals, nutrition history, and profile information. This action cannot be undone.
+
     CHILDREN'S PRIVACY
     Our Service does not address anyone under the age of 13. We do not knowingly collect personally identifiable information from anyone under the age of 13.
 
     CONTACT US
     If you have any questions about this Privacy Policy, You can contact us:
-    • By email: nutrisnap@gmail.com
+    • By email: support@nutricam.com
 
     For the complete Privacy Policy, visit our website or contact us directly.
     """

@@ -1386,6 +1386,85 @@ def google_login():
     except Exception as e:
         print("❌ Google login error:", str(e))
         return jsonify({"error": "Google login failed"}), 500
+    
+    
+@app.route("/delete_account", methods=["DELETE"])
+@token_required
+@db_required
+def delete_account():
+    """
+    Permanently delete user account and all associated data.
+    This complies with App Store guidelines 5.1.1(v) for account deletion.
+    """
+    try:
+        user_id = request.user_id
+        
+        print(f"🗑️ Account deletion request for user_id: {user_id}")
+        
+        # Verify user exists
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            print(f"❌ User not found: {user_id}")
+            return jsonify({"error": "User not found"}), 404
+        
+        print(f"👤 Deleting account for user: {user.get('name', 'Unknown')} ({user.get('email', 'Unknown')})")
+        
+        # Delete all user data from all collections
+        deletion_results = {}
+        
+        # 1. Delete user profile
+        profile_result = profiles_collection.delete_many({"user_id": user_id})
+        deletion_results["profiles"] = profile_result.deleted_count
+        print(f"✅ Deleted {profile_result.deleted_count} profile(s)")
+        
+        # 2. Delete all meals
+        meals_result = meals_collection.delete_many({"user_id": user_id})
+        deletion_results["meals"] = meals_result.deleted_count
+        print(f"✅ Deleted {meals_result.deleted_count} meal(s)")
+        
+        # 3. Delete exercise records
+        if "exercise" in db.list_collection_names():
+            exercise_result = db["exercise"].delete_many({"user_id": user_id})
+            deletion_results["exercise"] = exercise_result.deleted_count
+            print(f"✅ Deleted {exercise_result.deleted_count} exercise record(s)")
+        
+        # 4. Delete water intake records
+        if "water" in db.list_collection_names():
+            water_result = db["water"].delete_many({"user_id": user_id})
+            deletion_results["water"] = water_result.deleted_count
+            print(f"✅ Deleted {water_result.deleted_count} water record(s)")
+        
+        # 5. Delete weight records
+        if "weight" in db.list_collection_names():
+            weight_result = db["weight"].delete_many({"user_id": user_id})
+            deletion_results["weight"] = weight_result.deleted_count
+            print(f"✅ Deleted {weight_result.deleted_count} weight record(s)")
+        
+        # 6. Finally, delete the user account itself
+        user_result = users_collection.delete_one({"_id": ObjectId(user_id)})
+        deletion_results["user"] = user_result.deleted_count
+        print(f"✅ Deleted user account")
+        
+        if user_result.deleted_count == 0:
+            print(f"❌ Failed to delete user account")
+            return jsonify({"error": "Failed to delete user account"}), 500
+        
+        print(f"🎉 Account deletion completed successfully")
+        print(f"📊 Deletion summary: {deletion_results}")
+        
+        return jsonify({
+            "message": "Account deleted successfully",
+            "deleted_data": deletion_results,
+            "timestamp": datetime.now().isoformat()
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error in delete_account: {str(e)}")
+        traceback.print_exc()
+        return jsonify({
+            "error": "Account deletion failed",
+            "details": str(e)
+        }), 500
 
 
 
