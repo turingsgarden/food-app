@@ -1,5 +1,7 @@
 import SwiftUI
 import AuthenticationServices
+import GoogleSignIn
+import GoogleSignInSwift
 
 struct RegisterView: View {
     @Environment(\.dismiss) private var dismiss
@@ -21,6 +23,12 @@ struct RegisterView: View {
     @State private var navigateToDashboard = false
     @State private var isLoading = false
     @State private var agreedToTerms = false
+    
+    @FocusState private var focusedField: Field?
+    
+    enum Field {
+        case name, email, password, confirmPassword
+    }
 
     var body: some View {
         NavigationStack {
@@ -36,6 +44,9 @@ struct RegisterView: View {
                     endPoint: .bottom
                 )
                 .ignoresSafeArea()
+                .onTapGesture {
+                    focusedField = nil
+                }
 
                 ScrollView {
                     VStack(spacing: 32) {
@@ -50,6 +61,7 @@ struct RegisterView: View {
                                     }
                                     .foregroundColor(.gray)
                                 }
+                                .buttonStyle(PlainButtonStyle())
                                 Spacer()
                             }
                             .padding(.horizontal)
@@ -75,7 +87,9 @@ struct RegisterView: View {
                                 placeholder: "Enter your name",
                                 text: $name,
                                 error: $nameError,
-                                validate: validateName
+                                validate: validateName,
+                                focusedField: $focusedField,
+                                field: .name
                             )
                             
                             // Email Field
@@ -86,7 +100,9 @@ struct RegisterView: View {
                                 text: $email,
                                 error: $emailError,
                                 validate: validateEmail,
-                                keyboardType: .emailAddress
+                                keyboardType: .emailAddress,
+                                focusedField: $focusedField,
+                                field: .email
                             )
 
                             // Password Field
@@ -97,7 +113,9 @@ struct RegisterView: View {
                                 text: $password,
                                 isSecure: $isSecure,
                                 error: $passwordError,
-                                validate: validatePassword
+                                validate: validatePassword,
+                                focusedField: $focusedField,
+                                field: .password
                             )
                             
                             // Password strength indicator
@@ -113,7 +131,9 @@ struct RegisterView: View {
                                 text: $confirmPassword,
                                 isSecure: $isConfirmSecure,
                                 error: $confirmPasswordError,
-                                validate: validateConfirmPassword
+                                validate: validateConfirmPassword,
+                                focusedField: $focusedField,
+                                field: .confirmPassword
                             )
 
                             // Terms and Conditions
@@ -143,8 +163,9 @@ struct RegisterView: View {
                                 Spacer()
                             }
 
-                            // Register Button - FIXED RESPONSIVENESS
+                            // Register Button
                             Button(action: {
+                                focusedField = nil
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 validateAll()
                                 if allValid() && agreedToTerms {
@@ -165,7 +186,7 @@ struct RegisterView: View {
                                 }
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
+                                .frame(height: 50)
                                 .background(
                                     LinearGradient(
                                         gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
@@ -178,7 +199,8 @@ struct RegisterView: View {
                                 .opacity(agreedToTerms ? 1.0 : 0.6)
                             }
                             .disabled(isLoading || !agreedToTerms)
-                            .buttonStyle(PlainButtonStyle()) // Add for better touch response
+                            .buttonStyle(PlainButtonStyle())
+                            .contentShape(Rectangle())
 
                             if registrationFailed {
                                 ErrorCard(message: registrationError)
@@ -201,13 +223,65 @@ struct RegisterView: View {
                             }
                             .padding(.vertical, 8)
 
-                            // Social Registration - Keep existing
+                            // Social Registration - FIXED
                             VStack(spacing: 12) {
-                                SignInWithAppleButton(.signUp, onRequest: { _ in }, onCompletion: { _ in })
-                                    .frame(height: 50)
-                                    .cornerRadius(12)
+                                // Apple Sign-In - FIXED
+                                SignInWithAppleButton(.signUp) { request in
+                                    print("🍎 Apple SignUp request started")
+                                    request.requestedScopes = [.fullName, .email]
+                                } onCompletion: { result in
+                                    print("🍎 Apple SignUp completion triggered")
+                                    
+                                    switch result {
+                                    case .success(let authResults):
+                                        print("✅ Apple authorization success")
+                                        
+                                        if let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
+                                            let userId = credential.user
+                                            let email = credential.email ?? "\(userId)@apple.local"
+                                            let fullName = credential.fullName
+                                            let firstName = fullName?.givenName ?? ""
+                                            let lastName = fullName?.familyName ?? ""
+                                            let displayName = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
+                                            
+                                            print("🎉 Apple signup data:")
+                                            print("📧 Email: \(email)")
+                                            print("👤 Name: \(displayName)")
+                                            
+                                            if let tokenData = credential.identityToken,
+                                               let tokenStr = String(data: tokenData, encoding: .utf8) {
+                                                print("🔑 Token received, registering...")
+                                                attemptAppleRegister(email: email, name: displayName.isEmpty ? "Apple User" : displayName, token: tokenStr)
+                                            } else {
+                                                print("❌ Failed to get identity token")
+                                                self.registrationFailed = true
+                                                self.registrationError = "Failed to get Apple identity token"
+                                            }
+                                        } else {
+                                            print("❌ Invalid credential type")
+                                            self.registrationFailed = true
+                                            self.registrationError = "Invalid Apple credential"
+                                        }
+                                        
+                                    case .failure(let error):
+                                        print("❌ Apple Sign-In failed: \(error.localizedDescription)")
+                                        // Don't show error if user cancelled
+                                        if (error as NSError).code != 1001 {
+                                            self.registrationFailed = true
+                                            self.registrationError = "Apple sign-up failed"
+                                        }
+                                    }
+                                }
+                                .signInWithAppleButtonStyle(.white)
+                                .frame(height: 50)
+                                .cornerRadius(12)
 
-                                Button(action: {}) {
+                                // Google Sign-In - FIXED
+                                Button(action: {
+                                    focusedField = nil
+                                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    handleGoogleRegister()
+                                }) {
                                     HStack {
                                         Image(systemName: "globe")
                                         Text("Sign up with Google")
@@ -215,7 +289,7 @@ struct RegisterView: View {
                                     }
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
+                                    .frame(height: 50)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
                                             .fill(Color.white.opacity(0.1))
@@ -225,7 +299,8 @@ struct RegisterView: View {
                                             )
                                     )
                                 }
-                                .buttonStyle(PlainButtonStyle()) // Add for better touch response
+                                .buttonStyle(PlainButtonStyle())
+                                .contentShape(Rectangle())
                             }
 
                             // Login Link
@@ -236,6 +311,7 @@ struct RegisterView: View {
                                 Button("Log In") {
                                     dismiss()
                                 }
+                                .buttonStyle(PlainButtonStyle())
                                 .foregroundColor(.orange)
                                 .fontWeight(.semibold)
                             }
@@ -246,7 +322,7 @@ struct RegisterView: View {
                         Spacer(minLength: 50)
                     }
                 }
-                .scrollDismissesKeyboard(.interactively) // Add for better keyboard handling
+                .scrollDismissesKeyboard(.interactively)
             }
             .preferredColorScheme(.dark)
             .navigationDestination(isPresented: $navigateToDashboard) {
@@ -306,7 +382,7 @@ struct RegisterView: View {
         nameError.isEmpty && emailError.isEmpty && passwordError.isEmpty && confirmPasswordError.isEmpty
     }
 
-    // MARK: - API Call (WITHOUT OTP)
+    // MARK: - Email/Password Registration
     
     func attemptRegister() {
         isLoading = true
@@ -351,20 +427,149 @@ struct RegisterView: View {
                 // Decode the response
                 do {
                     let response = try JSONDecoder().decode(RegisterResponse.self, from: data)
+                    print("✅ Registration successful, navigating to dashboard")
                     withAnimation(.spring()) {
                         self.session.login(id: response.user_id, name: response.name, token: response.token, isNewUser: true)
                         self.navigateToDashboard = true
                     }
                 } catch {
+                    print("❌ JSON decode error: \(error)")
                     self.registrationFailed = true
                     self.registrationError = "Unexpected error. Please try again."
                 }
             }
         }.resume()
     }
+    
+    // MARK: - Apple Sign-In Registration
+    
+    private func attemptAppleRegister(email: String, name: String, token: String) {
+        isLoading = true
+        registrationFailed = false
+        
+        NetworkManager.shared.appleLogin(email: email, identityToken: token) { result in
+            DispatchQueue.main.async {
+                self.isLoading = false
+                
+                switch result {
+                case .success(let (userId, userName, jwtToken)):
+                    print("✅ Apple registration successful")
+                    // Use the name from Apple if available, otherwise use backend name
+                    let finalName = name.isEmpty ? userName : name
+                    withAnimation(.spring()) {
+                        self.session.login(id: userId, name: finalName, token: jwtToken, isNewUser: true)
+                        self.navigateToDashboard = true
+                    }
+                    
+                case .failure(let error):
+                    print("❌ Apple registration failed: \(error)")
+                    self.registrationFailed = true
+                    self.registrationError = "Apple sign-up failed. Please try again."
+                }
+            }
+        }
+    }
+    
+    // MARK: - Google Sign-In Registration
+    
+    private func handleGoogleRegister() {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootVC = windowScene.windows.first?.rootViewController else {
+            print("❌ No root view controller")
+            return
+        }
+        
+        GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
+            if let error = error {
+                print("❌ Google Sign-In failed:", error.localizedDescription)
+                // Don't show error if user cancelled
+                if (error as NSError).code != -5 {
+                    DispatchQueue.main.async {
+                        self.registrationFailed = true
+                        self.registrationError = "Google sign-up failed"
+                    }
+                }
+                return
+            }
+            
+            guard let user = result?.user,
+                  let idToken = user.idToken?.tokenString else {
+                print("❌ Google Sign-In: no user or idToken")
+                return
+            }
+            
+            let email = user.profile?.email ?? ""
+            let fullName = user.profile?.name ?? ""
+            
+            print("✅ Google sign-up success")
+            print("📧 Email:", email)
+            print("🧑 Name:", fullName)
+            
+            self.sendGoogleTokenToBackend(idToken: idToken, email: email)
+        }
+    }
+    
+    private func sendGoogleTokenToBackend(idToken: String, email: String) {
+        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/google_login") else { return }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = ["idToken": idToken, "email": email]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("❌ Network error:", error.localizedDescription)
+                DispatchQueue.main.async {
+                    self.registrationFailed = true
+                    self.registrationError = "Network error. Please try again."
+                }
+                return
+            }
+            
+            if let httpResponse = response as? HTTPURLResponse {
+                print("🌐 Backend response code:", httpResponse.statusCode)
+            }
+            
+            if let data = data {
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                        print("📦 Backend response:", json)
+                        
+                        if let userId = json["user_id"] as? String,
+                           let name = json["name"] as? String,
+                           let token = json["token"] as? String {
+                            print("✅ Google registration successful")
+                            DispatchQueue.main.async {
+                                withAnimation(.spring()) {
+                                    self.session.login(id: userId, name: name, token: token, isNewUser: true)
+                                    self.navigateToDashboard = true
+                                }
+                            }
+                        } else {
+                            print("❌ Missing fields in backend response")
+                            DispatchQueue.main.async {
+                                self.registrationFailed = true
+                                self.registrationError = "Registration failed. Please try again."
+                            }
+                        }
+                    }
+                } catch {
+                    print("❌ JSON parse error:", error.localizedDescription)
+                    DispatchQueue.main.async {
+                        self.registrationFailed = true
+                        self.registrationError = "Registration failed. Please try again."
+                    }
+                }
+            }
+        }.resume()
+    }
 }
 
-// Keep all supporting views unchanged
+// MARK: - Supporting Views
+
 struct FormField: View {
     let title: String
     let icon: String
@@ -373,6 +578,8 @@ struct FormField: View {
     @Binding var error: String
     let validate: () -> Void
     var keyboardType: UIKeyboardType = .default
+    var focusedField: FocusState<RegisterView.Field?>.Binding
+    var field: RegisterView.Field
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -391,6 +598,7 @@ struct FormField: View {
                     .keyboardType(keyboardType)
                     .autocapitalization(keyboardType == .emailAddress ? .none : .words)
                     .foregroundColor(.white)
+                    .focused(focusedField, equals: field)
                     .onChange(of: text) { _, _ in validate() }
             }
             .padding()
@@ -421,6 +629,8 @@ struct SecureFormField: View {
     @Binding var isSecure: Bool
     @Binding var error: String
     let validate: () -> Void
+    var focusedField: FocusState<RegisterView.Field?>.Binding
+    var field: RegisterView.Field
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -438,9 +648,11 @@ struct SecureFormField: View {
                 if isSecure {
                     SecureField(placeholder, text: $text)
                         .foregroundColor(.white)
+                        .focused(focusedField, equals: field)
                 } else {
                     TextField(placeholder, text: $text)
                         .foregroundColor(.white)
+                        .focused(focusedField, equals: field)
                 }
                 
                 Button(action: { isSecure.toggle() }) {
@@ -448,6 +660,7 @@ struct SecureFormField: View {
                         .foregroundColor(.gray)
                         .font(.caption)
                 }
+                .buttonStyle(PlainButtonStyle())
             }
             .padding()
             .background(

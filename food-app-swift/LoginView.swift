@@ -17,6 +17,12 @@ struct LoginView: View {
     @State private var isLoading = false
     @State private var showRegister = false
     
+    @FocusState private var focusedField: Field?
+    
+    enum Field {
+        case email, password
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -31,6 +37,10 @@ struct LoginView: View {
                     endPoint: .bottom
                 )
                 .ignoresSafeArea()
+                .onTapGesture {
+                    // FIXED: Only dismiss keyboard, don't block button taps
+                    focusedField = nil
+                }
                 
                 ScrollView {
                     VStack(spacing: 32) {
@@ -78,6 +88,7 @@ struct LoginView: View {
                                         .keyboardType(.emailAddress)
                                         .autocapitalization(.none)
                                         .foregroundColor(.white)
+                                        .focused($focusedField, equals: .email)
                                         .onChange(of: email) { _, _ in validateEmail() }
                                 }
                                 .padding()
@@ -114,16 +125,21 @@ struct LoginView: View {
                                     if isSecure {
                                         SecureField("Enter your password", text: $password)
                                             .foregroundColor(.white)
+                                            .focused($focusedField, equals: .password)
                                     } else {
                                         TextField("Enter your password", text: $password)
                                             .foregroundColor(.white)
+                                            .focused($focusedField, equals: .password)
                                     }
                                     
-                                    Button(action: { isSecure.toggle() }) {
+                                    Button(action: {
+                                        isSecure.toggle()
+                                    }) {
                                         Image(systemName: isSecure ? "eye.slash.fill" : "eye.fill")
                                             .foregroundColor(.gray)
                                             .font(.caption)
                                     }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
                                 .padding()
                                 .background(
@@ -146,7 +162,9 @@ struct LoginView: View {
                             
                             // Remember Me & Forgot Password
                             HStack {
-                                Button(action: { rememberMe.toggle() }) {
+                                Button(action: {
+                                    rememberMe.toggle()
+                                }) {
                                     HStack(spacing: 8) {
                                         Image(systemName: rememberMe ? "checkmark.square.fill" : "square")
                                             .foregroundColor(rememberMe ? .orange : .gray)
@@ -164,12 +182,14 @@ struct LoginView: View {
                                 Button("Forgot Password?") {
                                     // Handle forgot password
                                 }
+                                .buttonStyle(PlainButtonStyle())
                                 .font(.caption)
                                 .foregroundColor(.orange)
                             }
                             
-                            // Login Button - FIXED RESPONSIVENESS
+                            // Login Button - FIXED
                             Button(action: {
+                                focusedField = nil // Dismiss keyboard
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 validateEmail()
                                 validatePassword()
@@ -191,7 +211,7 @@ struct LoginView: View {
                                 }
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
+                                .frame(height: 50) // FIXED: Explicit minimum height
                                 .background(
                                     LinearGradient(
                                         gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
@@ -203,7 +223,8 @@ struct LoginView: View {
                                 .shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
                             .disabled(isLoading)
-                            .buttonStyle(PlainButtonStyle()) // Add this for better touch response
+                            .buttonStyle(PlainButtonStyle())
+                            .contentShape(Rectangle()) // FIXED: Ensure entire button area is tappable
                             
                             if loginFailed {
                                 HStack {
@@ -235,30 +256,29 @@ struct LoginView: View {
                             }
                             .padding(.vertical, 8)
                             
-                            // Social Login - Keep existing Apple and Google login code
+                            // Social Login
                             VStack(spacing: 12) {
-                                // Apple login button - NO CHANGES
+                                // Apple login button
                                 SignInWithAppleButton(.signIn) { request in
-                                    print("🔩 Apple SignIn request started")
+                                    print("🍎 Apple SignIn request started")
                                     request.requestedScopes = [.fullName, .email]
-                                    print("🔩 Requested scopes: fullName & email")
+                                    print("🍎 Requested scopes: fullName & email")
                                 } onCompletion: { result in
-                                    print("🔩 onCompletion triggered with result: \(result)")
+                                    print("🍎 onCompletion triggered with result: \(result)")
                                     
                                     switch result {
                                     case .success(let authResults):
                                         print("✅ Authorization success, checking credential type...")
                                         
                                         if let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
-                                            print("🔍 Credential received: \(credential)")
+                                            print("🔑 Credential received: \(credential)")
                                             
                                             let userId = credential.user
                                             let email = credential.email ?? "\(userId)@apple.local"
                                             let identityToken = credential.identityToken
-                                            let authCode = credential.authorizationCode
                                             
-                                            print("🍎 Apple login success")
-                                            print("🔑 userId (Apple sub): \(userId)")
+                                            print("🎉 Apple login success")
+                                            print("🔒 userId (Apple sub): \(userId)")
                                             print("📧 email: \(email)")
                                             
                                             if let tokenData = identityToken {
@@ -276,12 +296,6 @@ struct LoginView: View {
                                                 self.loginFailed = true
                                                 self.loginErrorMessage = "Failed to get Apple identity token"
                                             }
-                                            
-                                            if let code = authCode, let codeStr = String(data: code, encoding: .utf8) {
-                                                print("📜 authorizationCode: \(codeStr)")
-                                            } else {
-                                                print("⚠️ No authorizationCode received")
-                                            }
                                         } else {
                                             print("❌ Credential is not ASAuthorizationAppleIDCredential")
                                             self.loginFailed = true
@@ -298,8 +312,9 @@ struct LoginView: View {
                                 .frame(height: 50)
                                 .cornerRadius(12)
                                 
-                                // Google login button - NO CHANGES
+                                // Google login button
                                 Button(action: {
+                                    focusedField = nil // Dismiss keyboard
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     handleGoogleLogin()
                                 }) {
@@ -310,7 +325,7 @@ struct LoginView: View {
                                     }
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 14)
+                                    .frame(height: 50) // FIXED: Explicit minimum height
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
                                             .fill(Color.white.opacity(0.1))
@@ -320,7 +335,8 @@ struct LoginView: View {
                                             )
                                     )
                                 }
-                                .buttonStyle(PlainButtonStyle()) // Add for better touch response
+                                .buttonStyle(PlainButtonStyle())
+                                .contentShape(Rectangle()) // FIXED: Ensure entire button area is tappable
                             }
                             
                             // Register Link
@@ -331,6 +347,7 @@ struct LoginView: View {
                                 Button("Create Account") {
                                     showRegister = true
                                 }
+                                .buttonStyle(PlainButtonStyle())
                                 .foregroundColor(.orange)
                                 .fontWeight(.semibold)
                             }
@@ -341,12 +358,9 @@ struct LoginView: View {
                         Spacer(minLength: 50)
                     }
                 }
-                .scrollDismissesKeyboard(.interactively) // Add this for better keyboard handling
+                .scrollDismissesKeyboard(.interactively)
             }
             .preferredColorScheme(.dark)
-            .onTapGesture {
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-            }
             .navigationDestination(isPresented: $navigateToDashboard) {
                 DashboardView()
                     .navigationBarBackButtonHidden(true)
@@ -357,7 +371,6 @@ struct LoginView: View {
         }
     }
     
-    // Keep all existing validation and login methods unchanged
     private func validateEmail() {
         let trimmed = email.trimmingCharacters(in: .whitespaces)
         withAnimation(.easeInOut(duration: 0.2)) {
@@ -374,7 +387,6 @@ struct LoginView: View {
         }
     }
     
-    // Keep all existing login methods (attemptAppleLogin, handleGoogleLogin, etc.) unchanged
     private func attemptAppleLogin(email: String, token: String) {
         isLoading = true
         loginFailed = false
@@ -399,7 +411,9 @@ struct LoginView: View {
     }
     
     private func handleGoogleLogin() {
-        guard let rootVC = UIApplication.shared.windows.first?.rootViewController else {
+        // Get the root view controller using the modern iOS 15+ API
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let rootVC = windowScene.windows.first?.rootViewController else {
             print("❌ No root view controller")
             return
         }
@@ -506,3 +520,5 @@ struct LoginView: View {
         }
     }
 }
+
+
