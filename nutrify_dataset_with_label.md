@@ -33,16 +33,6 @@
 
 ---
 
-### MyFoodRepo-273
-- **Included Information:** Instance segmentation for each ingredient (polygon masks per food region)
-- **Image Source:** User-uploaded real meal photos via MyFoodRepo app
-- **Annotation Source:** 
-  1. Algorithm generates initial instance segmentation and food class predictions
-  2. Humans verify and correct segmentations and class labels as needed
-- **Paper:** [PDF](https://arxiv.org/pdf/2106.14977)
-
----
-
 
 ### FoodSeg-103
 - **Included Information:** Visible ingredients
@@ -69,6 +59,16 @@
 ---
 
 
+### MyFoodRepo-273
+- **Included Information:** Instance segmentation for each ingredient (polygon masks per food region)
+- **Image Source:** User-uploaded real meal photos via MyFoodRepo app
+- **Annotation Source:** 
+  1. Algorithm generates initial instance segmentation and food class predictions
+  2. Humans verify and correct segmentations and class labels as needed
+- **Paper:** [PDF](https://arxiv.org/pdf/2106.14977)
+
+---
+
 ### Recipe1M
 - **Included Information:** 
   1. Recipe text:
@@ -83,4 +83,5 @@
   3. Ingredients matched with the USDA nutrient database
 - **Source / Dataset Link:** [Recipe1M / Recipe1M+](https://arxiv.org/pdf/1810.06553)
 - **Paper / Website:** [Link](https://im2recipe.csail.mit.edu/tpami19.pdf)
+
 
