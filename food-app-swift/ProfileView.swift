@@ -25,170 +25,204 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                // Gradient background
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.black,
-                        Color.black.opacity(0.95),
-                        Color(red: 0.1, green: 0.1, blue: 0.15)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                
-                if profileManager.isLoading && profileManager.userProfile == nil && !hasAppeared {
-                    // Loading state only on initial load
-                    VStack(spacing: 20) {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .orange))
-                            .scaleEffect(1.5)
-                        
-                        Text("Loading your profile...")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                    }
-                } else {
-                    // Main content - always show, even without profile
-                    ScrollView {
-                        VStack(spacing: 24) {
-                            // Header with Profile Picture
-                            profileHeaderSection
-                            
-                            if let profile = profileManager.userProfile {
-                                // Stats Cards
-                                profileStatsSection(profile: profile)
-                                
-                                // Settings Section
-                                settingsSection(profile: profile)
-                            } else {
-                                // Profile setup prompt
-                                profileSetupPromptSection
-                            }
-                            
-                            // Account Section - Always visible
-                            accountSection
-                            
-                            // App Info
-                            appInfoSection()
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                
-                // Loading overlay for account deletion
-                if isDeletingAccount {
-                    Color.black.opacity(0.7)
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: 20) {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .orange))
-                            .scaleEffect(1.5)
-                        
-                        Text("Deleting your account...")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        Text("Please wait")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    .padding(40)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.black.opacity(0.9))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 20)
-                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                            )
-                    )
-                }
+            mainContent
+                .preferredColorScheme(.dark)
+                .navigationTitle("Profile")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { toolbarContent }
+                .onAppear(perform: handleAppear)
+                .alert("Logout", isPresented: $showLogoutAlert, actions: logoutAlertButtons, message: logoutAlertMessage)
+                .alert("Delete Account", isPresented: $showDeleteAccountAlert, actions: deleteAlertButtons, message: deleteAlertMessage)
+                .alert("Final Confirmation", isPresented: $showDeleteConfirmation, actions: finalDeleteButtons, message: finalDeleteMessage)
+                .alert("Error", isPresented: $showErrorAlert, actions: errorAlertButtons, message: errorAlertMessage)
+                .sheet(isPresented: $showEditProfile) { profileEditSheet }
+                .alert("Help & Support", isPresented: $showHelpSupport, actions: helpAlertButtons, message: helpAlertMessage)
+                .refreshable { await refreshProfile() }
+        }
+    }
+    
+    // MARK: - Body Components
+    
+    private var mainContent: some View {
+        ZStack {
+            backgroundGradient
+            
+            if profileManager.isLoading && profileManager.userProfile == nil && !hasAppeared {
+                loadingView
+            } else {
+                scrollContent
             }
-            .preferredColorScheme(.dark)
-            .navigationTitle("Profile")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    if profileManager.isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .orange))
-                            .scaleEffect(0.8)
-                    } else if profileManager.userProfile != nil {
-                        Button(action: {
-                            print("🔄 Manual refresh button tapped")
-                            profileManager.fetchProfile(force: true)
-                        }) {
-                            Image(systemName: "arrow.clockwise")
-                                .foregroundColor(.orange)
-                        }
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundColor(.orange)
-                }
-            }
-            .onAppear {
-                if !hasAppeared {
-                    hasAppeared = true
-                    print("👤 ProfileView appeared - fetching profile")
-                    profileManager.fetchProfile(force: false)
-                }
-            }
-            .alert("Logout", isPresented: $showLogoutAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Logout", role: .destructive) {
-                    performLogout()
-                }
-            } message: {
-                Text("Are you sure you want to logout? You'll need to login again to access your meals.")
-            }
-            .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete", role: .destructive) {
-                    showDeleteConfirmation = true
-                }
-            } message: {
-                Text("Are you sure you want to delete your account? This will permanently delete all your data including meals, nutrition history, and profile information. This action cannot be undone.")
-            }
-            .alert("Final Confirmation", isPresented: $showDeleteConfirmation) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete Forever", role: .destructive) {
-                    performAccountDeletion()
-                }
-            } message: {
-                Text("This is your last chance. Deleting your account is permanent and irreversible. All your data will be lost forever.")
-            }
-            .alert("Error", isPresented: $showErrorAlert) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(errorMessage)
-            }
-            .sheet(isPresented: $showEditProfile) {
-                ProfileSetupView(existingProfile: profileManager.userProfile)
-                    .onDisappear {
-                        // Force refresh after profile setup/edit
-                        print("🔃 Profile setup/edit completed, refreshing profile")
-                        profileManager.fetchProfile(force: true)
-                    }
-            }
-            .alert("Help & Support", isPresented: $showHelpSupport) {
-                Button("Contact Support") {
-                    openEmailSupport()
-                }
-                Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("For support, please contact us at support@nutricam.com")
-            }
-            .refreshable {
-                await refreshProfile()
+            
+            if isDeletingAccount {
+                deletionOverlay
             }
         }
+    }
+    
+    private var backgroundGradient: some View {
+        LinearGradient(
+            gradient: Gradient(colors: [
+                Color.black,
+                Color.black.opacity(0.95),
+                Color(red: 0.1, green: 0.1, blue: 0.15)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+    }
+    
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                .scaleEffect(1.5)
+            
+            Text("Loading your profile...")
+                .font(.headline)
+                .foregroundColor(.white)
+        }
+    }
+    
+    private var scrollContent: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                profileHeaderSection
+                
+                if let profile = profileManager.userProfile {
+                    profileStatsSection(profile: profile)
+                    settingsSection(profile: profile)
+                } else {
+                    profileSetupPromptSection
+                }
+                
+                accountSection
+                appInfoSection()
+            }
+            .padding(.horizontal)
+        }
+    }
+    
+    private var deletionOverlay: some View {
+        Color.black.opacity(0.7)
+            .ignoresSafeArea()
+            .overlay(deletionProgress)
+    }
+    
+    private var deletionProgress: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                .scaleEffect(1.5)
+            
+            Text("Deleting your account...")
+                .font(.headline)
+                .foregroundColor(.white)
+            
+            Text("Please wait")
+                .font(.subheadline)
+                .foregroundColor(.gray)
+        }
+        .padding(40)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.black.opacity(0.9))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+    
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .navigationBarLeading) {
+            if profileManager.isLoading {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                    .scaleEffect(0.8)
+            } else if profileManager.userProfile != nil {
+                Button(action: {
+                    print("🔄 Manual refresh button tapped")
+                    profileManager.fetchProfile(force: true)
+                }) {
+                    Image(systemName: "arrow.clockwise")
+                        .foregroundColor(.orange)
+                }
+            }
+        }
+        
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Done") { dismiss() }
+                .foregroundColor(.orange)
+        }
+    }
+    
+    // MARK: - Alert Builders
+    
+    private func handleAppear() {
+        if !hasAppeared {
+            hasAppeared = true
+            print("👤 ProfileView appeared - fetching profile")
+            profileManager.fetchProfile(force: false)
+        }
+    }
+    
+    @ViewBuilder
+    private func logoutAlertButtons() -> some View {
+        Button("Cancel", role: .cancel) { }
+        Button("Logout", role: .destructive) { performLogout() }
+    }
+    
+    private func logoutAlertMessage() -> some View {
+        Text("Are you sure you want to logout? You'll need to login again to access your meals.")
+    }
+    
+    @ViewBuilder
+    private func deleteAlertButtons() -> some View {
+        Button("Cancel", role: .cancel) { }
+        Button("Delete", role: .destructive) { showDeleteConfirmation = true }
+    }
+    
+    private func deleteAlertMessage() -> some View {
+        Text("Are you sure you want to delete your account? This will permanently delete all your data including meals, nutrition history, and profile information. This action cannot be undone.")
+    }
+    
+    @ViewBuilder
+    private func finalDeleteButtons() -> some View {
+        Button("Cancel", role: .cancel) { }
+        Button("Delete Forever", role: .destructive) { performAccountDeletion() }
+    }
+    
+    private func finalDeleteMessage() -> some View {
+        Text("This is your last chance. Deleting your account is permanent and irreversible. All your data will be lost forever.")
+    }
+    
+    @ViewBuilder
+    private func errorAlertButtons() -> some View {
+        Button("OK", role: .cancel) { }
+    }
+    
+    private func errorAlertMessage() -> some View {
+        Text(errorMessage)
+    }
+    
+    private var profileEditSheet: some View {
+        ProfileSetupView(existingProfile: profileManager.userProfile)
+            .onDisappear {
+                print("🔃 Profile setup/edit completed, refreshing profile")
+                profileManager.fetchProfile(force: true)
+            }
+    }
+    
+    @ViewBuilder
+    private func helpAlertButtons() -> some View {
+        Button("Contact Support") { openEmailSupport() }
+        Button("Cancel", role: .cancel) { }
+    }
+    
+    private func helpAlertMessage() -> some View {
+        Text("For support, please contact us at support@nutricam.com")
     }
     
     private func openEmailSupport() {
@@ -208,7 +242,6 @@ struct ProfileView: View {
     @ViewBuilder
     var profileHeaderSection: some View {
         VStack(spacing: 16) {
-            // Profile Avatar
             ZStack {
                 Circle()
                     .fill(
@@ -248,7 +281,6 @@ struct ProfileView: View {
                 }
             }
             
-            // Edit/Setup Profile Button
             Button(action: { showEditProfile = true }) {
                 HStack {
                     Image(systemName: profileManager.userProfile != nil ? "pencil" : "person.fill.badge.plus")
@@ -275,7 +307,6 @@ struct ProfileView: View {
     @ViewBuilder
     var profileSetupPromptSection: some View {
         VStack(spacing: 20) {
-            // Informative Card
             VStack(spacing: 16) {
                 Image(systemName: "exclamationmark.circle.fill")
                     .font(.system(size: 40))
@@ -364,8 +395,7 @@ struct ProfileView: View {
                     action: { showEditProfile = true }
                 )
                 
-                Divider()
-                    .background(Color.white.opacity(0.1))
+                Divider().background(Color.white.opacity(0.1))
                 
                 SettingsRow(
                     icon: "target",
@@ -374,8 +404,7 @@ struct ProfileView: View {
                     action: { showEditProfile = true }
                 )
                 
-                Divider()
-                    .background(Color.white.opacity(0.1))
+                Divider().background(Color.white.opacity(0.1))
                 
                 SettingsRow(
                     icon: "leaf.fill",
@@ -384,8 +413,7 @@ struct ProfileView: View {
                     action: { showEditProfile = true }
                 )
                 
-                Divider()
-                    .background(Color.white.opacity(0.1))
+                Divider().background(Color.white.opacity(0.1))
                 
                 SettingsRow(
                     icon: "star.fill",
@@ -394,8 +422,7 @@ struct ProfileView: View {
                     action: rateApp
                 )
                 
-                Divider()
-                    .background(Color.white.opacity(0.1))
+                Divider().background(Color.white.opacity(0.1))
                 
                 SettingsRow(
                     icon: "questionmark.circle.fill",
@@ -432,8 +459,7 @@ struct ProfileView: View {
                     action: { showLogoutAlert = true }
                 )
                 
-                Divider()
-                    .background(Color.white.opacity(0.1))
+                Divider().background(Color.white.opacity(0.1))
                 
                 SettingsRow(
                     icon: "trash.fill",
@@ -486,24 +512,17 @@ struct ProfileView: View {
         }
     }
     
-    // FIXED: Allow logout regardless of profile status
     func performLogout() {
         isLoggingOut = true
-        
-        // Clear all data
         profileManager.clearProfile()
-        
-        // Perform logout
         session.logout()
         
-        // Dismiss view
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.isLoggingOut = false
             self.dismiss()
         }
     }
     
-    // NEW: Account Deletion
     func performAccountDeletion() {
         isDeletingAccount = true
         
@@ -520,8 +539,7 @@ struct ProfileView: View {
         request.httpMethod = "DELETE"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        // Add JWT token for authentication
-        if let token = session.jwtToken {
+        if let token = session.getAuthToken() {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
         
@@ -543,27 +561,18 @@ struct ProfileView: View {
                     
                     if httpResponse.statusCode == 200 {
                         print("✅ Account deleted successfully")
-                        
-                        // Clear all local data
                         self.profileManager.clearProfile()
-                        
-                        // Logout and return to login screen
                         self.session.logout()
-                        
-                        // Dismiss view
                         self.dismiss()
-                        
                     } else if httpResponse.statusCode == 401 {
                         print("❌ Unauthorized - token may be expired")
                         self.errorMessage = "Session expired. Please login again."
                         self.showErrorAlert = true
                         
-                        // Force logout
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                             self.session.logout()
                             self.dismiss()
                         }
-                        
                     } else {
                         print("❌ Account deletion failed with status: \(httpResponse.statusCode)")
                         self.errorMessage = "Failed to delete account. Please contact support."
