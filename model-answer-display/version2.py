@@ -86,7 +86,7 @@ def display_model_response(response, model_name, page_num):
     analysis_time_seconds = response.get("analysis_time_seconds")
     analysis_time_formatted = response.get("analysis_time", format_analysis_time(analysis_time_seconds))
     
-    # 基本字段
+
     dish_names = response.get("dish_names", [])
     visible_ingredients = response.get("visible_ingredients", [])
     hidden_ingredients = response.get("hidden_ingredients", [])
@@ -94,13 +94,13 @@ def display_model_response(response, model_name, page_num):
     console_output = response.get("console_output", "N/A")
     success = response.get("success", False)
 
-    # 菜品名称
+
     dish_list = "\n".join([f"• {d}" for d in dish_names]) if dish_names else "N/A"
     
-    # 时间显示
+
     time_display = f"({analysis_time_formatted})" if analysis_time_formatted and analysis_time_formatted != "N/A" else ""
 
-    # 可见食材
+
     visible_list = []
     for ing in visible_ingredients:
         line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
@@ -113,7 +113,7 @@ def display_model_response(response, model_name, page_num):
         if isinstance(ing, dict):
             line = f"• {ing.get('name', ''):<20} {ing.get('quantity', ''):>6} {ing.get('unit', ''):<6}"
         else:
-            # 如果不是字典，说明数据格式有问题
+
             line = f"• {repr(ing)}"
         hidden_list.append(line)
     
