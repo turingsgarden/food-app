@@ -292,13 +292,13 @@ def run_version1():
 
     st.markdown("""
     <style>
-        /* 整体页面布局优化 */
+
         .main .block-container {
             padding: 1rem 2rem 5rem !important;
             max-width: 95% !important;
         }
 
-        /* 三列布局：左图居中，两侧模型结果 */
+
         .image-container {
             display: flex;
             flex-direction: column;
@@ -314,7 +314,7 @@ def run_version1():
             color: #555;
         }
 
-        /* 模型输出框滚动样式 */
+
         .model-response-box {
             height: 650px;
             overflow-y: auto;
@@ -324,7 +324,7 @@ def run_version1():
             background: #fafafa;
         }
 
-        /* 导航栏样式 */
+
         .nav-bar {
             display: flex;
             align-items: center;
@@ -341,12 +341,12 @@ def run_version1():
             text-align: center;
         }
 
-        /* 让 Streamlit 默认容器自适应 */
+
         div[data-testid="stHorizontalBlock"] {
             align-items: flex-start !important;
         }
 
-        /* 调整左右栏内容对齐 */
+
         [data-testid="stVerticalBlock"] {
             display: flex;
             flex-direction: column;
