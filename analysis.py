@@ -1,9 +1,12 @@
 from PIL import Image
 import os
 import google.generativeai as genai
+from dotenv import load_dotenv
+load_dotenv()
+api_key = os.getenv("GOOGLE_API_KEY")
 
 # Configure Gemini key
-genai.configure(api_key="AIzaSyC2exYMPab3PIOmF2la7Oy3xRdGj-JZazg")
+genai.configure(api_key=api_key)
 
 models = genai.list_models()
 
