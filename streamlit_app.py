@@ -15,7 +15,14 @@ from analysis import (
 # Constants
 INDEX_CSV = "images_index.csv"
 RESULTS_CSV = "analysis_results.csv"
-DATASET_ROOT = "/home/sheru/datasets/uecfood256-small-random"
+# DATASET_ROOT = "/home/sheru/datasets/uecfood256-small-random" this line works only on local, not on deployed render
+DATASET_ROOT = os.path.join(
+    os.path.dirname(__file__),
+    "datasets",
+    "uecfood256-small-random",
+    "UECFOOD256"
+)
+
 
 st.set_page_config(page_title="🍔 Food Calorie Estimator", layout="wide")
 st.title("🍔 Food Calorie Estimator Benchmark")
