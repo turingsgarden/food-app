@@ -7,7 +7,7 @@ __pycache__/
 .env
 
 # Ignore local image uploads/temp files
-*.jpg
+# *.jpg commented due to datasets folder haiving images
 *.jpeg
 uploads/
 
