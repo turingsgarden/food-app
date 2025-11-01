@@ -547,5 +547,7 @@ def main():
             else:
                 st.info("No ground truth available")
 
-if __name__ == "__main__":
+def run_version2():
+    
     main()
+
