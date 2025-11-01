@@ -1,0 +1,9 @@
+./dish_ids/README
+
+All models in the Nutrition5k paper were only trained on data from Cafe 1.
+- Cafe 1 data consists of all dish ids from dish_1556572657 to dish_1568666357
+- Cafe 2 data consists of all dish ids from dish_1571931457 to dish_1576259776
+
+The ../splits/ directory lists the splits used in our experiments. Note that
+because depth information is only available for a subset of the dishes, the
+depth_*_split.txt files are subsets of the rgb_*_splits.txt files.
