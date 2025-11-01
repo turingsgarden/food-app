@@ -5,11 +5,8 @@ from PIL import Image
 import glob
 
 def load_model_data():
-    model_files = {
-        "gemini-2.5-pro": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\food-app\\output\\Nutrition5k_Gemini-2.5-pro_pydantic_food_dataset_analysis.json"
-    }
-
-    ground_truth_path = "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\metadata\\dish_metadata_cafe1.json"
+    model_files = {"gemini-2.5-pro": "output/Nutrition5k_Gemini-2.5-pro_pydantic_food_dataset_analysis.json"}
+    ground_truth_path = "Nutrition5k/metadata/dish_metadata_cafe1.json"
     
     model_data = {}
     available_models = []
@@ -48,7 +45,7 @@ def load_model_data():
     return model_data, available_models, ground_truth_data
 
 def get_all_images():
-    image_dir = "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5K-300"
+    image_dir = "Nutrition5k/Nutrition5K-300/"
     
     if not os.path.exists(image_dir):
         st.error(f"Directory does not exist: {image_dir}")
@@ -550,4 +547,5 @@ def main():
 def run_version2():
     
     main()
+
 
