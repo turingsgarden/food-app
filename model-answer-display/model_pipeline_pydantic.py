@@ -1,4 +1,4 @@
-# # run_pydantix_output.py
+# model_pipeline_pydantic.py
 import sys
 import os
 import time
@@ -27,32 +27,68 @@ class Ingredient(BaseModel):
     name: str = Field(description="Ingredient name")
     quantity: float = Field(description="Quantity")
     unit: str = Field(description="Unit - use 'g' for solids, 'ml' for liquids")
+    _original_unit: str = None  # Internal field to store original unit
 
-    @validator('unit')
-    def validate_unit(cls, v):
-        """Validate and normalize units"""
-        v = v.lower().strip()
+    @validator('unit', pre=True)
+    def validate_and_store_unit(cls, v, values):
+        """Validate and normalize units, store original unit for conversion"""
+        original_unit = v.lower().strip()
         
         # Solid units mapping to grams
         solid_units = {'g', 'gram', 'grams', 'gr', 'gm', 'kg', 'kilogram', 'kilograms'}
-        solid_conversion = {'kg': 1000, 'kilogram': 1000, 'kilograms': 1000}
         
         # Liquid units mapping to ml
         liquid_units = {'ml', 'milliliter', 'milliliters', 'l', 'liter', 'liters', 'cup', 'cups', 'tsp', 'teaspoon', 'teaspoons', 'tbsp', 'tablespoon', 'tablespoons'}
+        
+        # Store original unit in the instance
+        if hasattr(cls, '_original_unit'):
+            cls._original_unit = original_unit
+        
+        if original_unit in solid_units:
+            return 'g'
+        elif original_unit in liquid_units:
+            return 'ml'
+        else:
+            # Default to grams for unknown units
+            return 'g'
+
+    @validator('quantity', always=True)
+    def convert_quantity(cls, v, values):
+        """Convert quantity to standardized units (g or ml)"""
+        if 'unit' not in values:
+            return v
+            
+        # Get the original unit that was passed in
+        original_unit = getattr(cls, '_original_unit', None)
+        if not original_unit:
+            return v
+            
+        # Solid unit conversions to grams
+        solid_conversion = {
+            'kg': 1000, 'kilogram': 1000, 'kilograms': 1000,
+            'g': 1, 'gram': 1, 'grams': 1, 'gr': 1, 'gm': 1
+        }
+        
+        # Liquid unit conversions to ml
         liquid_conversion = {
             'l': 1000, 'liter': 1000, 'liters': 1000,
+            'ml': 1, 'milliliter': 1, 'milliliters': 1,
             'cup': 240, 'cups': 240,
             'tsp': 5, 'teaspoon': 5, 'teaspoons': 5,
             'tbsp': 15, 'tablespoon': 15, 'tablespoons': 15
         }
         
-        if v in solid_units:
-            return 'g'
-        elif v in liquid_units:
-            return 'ml'
-        else:
-            # Default to grams for unknown units
-            return 'g'
+        # Apply conversion based on original unit
+        if original_unit in solid_conversion:
+            converted_quantity = v * solid_conversion[original_unit]
+            print(f"Converted {v} {original_unit} to {converted_quantity} g")
+            return converted_quantity
+        elif original_unit in liquid_conversion:
+            converted_quantity = v * liquid_conversion[original_unit]
+            print(f"Converted {v} {original_unit} to {converted_quantity} ml")
+            return converted_quantity
+        
+        return v
 
 class NutritionInfo(BaseModel):
     calories: float = Field(description="Calories in kcal", ge=0)
@@ -97,7 +133,7 @@ def validate_image_for_analysis(image_path):
 class FoodAnalysisService:
     def __init__(self):
         self.analysis_agent = Agent(
-            'google-gla:gemini-2.5-flash',
+            'google-gla:gemini-2.5-pro',
             output_type=FoodAnalysisResult,
             system_prompt=(
                 "You are a professional food analysis expert. "
@@ -222,7 +258,8 @@ class FoodAnalysisService:
             print(f"Database save error: {str(e)}")
             raise
 
- 
+
+
 
 
 
@@ -418,3 +455,4 @@ class FoodAnalysisService:
 #         except Exception as e:
 #             print(f"Database save error: {str(e)}")
 #             raise
+
