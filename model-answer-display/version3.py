@@ -45,7 +45,7 @@ def load_model_data():
     return model_data, available_models, ground_truth_data
 
 def get_all_images():
-    image_dir = "Nutrition5k/Nutrition5K-300/"
+    image_dir = "Nutrition5k/Nutrition5K-300"
     
     if not os.path.exists(image_dir):
         st.error(f"Directory does not exist: {image_dir}")
@@ -547,6 +547,7 @@ def main():
 def run_version3():
     
     main()
+
 
 
 
