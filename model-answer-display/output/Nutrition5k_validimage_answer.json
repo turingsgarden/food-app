@@ -10145,7 +10145,7 @@
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559675268_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559675268_rgb.png",
         "image_filename": "dish_1559675268_rgb.png",
         "dish_names": [
             "Salad"
@@ -10207,11 +10207,11 @@
         "processing_timestamp": "2025-11-04T22:12:50.667545",
         "analysis_time_seconds": 12.230484247207642,
         "analysis_time": "12.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559675268_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.23 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559675268_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.23 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678330_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559678330_rgb.png",
         "image_filename": "dish_1559678330_rgb.png",
         "dish_names": [
             "Spinach Salad"
@@ -10273,11 +10273,11 @@
         "processing_timestamp": "2025-11-04T22:14:00.017965",
         "analysis_time_seconds": 10.638885736465454,
         "analysis_time": "10.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678330_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.64 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559678330_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.64 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678367_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559678367_rgb.png",
         "image_filename": "dish_1559678367_rgb.png",
         "dish_names": [
             "Vegetable Stir-fry"
@@ -10334,11 +10334,11 @@
         "processing_timestamp": "2025-11-04T22:14:12.950842",
         "analysis_time_seconds": 10.919628620147705,
         "analysis_time": "10.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678367_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.92 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559678367_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.92 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678405_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559678405_rgb.png",
         "image_filename": "dish_1559678405_rgb.png",
         "dish_names": [
             "Steak Salad"
@@ -10405,11 +10405,11 @@
         "processing_timestamp": "2025-11-04T22:14:27.002196",
         "analysis_time_seconds": 12.050004482269287,
         "analysis_time": "12.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678405_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.05 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559678405_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.05 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678457_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559678457_rgb.png",
         "image_filename": "dish_1559678457_rgb.png",
         "dish_names": [
             "Steak with Lentils and Vegetables"
@@ -10481,11 +10481,11 @@
         "processing_timestamp": "2025-11-04T22:14:43.689983",
         "analysis_time_seconds": 14.686557054519653,
         "analysis_time": "14.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678457_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 14.69 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559678457_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 14.69 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678629_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559678629_rgb.png",
         "image_filename": "dish_1559678629_rgb.png",
         "dish_names": [
             "Marinated Herring"
@@ -10542,11 +10542,11 @@
         "processing_timestamp": "2025-11-04T22:14:55.305576",
         "analysis_time_seconds": 9.613193988800049,
         "analysis_time": "9.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559678629_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.61 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559678629_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.61 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559700851_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559700851_rgb.png",
         "image_filename": "dish_1559700851_rgb.png",
         "dish_names": [
             "Arugula Salad"
@@ -10598,11 +10598,11 @@
         "processing_timestamp": "2025-11-04T22:15:22.744180",
         "analysis_time_seconds": 9.398472785949707,
         "analysis_time": "9.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559700851_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.40 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559700851_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.40 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751458_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559751458_rgb.png",
         "image_filename": "dish_1559751458_rgb.png",
         "dish_names": [
             "Roasted Sweet Potatoes"
@@ -10644,11 +10644,11 @@
         "processing_timestamp": "2025-11-04T22:15:37.988492",
         "analysis_time_seconds": 13.231078386306763,
         "analysis_time": "13.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751458_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.23 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559751458_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.23 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751552_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559751552_rgb.png",
         "image_filename": "dish_1559751552_rgb.png",
         "dish_names": [
             "Roasted Sweet Potatoes and Berries"
@@ -10705,11 +10705,11 @@
         "processing_timestamp": "2025-11-04T22:15:51.036679",
         "analysis_time_seconds": 11.046648502349854,
         "analysis_time": "11.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751552_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.05 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559751552_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.05 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751710_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559751710_rgb.png",
         "image_filename": "dish_1559751710_rgb.png",
         "dish_names": [
             "Mixed Berries"
@@ -10740,11 +10740,11 @@
         "processing_timestamp": "2025-11-04T22:16:02.369874",
         "analysis_time_seconds": 9.3296639919281,
         "analysis_time": "9.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751710_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.33 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559751710_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.33 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751744_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559751744_rgb.png",
         "image_filename": "dish_1559751744_rgb.png",
         "dish_names": [
             "Scrambled Eggs"
@@ -10796,11 +10796,11 @@
         "processing_timestamp": "2025-11-04T22:16:18.311653",
         "analysis_time_seconds": 13.93908429145813,
         "analysis_time": "13.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751744_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.94 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559751744_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.94 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751775_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559751775_rgb.png",
         "image_filename": "dish_1559751775_rgb.png",
         "dish_names": [
             "Scrambled Eggs"
@@ -10867,11 +10867,11 @@
         "processing_timestamp": "2025-11-04T22:16:35.237034",
         "analysis_time_seconds": 14.921140193939209,
         "analysis_time": "14.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751775_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 14.92 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559751775_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 14.92 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751801_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559751801_rgb.png",
         "image_filename": "dish_1559751801_rgb.png",
         "dish_names": [
             "Sausage and Egg Breakfast"
@@ -10938,11 +10938,11 @@
         "processing_timestamp": "2025-11-04T22:16:48.850165",
         "analysis_time_seconds": 11.610458374023438,
         "analysis_time": "11.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559751801_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.61 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559751801_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.61 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559838214_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559838214_rgb.png",
         "image_filename": "dish_1559838214_rgb.png",
         "dish_names": [
             "Bacon"
@@ -10979,11 +10979,11 @@
         "processing_timestamp": "2025-11-04T22:17:02.050358",
         "analysis_time_seconds": 11.19353723526001,
         "analysis_time": "11.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559838214_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.19 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559838214_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.19 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559838279_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559838279_rgb.png",
         "image_filename": "dish_1559838279_rgb.png",
         "dish_names": [
             "Fruit Salad"
@@ -11030,11 +11030,11 @@
         "processing_timestamp": "2025-11-04T22:17:16.353774",
         "analysis_time_seconds": 12.301914930343628,
         "analysis_time": "12.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559838279_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.30 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559838279_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.30 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559838402_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559838402_rgb.png",
         "image_filename": "dish_1559838402_rgb.png",
         "dish_names": [
             "Breakfast plate"
@@ -11101,11 +11101,11 @@
         "processing_timestamp": "2025-11-04T22:17:33.686583",
         "analysis_time_seconds": 15.318599462509155,
         "analysis_time": "15.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559838402_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 15.32 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559838402_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 15.32 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841023_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841023_rgb.png",
         "image_filename": "dish_1559841023_rgb.png",
         "dish_names": [
             "Meatball"
@@ -11167,11 +11167,11 @@
         "processing_timestamp": "2025-11-04T22:17:49.064510",
         "analysis_time_seconds": 13.375327587127686,
         "analysis_time": "13.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841023_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.38 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841023_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.38 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841061_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841061_rgb.png",
         "image_filename": "dish_1559841061_rgb.png",
         "dish_names": [
             "Sausage and Blackberries"
@@ -11208,11 +11208,11 @@
         "processing_timestamp": "2025-11-04T22:18:04.563003",
         "analysis_time_seconds": 13.497122049331665,
         "analysis_time": "13.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841061_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.50 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841061_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.50 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841091_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841091_rgb.png",
         "image_filename": "dish_1559841091_rgb.png",
         "dish_names": [
             "Roasted potatoes and sausage"
@@ -11269,11 +11269,11 @@
         "processing_timestamp": "2025-11-04T22:18:17.869590",
         "analysis_time_seconds": 11.302264928817749,
         "analysis_time": "11.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841091_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.30 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841091_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.30 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841127_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841127_rgb.png",
         "image_filename": "dish_1559841127_rgb.png",
         "dish_names": [
             "Scrambled Eggs with Sausage and Potatoes"
@@ -11345,11 +11345,11 @@
         "processing_timestamp": "2025-11-04T22:18:32.519782",
         "analysis_time_seconds": 12.642250061035156,
         "analysis_time": "12.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841127_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.64 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841127_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.64 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841163_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841163_rgb.png",
         "image_filename": "dish_1559841163_rgb.png",
         "dish_names": [
             "American Breakfast"
@@ -11421,11 +11421,11 @@
         "processing_timestamp": "2025-11-04T22:18:48.430184",
         "analysis_time_seconds": 13.909352540969849,
         "analysis_time": "13.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841163_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.91 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841163_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.91 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841571_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841571_rgb.png",
         "image_filename": "dish_1559841571_rgb.png",
         "dish_names": [
             "Oat Cereal"
@@ -11451,11 +11451,11 @@
         "processing_timestamp": "2025-11-04T22:18:58.214798",
         "analysis_time_seconds": 7.778671503067017,
         "analysis_time": "7.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841571_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.78 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841571_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.78 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841781_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841781_rgb.png",
         "image_filename": "dish_1559841781_rgb.png",
         "dish_names": [
             "Grapes and Cereal"
@@ -11486,11 +11486,11 @@
         "processing_timestamp": "2025-11-04T22:19:17.605254",
         "analysis_time_seconds": 17.38897156715393,
         "analysis_time": "17.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841781_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 17.39 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841781_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 17.39 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841808_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841808_rgb.png",
         "image_filename": "dish_1559841808_rgb.png",
         "dish_names": [
             "Fruit and Cereal"
@@ -11526,11 +11526,11 @@
         "processing_timestamp": "2025-11-04T22:19:28.082794",
         "analysis_time_seconds": 8.476791143417358,
         "analysis_time": "8.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841808_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.48 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841808_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.48 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841870_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841870_rgb.png",
         "image_filename": "dish_1559841870_rgb.png",
         "dish_names": [
             "Pear"
@@ -11556,11 +11556,11 @@
         "processing_timestamp": "2025-11-04T22:19:35.913541",
         "analysis_time_seconds": 5.825355052947998,
         "analysis_time": "5.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841870_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 5.83 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841870_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 5.83 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841891_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841891_rgb.png",
         "image_filename": "dish_1559841891_rgb.png",
         "dish_names": [
             "Fruit plate"
@@ -11591,11 +11591,11 @@
         "processing_timestamp": "2025-11-04T22:19:44.833250",
         "analysis_time_seconds": 6.91250467300415,
         "analysis_time": "6.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841891_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.91 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841891_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.91 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841908_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841908_rgb.png",
         "image_filename": "dish_1559841908_rgb.png",
         "dish_names": [
             "Fruit and Vegetable Platter"
@@ -11631,11 +11631,11 @@
         "processing_timestamp": "2025-11-04T22:19:56.145857",
         "analysis_time_seconds": 9.3102126121521,
         "analysis_time": "9.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841908_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.31 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841908_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.31 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841950_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841950_rgb.png",
         "image_filename": "dish_1559841950_rgb.png",
         "dish_names": [
             "Broccoli"
@@ -11661,11 +11661,11 @@
         "processing_timestamp": "2025-11-04T22:20:08.022068",
         "analysis_time_seconds": 9.874026775360107,
         "analysis_time": "9.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841950_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.87 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841950_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.87 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841979_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559841979_rgb.png",
         "image_filename": "dish_1559841979_rgb.png",
         "dish_names": [
             "Fruit and Vegetables"
@@ -11696,11 +11696,11 @@
         "processing_timestamp": "2025-11-04T22:20:17.692599",
         "analysis_time_seconds": 7.6589274406433105,
         "analysis_time": "7.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559841979_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.66 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559841979_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.66 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842047_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559842047_rgb.png",
         "image_filename": "dish_1559842047_rgb.png",
         "dish_names": [
             "Fruit and Vegetable Plate"
@@ -11736,11 +11736,11 @@
         "processing_timestamp": "2025-11-04T22:20:27.694466",
         "analysis_time_seconds": 7.999897003173828,
         "analysis_time": "8.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842047_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.00 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559842047_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.00 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842274_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559842274_rgb.png",
         "image_filename": "dish_1559842274_rgb.png",
         "dish_names": [
             "Almonds"
@@ -11766,11 +11766,11 @@
         "processing_timestamp": "2025-11-04T22:20:42.062792",
         "analysis_time_seconds": 12.36731219291687,
         "analysis_time": "12.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842274_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.37 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559842274_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.37 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842326_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559842326_rgb.png",
         "image_filename": "dish_1559842326_rgb.png",
         "dish_names": [
             "Almonds and Tangerine"
@@ -11801,11 +11801,11 @@
         "processing_timestamp": "2025-11-04T22:20:52.798186",
         "analysis_time_seconds": 8.734166383743286,
         "analysis_time": "8.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842326_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.73 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559842326_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.73 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842374_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559842374_rgb.png",
         "image_filename": "dish_1559842374_rgb.png",
         "dish_names": [
             "Snack Plate"
@@ -11841,11 +11841,11 @@
         "processing_timestamp": "2025-11-04T22:21:05.238937",
         "analysis_time_seconds": 10.430456161499023,
         "analysis_time": "10.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842374_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.43 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559842374_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.43 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842409_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559842409_rgb.png",
         "image_filename": "dish_1559842409_rgb.png",
         "dish_names": [
             "Snack Plate"
@@ -11886,11 +11886,11 @@
         "processing_timestamp": "2025-11-04T22:21:23.664461",
         "analysis_time_seconds": 16.42267370223999,
         "analysis_time": "16.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559842409_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 16.42 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559842409_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 16.42 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843030_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559843030_rgb.png",
         "image_filename": "dish_1559843030_rgb.png",
         "dish_names": [
             "Sliced Strawberries"
@@ -11916,11 +11916,11 @@
         "processing_timestamp": "2025-11-04T22:21:31.639607",
         "analysis_time_seconds": 5.964555263519287,
         "analysis_time": "6.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843030_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 5.96 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559843030_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 5.96 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843052_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559843052_rgb.png",
         "image_filename": "dish_1559843052_rgb.png",
         "dish_names": [
             "Fruit Plate"
@@ -11951,11 +11951,11 @@
         "processing_timestamp": "2025-11-04T22:21:46.416096",
         "analysis_time_seconds": 12.7602379322052,
         "analysis_time": "12.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843052_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.76 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559843052_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.76 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843185_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559843185_rgb.png",
         "image_filename": "dish_1559843185_rgb.png",
         "dish_names": [
             "Fruit and Vegetable Plate"
@@ -11991,11 +11991,11 @@
         "processing_timestamp": "2025-11-04T22:21:58.131721",
         "analysis_time_seconds": 9.714987516403198,
         "analysis_time": "9.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843185_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.71 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559843185_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.71 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843222_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559843222_rgb.png",
         "image_filename": "dish_1559843222_rgb.png",
         "dish_names": [
             "Fruit and Vegetable Plate"
@@ -12036,11 +12036,11 @@
         "processing_timestamp": "2025-11-04T22:22:09.126891",
         "analysis_time_seconds": 8.981054067611694,
         "analysis_time": "9.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843222_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.98 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559843222_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.98 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843335_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559843335_rgb.png",
         "image_filename": "dish_1559843335_rgb.png",
         "dish_names": [
             "Sliced Strawberries"
@@ -12066,11 +12066,11 @@
         "processing_timestamp": "2025-11-04T22:22:21.281605",
         "analysis_time_seconds": 10.1503324508667,
         "analysis_time": "10.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843335_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.15 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559843335_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.15 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843492_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559843492_rgb.png",
         "image_filename": "dish_1559843492_rgb.png",
         "dish_names": [
             "Fruit and Vegetable Plate"
@@ -12101,11 +12101,11 @@
         "processing_timestamp": "2025-11-04T22:22:36.993517",
         "analysis_time_seconds": 13.710371494293213,
         "analysis_time": "13.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843492_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.71 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559843492_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.71 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843690_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559843690_rgb.png",
         "image_filename": "dish_1559843690_rgb.png",
         "dish_names": [
             "Fruit and Vegetable Plate"
@@ -12157,11 +12157,11 @@
         "processing_timestamp": "2025-11-04T22:22:54.982715",
         "analysis_time_seconds": 15.986801624298096,
         "analysis_time": "16.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843690_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 15.99 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559843690_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 15.99 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843715_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559843715_rgb.png",
         "image_filename": "dish_1559843715_rgb.png",
         "dish_names": [
             "Fruit and Vegetable Plate"
@@ -12202,11 +12202,11 @@
         "processing_timestamp": "2025-11-04T22:23:05.750135",
         "analysis_time_seconds": 8.766070127487183,
         "analysis_time": "8.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559843715_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.77 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559843715_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.77 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844030_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844030_rgb.png",
         "image_filename": "dish_1559844030_rgb.png",
         "dish_names": [
             "Sliced Strawberries"
@@ -12232,11 +12232,11 @@
         "processing_timestamp": "2025-11-04T22:23:17.696227",
         "analysis_time_seconds": 9.940240383148193,
         "analysis_time": "9.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844030_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.94 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844030_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.94 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844063_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844063_rgb.png",
         "image_filename": "dish_1559844063_rgb.png",
         "dish_names": [
             "Fruit Plate"
@@ -12267,11 +12267,11 @@
         "processing_timestamp": "2025-11-04T22:23:27.356354",
         "analysis_time_seconds": 7.649524211883545,
         "analysis_time": "7.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844063_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.65 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844063_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.65 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844090_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844090_rgb.png",
         "image_filename": "dish_1559844090_rgb.png",
         "dish_names": [
             "Fruit Plate"
@@ -12307,11 +12307,11 @@
         "processing_timestamp": "2025-11-04T22:23:39.280061",
         "analysis_time_seconds": 9.921376943588257,
         "analysis_time": "9.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844090_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.92 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844090_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.92 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844113_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844113_rgb.png",
         "image_filename": "dish_1559844113_rgb.png",
         "dish_names": [
             "Fruit and Nut Platter"
@@ -12352,11 +12352,11 @@
         "processing_timestamp": "2025-11-04T22:23:49.685569",
         "analysis_time_seconds": 8.402474641799927,
         "analysis_time": "8.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844113_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.40 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844113_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.40 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844272_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844272_rgb.png",
         "image_filename": "dish_1559844272_rgb.png",
         "dish_names": [
             "Almonds"
@@ -12393,11 +12393,11 @@
         "processing_timestamp": "2025-11-04T22:23:57.979385",
         "analysis_time_seconds": 6.28903865814209,
         "analysis_time": "6.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844272_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.29 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844272_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.29 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844323_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844323_rgb.png",
         "image_filename": "dish_1559844323_rgb.png",
         "dish_names": [
             "Almonds and Grapes"
@@ -12428,11 +12428,11 @@
         "processing_timestamp": "2025-11-04T22:24:15.932386",
         "analysis_time_seconds": 15.947787523269653,
         "analysis_time": "15.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844323_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 15.95 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844323_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 15.95 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844366_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844366_rgb.png",
         "image_filename": "dish_1559844366_rgb.png",
         "dish_names": [
             "Snack Plate"
@@ -12468,11 +12468,11 @@
         "processing_timestamp": "2025-11-04T22:24:31.444517",
         "analysis_time_seconds": 13.506169319152832,
         "analysis_time": "13.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844366_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.51 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844366_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.51 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844458_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844458_rgb.png",
         "image_filename": "dish_1559844458_rgb.png",
         "dish_names": [
             "Grapes"
@@ -12498,11 +12498,11 @@
         "processing_timestamp": "2025-11-04T22:24:42.510684",
         "analysis_time_seconds": 9.063335657119751,
         "analysis_time": "9.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844458_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.06 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844458_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.06 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844479_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844479_rgb.png",
         "image_filename": "dish_1559844479_rgb.png",
         "dish_names": [
             "Fruit plate"
@@ -12533,11 +12533,11 @@
         "processing_timestamp": "2025-11-04T22:24:50.808725",
         "analysis_time_seconds": 6.287841558456421,
         "analysis_time": "6.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844479_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.29 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844479_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.29 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844490_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844490_rgb.png",
         "image_filename": "dish_1559844490_rgb.png",
         "dish_names": [
             "Fruit Platter"
@@ -12573,11 +12573,11 @@
         "processing_timestamp": "2025-11-04T22:25:04.558132",
         "analysis_time_seconds": 11.745157241821289,
         "analysis_time": "11.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844490_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.75 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844490_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.75 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844506_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844506_rgb.png",
         "image_filename": "dish_1559844506_rgb.png",
         "dish_names": [
             "Fruit Plate"
@@ -12613,11 +12613,11 @@
         "processing_timestamp": "2025-11-04T22:25:19.904329",
         "analysis_time_seconds": 13.343900680541992,
         "analysis_time": "13.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844506_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.34 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844506_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.34 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844611_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844611_rgb.png",
         "image_filename": "dish_1559844611_rgb.png",
         "dish_names": [
             "Red Grapes"
@@ -12643,11 +12643,11 @@
         "processing_timestamp": "2025-11-04T22:25:29.155498",
         "analysis_time_seconds": 7.2486937046051025,
         "analysis_time": "7.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844611_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.25 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844611_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.25 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844657_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844657_rgb.png",
         "image_filename": "dish_1559844657_rgb.png",
         "dish_names": [
             "Roasted Potatoes and Grapes"
@@ -12694,11 +12694,11 @@
         "processing_timestamp": "2025-11-04T22:25:40.112774",
         "analysis_time_seconds": 8.953800678253174,
         "analysis_time": "9.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844657_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.95 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844657_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.95 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844683_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844683_rgb.png",
         "image_filename": "dish_1559844683_rgb.png",
         "dish_names": [
             "Roasted Potatoes with Broccoli and Grapes"
@@ -12750,11 +12750,11 @@
         "processing_timestamp": "2025-11-04T22:25:51.649568",
         "analysis_time_seconds": 9.520476818084717,
         "analysis_time": "9.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844683_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.52 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844683_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.52 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844928_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844928_rgb.png",
         "image_filename": "dish_1559844928_rgb.png",
         "dish_names": [
             "Roasted Potatoes"
@@ -12796,11 +12796,11 @@
         "processing_timestamp": "2025-11-04T22:26:10.190642",
         "analysis_time_seconds": 16.539578914642334,
         "analysis_time": "16.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844928_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 16.54 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844928_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 16.54 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844951_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559844951_rgb.png",
         "image_filename": "dish_1559844951_rgb.png",
         "dish_names": [
             "Roasted Potatoes and Almonds"
@@ -12842,11 +12842,11 @@
         "processing_timestamp": "2025-11-04T22:26:32.565381",
         "analysis_time_seconds": 20.372663259506226,
         "analysis_time": "20.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559844951_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 20.37 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559844951_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 20.37 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845018_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559845018_rgb.png",
         "image_filename": "dish_1559845018_rgb.png",
         "dish_names": [
             "Roasted Potatoes"
@@ -12893,11 +12893,11 @@
         "processing_timestamp": "2025-11-04T22:26:47.584970",
         "analysis_time_seconds": 13.010822057723999,
         "analysis_time": "13.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845018_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.01 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559845018_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.01 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845046_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559845046_rgb.png",
         "image_filename": "dish_1559845046_rgb.png",
         "dish_names": [
             "Roasted Potatoes with Almonds and Broccoli"
@@ -12949,11 +12949,11 @@
         "processing_timestamp": "2025-11-04T22:27:02.351473",
         "analysis_time_seconds": 12.764485120773315,
         "analysis_time": "12.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845046_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.76 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559845046_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.76 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845290_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559845290_rgb.png",
         "image_filename": "dish_1559845290_rgb.png",
         "dish_names": [
             "Fried potatoes"
@@ -12990,11 +12990,11 @@
         "processing_timestamp": "2025-11-04T22:27:14.566773",
         "analysis_time_seconds": 10.206650495529175,
         "analysis_time": "10.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845290_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.21 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559845290_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.21 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845370_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559845370_rgb.png",
         "image_filename": "dish_1559845370_rgb.png",
         "dish_names": [
             "Roasted Potatoes"
@@ -13041,11 +13041,11 @@
         "processing_timestamp": "2025-11-04T22:27:24.280895",
         "analysis_time_seconds": 7.709185361862183,
         "analysis_time": "7.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845370_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.71 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559845370_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.71 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845399_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559845399_rgb.png",
         "image_filename": "dish_1559845399_rgb.png",
         "dish_names": [
             "Roasted Potatoes"
@@ -13097,11 +13097,11 @@
         "processing_timestamp": "2025-11-04T22:27:37.751417",
         "analysis_time_seconds": 11.465650796890259,
         "analysis_time": "11.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845399_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.47 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559845399_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.47 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845513_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559845513_rgb.png",
         "image_filename": "dish_1559845513_rgb.png",
         "dish_names": [
             "Fruit and Potato Plate"
@@ -13158,11 +13158,11 @@
         "processing_timestamp": "2025-11-04T22:27:53.706320",
         "analysis_time_seconds": 13.93020486831665,
         "analysis_time": "13.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845513_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.93 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559845513_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.93 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845745_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559845745_rgb.png",
         "image_filename": "dish_1559845745_rgb.png",
         "dish_names": [
             "Roasted Potatoes"
@@ -13204,11 +13204,11 @@
         "processing_timestamp": "2025-11-04T22:28:04.683906",
         "analysis_time_seconds": 8.973488330841064,
         "analysis_time": "9.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845745_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.97 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559845745_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.97 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845767_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559845767_rgb.png",
         "image_filename": "dish_1559845767_rgb.png",
         "dish_names": [
             "Roasted Potatoes and Fruit"
@@ -13260,11 +13260,11 @@
         "processing_timestamp": "2025-11-04T22:28:19.152060",
         "analysis_time_seconds": 12.399050235748291,
         "analysis_time": "12.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559845767_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.40 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559845767_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.40 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846034_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846034_rgb.png",
         "image_filename": "dish_1559846034_rgb.png",
         "dish_names": [
             "Steamed Broccoli"
@@ -13301,11 +13301,11 @@
         "processing_timestamp": "2025-11-04T22:28:28.447279",
         "analysis_time_seconds": 7.290369033813477,
         "analysis_time": "7.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846034_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.29 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846034_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.29 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846073_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846073_rgb.png",
         "image_filename": "dish_1559846073_rgb.png",
         "dish_names": [
             "Tangerine and Broccoli"
@@ -13336,11 +13336,11 @@
         "processing_timestamp": "2025-11-04T22:28:40.740199",
         "analysis_time_seconds": 10.287336111068726,
         "analysis_time": "10.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846073_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.29 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846073_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.29 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846099_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846099_rgb.png",
         "image_filename": "dish_1559846099_rgb.png",
         "dish_names": [
             "Snack Plate"
@@ -13382,11 +13382,11 @@
         "processing_timestamp": "2025-11-04T22:28:58.839090",
         "analysis_time_seconds": 16.09475064277649,
         "analysis_time": "16.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846099_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 16.09 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846099_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 16.09 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846311_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846311_rgb.png",
         "image_filename": "dish_1559846311_rgb.png",
         "dish_names": [
             "Guava"
@@ -13412,11 +13412,11 @@
         "processing_timestamp": "2025-11-04T22:29:13.306916",
         "analysis_time_seconds": 12.452500343322754,
         "analysis_time": "12.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846311_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.45 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846311_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.45 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846334_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846334_rgb.png",
         "image_filename": "dish_1559846334_rgb.png",
         "dish_names": [
             "Fruit and Vegetable Plate"
@@ -13447,11 +13447,11 @@
         "processing_timestamp": "2025-11-04T22:29:24.347527",
         "analysis_time_seconds": 9.03706169128418,
         "analysis_time": "9.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846334_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.04 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846334_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.04 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846363_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846363_rgb.png",
         "image_filename": "dish_1559846363_rgb.png",
         "dish_names": [
             "Fruit and Vegetables"
@@ -13487,11 +13487,11 @@
         "processing_timestamp": "2025-11-04T22:29:34.243872",
         "analysis_time_seconds": 7.8946239948272705,
         "analysis_time": "7.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846363_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.89 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846363_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 7.89 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846450_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846450_rgb.png",
         "image_filename": "dish_1559846450_rgb.png",
         "dish_names": [
             "Pear"
@@ -13517,11 +13517,11 @@
         "processing_timestamp": "2025-11-04T22:29:40.503399",
         "analysis_time_seconds": 4.258305788040161,
         "analysis_time": "4.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846450_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 4.26 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846450_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 4.26 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846504_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846504_rgb.png",
         "image_filename": "dish_1559846504_rgb.png",
         "dish_names": [
             "Pear and Broccoli"
@@ -13552,11 +13552,11 @@
         "processing_timestamp": "2025-11-04T22:30:03.002564",
         "analysis_time_seconds": 20.496004343032837,
         "analysis_time": "20.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846504_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 20.50 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846504_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 20.50 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846528_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846528_rgb.png",
         "image_filename": "dish_1559846528_rgb.png",
         "dish_names": [
             "Snack Plate"
@@ -13592,11 +13592,11 @@
         "processing_timestamp": "2025-11-04T22:30:15.220378",
         "analysis_time_seconds": 10.20767331123352,
         "analysis_time": "10.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846528_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.21 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846528_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.21 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846585_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846585_rgb.png",
         "image_filename": "dish_1559846585_rgb.png",
         "dish_names": [
             "Guava"
@@ -13622,11 +13622,11 @@
         "processing_timestamp": "2025-11-04T22:30:27.212167",
         "analysis_time_seconds": 9.980816125869751,
         "analysis_time": "10.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846585_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.98 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846585_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.98 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846688_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846688_rgb.png",
         "image_filename": "dish_1559846688_rgb.png",
         "dish_names": [
             "Beet and Goat Cheese Salad"
@@ -13693,11 +13693,11 @@
         "processing_timestamp": "2025-11-04T22:30:42.415407",
         "analysis_time_seconds": 13.200967788696289,
         "analysis_time": "13.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846688_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.20 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846688_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 13.20 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846825_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559846825_rgb.png",
         "image_filename": "dish_1559846825_rgb.png",
         "dish_names": [
             "Pizza"
@@ -13759,11 +13759,11 @@
         "processing_timestamp": "2025-11-04T22:30:54.755305",
         "analysis_time_seconds": 10.32638168334961,
         "analysis_time": "10.3s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559846825_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.33 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559846825_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.33 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559848857_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559848857_rgb.png",
         "image_filename": "dish_1559848857_rgb.png",
         "dish_names": [
             "Tangerine"
@@ -13789,11 +13789,11 @@
         "processing_timestamp": "2025-11-04T22:31:01.542924",
         "analysis_time_seconds": 4.770906448364258,
         "analysis_time": "4.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559848857_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 4.77 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559848857_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 4.77 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559848882_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559848882_rgb.png",
         "image_filename": "dish_1559848882_rgb.png",
         "dish_names": [
             "Fruit"
@@ -13824,11 +13824,11 @@
         "processing_timestamp": "2025-11-04T22:31:12.535340",
         "analysis_time_seconds": 8.98999309539795,
         "analysis_time": "9.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559848882_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.99 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559848882_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.99 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559848929_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559848929_rgb.png",
         "image_filename": "dish_1559848929_rgb.png",
         "dish_names": [
             "Fruit Plate"
@@ -13864,11 +13864,11 @@
         "processing_timestamp": "2025-11-04T22:31:24.618718",
         "analysis_time_seconds": 10.067397594451904,
         "analysis_time": "10.1s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559848929_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.07 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559848929_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 10.07 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849020_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559849020_rgb.png",
         "image_filename": "dish_1559849020_rgb.png",
         "dish_names": [
             "Red Grapes"
@@ -13894,11 +13894,11 @@
         "processing_timestamp": "2025-11-04T22:31:32.134149",
         "analysis_time_seconds": 5.508733510971069,
         "analysis_time": "5.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849020_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 5.51 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559849020_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 5.51 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849053_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559849053_rgb.png",
         "image_filename": "dish_1559849053_rgb.png",
         "dish_names": [
             "Grapes and Almonds"
@@ -13929,11 +13929,11 @@
         "processing_timestamp": "2025-11-04T22:31:45.157699",
         "analysis_time_seconds": 11.016672372817993,
         "analysis_time": "11.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849053_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.02 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559849053_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.02 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849097_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559849097_rgb.png",
         "image_filename": "dish_1559849097_rgb.png",
         "dish_names": [
             "Fruit and Nut Platter"
@@ -13969,11 +13969,11 @@
         "processing_timestamp": "2025-11-04T22:31:55.665595",
         "analysis_time_seconds": 8.505541801452637,
         "analysis_time": "8.5s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849097_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.51 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559849097_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.51 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849412_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559849412_rgb.png",
         "image_filename": "dish_1559849412_rgb.png",
         "dish_names": [
             "Almonds"
@@ -14010,11 +14010,11 @@
         "processing_timestamp": "2025-11-04T22:32:09.398030",
         "analysis_time_seconds": 11.720574378967285,
         "analysis_time": "11.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849412_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.72 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559849412_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.72 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849466_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559849466_rgb.png",
         "image_filename": "dish_1559849466_rgb.png",
         "dish_names": [
             "Almonds and Guava"
@@ -14045,11 +14045,11 @@
         "processing_timestamp": "2025-11-04T22:32:38.778181",
         "analysis_time_seconds": 27.36973524093628,
         "analysis_time": "27.4s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849466_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 27.37 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559849466_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 27.37 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849497_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559849497_rgb.png",
         "image_filename": "dish_1559849497_rgb.png",
         "dish_names": [
             "Fruit and Nut Platter"
@@ -14085,11 +14085,11 @@
         "processing_timestamp": "2025-11-04T22:32:53.359723",
         "analysis_time_seconds": 12.579156637191772,
         "analysis_time": "12.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849497_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.58 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559849497_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 12.58 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849537_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559849537_rgb.png",
         "image_filename": "dish_1559849537_rgb.png",
         "dish_names": [
             "Fruit and Nut Platter"
@@ -14130,11 +14130,11 @@
         "processing_timestamp": "2025-11-04T22:33:04.568756",
         "analysis_time_seconds": 9.19970703125,
         "analysis_time": "9.2s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559849537_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.20 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559849537_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.20 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559850283_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559850283_rgb.png",
         "image_filename": "dish_1559850283_rgb.png",
         "dish_names": [
             "Almonds"
@@ -14171,11 +14171,11 @@
         "processing_timestamp": "2025-11-04T22:33:13.341350",
         "analysis_time_seconds": 6.76546835899353,
         "analysis_time": "6.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559850283_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.77 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559850283_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.77 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559850314_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559850314_rgb.png",
         "image_filename": "dish_1559850314_rgb.png",
         "dish_names": [
             "Fruit and Nut Snack"
@@ -14206,11 +14206,11 @@
         "processing_timestamp": "2025-11-04T22:33:30.177674",
         "analysis_time_seconds": 14.833375692367554,
         "analysis_time": "14.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559850314_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 14.83 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559850314_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 14.83 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559850338_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559850338_rgb.png",
         "image_filename": "dish_1559850338_rgb.png",
         "dish_names": [
             "Snack Plate"
@@ -14257,11 +14257,11 @@
         "processing_timestamp": "2025-11-04T22:33:48.873978",
         "analysis_time_seconds": 16.684613466262817,
         "analysis_time": "16.7s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559850338_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 16.68 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559850338_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 16.68 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559925037_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559925037_rgb.png",
         "image_filename": "dish_1559925037_rgb.png",
         "dish_names": [
             "Bacon"
@@ -14298,11 +14298,11 @@
         "processing_timestamp": "2025-11-04T22:33:57.858384",
         "analysis_time_seconds": 6.981330156326294,
         "analysis_time": "7.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559925037_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.98 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559925037_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 6.98 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559925083_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559925083_rgb.png",
         "image_filename": "dish_1559925083_rgb.png",
         "dish_names": [
             "Roasted Sweet Potatoes with Bacon"
@@ -14349,11 +14349,11 @@
         "processing_timestamp": "2025-11-04T22:34:09.416342",
         "analysis_time_seconds": 9.552223682403564,
         "analysis_time": "9.6s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559925083_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.55 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559925083_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 9.55 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559925174_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559925174_rgb.png",
         "image_filename": "dish_1559925174_rgb.png",
         "dish_names": [
             "Mixed Berries"
@@ -14389,11 +14389,11 @@
         "processing_timestamp": "2025-11-04T22:34:20.192112",
         "analysis_time_seconds": 8.774651765823364,
         "analysis_time": "8.8s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559925174_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.77 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559925174_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 8.77 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559932674_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559932674_rgb.png",
         "image_filename": "dish_1559932674_rgb.png",
         "dish_names": [
             "Orange"
@@ -14419,11 +14419,11 @@
         "processing_timestamp": "2025-11-04T22:34:27.074200",
         "analysis_time_seconds": 4.8590991497039795,
         "analysis_time": "4.9s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559932674_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 4.86 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559932674_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 4.86 seconds\n",
         "success": true
     },
     {
-        "image_path": "C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559933793_rgb.png",
+        "image_path": "Nutrition5k/Nutrition5K-300/dish_1559933793_rgb.png",
         "image_filename": "dish_1559933793_rgb.png",
         "dish_names": [
             "Roasted Brussels Sprouts"
@@ -14470,7 +14470,7 @@
         "processing_timestamp": "2025-11-04T22:34:41.099283",
         "analysis_time_seconds": 11.960465908050537,
         "analysis_time": "12.0s",
-        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: C:\\Users\\PC\\OneDrive\\Desktop\\Nutrify\\Nutrition5k\\Nutrition5k-700-800\\dish_1559933793_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.96 seconds\n",
+        "console_output": "Starting Pydantic analysis for user: batch_user_pydantic\nImage: Nutrition5k/Nutrition5K-300/dish_1559933793_rgb.png\nImage preprocessed: 640x480\nPydantic analysis completed in 11.96 seconds\n",
         "success": true
     }
 ]
