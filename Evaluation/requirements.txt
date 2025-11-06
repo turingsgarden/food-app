@@ -1,0 +1,5 @@
+rapidfuzz
+openpyxl
+matplotlib
+seaborn
+scipy
