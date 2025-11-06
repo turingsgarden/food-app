@@ -2,7 +2,8 @@ import streamlit as st
 import traceback
 from version1 import run_version1
 from version2 import run_version2
-from version3 import run_version3  
+from version3 import run_version3
+from version4 import run_version4  # Add Version 4 import
 
 
 # -------------------------------
@@ -27,12 +28,19 @@ def clear_version_state(version_prefix):
         "food_info", "nutrition_data", "display_mode_v2"
     ]
     
-
     keywords_v3 = [
         "v3_current_page", "v3_data_loaded", "v3_valid_images",
         "v3_model_responses", "v3_selected_image", "v3_uploaded_file",
         "v3_analysis_time", "v3_display_mode", "v3_image_index",
         "v3_response_data", "v3_result_display", "v3_structured_data"
+    ]
+    
+    keywords_v4 = [
+        "v4_current_page", "v4_data_loaded", "v4_valid_images",
+        "v4_model_responses", "v4_selected_image", "v4_uploaded_file",
+        "v4_analysis_time", "v4_display_mode", "v4_image_index",
+        "v4_response_data", "v4_result_display", "v4_structured_data",
+        "v4_advanced_settings", "v4_custom_config"
     ]
 
     to_delete = []
@@ -42,6 +50,8 @@ def clear_version_state(version_prefix):
         elif version_prefix == "v2" and any(k in key for k in keywords_v2):
             to_delete.append(key)
         elif version_prefix == "v3" and any(k in key for k in keywords_v3):
+            to_delete.append(key)
+        elif version_prefix == "v4" and any(k in key for k in keywords_v4):
             to_delete.append(key)
 
     for key in to_delete:
@@ -66,9 +76,9 @@ if "version_initialized" not in st.session_state:
 # 🔹 UI: Version Selector (Only show when no version is selected)
 # -------------------------------
 if not st.session_state.selected_version:
-    # 更新选择框包含Version 3
+    # Update selection box to include Version 3 and Version 4
     st.selectbox("Select version to display:", 
-                ["Version 1", "Version 2", "Version 3"], 
+                ["Version 1", "Version 2", "Version 3", "Version 4"],  # Add Version 4
                 key="page_select")
 
     if st.button("✅ Confirm Selection"):
@@ -82,6 +92,8 @@ if not st.session_state.selected_version:
             clear_version_state("v2")
         elif prev_version == "Version 3":
             clear_version_state("v3")
+        elif prev_version == "Version 4":  # Add Version 4 cleanup
+            clear_version_state("v4")
 
         # ✅ Update selection and mark as freshly initialized
         st.session_state.selected_version = new_version
@@ -105,6 +117,8 @@ if st.session_state.selected_version:
             run_version2()
         elif st.session_state.selected_version == "Version 3": 
             run_version3()
+        elif st.session_state.selected_version == "Version 4":  # Add Version 4 execution
+            run_version4()
     except Exception as e:
         st.error("❌ Error occurred while executing subpage, please check traceback:")
         st.text(traceback.format_exc())
@@ -119,6 +133,8 @@ if st.session_state.selected_version:
             clear_version_state("v2")
         elif current_version == "Version 3": 
             clear_version_state("v3")
+        elif current_version == "Version 4":  # Add Version 4 cleanup
+            clear_version_state("v4")
 
         st.session_state.selected_version = ""
         st.session_state.version_initialized = False
