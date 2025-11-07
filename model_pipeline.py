@@ -11,10 +11,37 @@ from io import BytesIO
 import traceback
 import random
 
+#this fn just does random time delay for retrying gemini calls
+# def call_gemini_with_retries(model, content, max_retries=3, base_delay=5):
+#     """
+#     Wrapper to call Gemini API with retries and exponential backoff.
+#     Waits longer between attempts if rate-limited or transient errors occur.
+#     """
+#     for attempt in range(1, max_retries + 1):
+#         try:
+#             response = model.generate_content(content)
+#             if response and response.text:
+#                 return response  # ✅ success
+#             else:
+#                 raise Exception("Empty or invalid Gemini response")
+        
+#         except Exception as e:
+#             print(f"⚠️ Gemini request failed (attempt {attempt}/{max_retries}): {str(e)}")
+
+#             # Only sleep if more retries left
+#             if attempt < max_retries:
+#                 delay = base_delay * attempt + random.uniform(0, 2)
+#                 print(f"⏳ Retrying in {delay:.1f}s...")
+#                 time.sleep(delay)
+#             else:
+#                 print("❌ All Gemini retries failed.")
+#                 raise
+
+#this function does retry with suggested time delay
 def call_gemini_with_retries(model, content, max_retries=3, base_delay=5):
     """
     Wrapper to call Gemini API with retries and exponential backoff.
-    Waits longer between attempts if rate-limited or transient errors occur.
+    If a rate-limit (429) occurs, parse 'retry_delay' from the error and wait accordingly.
     """
     for attempt in range(1, max_retries + 1):
         try:
@@ -25,17 +52,29 @@ def call_gemini_with_retries(model, content, max_retries=3, base_delay=5):
                 raise Exception("Empty or invalid Gemini response")
         
         except Exception as e:
-            print(f"⚠️ Gemini request failed (attempt {attempt}/{max_retries}): {str(e)}")
+            error_text = str(e)
+            print(f"⚠️ Gemini request failed (attempt {attempt}/{max_retries}): {error_text}")
 
-            # Only sleep if more retries left
             if attempt < max_retries:
-                delay = base_delay * attempt + random.uniform(0, 2)
-                print(f"⏳ Retrying in {delay:.1f}s...")
-                time.sleep(delay)
+                # Try to extract retry_delay value (in seconds)
+                retry_seconds = None
+                match = re.search(r"retry_delay\s*\{\s*seconds:\s*(\d+)", error_text)
+                if not match:
+                    # fallback: sometimes it's shown as "Please retry in 54.94s."
+                    match = re.search(r"Please retry in\s*([\d\.]+)s", error_text)
+                
+                if match:
+                    retry_seconds = float(match.group(1)) + 1.0  # add 1s safety buffer
+                    print(f"⏳ API suggests retrying in {retry_seconds:.1f}s (from error message)")
+                else:
+                    # Default backoff if no retry_delay found
+                    retry_seconds = base_delay * attempt + random.uniform(0, 2)
+                    print(f"⏳ Using exponential backoff: {retry_seconds:.1f}s")
+
+                time.sleep(retry_seconds)
             else:
                 print("❌ All Gemini retries failed.")
                 raise
-
 
 # Load environment variables
 load_dotenv()
