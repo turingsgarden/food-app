@@ -9,6 +9,33 @@ from dotenv import load_dotenv
 from pymongo import MongoClient
 from io import BytesIO
 import traceback
+import random
+
+def call_gemini_with_retries(model, content, max_retries=3, base_delay=5):
+    """
+    Wrapper to call Gemini API with retries and exponential backoff.
+    Waits longer between attempts if rate-limited or transient errors occur.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = model.generate_content(content)
+            if response and response.text:
+                return response  # ✅ success
+            else:
+                raise Exception("Empty or invalid Gemini response")
+        
+        except Exception as e:
+            print(f"⚠️ Gemini request failed (attempt {attempt}/{max_retries}): {str(e)}")
+
+            # Only sleep if more retries left
+            if attempt < max_retries:
+                delay = base_delay * attempt + random.uniform(0, 2)
+                print(f"⏳ Retrying in {delay:.1f}s...")
+                time.sleep(delay)
+            else:
+                print("❌ All Gemini retries failed.")
+                raise
+
 
 # Load environment variables
 load_dotenv()
@@ -19,7 +46,6 @@ if not GEN_API_KEY:
     raise ValueError("GEMINI_API_KEY is not set in environment variables.")
 
 genai.configure(api_key=GEN_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
 # MongoDB Setup
 mongo_uri = os.getenv("MONGO_URI")
@@ -33,11 +59,17 @@ def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
-def analyze_image_with_gemini(image_path):
+def analyze_image_with_gemini(image_path, model_name='gemini-2.5-flash'):
     """Analyze image with Gemini - based on working web app code"""
     try:
+        # CHANGE: Initialize model with parameter
+        print(f"🔍 BEFORE ANALYSIS - Image exists: {os.path.exists(image_path)}")
+        print(f"🔍 Image path: {image_path}")
+        gemini_model = genai.GenerativeModel(model_name)
+        
         # Optimize image before sending
         image = Image.open(image_path)
+        print(f"✅ Image opened successfully")
         
         # Resize if too large
         max_size = (1024, 1024)
@@ -47,18 +79,28 @@ def analyze_image_with_gemini(image_path):
         if image.mode not in ('RGB', 'L'):
             image = image.convert('RGB')
         
+        optimized_dir = os.path.join(os.path.dirname(image_path), "temp_optimized")
+        os.makedirs(optimized_dir, exist_ok=True)
+        base_name = os.path.basename(image_path)
+
         # Save optimized version
-        optimized_path = image_path.replace('.png', '_opt.jpg')
+        # optimized_path = image_path.replace('.png', '_opt.jpg')
+        optimized_path = os.path.join(optimized_dir, f"opt_{base_name}.jpg")
+        print(f"💾 Saving optimized to: {optimized_path}")
         image.save(optimized_path, 'JPEG', quality=85)
         
         # Encode optimized image
         image_data = encode_image(optimized_path)
         
-        # Clean up optimized file
+        #Clean up optimized file
         try:
-            os.remove(optimized_path)
-        except:
-            pass
+            if os.path.exists(optimized_path):
+                os.remove(optimized_path)
+                print(f"🗑️ Deleted temp file: {optimized_path}")
+        except Exception as e:
+            print(f"⚠️ Could not delete temp file: {e}")
+        
+        print(f"🔍 AFTER CLEANUP - Original still exists: {os.path.exists(image_path)}")
         
         # Enhanced prompt for analyzing ALL dishes/items in the image
         prompt = (
@@ -94,22 +136,25 @@ def analyze_image_with_gemini(image_path):
             "Be thorough - don't miss any food items in the image."
         )
         
-        print("🔍 Analyzing image with Gemini...")
+        print(f"🔍 Analyzing image with {model_name}...")
         
-        response = gemini_model.generate_content([
-            prompt,
-            {"mime_type": "image/jpeg", "data": image_data}
-        ])
+        # response = gemini_model.generate_content([
+        #     prompt,
+        #     {"mime_type": "image/jpeg", "data": image_data}
+        # ])
+        response = call_gemini_with_retries(
+            gemini_model,
+            [prompt, {"mime_type": "image/jpeg", "data": image_data}])
         
         if response and response.text:
-            print("✅ Gemini analysis successful")
-            print(f"📊 Raw Gemini response first 500 chars:\n{response.text[:500]}")
+            print(f"✅ {model_name} analysis successful")
+            print(f"📊 Raw {model_name} response first 500 chars:\n{response.text[:500]}")
             return response.text
         else:
             raise Exception("Empty response from Gemini")
             
     except Exception as e:
-        print(f"❌ Gemini analysis error: {str(e)}")
+        print(f"❌ {model_name} analysis error: {str(e)}")
         return f"Gemini error: {str(e)}"
 
 def extract_ingredients_only(description):
@@ -121,8 +166,11 @@ def extract_ingredients_only(description):
             ingredients.append(line.strip())
     return "\n".join(ingredients)
 
-def search_hidden_ingredients(dish_names, visible_ingredients):
+def search_hidden_ingredients(dish_names, visible_ingredients, model_name='gemini-2.5-flash'):
     """Find hidden ingredients based on ALL dishes and visible ingredients"""
+    # CHANGE: Initialize model with parameter
+    gemini_model = genai.GenerativeModel(model_name)
+    
     prompt = (
         f"You are a recipe analyst. For these dishes: {dish_names}\n"
         f"With visible ingredients:\n{visible_ingredients}\n\n"
@@ -133,8 +181,9 @@ def search_hidden_ingredients(dish_names, visible_ingredients):
     )
     
     try:
-        print("🔍 Searching for hidden ingredients...")
-        response = gemini_model.generate_content(prompt)
+        print(f"🔍 Searching for hidden ingredients with {model_name}...")
+        # response = gemini_model.generate_content(prompt)
+        response = call_gemini_with_retries(gemini_model, prompt)
         
         if response and response.text:
             lines = response.text.strip().split('\n')
@@ -159,7 +208,7 @@ def search_hidden_ingredients(dish_names, visible_ingredients):
             return "Cooking oil | 2 | tbsp | For cooking\nSalt | 1 | tsp | Seasoning"
             
     except Exception as e:
-        print(f"❌ Hidden ingredients error: {str(e)}")
+        print(f"❌ Hidden ingredients error with {model_name}: {str(e)}")
         return "Cooking oil | 2 | tbsp | For cooking\nSalt | 1 | tsp | Seasoning"
 
 def get_default_value(nutrient):
@@ -185,8 +234,10 @@ Fiber|5|g
 Sugar|10|g
 Sodium|800|mg"""
 
-def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_ingredients):
+def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_ingredients, model_name='gemini-2.5-flash'):
     """Estimate nutrition - GUARANTEED TO WORK"""
+    # CHANGE: Initialize model with parameter
+    gemini_model = genai.GenerativeModel(model_name)
     
     all_ingredients = f"{visible_ingredients}\n{hidden_ingredients}"
     
@@ -206,12 +257,13 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
     )
     
     try:
-        print("📊 Calculating nutrition...")
+        print(f"📊 Calculating nutrition with {model_name}...")
         print(f"📊 For dishes: {dish_names}")
-        response = gemini_model.generate_content(prompt)
+        # response = gemini_model.generate_content(prompt)
+        response = call_gemini_with_retries(gemini_model, prompt)
         
         if response and response.text:
-            print(f"📊 Raw Gemini nutrition response:\n{response.text}")
+            print(f"📊 Raw {model_name} nutrition response:\n{response.text}")
             
             # Parse the response more carefully
             lines = response.text.strip().split('\n')
@@ -262,7 +314,7 @@ def estimate_nutrition_from_ingredients(dish_names, visible_ingredients, hidden_
             return get_default_nutrition()
             
     except Exception as e:
-        print(f"❌ Nutrition calculation error: {str(e)}")
+        print(f"❌ Nutrition calculation error with {model_name}: {str(e)}")
         print(f"❌ Error type: {type(e).__name__}")
         traceback.print_exc()
         return get_default_nutrition()
@@ -302,16 +354,17 @@ def parse_to_dict(text):
                 continue
     return data_dict
 
-def full_image_analysis(image_path, user_id):
+def full_image_analysis(image_path, user_id, model_name='gemini-2.5-flash'):
     """Main function for complete image analysis"""
+    # CHANGE: Added model_name parameter with default value
     try:
         start_time = time.time()
         
-        print(f"🤖 Starting image analysis for user: {user_id}")
+        print(f"🤖 Starting image analysis for user: {user_id} with model: {model_name}")
         print(f"📸 Image: {image_path}")
         
         # Step 1: Analyze image
-        gemini_description = analyze_image_with_gemini(image_path)
+        gemini_description = analyze_image_with_gemini(image_path, model_name)
         
         if "Gemini error" in gemini_description:
             raise Exception(f"Gemini analysis failed: {gemini_description}")
@@ -326,10 +379,10 @@ def full_image_analysis(image_path, user_id):
             cleaned_ingredients = "Unknown ingredients | 100 | g | Main dish"
         
         # Step 4: Find hidden ingredients
-        hidden_ingredients = search_hidden_ingredients(dish_names, cleaned_ingredients)
+        hidden_ingredients = search_hidden_ingredients(dish_names, cleaned_ingredients, model_name)
         
         # Step 5: Calculate nutrition (guaranteed to work)
-        nutrition_info = estimate_nutrition_from_ingredients(dish_names, cleaned_ingredients, hidden_ingredients)
+        nutrition_info = estimate_nutrition_from_ingredients(dish_names, cleaned_ingredients, hidden_ingredients, model_name)
         
         # TEMPORARY FIX: If nutrition is empty or too short, use defaults
         if not nutrition_info or len(nutrition_info) < 50:
@@ -353,7 +406,7 @@ Sodium|980|mg"""
         
         analysis_time = time.time() - start_time
         
-        print(f"✅ Analysis completed in {analysis_time:.2f} seconds")
+        print(f"✅ Analysis completed in {analysis_time:.2f} seconds with {model_name}")
         print(f"🍴 Dishes/Items: {dish_names}")
         print(f"📋 Visible ingredients: {len(visible_dict)} items")
         print(f"🔐 Hidden ingredients: {len(hidden_dict)} items")
@@ -366,6 +419,7 @@ Sodium|980|mg"""
             'nutrition_info': nutrition_info,
             'analysis_time': analysis_time,
             'user_id': user_id,
+            'model_name': model_name,  # CHANGE: Added model name to output
             'debug_info': {
                 'visible_count': len(visible_dict),
                 'hidden_count': len(hidden_dict),
@@ -374,7 +428,7 @@ Sodium|980|mg"""
         }
         
     except Exception as e:
-        print(f"❌ Full analysis error: {str(e)}")
+        print(f"❌ Full analysis error with {model_name}: {str(e)}")
         traceback.print_exc()
         
         # Return with default values
@@ -385,13 +439,17 @@ Sodium|980|mg"""
             'nutrition_info': get_default_nutrition(),
             'analysis_time': 0,
             'user_id': user_id,
+            'model_name': model_name,  # CHANGE: Added model name to output
             'error': str(e)
         }
 
-def recalculate_nutrition_enhanced(ingredients_text):
+def recalculate_nutrition_enhanced(ingredients_text, model_name='gemini-2.5-flash'):
     """Recalculate nutrition - simplified version"""
+    # CHANGE: Added model_name parameter
+    gemini_model = genai.GenerativeModel(model_name)
+    
     try:
-        print(f"🔄 Recalculating nutrition...")
+        print(f"🔄 Recalculating nutrition with {model_name}...")
         print(f"📋 Input ingredients:\n{ingredients_text[:200]}...")
         
         prompt = (
@@ -406,7 +464,8 @@ def recalculate_nutrition_enhanced(ingredients_text):
             "Sodium|[number]|mg"
         )
         
-        response = gemini_model.generate_content(prompt)
+        # response = gemini_model.generate_content(prompt)
+        response = call_gemini_with_retries(gemini_model, prompt)
         
         if response and response.text:
             print(f"📊 Recalculation response:\n{response.text}")
@@ -437,7 +496,7 @@ def recalculate_nutrition_enhanced(ingredients_text):
             return get_default_nutrition()
             
     except Exception as e:
-        print(f"❌ Recalculation error: {str(e)}")
+        print(f"❌ Recalculation error with {model_name}: {str(e)}")
         return get_default_nutrition()
 
 def validate_image_for_analysis(image_path):

@@ -1,349 +1,81 @@
-image_path,image_name,model,calories_estimate,timestamp
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-pro,"Steamed rice, Mixed side dish, Soup
-
-White rice | 1 | Bowl | Steamed rice
-Tofu | 1 | Block | Mixed side dish
-Hijiki seaweed | 1 | Portion | Mixed side dish
-Lettuce | 1 | Leaf | Mixed side dish
-Broth | 1 | Bowl | Soup",1759697086.3793573
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-flash,"White rice, clear liquid, mixed side dish
-
-Rice | 1 | serving | White rice
-Water | 1 | serving | Clear liquid
-Dark leafy/seaweed-like item | 1 | portion | Mixed side dish
-Light blocks | 2 | pieces | Mixed side dish",1759697091.8116283
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-pro-preview-03-25,"Steamed white rice, Clear soup or water, Seaweed side dish, Tofu, Mixed vegetables
-
-White rice | 1 | bowl | Steamed white rice
-Clear broth or water | 1 | bowl | Clear soup or water
-Seaweed | 1 | portion | Seaweed side dish
-Tofu | 1 | block | Tofu
-Green leafy vegetable | 1 | small portion | Mixed vegetables
-Carrot | 1 | small piece | Mixed vegetables",1759697107.3680437
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-flash-preview-05-20,"Plain white rice, Clear soup, Tofu and seaweed side dish
-
-Rice | 1 | bowl | Plain white rice
-Water | 1 | serving | Clear soup
-Tofu | 1 | block | Tofu and seaweed side dish
-Seaweed (dark) | 1 | portion | Tofu and seaweed side dish",1759697118.5154831
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10666.jpg,10666.jpg,gemini-2.5-pro,"Steamed white rice, Vegetable side dish
-
-White rice | 1 | bowl | Steamed white rice
-Cabbage | 1 | portion | Vegetable side dish",1759697145.791286
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10666.jpg,10666.jpg,gemini-2.5-flash,"White rice, Shredded vegetable side dish
-White rice | 1.5 | cups | White rice
-Shredded white/pale green vegetable | 40 | grams | Shredded vegetable side dish
-Green herb/vegetable | 8 | pieces | Shredded vegetable side dish",1759697163.4294858
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10666.jpg,10666.jpg,gemini-2.5-pro-preview-03-25,"Steamed white rice, Shredded cabbage
-
-White rice | 1 | bowl | Steamed white rice
-Cabbage | 1 | portion | Shredded cabbage",1759697172.6069386
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10666.jpg,10666.jpg,gemini-2.5-flash-preview-05-20,"White rice, Shredded vegetable side dish
-Cooked white rice | 1 | bowl | White rice
-Shredded pale vegetable | 1 | portion | Shredded vegetable side dish",1759697186.3127675
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-pro,"Steamed rice, Seaweed side dish, Tofu with green vegetable, Soup, Beverage
-
-White rice | 1 | bowl | Steamed rice
-Seaweed | 1 | portion | Seaweed side dish
-Tofu | 1 | cube | Tofu with green vegetable
-Green leafy vegetable | 1 | portion | Tofu with green vegetable
-Clear broth | 1 | bowl | Soup",1759698288.215248
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-flash,"White rice, Clear liquid, Side dish with dark leafy greens and tofu
-
-Cooked white rice | numerous | grains | White rice
-Water | indeterminate | liquid | Clear liquid
-Dark leafy greens | numerous | pieces | Side dish with dark leafy greens and tofu
-Tofu | 1 | piece | Side dish with dark leafy greens and tofu",1759698295.511583
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-pro-preview-03-25,"Steamed white rice, seaweed salad, tofu, water/clear soup
-
-White rice | 1 | bowl | Steamed white rice
-Hijiki seaweed | 1 | portion | Seaweed salad
-Tofu | 1 | cube | Tofu
-Water | 1 | bowl | Water/clear soup",1759698304.2314913
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-flash-preview-05-20,"Steamed white rice, clear liquid, assorted side dish
-
-White rice grains | 1 | bowl | Steamed white rice
-Clear liquid | 1 | bowl | Clear liquid
-Dark rehydrated strands | 1 | portion | Assorted side dish
-Light-colored block | 1 | piece | Assorted side dish
-Small light-colored pieces | 3 | pieces | Assorted side dish",1759698318.7592666
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-pro,"Steamed rice, Side dish with tofu and seaweed, Clear soup or water, Beverage
-
-White rice | 1 | bowl | Steamed rice
-Clear liquid | 1 | bowl | Clear soup or water
-Tofu | 1 | block | Side dish with tofu and seaweed
-Seaweed | 1 | portion | Side dish with tofu and seaweed
-Carrot | 1 | slice | Side dish with tofu and seaweed",1759698362.5324302
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10586.jpg,10586.jpg,gemini-2.5-flash,"White rice, clear beverage/soup, simmered dark greens and pale items
-
-White rice grains | 1 | serving | White rice
-Liquid | 1 | cup | Clear beverage/soup
-Dark leafy substance | 1 | portion | Simmered dark greens and pale items
-Pale rectangular pieces | 3 | pieces | Simmered dark greens and pale items",1759698370.7934377
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10910.jpg,10910.jpg,gemini-2.5-pro,"Ebi fry (fried shrimp), Korokke (croquette), Shredded cabbage salad, Steamed white rice, Miso soup, Tartar sauce
-
-Shrimp | 2 | pieces | Ebi fry (fried shrimp)
-Panko breading | 3 | pieces | Ebi fry (fried shrimp), Korokke (croquette)
-Tonkatsu sauce | 1 | portion | Ebi fry (fried shrimp), Korokke (croquette)
-Cabbage (shredded) | 1 | serving | Shredded cabbage salad
-Cucumber | 1 | slice | Shredded cabbage salad
-White rice | 1 | bowl | Steamed white rice
-Miso broth | 1 | bowl | Miso soup
-Wakame seaweed | 1 | portion | Miso soup
-Tartar sauce | 1 | dollop | Tartar sauce
-Chopped pickles | 1 | portion | Tartar sauce",1759698404.0480058
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10910.jpg,10910.jpg,gemini-2.5-flash,"Ebi Fry, Korokke, Shredded Cabbage Salad, Tartar Sauce, White Rice, Miso Soup
-
-Shrimp | 2 | pieces | Ebi Fry
-Panko Breading | 1 | portion | Ebi Fry
-Panko Breading | 1 | portion | Korokke
-Sauce (dark brown) | 1 | drizzle | Korokke
-Shredded Cabbage | 1 | portion | Shredded Cabbage Salad
-Shredded Red Cabbage (or carrot) | 1 | portion | Shredded Cabbage Salad
-Lettuce (or cucumber) | 1 | piece | Shredded Cabbage Salad
-Tartar Sauce | 1 | dollop | Tartar Sauce
-White Rice | 1 | bowl | White Rice
-Miso Broth | 1 | bowl | Miso Soup
-Green Onion (or wakame seaweed) | 1 | portion | Miso Soup
-Tofu | 1 | portion | Miso Soup",1759698408.80103
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10910.jpg,10910.jpg,gemini-2.5-pro-preview-03-25,"Ebi furai (fried shrimp), Korokke (croquette), Shredded cabbage salad, Tartar sauce, Miso soup, Steamed white rice
-
-Shrimp | 2 | pieces | Ebi furai (fried shrimp)
-Panko breadcrumbs | 1 | coating | Ebi furai (fried shrimp)
-Panko breadcrumbs | 1 | coating | Korokke (croquette)
-Brown sauce | 1 | drizzle | Ebi furai (fried shrimp)
-Brown sauce | 1 | drizzle | Korokke (croquette)
-Cabbage | 1 | serving | Shredded cabbage salad
-Lettuce | 1 | piece | Shredded cabbage salad
-Pickled relish/herbs | 1 | specks | Tartar sauce
-Soup broth | 1 | serving | Miso soup
-Wakame seaweed | 1 | serving | Miso soup
-White rice | 1 | bowl | Steamed white rice",1759698421.754963
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/1/10910.jpg,10910.jpg,gemini-2.5-flash-preview-05-20,"Fried shrimp, Fried croquette, Shredded cabbage salad, Tartar sauce, Steamed white rice, Miso soup
-
-Shrimp | 2 | pieces | Fried shrimp
-Breadcrumbs | 1 | layer | Fried shrimp
-Sauce (brown, savory) | 1 | drizzle | Fried shrimp
-Croquette (body) | 1 | piece | Fried croquette
-Breadcrumbs | 1 | layer | Fried croquette
-Sauce (brown, savory) | 1 | drizzle | Fried croquette
-Cabbage | 1 | portion | Shredded cabbage salad
-Lettuce | 1 | leaf | Shredded cabbage salad
-Carrot | 1 | portion | Shredded cabbage salad
-Creamy sauce | 1 | dollop | Tartar sauce
-Herbs/Relish | 1 | amount | Tartar sauce
-White rice | 1 | bowl | Steamed white rice
-Miso soup broth | 1 | bowl | Miso soup
-Tofu | 1 | portion | Miso soup
-Seaweed | 1 | portion | Miso soup",1759698444.5256028
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/250/333179.jpg,333179.jpg,gemini-2.5-pro,"Pan-seared salmon, steamed asparagus, lemon slices
-
-Salmon fillet | 1 | piece | Pan-seared salmon
-Black pepper (ground) | 1 | sprinkle | Pan-seared salmon
-Asparagus | 6 | spears | Steamed asparagus
-Lemon | 3 | slices | Lemon slices",1759721860.1690636
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/250/333179.jpg,333179.jpg,gemini-2.5-flash,"Grilled Salmon with Asparagus and Lemon
-
-Salmon fillet | 1 | piece | Grilled Salmon
-Asparagus | 6 | spears | Grilled Salmon
-Lemon | 3 | slices | Grilled Salmon",1759721864.5172467
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/250/333179.jpg,333179.jpg,gemini-2.5-pro-preview-03-25,"Pan-seared salmon fillet, steamed asparagus, lemon slices
-
-Salmon fillet | 1 | Fillet | Pan-seared salmon fillet
-Black pepper | 1 | Garnish | Pan-seared salmon fillet
-Asparagus | 6 | Spears | Steamed asparagus
-Lemon | 3 | Slices | Lemon slices",1759721878.697717
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/250/333179.jpg,333179.jpg,gemini-2.5-flash-preview-05-20,"Cooked salmon fillet, asparagus, lemon slices
-
-Salmon | 1 | piece | Cooked salmon fillet
-Asparagus | 5 | stalks | Asparagus
-Lemon | 3 | slices | Lemon slices",1759721885.4509904
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/250/333179.jpg,333179.jpg,gemini-2.5-pro,"Pan-seared salmon, steamed asparagus, lemon slices
-
-Salmon fillet | 1 | piece | Pan-seared salmon
-Black pepper (ground) | 1 | garnish | Pan-seared salmon
-Asparagus | 6 | spears | Steamed asparagus
-Lemon | 3 | slices | Lemon slices",1759721910.4251232
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/250/333179.jpg,333179.jpg,gemini-2.5-flash,"Grilled salmon fillet, asparagus, lemon slices
-
-Salmon | 1 | piece | Grilled salmon fillet
-Black pepper | small amount | sprinkle | Grilled salmon fillet
-Asparagus | 7 | stalks | Asparagus
-Lemon | 3 | slices | Lemon slices",1759721913.6833487
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/250/333179.jpg,333179.jpg,gemini-2.5-pro-preview-03-25,"Pan-seared salmon fillet, cooked asparagus, lemon slices
-
-Salmon fillet | 1 | piece | Pan-seared salmon fillet
-Black pepper (ground) | 1 | sprinkle | Pan-seared salmon fillet
-Asparagus spear | 6 | count | Cooked asparagus
-Lemon slice | 3 | count | Lemon slices",1759721924.933444
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/250/333179.jpg,333179.jpg,gemini-2.5-flash-preview-05-20,"Cooked Salmon, Asparagus, Lemon Slices
-Salmon | 1 | piece | Cooked Salmon
-Asparagus | 9 | spears | Asparagus
-Lemon | 3 | slices | Lemon Slices",1759721928.6570458
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/88/12024.jpg,12024.jpg,gemini-2.5-pro,"Creamy pasta, steamed broccoli, sliced tomato
-Gemelli pasta | 1 | serving | Creamy pasta
-Cream sauce | 1 | serving | Creamy pasta
-Broccoli floret | 3 | pieces | Steamed broccoli
-Broccoli stalk | 1 | piece | Steamed broccoli
-Tomato | 1 | wedge | Sliced tomato",1759721961.0874424
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/88/12024.jpg,12024.jpg,gemini-2.5-flash,"Pasta salad, Tomato slices, Steamed broccoli
-
-Pasta (fusilli/rotini) | 200 | pieces | Pasta salad
-Creamy sauce | 30 | ml | Pasta salad
-Dark specks (ground pepper/herb) | 150 | specks | Pasta salad
-Tomato | 1 | wedge | Tomato slices
-Broccoli floret | 3 | count | Steamed broccoli
-Broccoli stem | 2 | pieces | Steamed broccoli",1759721988.7154734
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/88/12024.jpg,12024.jpg,gemini-2.5-pro-preview-03-25,"Creamy pasta, steamed broccoli, tomato slices
-
-Gemelli pasta | 50 | pieces | Creamy pasta
-Creamy sauce | 1 | portion | Creamy pasta
-Black pepper specks | 10 | specks | Creamy pasta
-Broccoli floret | 3 | florets | Steamed broccoli
-Broccoli stem | 1 | piece | Steamed broccoli
-Tomato | 1 | slice | Tomato slices",1759721999.4948084
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/88/12024.jpg,12024.jpg,gemini-2.5-flash-preview-05-20,"Pasta with creamy sauce, Sliced tomato, Steamed broccoli
-
-Pasta (Fusilli/Rotini) | 1 | serving | Pasta with creamy sauce
-Creamy sauce | 1 | coating | Pasta with creamy sauce
-Dark specks (likely ground pepper/herbs) | 100 | specks | Pasta with creamy sauce
-Tomato | 1 | slice | Sliced tomato
-Broccoli floret | 3 | pieces | Steamed broccoli
-Broccoli stem | 2 | pieces | Steamed broccoli",1759722027.1192331
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/88/12024.jpg,12024.jpg,gemini-2.5-pro,"Creamy pasta, Steamed broccoli, Tomato slice
-
-Gemelli pasta | 1 | portion | Creamy pasta
-Creamy sauce | 1 | serving | Creamy pasta
-Black pepper | 8 | specks | Creamy pasta
-Broccoli | 3 | florets | Steamed broccoli
-Broccoli | 1 | stem | Steamed broccoli
-Tomato | 1 | wedge | Tomato slice
-Tomato seeds | 4 | seeds | Tomato slice",1759722145.6732044
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/88/12024.jpg,12024.jpg,gemini-2.5-flash,"Pasta with creamy sauce, tomato wedge, steamed broccoli
-
-Pasta (spiral shape) | 1 | portion | Pasta with creamy sauce
-Creamy sauce | 1 | amount | Pasta with creamy sauce
-Specks (dark, possibly pepper/herbs) | 20 | approx. specks | Pasta with creamy sauce
-Tomato | 1 | wedge | Tomato wedge
-Broccoli floret | 3 | pieces | Steamed broccoli
-Broccoli stem | 2 | pieces | Steamed broccoli",1759722161.2479038
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/88/12024.jpg,12024.jpg,gemini-2.5-pro-preview-03-25,"Creamy pasta, steamed broccoli, sliced tomato
-
-Gemelli pasta | 1 | portion | Creamy pasta
-Broccoli floret | 3 | florets | Steamed broccoli
-Broccoli stalk | 1 | piece | Steamed broccoli
-Tomato | 1 | wedge | Sliced tomato
-Tomato seed | 4 | seeds | Sliced tomato",1759722177.7088807
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/88/12024.jpg,12024.jpg,gemini-2.5-flash-preview-05-20,"Pasta with creamy sauce, Tomato wedge, Steamed broccoli
-
-Pasta (fusilli-type) | 75 | pieces | Pasta with creamy sauce
-Creamy sauce | 1 | serving | Pasta with creamy sauce
-Dark specks (herbs/pepper) | 150 | flecks | Pasta with creamy sauce
-Tomato | 1 | wedge | Tomato wedge
-Broccoli florets | 3 | florets | Steamed broccoli
-Broccoli stem section | 1 | piece | Steamed broccoli",1759722194.4828668
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/99/5491.jpg,5491.jpg,gemini-2.5-pro,"Karaage (Japanese fried chicken), Takikomi gohan (mixed rice), Miso soup, Water
-
-Ingredient | Quantity Number | Unit | Which dish/item it's from
----|---|---|---
-Chicken | 5 | pieces | Karaage (Japanese fried chicken)
-White rice | 1 | bowl | Takikomi gohan (mixed rice)
-Minced savory ingredient | 1 | portion | Takikomi gohan (mixed rice)
-Carrot | 1 | small piece | Takikomi gohan (mixed rice)
-Tofu | 4 | cubes | Miso soup
-Enoki mushroom | 1 | cluster | Miso soup
-Ice | 2 | cubes | Water",1759724087.7354116
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/99/5491.jpg,5491.jpg,gemini-2.5-flash,"Karaage, Mixed Rice, Miso Soup, Water
-
-Chicken | 5 | pieces | Karaage
-Fried batter | sufficient amount | coating | Karaage
-White rice | 1 | bowl | Mixed Rice
-Dark pieces (meat/vegetable) | multiple | pieces | Mixed Rice
-Carrot | 1 | piece | Mixed Rice
-Miso soup broth | 1 | bowl | Miso Soup
-Tofu | 4 | pieces | Miso Soup
-Enoki mushrooms | multiple | strands | Miso Soup
-Water | 1 | glass | Water
-Ice cubes | 3 | cubes | Water",1759724094.1255555
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/99/5491.jpg,5491.jpg,gemini-2.5-pro-preview-03-25,"Karaage (Japanese fried chicken), Takikomi gohan (mixed rice), Miso soup, Water with ice
-
-Chicken | 5 | pieces | Karaage (Japanese fried chicken)
-Fried batter | 5 | pieces | Karaage (Japanese fried chicken)
-White rice | 1 | bowl | Takikomi gohan (mixed rice)
-Minced meat/mushroom | 1 | serving | Takikomi gohan (mixed rice)
-Carrot | 1 | piece | Takikomi gohan (mixed rice)
-Miso broth | 1 | bowl | Miso soup
-Tofu | 4 | cubes | Miso soup
-Enoki mushroom | 1 | serving | Miso soup
-Water | 1 | glass | Water with ice
-Ice | 2 | cubes | Water with ice",1759724112.2330987
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/99/5491.jpg,5491.jpg,gemini-2.5-flash-preview-05-20,"Karaage, Mixed rice, Miso soup, Water with ice
-Chicken pieces | 5 | pieces | Karaage
-Crispy coating | N/A | N/A | Karaage
-Rice | N/A | N/A | Mixed rice
-Dark speck/strands | N/A | N/A | Mixed rice
-Orange speck | 2 | pieces | Mixed rice
-Broth | N/A | N/A | Miso soup
-Tofu | 3 | cubes | Miso soup
-Enoki mushrooms | N/A | strands | Miso soup
-Green garnish | N/A | N/A | Miso soup
-Water | N/A | N/A | Water with ice
-Ice cubes | 3 | cubes | Water with ice",1759724120.8250213
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/51/5114.jpg,5114.jpg,gemini-2.5-pro,"Sweet and sour pork
-
-Battered pork | 8 | pieces | Sweet and sour pork
-Carrot | 6 | chunks | Sweet and sour pork
-Pineapple | 4 | chunks | Sweet and sour pork
-Green bell pepper | 3 | pieces | Sweet and sour pork
-Sweet and sour sauce | 1 | serving | Sweet and sour pork
-Parsley | 1 | sprig | Sweet and sour pork",1759761154.680854
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/51/5114.jpg,5114.jpg,gemini-2.5-flash,"Braised Protein and Vegetable Stew
-
-Fried protein pieces | 9 | pieces | Braised Protein and Vegetable Stew
-Carrot | 8 | pieces | Braised Protein and Vegetable Stew
-Potato | 6 | pieces | Braised Protein and Vegetable Stew
-Green bell pepper | 4 | pieces | Braised Protein and Vegetable Stew
-Braised sauce | 1 | serving | Braised Protein and Vegetable Stew",1759761174.9680572
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/51/5114.jpg,5114.jpg,gemini-2.5-pro-preview-03-25,"Sweet and sour dish
-
-Battered protein | 8 | chunks | Sweet and sour dish
-Carrot | 7 | chunks | Sweet and sour dish
-Pineapple | 4 | chunks | Sweet and sour dish
-Green bell pepper | 3 | pieces | Sweet and sour dish
-Sweet and sour sauce | 1 | serving | Sweet and sour dish
-Herb garnish | 1 | piece | Sweet and sour dish",1759761199.666237
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/51/5114.jpg,5114.jpg,gemini-2.5-flash-preview-05-20,"Braised Pork and Vegetable Stew
-
-Pork pieces | 8 | pieces | Braised Pork and Vegetable Stew
-Carrot | 8 | pieces | Braised Pork and Vegetable Stew
-Potato | 7 | pieces | Braised Pork and Vegetable Stew
-Green Bell Pepper | 3 | pieces | Braised Pork and Vegetable Stew
-Scallion | 1 | pinch | Braised Pork and Vegetable Stew",1759761227.0014186
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/51/5114.jpg,5114.jpg,gemini-2.5-pro,"Sweet and sour stir-fry
-
-Battered Pork | 7 | pieces | Sweet and sour stir-fry
-Carrot | 5 | pieces | Sweet and sour stir-fry
-Pineapple | 4 | chunks | Sweet and sour stir-fry
-Green Bell Pepper | 3 | pieces | Sweet and sour stir-fry
-Sweet and sour sauce | 1 | serving | Sweet and sour stir-fry
-Green Herb Garnish | 1 | piece | Sweet and sour stir-fry",1759761400.6505373
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/51/5114.jpg,5114.jpg,gemini-2.5-flash,"Sweet and Sour Pork with Vegetables
-
-Pork pieces | 8 | pieces | Sweet and Sour Pork with Vegetables
-Carrot | 5 | pieces | Sweet and Sour Pork with Vegetables
-Pineapple | 5 | pieces | Sweet and Sour Pork with Vegetables
-Green Bell Pepper | 2 | pieces | Sweet and Sour Pork with Vegetables",1759761421.355146
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/51/5114.jpg,5114.jpg,gemini-2.5-pro-preview-03-25,"Sweet and sour pork
-
-Pork | 6 | pieces | Sweet and sour pork
-Carrot | 4 | chunks | Sweet and sour pork
-Pineapple | 4 | chunks | Sweet and sour pork
-Green bell pepper | 3 | pieces | Sweet and sour pork
-Sweet and sour sauce | 1 | serving | Sweet and sour pork",1759761439.4401093
-/home/sheru/datasets/uecfood256-small-random/UECFOOD256/51/5114.jpg,5114.jpg,gemini-2.5-flash-preview-05-20,"Braised Pork/Meat and Vegetable Stew
-
-Coated protein/meat pieces | 8 | pieces | Braised Pork/Meat and Vegetable Stew
-Carrot | 7 | pieces | Braised Pork/Meat and Vegetable Stew
-Light-colored starchy root vegetable (likely potato or daikon) | 5 | pieces | Braised Pork/Meat and Vegetable Stew
-Green bell pepper/capsicum | 3 | strips | Braised Pork/Meat and Vegetable Stew
-Brown sauce | 1 | serving | Braised Pork/Meat and Vegetable Stew",1759761447.5553365
+"image_path","model","dish_names","gemini_description","cleaned_ingredients","hidden_ingredients","full_nutrition","timestamp"
+"datasets/uecfood256-20/107_183820.jpg","gemini-2.0-flash-exp","Curry, Rice, Fried onion","White rice | 200 | g | Rice Curry sauce | 150 | g | Curry Fried onion | 20 | g | Curry Egg yolk | 1 | piece | Curry Parsley | 1 | sprig | Curry","White rice | 200 | g | Rice Curry sauce | 150 | g | Curry Fried onion | 20 | g | Curry Egg yolk | 1 | piece | Curry Parsley | 1 | sprig | Curry","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762488443.216438"
+"datasets/uecfood256-20/107_183820.jpg","gemini-2.5-pro","Japanese dry curry with rice","Minced meat curry | 250 | g | Japanese dry curry Steamed white rice | 200 | g | Japanese dry curry base Egg yolk | 1 | pc | Japanese dry curry topping Fried onions | 15 | g | Japanese dry curry topping Dried parsley | 1 | g | Garnish on egg yolk","Minced meat curry | 250 | g | Japanese dry curry Steamed white rice | 200 | g | Japanese dry curry base Egg yolk | 1 | pc | Japanese dry curry topping Fried onions | 15 | g | Japanese dry curry topping Dried parsley | 1 | g | Garnish on egg yolk","Oil | 1 | tbsp | For sautéing Garlic | 1 | clove | Minced Japanese Curry Roux | 2 | blocks | For curry flavor Water | 150 | ml | For curry sauce Soy Sauce | 1 | tbsp | Seasoning Worcestershire Sauce | 1 | tbsp | Seasoning Water | 240 | ml | For cooking rice","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762488577.9277031"
+"datasets/uecfood256-20/107_183820.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762488596.1223173"
+"datasets/uecfood256-20/107_183820.jpg","gemini-2.0-flash-001","Curry rice","Rice | 200 | g | Curry rice Curry sauce | 150 | g | Curry rice Egg yolk | 1 | no. | Curry rice Fried onions | 20 | g | Curry rice Parsley | 2 | g | Curry rice","Rice | 200 | g | Curry rice Curry sauce | 150 | g | Curry rice Egg yolk | 1 | no. | Curry rice Fried onions | 20 | g | Curry rice Parsley | 2 | g | Curry rice","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762488603.2663834"
+"datasets/uecfood256-20/109_183984.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762488622.124861"
+"datasets/uecfood256-20/109_183984.jpg","gemini-2.5-pro","Glass noodle stir-fry with beef and mushrooms","Glass noodles | 80 | g | Glass noodle stir-fry Beef | 50 | g | Glass noodle stir-fry Oyster mushrooms | 60 | g | Glass noodle stir-fry Broccolini | 30 | g | Glass noodle stir-fry Onion | 20 | g | Glass noodle stir-fry Bamboo shoots | 15 | g | Glass noodle stir-fry Garlic | 5 | g | Glass noodle stir-fry","Glass noodles | 80 | g | Glass noodle stir-fry Beef | 50 | g | Glass noodle stir-fry Oyster mushrooms | 60 | g | Glass noodle stir-fry Broccolini | 30 | g | Glass noodle stir-fry Onion | 20 | g | Glass noodle stir-fry Bamboo shoots | 15 | g | Glass noodle stir-fry Garlic | 5 | g | Glass noodle stir-fry","Soy sauce | 2 | tbsp | For sauce Oyster sauce | 1 | tbsp | For sauce Sesame oil | 1 | tsp | For flavor and aroma Sugar | 1 | tsp | For sauce Sesame seeds | 1 | tsp | Garnish","Calories|736|kcal; Protein|39|g; Fat|26|g; Carbohydrates|87|g; Fiber|4|g; Sugar|9|g; Sodium|1204|mg","1762488764.532833"
+"datasets/uecfood256-20/109_183984.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762488782.694415"
+"datasets/uecfood256-20/109_183984.jpg","gemini-2.0-flash-001","Glass noodle stir-fry","Glass noodles | 150 | g | Glass noodle stir-fry Mushrooms | 100 | g | Glass noodle stir-fry Meat | 50 | g | Glass noodle stir-fry Onions | 30 | g | Glass noodle stir-fry Greens | 30 | g | Glass noodle stir-fry Bamboo shoots | 20 | g | Glass noodle stir-fry","Glass noodles | 150 | g | Glass noodle stir-fry Mushrooms | 100 | g | Glass noodle stir-fry Meat | 50 | g | Glass noodle stir-fry Onions | 30 | g | Glass noodle stir-fry Greens | 30 | g | Glass noodle stir-fry Bamboo shoots | 20 | g | Glass noodle stir-fry","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762488792.702953"
+"datasets/uecfood256-20/163_112002.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762488813.0439339"
+"datasets/uecfood256-20/163_112002.jpg","gemini-2.5-pro","Fruit parfait","Yogurt | 120 | g | Fruit parfait Orange segments | 50 | g | Fruit parfait Pistachio nuts | 5 | g | Fruit parfait Orange zest | 2 | g | Fruit parfait","Yogurt | 120 | g | Fruit parfait Orange segments | 50 | g | Fruit parfait Pistachio nuts | 5 | g | Fruit parfait Orange zest | 2 | g | Fruit parfait","Honey | 15 | g | For sweetness Vanilla extract | 2 | g | For flavor","Calories|177|kcal; Protein|14|g; Fat|3|g; Carbohydrates|25|g; Fiber|2|g; Sugar|22|g; Sodium|44|mg","1762488874.7953525"
+"datasets/uecfood256-20/163_112002.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762488892.158442"
+"datasets/uecfood256-20/163_112002.jpg","gemini-2.0-flash-001","Dessert parfait","Yogurt | 150 | g | Dessert parfait Orange segments | 100 | g | Dessert parfait Pistachios | 5 | g | Dessert parfait","Yogurt | 150 | g | Dessert parfait Orange segments | 100 | g | Dessert parfait Pistachios | 5 | g | Dessert parfait","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|229|kcal; Protein|14|g; Fat|11|g; Carbohydrates|25|g; Fiber|3|g; Sugar|20|g; Sodium|1249|mg","1762488894.4549081"
+"datasets/uecfood256-20/173_118963.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762488916.8091273"
+"datasets/uecfood256-20/173_118963.jpg","gemini-2.5-pro","Beef noodle soup, Rice with topping","Beef broth | 400 | ml | Beef noodle soup Egg noodles | 100 | g | Beef noodle soup Beef cubes | 5 | pieces | Beef noodle soup Bok choy | 50 | g | Beef noodle soup Scallions | 5 | g | Beef noodle soup Steamed rice | 100 | g | Rice with topping Braised meat topping | 30 | g | Rice with topping Scallions | 2 | g | Rice with topping","Beef broth | 400 | ml | Beef noodle soup Egg noodles | 100 | g | Beef noodle soup Beef cubes | 5 | pieces | Beef noodle soup Bok choy | 50 | g | Beef noodle soup Scallions | 5 | g | Beef noodle soup Steamed rice | 100 | g | Rice with topping Braised meat topping | 30 | g | Rice with topping Scallions | 2 | g | Rice with topping","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning Soy sauce | 4 | tbsp | Seasoning and color Garlic | 4 | cloves | Aromatic Ginger | 1 | inch | Aromatic Star anise | 2 | whole | For broth Sugar | 2 | tsp | To balance flavor White pepper | 0.5 | tsp | Garnish and seasoning","Calories|805|kcal; Protein|44|g; Fat|29|g; Carbohydrates|89|g; Fiber|5|g; Sugar|7|g; Sodium|1300|mg","1762489021.346272"
+"datasets/uecfood256-20/173_118963.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489038.826627"
+"datasets/uecfood256-20/173_118963.jpg","gemini-2.0-flash-001","Beef Noodle Soup, Rice dish","Beef | 100 | g | Beef Noodle Soup Noodles | 100 | g | Beef Noodle Soup Bok Choy | 50 | g | Beef Noodle Soup Green onions | 5 | g | Beef Noodle Soup Rice | 50 | g | Rice dish Green onions | 3 | g | Rice dish","Beef | 100 | g | Beef Noodle Soup Noodles | 100 | g | Beef Noodle Soup Bok Choy | 50 | g | Beef Noodle Soup Green onions | 5 | g | Beef Noodle Soup Rice | 50 | g | Rice dish Green onions | 3 | g | Rice dish","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762489042.3032074"
+"datasets/uecfood256-20/179_52487.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489062.9527218"
+"datasets/uecfood256-20/179_52487.jpg","gemini-2.5-pro","Pan-fried turnip cake","Turnip and rice cake | 5 | pieces | Pan-fried turnip cake","Turnip and rice cake | 5 | pieces | Pan-fried turnip cake","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762489158.902699"
+"datasets/uecfood256-20/179_52487.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489177.173035"
+"datasets/uecfood256-20/179_52487.jpg","gemini-2.0-flash-001","Turnip Cake","Turnip | 400 | g | Turnip Cake Rice flour | 100 | g | Turnip Cake","Turnip | 400 | g | Turnip Cake Rice flour | 100 | g | Turnip Cake","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|10|g; Fat|25|g; Carbohydrates|120|g; Fiber|10|g; Sugar|5|g; Sodium|2400|mg","1762489179.332521"
+"datasets/uecfood256-20/185_173368.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489199.8096166"
+"datasets/uecfood256-20/185_173368.jpg","gemini-2.5-pro","Hainanese chicken rice","Poached chicken | 6 | slices | Hainanese chicken rice White rice | 1 | serving | Hainanese chicken rice Cucumber | 8 | slices | Hainanese chicken rice","Poached chicken | 6 | slices | Hainanese chicken rice White rice | 1 | serving | Hainanese chicken rice Cucumber | 8 | slices | Hainanese chicken rice","Ginger | 4 | slices | Aromatic for broth and rice Garlic | 3 | cloves | Aromatic for broth and rice Scallion | 2 | stalks | Aromatic / For sauce Pandan leaves | 2 | leaves | Aromatic for rice Chicken fat | 2 | tbsp | For cooking rice Sesame oil | 1 | tbsp | Dressing for chicken Dark soy sauce | 2 | tbsp | Dipping sauce Chilli | 3 | whole | For dipping sauce Lime | 1 | whole | For dipping sauce Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762489279.579704"
+"datasets/uecfood256-20/185_173368.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489297.7013454"
+"datasets/uecfood256-20/185_173368.jpg","gemini-2.0-flash-001","Chicken Rice","Chicken | 200 | g | Chicken Rice Rice | 200 | g | Chicken Rice Cucumber slices | 50 | g | Chicken Rice","Chicken | 200 | g | Chicken Rice Rice | 200 | g | Chicken Rice Cucumber slices | 50 | g | Chicken Rice","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762489300.866474"
+"datasets/uecfood256-20/1_14235.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489321.5988486"
+"datasets/uecfood256-20/1_14235.jpg","gemini-2.5-pro","Hamburger steak with sauce, Fried shrimp, Shumai, Steamed vegetables, Miso soup, Steamed white rice, Cucumber salad, Kanten jelly dessert","Ground meat patty | 1 | pc | Hamburger steak with sauce Demi-glace sauce | 30 | ml | Hamburger steak with sauce Shrimp | 1 | pc | Fried shrimp Panko breading | 15 | g | Fried shrimp Dumpling wrapper | 1 | pc | Shumai Dumpling filling | 20 | g | Shumai Carrot | 1 | slice | Steamed vegetables Green beans | 3 | pcs | Steamed vegetables Miso broth | 150 | ml | Miso soup Tofu | 10 | g | Miso soup Steamed white rice | 200 | g | Steamed white rice Cucumber | 30 | g | Cucumber salad White vegetable sliv","Ground meat patty | 1 | pc | Hamburger steak with sauce Demi-glace sauce | 30 | ml | Hamburger steak with sauce Shrimp | 1 | pc | Fried shrimp Panko breading | 15 | g | Fried shrimp Dumpling wrapper | 1 | pc | Shumai Dumpling filling | 20 | g | Shumai Carrot | 1 | slice | Steamed vegetables Green beans | 3 | pcs | Steamed vegetables Miso broth | 150 | ml | Miso soup Tofu | 10 | g | Miso soup Steamed white rice | 200 | g | Steamed white rice Cucumber | 30 | g | Cucumber salad White vegetable sliv","Oil | 30 | ml | For frying and cooking Salt | 5 | g | Seasoning Black pepper | 2 | g | Seasoning Egg | 1 | pc | Binder and coating All-purpose flour | 20 | g | For coating Soy sauce | 15 | ml | Seasoning Rice vinegar | 30 | ml | For salad dressing Sugar | 10 | g | For salad dressing Dashi stock | 150 | ml | Soup base","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762489429.9734766"
+"datasets/uecfood256-20/1_14235.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489448.5741155"
+"datasets/uecfood256-20/1_14235.jpg","gemini-2.0-flash-001","Here's the food analysis:","Ingredient | Quantity Number | Unit | Which dish/item it's from Ground meat | 100 | g | Hamburg steak Carrot | 20 | g | Hamburg steak Green beans | 10 | g | Hamburg steak Shrimp | 1 | piece | Tempura Batter | 20 | g | Tempura Rice | 200 | g | Rice Tofu | 20 | g | Miso soup Wakame seaweed | 5 | g | Miso soup Clear broth | 100 | ml | Clear soup with topping Red beans | 10 | g | Clear soup with topping Agar jelly | 20 | g | Clear soup with topping Cucumber | 30 | g | Cucumber salad","Ingredient | Quantity Number | Unit | Which dish/item it's from Ground meat | 100 | g | Hamburg steak Carrot | 20 | g | Hamburg steak Green beans | 10 | g | Hamburg steak Shrimp | 1 | piece | Tempura Batter | 20 | g | Tempura Rice | 200 | g | Rice Tofu | 20 | g | Miso soup Wakame seaweed | 5 | g | Miso soup Clear broth | 100 | ml | Clear soup with topping Red beans | 10 | g | Clear soup with topping Agar jelly | 20 | g | Clear soup with topping Cucumber | 30 | g | Cucumber salad","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|45|g; Fat|35|g; Carbohydrates|85|g; Fiber|10|g; Sugar|15|g; Sodium|1500|mg","1762489459.6130924"
+"datasets/uecfood256-20/218_214169.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489481.1099877"
+"datasets/uecfood256-20/218_214169.jpg","gemini-2.5-pro","Sugar-coated filled doughnuts","Fried dough | 9 | pieces | Sugar-coated filled doughnuts Granulated sugar | 100 | g | Sugar-coated filled doughnuts (coating) Cream filling | 30 | g | Sugar-coated filled doughnuts (filling)","Fried dough | 9 | pieces | Sugar-coated filled doughnuts Granulated sugar | 100 | g | Sugar-coated filled doughnuts (coating) Cream filling | 30 | g | Sugar-coated filled doughnuts (filling)","All-purpose flour | 3 | cups | For the dough Yeast | 2 | tsp | For leavening Egg | 1 | pc | For the dough Milk | 1 | cup | For the dough and filling Vegetable oil | 4 | cups | For frying Vanilla extract | 1 | tsp | For the filling Salt | 0.5 | tsp | Seasoning","Calories|3290|kcal; Protein|55|g; Fat|165|g; Carbohydrates|395|g; Fiber|11|g; Sugar|120|g; Sodium|1350|mg","1762489554.1439946"
+"datasets/uecfood256-20/218_214169.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489572.6085575"
+"datasets/uecfood256-20/218_214169.jpg","gemini-2.0-flash-001","Donuts","Sugar | 20 | g | Donuts Filling | 10 | g | Donuts Dough | 50 | g | Donuts","Sugar | 20 | g | Donuts Filling | 10 | g | Donuts Dough | 50 | g | Donuts","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|734|kcal; Protein|8|g; Fat|38|g; Carbohydrates|92|g; Fiber|2|g; Sugar|42|g; Sodium|1230|mg","1762489577.7713048"
+"datasets/uecfood256-20/221_273953.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489598.579656"
+"datasets/uecfood256-20/221_273953.jpg","gemini-2.5-pro","Asian-style soup, dipping sauce, white rice","Broth | 450 | ml | Asian-style soup Meat chunks | 120 | g | Asian-style soup Cilantro | 15 | g | Asian-style soup Dark leafy greens | 50 | g | Asian-style soup Root vegetable chunk | 25 | g | Asian-style soup Dark sauce | 50 | ml | Dipping sauce Minced solids | 5 | g | Dipping sauce White rice | 150 | g | White rice","Broth | 450 | ml | Asian-style soup Meat chunks | 120 | g | Asian-style soup Cilantro | 15 | g | Asian-style soup Dark leafy greens | 50 | g | Asian-style soup Root vegetable chunk | 25 | g | Asian-style soup Dark sauce | 50 | ml | Dipping sauce Minced solids | 5 | g | Dipping sauce White rice | 150 | g | White rice","Water | 300 | ml | For cooking rice Oil | 1 | tbsp | For cooking Salt | 1 | tsp | Seasoning Soy sauce | 2 | tbsp | Seasoning Sugar | 2 | tsp | Seasoning Garlic | 2 | cloves | Aromatic Ginger | 10 | g | Aromatic Rice vinegar | 1 | tbsp | For dipping sauce","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762489747.3912401"
+"datasets/uecfood256-20/221_273953.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489765.913464"
+"datasets/uecfood256-20/221_273953.jpg","gemini-2.0-flash-001","Here's the food analysis:","Pork | 50 | g | Soup Spinach | 30 | g | Soup Cilantro | 10 | g | Soup Rice | 200 | g | White Rice Sauce | 50 | ml | Sauce","Pork | 50 | g | Soup Spinach | 30 | g | Soup Cilantro | 10 | g | Soup Rice | 200 | g | White Rice Sauce | 50 | ml | Sauce","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762489768.93506"
+"datasets/uecfood256-20/229_268891.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489789.285936"
+"datasets/uecfood256-20/229_268891.jpg","gemini-2.5-pro","Roasted chicken, Fresh herb garnish","Chicken | 400 | g | Roasted chicken Chicken skin | 50 | g | Roasted chicken Spice paste coating | 25 | g | Roasted chicken Cilantro leaves | 15 | count | Fresh herb garnish Cilantro stems | 4 | count | Fresh herb garnish","Chicken | 400 | g | Roasted chicken Chicken skin | 50 | g | Roasted chicken Spice paste coating | 25 | g | Roasted chicken Cilantro leaves | 15 | count | Fresh herb garnish Cilantro stems | 4 | count | Fresh herb garnish","Salt | 1 | tsp | Seasoning Olive oil | 1 | tbsp | For roasting Garlic powder | 1 | tsp | Flavoring Paprika | 1 | tsp | Flavoring","Calories|1144|kcal; Protein|127|g; Fat|68|g; Carbohydrates|4|g; Fiber|1|g; Sugar|0|g; Sodium|2678|mg","1762489915.3010383"
+"datasets/uecfood256-20/229_268891.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489932.9928033"
+"datasets/uecfood256-20/229_268891.jpg","gemini-2.0-flash-001","Roasted Chicken","Chicken | 1200 | g | Roasted Chicken Parsley | 5 | sprigs | Garnish for Roasted Chicken","Chicken | 1200 | g | Roasted Chicken Parsley | 5 | sprigs | Garnish for Roasted Chicken","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning Pepper | 0.5 | tsp | Seasoning Garlic powder | 0.5 | tsp | Seasoning Onion powder | 0.5 | tsp | Seasoning Paprika | 1 | tsp | Seasoning Thyme | 0.5 | tsp | Seasoning Rosemary | 0.5 | tsp | Seasoning Lemon juice | 1 | tbsp | Flavoring Butter | 2 | tbsp | Flavor","Calories|2988|kcal; Protein|291|g; Fat|197|g; Carbohydrates|17|g; Fiber|3|g; Sugar|4|g; Sodium|2145|mg","1762489936.127421"
+"datasets/uecfood256-20/240_270797.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762489956.7633617"
+"datasets/uecfood256-20/240_270797.jpg","gemini-2.5-pro","Braised pork rib soup","Pork ribs | 4 | pieces | Braised pork rib soup Shiitake mushroom | 1 | piece | Braised pork rib soup Broth | 200 | ml | Braised pork rib soup Star anise | 1 | piece | Braised pork rib soup Coriander leaf | 1 | sprig | Braised pork rib soup Pork fat | 20 | g | Braised pork rib soup","Pork ribs | 4 | pieces | Braised pork rib soup Shiitake mushroom | 1 | piece | Braised pork rib soup Broth | 200 | ml | Braised pork rib soup Star anise | 1 | piece | Braised pork rib soup Coriander leaf | 1 | sprig | Braised pork rib soup Pork fat | 20 | g | Braised pork rib soup","Soy sauce | 2 | tbsp | Seasoning and color Shaoxing wine | 1 | tbsp | For fragrance Ginger | 3 | slice | Aromatic Garlic | 2 | clove | Aromatic Sugar | 1 | tsp | To balance flavor Salt | 0.5 | tsp | To taste White pepper | 1 | pinch | To taste","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762490034.4455986"
+"datasets/uecfood256-20/240_270797.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490051.9554482"
+"datasets/uecfood256-20/240_270797.jpg","gemini-2.0-flash-001","Pork Stew","Pork ribs | 200 | g | Pork Stew Mushroom | 50 | g | Pork Stew Cilantro | 3 | g | Pork Stew Star Anise | 3 | g | Pork Stew Broth | 200 | ml | Pork Stew","Pork ribs | 200 | g | Pork Stew Mushroom | 50 | g | Pork Stew Cilantro | 3 | g | Pork Stew Star Anise | 3 | g | Pork Stew Broth | 200 | ml | Pork Stew","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|730|kcal; Protein|32|g; Fat|60|g; Carbohydrates|25|g; Fiber|6|g; Sugar|5|g; Sodium|1300|mg","1762490054.6369002"
+"datasets/uecfood256-20/242_324399.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490074.6400418"
+"datasets/uecfood256-20/242_324399.jpg","gemini-2.5-pro","Stir-fried noodles with pork and shrimp","Instant-style noodles | 150 | g | Stir-fried noodles Napa cabbage | 80 | g | Stir-fried noodles Minced pork | 60 | g | Stir-fried noodles Shrimp | 4 | pieces | Stir-fried noodles Fried shallots | 5 | g | Stir-fried noodles","Instant-style noodles | 150 | g | Stir-fried noodles Napa cabbage | 80 | g | Stir-fried noodles Minced pork | 60 | g | Stir-fried noodles Shrimp | 4 | pieces | Stir-fried noodles Fried shallots | 5 | g | Stir-fried noodles","Oil | 2 | tbsp | For cooking Garlic | 2 | cloves | Aromatics Soy sauce | 2 | tbsp | Seasoning Oyster sauce | 1 | tbsp | Seasoning Sugar | 1 | tsp | Seasoning Water | 50 | ml | For the sauce","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762490225.548317"
+"datasets/uecfood256-20/242_324399.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490245.3109572"
+"datasets/uecfood256-20/242_324399.jpg","gemini-2.0-flash-001","Yakisoba","Noodles | 300 | g | Yakisoba Pork | 50 | g | Yakisoba Cabbage | 100 | g | Yakisoba Shrimp | 20 | g | Yakisoba Scallops | 30 | g | Yakisoba","Noodles | 300 | g | Yakisoba Pork | 50 | g | Yakisoba Cabbage | 100 | g | Yakisoba Shrimp | 20 | g | Yakisoba Scallops | 30 | g | Yakisoba","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning Soy sauce | 2 | tbsp | Sauce base Worcestershire sauce | 1 | tbsp | Sauce flavor Oyster sauce | 1 | tbsp | Umami Ginger | 1 | tsp | Flavoring Garlic | 1 | clove | Flavoring Black pepper | 0.5 | tsp | Seasoning Sesame oil | 1 | tsp | Flavor Bonito flakes | 5 | g | Topping Seaweed flakes | 3 | g | Topping","Calories|820|kcal; Protein|40|g; Fat|30|g; Carbohydrates|95|g; Fiber|8|g; Sugar|15|g; Sodium|1500|mg","1762490248.919691"
+"datasets/uecfood256-20/30_2914.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490270.2508154"
+"datasets/uecfood256-20/30_2914.jpg","gemini-2.5-pro","Broad bean gratin","Broad beans | 30 | beans | Broad bean gratin Creamy white sauce | 150 | ml | Broad bean gratin Toast slices | 8 | slices | Broad bean gratin Herbs | 1 | g | Broad bean gratin garnish","Broad beans | 30 | beans | Broad bean gratin Creamy white sauce | 150 | ml | Broad bean gratin Toast slices | 8 | slices | Broad bean gratin Herbs | 1 | g | Broad bean gratin garnish","Cheese | 50 | g | For the topping Butter | 30 | g | For the sauce Flour | 30 | g | For the sauce Milk | 150 | ml | For the sauce Garlic | 1 | clove | Aromatic Salt | 1 | tsp | Seasoning Black pepper | 0.5 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762490427.1210628"
+"datasets/uecfood256-20/30_2914.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490443.736173"
+"datasets/uecfood256-20/30_2914.jpg","gemini-2.0-flash-001","Gratin","Baguette slices | 8 | slice | Gratin border Green beans | 200 | g | Gratin Cream sauce | 250 | ml | Gratin","Baguette slices | 8 | slice | Gratin border Green beans | 200 | g | Gratin Cream sauce | 250 | ml | Gratin","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762490447.8894815"
+"datasets/uecfood256-20/36_3522.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490468.2239609"
+"datasets/uecfood256-20/36_3522.jpg","gemini-2.5-pro","Miso soup","Miso soup broth | 200 | ml | Miso soup Tofu | 40 | g | Miso soup Wakame seaweed | 15 | g | Miso soup Scallions | 5 | g | Miso soup","Miso soup broth | 200 | ml | Miso soup Tofu | 40 | g | Miso soup Wakame seaweed | 15 | g | Miso soup Scallions | 5 | g | Miso soup","Miso paste | 1 | tbsp | For the soup base Dashi powder | 1 | tsp | To create the umami broth base","Calories|115|kcal; Protein|10|g; Fat|5|g; Carbohydrates|9|g; Fiber|2|g; Sugar|2|g; Sodium|2420|mg","1762490548.804375"
+"datasets/uecfood256-20/36_3522.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490566.5688891"
+"datasets/uecfood256-20/36_3522.jpg","gemini-2.0-flash-001","Miso soup","Tofu | 50 | g | Miso soup Wakame seaweed | 20 | g | Miso soup Green onions | 5 | g | Miso soup Broth | 200 | ml | Miso soup","Tofu | 50 | g | Miso soup Wakame seaweed | 20 | g | Miso soup Green onions | 5 | g | Miso soup Broth | 200 | ml | Miso soup","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|318|kcal; Protein|22|g; Fat|22|g; Carbohydrates|11|g; Fiber|3|g; Sugar|2|g; Sodium|1350|mg","1762490568.7035415"
+"datasets/uecfood256-20/47_4622.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490590.528003"
+"datasets/uecfood256-20/47_4622.jpg","gemini-2.5-pro","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490609.7036655"
+"datasets/uecfood256-20/47_4622.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490626.5329282"
+"datasets/uecfood256-20/47_4622.jpg","gemini-2.0-flash-001","Salmon, Rice, Miso soup, Green beans, Scallops, Pickled cucumber, Tomato salad","Salmon | 150 | g | Salmon Green beans | 50 | g | Salmon Scallops | 50 | g | Salmon Rice | 150 | g | Rice Tofu | 10 | g | Miso soup Seaweed | 2 | g | Miso soup Carrot | 5 | g | Miso soup Cucumber | 50 | g | Pickled cucumber Tomatoes | 100 | g | Tomato salad","Salmon | 150 | g | Salmon Green beans | 50 | g | Salmon Scallops | 50 | g | Salmon Rice | 150 | g | Rice Tofu | 10 | g | Miso soup Seaweed | 2 | g | Miso soup Carrot | 5 | g | Miso soup Cucumber | 50 | g | Pickled cucumber Tomatoes | 100 | g | Tomato salad","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|728|kcal; Protein|58|g; Fat|33|g; Carbohydrates|49|g; Fiber|8|g; Sugar|14|g; Sodium|850|mg","1762490629.9198525"
+"datasets/uecfood256-20/50_5029.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490651.0323362"
+"datasets/uecfood256-20/50_5029.jpg","gemini-2.5-pro","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490667.9431753"
+"datasets/uecfood256-20/50_5029.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490684.8431313"
+"datasets/uecfood256-20/50_5029.jpg","gemini-2.0-flash-001","Sukiyaki","Beef | 200 | g | Sukiyaki Napa cabbage | 50 | g | Sukiyaki Shiitake mushrooms | 50 | g | Sukiyaki Enoki mushrooms | 30 | g | Sukiyaki Green onions | 30 | g | Sukiyaki Nameko mushrooms | 20 | g | Sukiyaki Tofu | 50 | g | Sukiyaki","Beef | 200 | g | Sukiyaki Napa cabbage | 50 | g | Sukiyaki Shiitake mushrooms | 50 | g | Sukiyaki Enoki mushrooms | 30 | g | Sukiyaki Green onions | 30 | g | Sukiyaki Nameko mushrooms | 20 | g | Sukiyaki Tofu | 50 | g | Sukiyaki","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|55|g; Fat|50|g; Carbohydrates|40|g; Fiber|10|g; Sugar|10|g; Sodium|1500|mg","1762490688.4960449"
+"datasets/uecfood256-20/74_7889.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490709.3421412"
+"datasets/uecfood256-20/74_7889.jpg","gemini-2.5-pro","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490727.7356431"
+"datasets/uecfood256-20/74_7889.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490745.544678"
+"datasets/uecfood256-20/74_7889.jpg","gemini-2.0-flash-001","Braised pork belly, Braised eggs, Bok choy","Pork belly | 200 | g | Braised pork belly Eggs | 2 | count | Braised eggs Bok choy | 50 | g | Bok choy Sauce | 50 | ml | Braised pork belly","Pork belly | 200 | g | Braised pork belly Eggs | 2 | count | Braised eggs Bok choy | 50 | g | Bok choy Sauce | 50 | ml | Braised pork belly","Sugar | 1 | tbsp | For braising Soy sauce | 2 | tbsp | For braising Ginger | 3 | slices | For braising Garlic | 2 | cloves | For braising Water | 200 | ml | For braising Oyster sauce | 1 | tbsp | For braising Sesame oil | 1 | tsp | Flavoring Cornstarch | 1 | tsp | Thickening","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762490749.493655"
+"datasets/uecfood256-20/74_7894.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490771.084501"
+"datasets/uecfood256-20/74_7894.jpg","gemini-2.5-pro","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490787.6299405"
+"datasets/uecfood256-20/74_7894.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490806.0121715"
+"datasets/uecfood256-20/74_7894.jpg","gemini-2.0-flash-001","Braised pork belly","Pork belly | 300 | g | Braised pork belly Mustard | 5 | g | Braised pork belly Sauce | 20 | ml | Braised pork belly","Pork belly | 300 | g | Braised pork belly Mustard | 5 | g | Braised pork belly Sauce | 20 | ml | Braised pork belly","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|65|g; Carbohydrates|20|g; Fiber|2|g; Sugar|5|g; Sodium|800|mg","1762490809.7219198"
+"datasets/uecfood256-20/78_8287.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490831.5623565"
+"datasets/uecfood256-20/78_8287.jpg","gemini-2.5-pro","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490850.2387183"
+"datasets/uecfood256-20/78_8287.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490866.3087308"
+"datasets/uecfood256-20/78_8287.jpg","gemini-2.0-flash-001","Taiyaki","Wheat flour | 100 | g | Taiyaki batter Sugar | 20 | g | Taiyaki batter Red bean paste | 80 | g | Taiyaki filling","Wheat flour | 100 | g | Taiyaki batter Sugar | 20 | g | Taiyaki batter Red bean paste | 80 | g | Taiyaki filling","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|25|g; Fat|20|g; Carbohydrates|120|g; Fiber|5|g; Sugar|40|g; Sodium|500|mg","1762490869.4321096"
+"datasets/uecfood256-20/91_12280.jpg","gemini-2.0-flash-exp","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490891.3628664"
+"datasets/uecfood256-20/91_12280.jpg","gemini-2.5-pro","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490910.9323633"
+"datasets/uecfood256-20/91_12280.jpg","gemini-2.5-pro-preview-06-05","Unknown dish","Unknown ingredients | 100 | g | Main dish","Unknown ingredients | 100 | g | Main dish","Cooking oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|500|kcal; Protein|20|g; Fat|15|g; Carbohydrates|60|g; Fiber|5|g; Sugar|10|g; Sodium|800|mg","1762490927.1653543"
+"datasets/uecfood256-20/91_12280.jpg","gemini-2.0-flash-001","Egg Drop Soup","Egg | 50 | g | Egg Drop Soup Parsley | 1 | g | Egg Drop Soup","Egg | 50 | g | Egg Drop Soup Parsley | 1 | g | Egg Drop Soup","Oil | 2 | tbsp | For cooking Salt | 1 | tsp | Seasoning","Calories|750|kcal; Protein|35|g; Fat|25|g; Carbohydrates|80|g; Fiber|5|g; Sugar|10|g; Sodium|1200|mg","1762490930.4821768"
