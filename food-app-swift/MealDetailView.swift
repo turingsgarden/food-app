@@ -396,17 +396,19 @@ struct MealDetailView: View {
     func generateShareText() -> String {
         var text = "Check out my meal: \(meal.dish_prediction)\n\n"
         
-        // Add visible ingredients (filtered)
+        // Clean asterisks when generating share text
         text += "Visible Ingredients:\n"
         for line in filteredIngredientLines(from: meal.image_description) {
-            text += "• \(line)\n"
+            let cleanLine = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
+            text += "• \(cleanLine)\n"
         }
         
-        // Add hidden ingredients if they exist (filtered)
+        // Add hidden ingredients if they exist (filtered and cleaned)
         if let hidden = meal.hidden_ingredients, !hidden.isEmpty {
             text += "\nHidden Ingredients:\n"
             for line in filteredIngredientLines(from: hidden) {
-                text += "• \(line)\n"
+                let cleanLine = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
+                text += "• \(cleanLine)\n"
             }
         }
         
@@ -415,7 +417,7 @@ struct MealDetailView: View {
             text += "\nCalories: \(calories) kcal\n"
         }
         
-        text += "\nTracked with NutriSnap 🍎"
+        text += "\nTracked with NutriSnap 🎯"
         return text
     }
     
@@ -568,10 +570,12 @@ struct MealDetailView: View {
         return image
     }
 
-    // UPDATED: Filter out dashed lines when parsing for editing
+    // UPDATED: Clean asterisks when parsing for editing
     func parseIngredientsToEditableFiltered(from text: String) -> [EditableIngredient] {
         return filteredIngredientLines(from: text).compactMap { line in
-            let parts = line.split(separator: "|").map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
+            // Clean asterisks from the line first
+            let cleanLine = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
+            let parts = cleanLine.split(separator: "|").map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
             guard parts.count >= 3 else { return nil }
             return EditableIngredient(
                 id: UUID().uuidString,
@@ -640,6 +644,7 @@ struct InfoPill: View {
         )
     }
 }
+
 
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]

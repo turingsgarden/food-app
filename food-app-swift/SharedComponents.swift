@@ -75,13 +75,21 @@ struct IngredientDisplay: View {
     let text: String
     var isHidden: Bool = false
     
+    // Clean the text by removing asterisks
+    var cleanedText: String {
+        // Remove asterisks from the text
+        var cleaned = text.replacingOccurrences(of: "**", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "*", with: "")
+        return cleaned.trimmingCharacters(in: .whitespaces)
+    }
+    
     var body: some View {
         HStack {
             Circle()
                 .fill(isHidden ? Color.pink.opacity(0.2) : Color.green.opacity(0.2))
                 .frame(width: 8, height: 8)
             
-            Text(text)
+            Text(cleanedText)
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.9))
             
