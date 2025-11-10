@@ -1134,84 +1134,65 @@ struct DashboardView: View {
     
     // Replace extractAllNutrients in DashboardView.swift with this fixed version:
 
-    func extractAllNutrients(from text: String) -> (calories: Int, protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
-        var calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0, sugar = 0, sodium = 0
+    // In DashboardView.swift, update the extractAllNutrients function:
+
+func extractAllNutrients(from text: String) -> (calories: Int, protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
+    var calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0, sugar = 0, sodium = 0
+    
+    let lines = text.components(separatedBy: .newlines)
+    
+    for line in lines {
+        let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+        if trimmedLine.isEmpty { continue }
         
-        let lines = text.components(separatedBy: .newlines)
+        let parts = trimmedLine.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
         
-        for line in lines {
-            let trimmedLine = line.trimmingCharacters(in: .whitespaces)
-            if trimmedLine.isEmpty { continue }
+        if parts.count >= 2 {
+            let name = parts[0].lowercased()
             
-            // SKIP DASHED LINES - Skip any line that contains only dashes
-            if trimmedLine.contains("------") || trimmedLine.hasPrefix("---") {
-                print("⏭️ Skipping dashed line: \(trimmedLine)")
-                continue
-            }
+            // Clean the value - remove commas and extra spaces
+            let cleanedValue = parts[1]
+                .replacingOccurrences(of: ",", with: "")
+                .replacingOccurrences(of: " ", with: "")
             
-            let parts = trimmedLine.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-            
-            if parts.count >= 2 {
-                let name = parts[0].lowercased()
+            // Try to parse as Float first, then convert to Int
+            if let floatValue = Float(cleanedValue) {
+                let value = Int(floatValue)
                 
-                // SKIP EMPTY OR INVALID INGREDIENT NAMES
-                if name.isEmpty || name.contains("---") || name == "ingredient" {
-                    print("⏭️ Skipping invalid ingredient: \(name)")
-                    continue
+                // Calories
+                if name.contains("calorie") || name.contains("kcal") || name.contains("energy") {
+                    calories += value
                 }
-                
-                // Clean the value - remove commas and extra spaces
-                let cleanedValue = parts[1]
-                    .replacingOccurrences(of: ",", with: "")
-                    .replacingOccurrences(of: " ", with: "")
-                
-                if let value = Int(cleanedValue) {
-                    // Calories
-                    if name.contains("calorie") || name.contains("kcal") || name.contains("energy") {
-                        calories += value
-                        print("🔥 Found calories: \(value) from line: \(trimmedLine)")
-                    }
-                    // Protein
-                    else if name.contains("protein") {
-                        protein += value
-                        print("💪 Found protein: \(value) from line: \(trimmedLine)")
-                    }
-                    // Carbohydrates
-                    else if name.contains("carb") || name.contains("carbohydrate") {
-                        carbs += value
-                        print("🌾 Found carbs: \(value) from line: \(trimmedLine)")
-                    }
-                    // Fat
-                    else if name.contains("fat") && !name.contains("saturated") {
-                        fat += value
-                        print("🥑 Found fat: \(value) from line: \(trimmedLine)")
-                    }
-                    // Fiber
-                    else if name.contains("fiber") || name.contains("fibre") {
-                        fiber += value
-                        print("🌿 Found fiber: \(value) from line: \(trimmedLine)")
-                    }
-                    // Sugar
-                    else if name.contains("sugar") {
-                        sugar += value
-                        print("🍯 Found sugar: \(value) from line: \(trimmedLine)")
-                    }
-                    // Sodium
-                    else if name.contains("sodium") || name.contains("salt") {
-                        sodium += value
-                        print("🧂 Found sodium: \(value) from line: \(trimmedLine)")
-                    }
-                } else {
-                    // Log lines where we couldn't parse the value
-                    if !name.contains("---") && !name.isEmpty {
-                        print("⚠️ Could not parse value '\(cleanedValue)' from line: \(trimmedLine)")
-                    }
+                // Protein
+                else if name.contains("protein") {
+                    protein += value
+                }
+                // Carbohydrates
+                else if name.contains("carb") || name.contains("carbohydrate") {
+                    carbs += value
+                }
+                // Fat
+                else if name.contains("fat") && !name.contains("saturated") {
+                    fat += value
+                }
+                // Fiber
+                else if name.contains("fiber") || name.contains("fibre") {
+                    fiber += value
+                }
+                // Sugar
+                else if name.contains("sugar") {
+                    sugar += value
+                }
+                // Sodium
+                else if name.contains("sodium") || name.contains("salt") {
+                    sodium += value
                 }
             }
         }
-        
-        return (calories, protein, carbs, fat, fiber, sugar, sodium)
     }
+    
+    return (calories, protein, carbs, fat, fiber, sugar, sodium)
+}
     
     // MARK: - All Data Functions with JWT Authentication
     
