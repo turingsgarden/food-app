@@ -55,7 +55,7 @@ struct MealHistoryView: View {
                                 .font(.largeTitle.bold())
                                 .foregroundColor(.white)
                             
-                            Text("\\(meals.count) meals tracked")
+                            Text("\(meals.count) meals tracked")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
@@ -64,7 +64,7 @@ struct MealHistoryView: View {
                         
                         // Stats Card
                         VStack(spacing: 4) {
-                            Text("\\(totalCalories)")
+                            Text("\(totalCalories)")
                                 .font(.title2.bold())
                                 .foregroundColor(.orange)
                             Text("Total kcal")
@@ -109,7 +109,7 @@ struct MealHistoryView: View {
                     // Filter Pills
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            ForEach(filters, id: \\.self) { filter in
+                            ForEach(filters, id: \.self) { filter in
                                 FilterPill(
                                     title: filter,
                                     isSelected: selectedFilter == filter,
@@ -143,7 +143,8 @@ struct MealHistoryView: View {
                     } else {
                         ScrollView {
                             LazyVStack(spacing: 20, pinnedViews: .sectionHeaders) {
-                                ForEach(groupedMeals, id: \\.0) { date, meals in
+                                ForEach(Array(groupedMeals.enumerated()), id: \.offset) { index, group in
+                                    let (date, meals) = group
                                     Section {
                                         ForEach(meals) { meal in
                                             MealHistoryCard(meal: meal)
@@ -165,9 +166,9 @@ struct MealHistoryView: View {
             .preferredColorScheme(.dark)
             .onAppear {
                 print("📱 MealHistoryView appeared")
-                print("🔍 Is logged in: \\(SessionManager.shared.isLoggedIn)")
-                print("🆔 User ID: \\(SessionManager.shared.userID)")
-                print("🔑 Has token: \\(SessionManager.shared.getAuthToken() != nil)")
+                print("🔍 Is logged in: \(SessionManager.shared.isLoggedIn)")
+                print("🆔 User ID: \(SessionManager.shared.userID)")
+                print("🔑 Has token: \(SessionManager.shared.getAuthToken() != nil)")
                 
                 fetchMeals()
             }
@@ -234,7 +235,7 @@ struct MealHistoryView: View {
             return
         }
         
-        print("🔄 Fetching meals at \\(Date())")
+        print("🔄 Fetching meals at \(Date())")
         
         // Use NetworkManager which handles JWT authentication
         NetworkManager.shared.getUserMeals { result in
@@ -243,7 +244,7 @@ struct MealHistoryView: View {
                 
                 switch result {
                 case .success(let fetchedMeals):
-                    print("✅ Successfully fetched \\(fetchedMeals.count) meals")
+                    print("✅ Successfully fetched \(fetchedMeals.count) meals")
                     
                     // Remove duplicates based on meal ID
                     var uniqueMeals: [Meal] = []
@@ -256,7 +257,7 @@ struct MealHistoryView: View {
                             
                             // Debug log nutrition info
                             if !meal.nutrition_info.isEmpty {
-                                print("📊 Meal '\\(meal.dish_prediction)' nutrition: \\(meal.nutrition_info.prefix(100))...")
+                                print("📊 Meal '\(meal.dish_prediction)' nutrition: \(meal.nutrition_info.prefix(100))...")
                             }
                         }
                     }
@@ -275,11 +276,11 @@ struct MealHistoryView: View {
                         extractCalories(from: meal.nutrition_info)
                     }.reduce(0, +)
                     
-                    print("📊 Total calories calculated: \\(self.totalCalories)")
-                    print("📊 Unique meals loaded: \\(self.meals.count)")
+                    print("📊 Total calories calculated: \(self.totalCalories)")
+                    print("📊 Unique meals loaded: \(self.meals.count)")
                     
                 case .failure(let error):
-                    print("❌ Failed to load meals: \\(error)")
+                    print("❌ Failed to load meals: \(error)")
                     
                     // Better error handling
                     if let nsError = error as NSError? {
@@ -357,7 +358,7 @@ struct DateHeader: View {
             
             Spacer()
             
-            Text("\\(count) meals")
+            Text("\(count) meals")
                 .font(.caption)
                 .foregroundColor(.gray)
         }
@@ -418,7 +419,7 @@ struct MealHistoryCard: View {
                 HStack(spacing: 16) {
                     // Calories - with better extraction
                     if let cal = extractCalories(from: meal.nutrition_info) {
-                        Label("\\(cal) kcal", systemImage: "flame.fill")
+                        Label("\(cal) kcal", systemImage: "flame.fill")
                             .font(.subheadline)
                             .foregroundColor(.orange)
                     }
