@@ -14,7 +14,12 @@ struct BeautifulNutritionView: View {
     }
     
     var hasValidNutrition: Bool {
-        !nutritionItems.isEmpty
+        !nutritionItems.isEmpty && nutritionItems.contains { item in
+            if let value = Int(item.value), value > 0 {
+                return true
+            }
+            return false
+        }
     }
     
     var body: some View {
@@ -56,24 +61,21 @@ struct BeautifulNutritionView: View {
                     }
                 }
             } else {
-                // Error state - but still try to show something
+                // Loading or empty state
                 VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.title2)
+                    Image(systemName: "chart.pie")
+                        .font(.system(size: 40))
                         .foregroundColor(.orange.opacity(0.6))
                     
-                    Text("Processing nutrition data...")
+                    Text("Nutrition data unavailable")
                         .font(.headline)
                         .foregroundColor(.white)
                     
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .orange))
-                    
-                    // DEBUG: Show raw text
                     if !nutritionText.isEmpty {
-                        Text("Raw data: \(nutritionText.prefix(50))...")
-                            .font(.caption2)
+                        Text("Processing nutrition information...")
+                            .font(.caption)
                             .foregroundColor(.gray)
+                            .multilineTextAlignment(.center)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -111,87 +113,130 @@ struct BeautifulNutritionView: View {
         }
     }
     
-    // MARK: - Simple Nutrition Parsing (Works with backend format)
+    // MARK: - Enhanced Nutrition Parsing
     
     private func parseNutritionSimple() {
         var items: [NutritionItem] = []
         
-        print("🔍 BeautifulNutritionView - Parsing nutrition text: \(nutritionText)")
-        print("🔍 Text length: \(nutritionText.count)")
+        print("🔍 BeautifulNutritionView - Starting nutrition parse")
+        print("📊 Raw text: '\(nutritionText)'")
+        print("📊 Text length: \(nutritionText.count)")
         
         // Handle both \n and \r\n line endings
         let lines = nutritionText.components(separatedBy: CharacterSet.newlines)
-        print("📊 Found \(lines.count) lines")
+        print("📊 Found \(lines.count) lines to parse")
         
         for (index, line) in lines.enumerated() {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             
             // Skip empty lines
             if trimmed.isEmpty {
-                print("⏭️ Line \(index): Empty, skipping")
                 continue
             }
             
-            print("📊 Line \(index): '\(trimmed)'")
+            print("📊 Processing line \(index): '\(trimmed)'")
             
             // Try to parse lines with | separator
             if trimmed.contains("|") {
                 let parts = trimmed.components(separatedBy: "|")
                     .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 
-                print("📊 Parts count: \(parts.count), Parts: \(parts)")
+                print("📊 Parts found: \(parts)")
                 
                 if parts.count >= 3 {
-                    let name = parts[0]
-                    let value = parts[1]
+                    let name = cleanNutrientName(parts[0])
+                    let valueStr = cleanValueString(parts[1])
                     let unit = parts[2]
                     
+                    print("📊 Parsed: name='\(name)', value='\(valueStr)', unit='\(unit)'")
+                    
                     // Validate that value is numeric
-                    if !value.isEmpty && (Double(value) != nil || Int(value) != nil) {
-                        // Create nutrition item
+                    if !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
                         let item = NutritionItem(
                             name: name,
-                            value: value,
+                            value: valueStr,
                             unit: unit,
                             reasoning: nil
                         )
                         items.append(item)
-                        
-                        print("✅ Added nutrition item: \(name) = \(value) \(unit)")
+                        print("✅ Added nutrition item: \(name) = \(valueStr) \(unit)")
                     } else {
-                        print("⚠️ Invalid value '\(value)' for nutrient '\(name)'")
+                        print("⚠️ Invalid value '\(valueStr)' for nutrient '\(name)'")
                     }
-                } else {
-                    print("⚠️ Invalid parts count: \(parts.count) for line: '\(trimmed)'")
+                } else if parts.count == 2 {
+                    // Handle format without unit (e.g., "Calories|450")
+                    let name = cleanNutrientName(parts[0])
+                    let valueStr = cleanValueString(parts[1])
+                    
+                    if !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
+                        let unit = guessUnit(for: name)
+                        let item = NutritionItem(
+                            name: name,
+                            value: valueStr,
+                            unit: unit,
+                            reasoning: nil
+                        )
+                        items.append(item)
+                        print("✅ Added nutrition item (guessed unit): \(name) = \(valueStr) \(unit)")
+                    }
                 }
             } else {
                 print("📊 No pipe separator, trying alternative format")
-                // Try to parse other formats (e.g., "Calories: 500 kcal")
                 if let item = parseAlternativeFormat(trimmed) {
                     items.append(item)
-                    print("✅ Added nutrition item from alt format: \(item.name) = \(item.value) \(item.unit)")
-                } else {
-                    print("⚠️ Could not parse line: '\(trimmed)'")
+                    print("✅ Added from alt format: \(item.name) = \(item.value) \(item.unit)")
                 }
             }
         }
         
-        // If no items found, add defaults
-        if items.isEmpty {
-            print("⚠️ No nutrition items found, using defaults")
-            items = getDefaultNutrition()
-        } else {
-            print("✅ Total nutrition items parsed: \(items.count)")
+        // If we got valid items, use them
+        if !items.isEmpty {
+            print("✅ Successfully parsed \(items.count) nutrition items")
             for item in items {
                 print("  - \(item.name): \(item.value) \(item.unit)")
             }
-        }
-        
-        // Use main queue to update state
-        DispatchQueue.main.async {
-            withAnimation(.easeInOut(duration: 0.3)) {
-                self.nutritionItems = items
+            
+            DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.nutritionItems = items
+                }
             }
+        } else {
+            print("⚠️ No nutrition items found, using defaults")
+            items = getDefaultNutrition()
+            
+            DispatchQueue.main.async {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    self.nutritionItems = items
+                }
+            }
+        }
+    }
+    
+    private func cleanNutrientName(_ name: String) -> String {
+        // Clean up nutrient names
+        return name
+            .replacingOccurrences(of: "**", with: "")
+            .replacingOccurrences(of: "*", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private func cleanValueString(_ value: String) -> String {
+        // Clean up value strings - remove commas, extra spaces, etc.
+        return value
+            .replacingOccurrences(of: ",", with: "")
+            .replacingOccurrences(of: " ", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private func guessUnit(for nutrient: String) -> String {
+        let lowercased = nutrient.lowercased()
+        if lowercased.contains("calorie") || lowercased.contains("energy") {
+            return "kcal"
+        } else if lowercased.contains("sodium") {
+            return "mg"
+        } else {
+            return "g"
         }
     }
     
@@ -226,18 +271,18 @@ struct BeautifulNutritionView: View {
     
     private func getDefaultNutrition() -> [NutritionItem] {
         return [
-            NutritionItem(name: "Calories", value: "---", unit: "kcal", reasoning: nil),
-            NutritionItem(name: "Protein", value: "---", unit: "g", reasoning: nil),
-            NutritionItem(name: "Fat", value: "---", unit: "g", reasoning: nil),
-            NutritionItem(name: "Carbohydrates", value: "---", unit: "g", reasoning: nil),
-            NutritionItem(name: "Fiber", value: "---", unit: "g", reasoning: nil),
-            NutritionItem(name: "Sugar", value: "---", unit: "g", reasoning: nil),
-            NutritionItem(name: "Sodium", value: "---", unit: "mg", reasoning: nil)
+            NutritionItem(name: "Calories", value: "0", unit: "kcal", reasoning: nil),
+            NutritionItem(name: "Protein", value: "0", unit: "g", reasoning: nil),
+            NutritionItem(name: "Fat", value: "0", unit: "g", reasoning: nil),
+            NutritionItem(name: "Carbohydrates", value: "0", unit: "g", reasoning: nil),
+            NutritionItem(name: "Fiber", value: "0", unit: "g", reasoning: nil),
+            NutritionItem(name: "Sugar", value: "0", unit: "g", reasoning: nil),
+            NutritionItem(name: "Sodium", value: "0", unit: "mg", reasoning: nil)
         ]
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - Supporting Views (keep existing)
 
 struct CaloriesHighlightCard: View {
     let item: NutritionItem
@@ -338,23 +383,5 @@ struct NutrientCard: View {
                         .stroke(item.color.opacity(0.2), lineWidth: 1)
                 )
         )
-    }
-}
-
-// MARK: - Preview
-struct BeautifulNutritionView_Previews: PreviewProvider {
-    static var previews: some View {
-        BeautifulNutritionView(nutritionText: """
-            Calories|450|kcal
-            Protein|25|g
-            Fat|12|g
-            Carbohydrates|60|g
-            Fiber|8|g
-            Sugar|5|g
-            Sodium|800|mg
-            """)
-        .preferredColorScheme(.dark)
-        .padding()
-        .background(Color.black)
     }
 }

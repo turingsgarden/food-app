@@ -8,6 +8,7 @@ struct MealHistoryView: View {
     @State private var selectedMeal: Meal? = nil
     @State private var selectedFilter = "All"
     @State private var searchText = ""
+    @State private var lastRefreshTime = Date()
     
     let filters = ["All", "Breakfast", "Lunch", "Dinner", "Snacks"]
 
@@ -54,7 +55,7 @@ struct MealHistoryView: View {
                                 .font(.largeTitle.bold())
                                 .foregroundColor(.white)
                             
-                            Text("\(meals.count) meals tracked")
+                            Text("\\(meals.count) meals tracked")
                                 .font(.caption)
                                 .foregroundColor(.gray)
                         }
@@ -63,7 +64,7 @@ struct MealHistoryView: View {
                         
                         // Stats Card
                         VStack(spacing: 4) {
-                            Text("\(totalCalories)")
+                            Text("\\(totalCalories)")
                                 .font(.title2.bold())
                                 .foregroundColor(.orange)
                             Text("Total kcal")
@@ -108,7 +109,7 @@ struct MealHistoryView: View {
                     // Filter Pills
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            ForEach(filters, id: \.self) { filter in
+                            ForEach(filters, id: \\.self) { filter in
                                 FilterPill(
                                     title: filter,
                                     isSelected: selectedFilter == filter,
@@ -142,7 +143,7 @@ struct MealHistoryView: View {
                     } else {
                         ScrollView {
                             LazyVStack(spacing: 20, pinnedViews: .sectionHeaders) {
-                                ForEach(groupedMeals, id: \.0) { date, meals in
+                                ForEach(groupedMeals, id: \\.0) { date, meals in
                                     Section {
                                         ForEach(meals) { meal in
                                             MealHistoryCard(meal: meal)
@@ -164,33 +165,43 @@ struct MealHistoryView: View {
             .preferredColorScheme(.dark)
             .onAppear {
                 print("📱 MealHistoryView appeared")
-                print("🔐 Is logged in: \(SessionManager.shared.isLoggedIn)")
-                print("🆔 User ID: \(SessionManager.shared.userID)")
-                print("🔑 Has token: \(SessionManager.shared.getAuthToken() != nil)")
+                print("🔍 Is logged in: \\(SessionManager.shared.isLoggedIn)")
+                print("🆔 User ID: \\(SessionManager.shared.userID)")
+                print("🔑 Has token: \\(SessionManager.shared.getAuthToken() != nil)")
                 
+                fetchMeals()
+            }
+            // Listen for meal saved notifications
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in
+                print("🔔 Meal saved notification received in MealHistoryView")
+                // Add a small delay to ensure backend has processed the save
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    fetchMeals()
+                }
+            }
+            // Listen for meal updated notifications
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealUpdated"))) { _ in
+                print("🔔 Meal updated notification received in MealHistoryView")
+                // Add a small delay to ensure backend has processed the update
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    fetchMeals()
+                }
+            }
+            // Listen for meal deleted notifications
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealDeleted"))) { _ in
+                print("🔔 Meal deleted notification received in MealHistoryView")
                 fetchMeals()
             }
             .refreshable {
                 await fetchMealsAsync()
             }
             .sheet(item: $selectedMeal) { meal in
-                MealDetailView(meal: meal)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Debug") {
-                        print("=== DEBUG INFO ===")
-                        print("User ID: \(SessionManager.shared.userID)")
-                        print("Is Logged In: \(SessionManager.shared.isLoggedIn)")
-                        print("Token exists: \(SessionManager.shared.getAuthToken() != nil)")
-                        
-                        // Test health endpoint
-                        NetworkManager.shared.checkHealth { healthy, status in
-                            print("Health check: \(healthy), status: \(String(describing: status))")
+                NavigationView {
+                    MealDetailView(meal: meal)
+                        .onDisappear {
+                            // Refresh when detail view closes in case meal was edited
+                            fetchMeals()
                         }
-                    }
-                    .foregroundColor(.orange)
-                    .font(.caption)
                 }
             }
         }
@@ -214,6 +225,7 @@ struct MealHistoryView: View {
     func fetchMeals() {
         isLoading = true
         errorMessage = ""
+        lastRefreshTime = Date()
         
         // Check if user is logged in
         guard SessionManager.shared.isLoggedIn else {
@@ -222,6 +234,8 @@ struct MealHistoryView: View {
             return
         }
         
+        print("🔄 Fetching meals at \\(Date())")
+        
         // Use NetworkManager which handles JWT authentication
         NetworkManager.shared.getUserMeals { result in
             DispatchQueue.main.async {
@@ -229,7 +243,7 @@ struct MealHistoryView: View {
                 
                 switch result {
                 case .success(let fetchedMeals):
-                    print("✅ Successfully fetched \(fetchedMeals.count) meals")
+                    print("✅ Successfully fetched \\(fetchedMeals.count) meals")
                     
                     // Remove duplicates based on meal ID
                     var uniqueMeals: [Meal] = []
@@ -239,6 +253,11 @@ struct MealHistoryView: View {
                         if !seenMealIds.contains(meal._id) {
                             seenMealIds.insert(meal._id)
                             uniqueMeals.append(meal)
+                            
+                            // Debug log nutrition info
+                            if !meal.nutrition_info.isEmpty {
+                                print("📊 Meal '\\(meal.dish_prediction)' nutrition: \\(meal.nutrition_info.prefix(100))...")
+                            }
                         }
                     }
                     
@@ -253,13 +272,14 @@ struct MealHistoryView: View {
                     
                     // Calculate total calories using the global function from Meal.swift
                     self.totalCalories = self.meals.compactMap { meal in
-                        extractCalories(from: meal.nutrition_info)  // No self. needed - it's a global function
+                        extractCalories(from: meal.nutrition_info)
                     }.reduce(0, +)
                     
-                    print("📊 Total calories: \(self.totalCalories)")
+                    print("📊 Total calories calculated: \\(self.totalCalories)")
+                    print("📊 Unique meals loaded: \\(self.meals.count)")
                     
                 case .failure(let error):
-                    print("❌ Failed to load meals: \(error)")
+                    print("❌ Failed to load meals: \\(error)")
                     
                     // Better error handling
                     if let nsError = error as NSError? {
@@ -337,7 +357,7 @@ struct DateHeader: View {
             
             Spacer()
             
-            Text("\(count) meals")
+            Text("\\(count) meals")
                 .font(.caption)
                 .foregroundColor(.gray)
         }
@@ -396,9 +416,9 @@ struct MealHistoryCard: View {
                     .lineLimit(1)
                 
                 HStack(spacing: 16) {
-                    // Calories
+                    // Calories - with better extraction
                     if let cal = extractCalories(from: meal.nutrition_info) {
-                        Label("\(cal) kcal", systemImage: "flame.fill")
+                        Label("\\(cal) kcal", systemImage: "flame.fill")
                             .font(.subheadline)
                             .foregroundColor(.orange)
                     }

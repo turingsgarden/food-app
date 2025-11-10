@@ -520,12 +520,16 @@ def save_meal():
         image_full = data.get("image_full") or image
         image_thumb = data.get("image_thumb") or (compress_base64_image(image) if image else None)
 
+        # Log the nutrition info being saved
+        print(f"📊 Saving meal with nutrition info: {data['nutrition_info'][:200]}...")
+        print(f"📊 Nutrition info length: {len(data['nutrition_info'])}")
+
         # Build meal document
         meal = {
             "user_id": user_id,
             "dish_prediction": data["dish_prediction"],
             "image_description": data["image_description"],
-            "nutrition_info": data["nutrition_info"],
+            "nutrition_info": data["nutrition_info"],  # Make sure this has the recalculated values
             "hidden_ingredients": data.get("hidden_ingredients", ""),
             "image_full": image_full,
             "image_thumb": image_thumb,
@@ -536,6 +540,10 @@ def save_meal():
         }
 
         result = meals_collection.insert_one(meal)
+        
+        print(f"✅ Meal saved successfully with ID: {result.inserted_id}")
+        print(f"📊 Saved nutrition: {meal['nutrition_info'][:100]}...")
+        
         return jsonify({
             "message": "Meal saved successfully",
             "meal_id": str(result.inserted_id)
@@ -552,17 +560,24 @@ def get_user_meals():
     try:
         # Use user_id from JWT token
         user_id = request.user_id
+        print(f"📊 Fetching meals for user: {user_id}")
 
         # Query meals for the user, sorted by date
         meals = list(meals_collection.find(
             {"user_id": user_id}
         ).sort("saved_at", -1))
         
+        print(f"📊 Found {len(meals)} meals")
+        
         # Process each meal to ensure compatibility
         processed_meals = []
         for meal in meals:
             # Convert ObjectId to string
             meal["_id"] = str(meal["_id"])
+            
+            # Log nutrition info for debugging
+            if "nutrition_info" in meal:
+                print(f"📊 Meal {meal['dish_prediction'][:30]} nutrition: {meal['nutrition_info'][:100]}...")
             
             # Handle different image storage formats
             if "image" in meal and isinstance(meal["image"], bytes):
@@ -597,8 +612,7 @@ def get_user_meals():
             
             processed_meals.append(meal)
 
-        print(f"🔍 Looking up meals for user_id: {user_id}")
-        print(f"📦 Total meals found: {len(processed_meals)}")
+        print(f"✅ Returning {len(processed_meals)} processed meals")
         
         return jsonify(processed_meals), 200
         
@@ -606,6 +620,7 @@ def get_user_meals():
         print(f"❌ Error in get_user_meals: {str(e)}")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/update-meal", methods=["PUT"])
 @token_required
@@ -620,19 +635,25 @@ def update_meal():
         if not meal_id:
             return jsonify({"error": "Missing meal_id"}), 400
         
+        print(f"📊 Updating meal {meal_id}")
+        print(f"📊 Nutrition info received: {data.get('nutrition_info', '')[:200]}...")
+        
         # Verify meal belongs to user
         meal = meals_collection.find_one({"_id": ObjectId(meal_id)})
         if not meal or meal["user_id"] != request.user_id:
             return jsonify({"error": "Meal not found or unauthorized"}), 404
         
-        # Prepare update data
+        # Prepare update data - include ALL fields that can be updated
         update_data = {}
         if "dish_prediction" in data:
             update_data["dish_prediction"] = data["dish_prediction"]
         if "image_description" in data:
             update_data["image_description"] = data["image_description"]
+        if "hidden_ingredients" in data:
+            update_data["hidden_ingredients"] = data["hidden_ingredients"]
         if "nutrition_info" in data:
             update_data["nutrition_info"] = data["nutrition_info"]
+            print(f"📊 Updating nutrition to: {data['nutrition_info'][:100]}...")
         if "meal_type" in data:
             update_data["meal_type"] = data["meal_type"]
             
@@ -646,12 +667,16 @@ def update_meal():
         )
         
         if result.modified_count > 0:
+            print(f"✅ Meal {meal_id} updated successfully")
+            print(f"📊 Updated fields: {list(update_data.keys())}")
             return jsonify({"message": "Meal updated successfully"}), 200
         else:
+            print(f"⚠️ No changes made to meal {meal_id}")
             return jsonify({"error": "Meal not found or no changes made"}), 404
             
     except Exception as e:
         print(f"❌ Error in update_meal: {str(e)}")
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @app.route("/delete-meal", methods=["DELETE"])
@@ -701,14 +726,16 @@ def recalculate_nutrition():
         if not ingredients:
             return jsonify({"error": "No ingredients provided"}), 400
         
+        print(f"🔄 Recalculating nutrition for user {request.user_id}")
+        print(f"📋 Ingredients received:\n{ingredients}")
+        
         # Use enhanced recalculation from model_pipeline
         from model_pipeline import recalculate_nutrition_enhanced
         
-        print(f"🔄 Recalculating nutrition for user {request.user_id}")
-        print(f"📋 Ingredients: {ingredients[:100]}...")
-        
         try:
             nutrition_info = recalculate_nutrition_enhanced(ingredients)
+            
+            print(f"✅ Recalculated nutrition: {nutrition_info[:200]}...")
             
             # Check if recalculation failed
             if "Recalculation failed" in nutrition_info:

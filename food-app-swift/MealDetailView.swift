@@ -12,6 +12,8 @@ struct MealDetailView: View {
     @State private var isRecalculatingNutrition = false
     @State private var showShareSheet = false
     @State private var updatedNutritionInfo: String = ""
+    @State private var showSuccessToast = false
+    @State private var toastMessage = ""
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
@@ -133,7 +135,7 @@ struct MealDetailView: View {
                             }
                         }
                         
-                        // Beautiful Nutrition Overview Card (Updated)
+                        // Beautiful Nutrition Overview Card
                         BeautifulNutritionView(nutritionText: updatedNutritionInfo.isEmpty ? meal.nutrition_info : updatedNutritionInfo)
                         
                         // Visible Ingredients Section
@@ -142,22 +144,35 @@ struct MealDetailView: View {
                                 title: "Visible Ingredients",
                                 icon: "leaf.fill",
                                 color: Color.green,
-                                action: isEditing ? addNewVisibleIngredient : nil,
-                                actionIcon: isEditing ? "plus.circle" : nil
+                                action: nil,
+                                actionIcon: nil
                             )
                             
                             if isEditing {
                                 VStack(spacing: 12) {
                                     ForEach($editedVisibleIngredients) { $ingredient in
-                                        EditableIngredientRow(
+                                        QuantityOnlyIngredientRow(
                                             ingredient: $ingredient,
-                                            onDelete: { removeVisibleIngredient(id: ingredient.id) }
+                                            onDelete: nil
                                         )
                                     }
+                                    
+                                    // Info message
+                                    HStack {
+                                        Image(systemName: "info.circle.fill")
+                                            .font(.caption)
+                                            .foregroundColor(.orange.opacity(0.8))
+                                        
+                                        Text("Only quantities can be edited")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                        
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal, 4)
                                 }
                             } else {
                                 VStack(spacing: 8) {
-                                    // FIXED: Filter out dashed lines when displaying
                                     ForEach(filteredIngredientLines(from: meal.image_description), id: \.self) { line in
                                         IngredientDisplay(text: String(line))
                                     }
@@ -171,23 +186,57 @@ struct MealDetailView: View {
                                 title: "Hidden Ingredients",
                                 icon: "eye.slash.fill",
                                 color: Color.pink,
-                                action: isEditing ? addNewHiddenIngredient : nil,
-                                actionIcon: isEditing ? "plus.circle" : nil
+                                action: nil,
+                                actionIcon: nil
                             )
                             
                             if isEditing {
-                                VStack(spacing: 12) {
-                                    ForEach($editedHiddenIngredients) { $ingredient in
-                                        EditableIngredientRow(
-                                            ingredient: $ingredient,
-                                            onDelete: { removeHiddenIngredient(id: ingredient.id) }
-                                        )
+                                if !editedHiddenIngredients.isEmpty {
+                                    VStack(spacing: 12) {
+                                        ForEach($editedHiddenIngredients) { $ingredient in
+                                            QuantityOnlyIngredientRow(
+                                                ingredient: $ingredient,
+                                                onDelete: nil
+                                            )
+                                        }
+                                        
+                                        // Info message
+                                        HStack {
+                                            Image(systemName: "info.circle.fill")
+                                                .font(.caption)
+                                                .foregroundColor(.orange.opacity(0.8))
+                                            
+                                            Text("Nutrition will be recalculated automatically")
+                                                .font(.caption)
+                                                .foregroundColor(.gray)
+                                            
+                                            Spacer()
+                                        }
+                                        .padding(.horizontal, 4)
                                     }
+                                } else {
+                                    HStack {
+                                        Circle()
+                                            .fill(Color.pink.opacity(0.2))
+                                            .frame(width: 8, height: 8)
+                                        
+                                        Text("No hidden ingredients to edit")
+                                            .font(.subheadline)
+                                            .foregroundColor(.white.opacity(0.6))
+                                            .italic()
+                                        
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 6)
+                                    .padding(.horizontal, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.white.opacity(0.05))
+                                    )
                                 }
                             } else {
                                 VStack(spacing: 8) {
                                     if let hidden = meal.hidden_ingredients, !hidden.isEmpty {
-                                        // FIXED: Filter out dashed lines when displaying
                                         ForEach(filteredIngredientLines(from: hidden), id: \.self) { line in
                                             IngredientDisplay(text: String(line), isHidden: true)
                                         }
@@ -215,35 +264,6 @@ struct MealDetailView: View {
                             }
                         }
                         
-                        // Recalculate Nutrition Button (only when editing)
-                        if isEditing {
-                            Button(action: recalculateNutrition) {
-                                HStack {
-                                    if isRecalculatingNutrition {
-                                        ProgressView()
-                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                            .scaleEffect(0.8)
-                                    } else {
-                                        Image(systemName: "arrow.clockwise")
-                                    }
-                                    Text("Recalculate Nutrition")
-                                }
-                                .fontWeight(.semibold)
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [.purple, .purple.opacity(0.8)]),
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .cornerRadius(12)
-                            }
-                            .disabled(isRecalculatingNutrition)
-                        }
-                        
                         // Action Buttons
                         if isEditing {
                             HStack(spacing: 12) {
@@ -262,12 +282,15 @@ struct MealDetailView: View {
                                                 )
                                         )
                                 }
+                                .disabled(isSaving || isRecalculatingNutrition)
                                 
                                 Button(action: saveChanges) {
                                     HStack {
-                                        if isSaving {
+                                        if isSaving || isRecalculatingNutrition {
                                             ProgressView()
                                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                .scaleEffect(0.9)
+                                            Text(isRecalculatingNutrition ? "Calculating..." : "Saving...")
                                         } else {
                                             Image(systemName: "checkmark")
                                             Text("Save")
@@ -286,7 +309,7 @@ struct MealDetailView: View {
                                     )
                                     .cornerRadius(12)
                                 }
-                                .disabled(isSaving)
+                                .disabled(isSaving || isRecalculatingNutrition)
                             }
                         } else {
                             HStack(spacing: 12) {
@@ -341,6 +364,25 @@ struct MealDetailView: View {
                 }
             }
             .ignoresSafeArea(edges: .top)
+            
+            // Success Toast
+            if showSuccessToast {
+                VStack {
+                    Spacer()
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.white)
+                        Text(toastMessage)
+                            .foregroundColor(.white)
+                    }
+                    .padding()
+                    .background(Color.green)
+                    .cornerRadius(10)
+                    .padding()
+                    .transition(.move(edge: .bottom))
+                }
+                .animation(.spring(), value: showSuccessToast)
+            }
         }
         .preferredColorScheme(.dark)
         .navigationBarTitleDisplayMode(.inline)
@@ -357,26 +399,19 @@ struct MealDetailView: View {
         }
     }
     
-    // MARK: - NEW: Filter Function for Ingredient Lines
+    // MARK: - Filter Function for Ingredient Lines
     
     func filteredIngredientLines(from text: String) -> [String] {
         return text.split(separator: "\n").compactMap { line in
             let trimmedLine = line.trimmingCharacters(in: .whitespaces)
             
-            // Skip only truly empty lines
             if trimmedLine.isEmpty { return nil }
-            
-            // Skip only obvious header lines
             if trimmedLine.lowercased() == "ingredient | quantity number | unit" {
                 return nil
             }
             
-            // DON'T skip lines with dashes or other content
-            // The Pydantic model ensures clean data, so we don't need aggressive filtering
-            
             let parts = trimmedLine.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
             
-            // Accept any line with at least one part (ingredient name)
             if parts.count >= 1 && !parts[0].isEmpty {
                 return String(trimmedLine)
             }
@@ -396,14 +431,12 @@ struct MealDetailView: View {
     func generateShareText() -> String {
         var text = "Check out my meal: \(meal.dish_prediction)\n\n"
         
-        // Clean asterisks when generating share text
         text += "Visible Ingredients:\n"
         for line in filteredIngredientLines(from: meal.image_description) {
             let cleanLine = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
             text += "• \(cleanLine)\n"
         }
         
-        // Add hidden ingredients if they exist (filtered and cleaned)
         if let hidden = meal.hidden_ingredients, !hidden.isEmpty {
             text += "\nHidden Ingredients:\n"
             for line in filteredIngredientLines(from: hidden) {
@@ -412,7 +445,6 @@ struct MealDetailView: View {
             }
         }
         
-        // Add nutrition info
         if let calories = extractCalories(from: meal.nutrition_info) {
             text += "\nCalories: \(calories) kcal\n"
         }
@@ -437,38 +469,16 @@ struct MealDetailView: View {
         updatedNutritionInfo = ""
     }
     
-    func addNewVisibleIngredient() {
-        editedVisibleIngredients.append(EditableIngredient(
-            id: UUID().uuidString,
-            name: "New Ingredient",
-            quantity: "1",
-            unit: "piece"
-        ))
-    }
-    
-    func addNewHiddenIngredient() {
-        editedHiddenIngredients.append(EditableIngredient(
-            id: UUID().uuidString,
-            name: "New Hidden Ingredient",
-            quantity: "1",
-            unit: "tsp"
-        ))
-    }
-    
-    func removeVisibleIngredient(id: String) {
-        editedVisibleIngredients.removeAll { $0.id == id }
-    }
-    
-    func removeHiddenIngredient(id: String) {
-        editedHiddenIngredients.removeAll { $0.id == id }
-    }
-    
-    func recalculateNutrition() {
+    func saveChanges() {
+        isSaving = true
         isRecalculatingNutrition = true
         
-        // Combine visible and hidden ingredients
+        // First, recalculate nutrition with the new quantities
         let allIngredients = editedVisibleIngredients + editedHiddenIngredients
         let ingredientsList = allIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit)" }.joined(separator: "\n")
+        
+        print("📊 Recalculating nutrition for edited meal...")
+        print("📊 Ingredients list:\n\(ingredientsList)")
         
         NetworkManager.shared.recalculateNutrition(
             ingredients: ingredientsList
@@ -477,19 +487,27 @@ struct MealDetailView: View {
             
             switch result {
             case .success(let nutritionData):
-                // Update the nutrition info for Beautiful Nutrition View
+                print("✅ Nutrition recalculated successfully")
+                print("📊 New nutrition: \(nutritionData.nutrition_info)")
+                
+                // Update the nutrition info with recalculated values
                 self.updatedNutritionInfo = nutritionData.nutrition_info
+                
+                // Update the meal object immediately with new nutrition
+                self.meal.nutrition_info = nutritionData.nutrition_info
+                
+                // Now save everything with the new nutrition
+                self.performSave()
                 
             case .failure(let error):
                 print("❌ Nutrition recalculation failed: \(error)")
-                // Keep existing nutrition info if recalculation fails
+                // Save with existing nutrition if recalculation fails
+                self.performSave()
             }
         }
     }
     
-    func saveChanges() {
-        isSaving = true
-        
+    private func performSave() {
         // Update meal data
         meal.dish_prediction = editedDishName
         meal.image_description = editedVisibleIngredients.map {
@@ -501,24 +519,37 @@ struct MealDetailView: View {
             "\($0.name) | \($0.quantity) | \($0.unit) | User edited"
         }.joined(separator: "\n")
         
-        // Update nutrition if recalculated
+        meal.hidden_ingredients = hiddenIngredientsString
+        
+        // Make sure we have the updated nutrition
         if !updatedNutritionInfo.isEmpty {
             meal.nutrition_info = updatedNutritionInfo
         }
+        
+        print("📊 Saving meal with updated nutrition: \(meal.nutrition_info.prefix(100))...")
         
         updateMealInBackend(hiddenIngredients: hiddenIngredientsString)
     }
     
     func updateMealInBackend(hiddenIngredients: String) {
-        // Create payload with all updated data
+        // Get JWT token
+        guard let token = SessionManager.shared.getAuthToken() else {
+            self.isSaving = false
+            print("❌ No auth token available")
+            return
+        }
+        
+        // Create payload with all updated data including the new nutrition
         let payload: [String: Any] = [
             "meal_id": meal._id,
             "dish_prediction": meal.dish_prediction,
             "image_description": meal.image_description,
             "hidden_ingredients": hiddenIngredients,
-            "nutrition_info": updatedNutritionInfo.isEmpty ? meal.nutrition_info : updatedNutritionInfo,
+            "nutrition_info": meal.nutrition_info,  // This now contains the updated nutrition
             "meal_type": meal.meal_type ?? "Lunch"
         ]
+        
+        print("📤 Sending update with nutrition: \(meal.nutrition_info.prefix(100))...")
         
         guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/update-meal"),
               let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
@@ -529,6 +560,7 @@ struct MealDetailView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpBody = jsonData
         
         URLSession.shared.dataTask(with: request) { data, response, error in
@@ -541,10 +573,23 @@ struct MealDetailView: View {
                 }
                 
                 if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                    // Update the meal object with hidden ingredients
-                    self.meal.hidden_ingredients = hiddenIngredients
+                    print("✅ Meal updated successfully")
+                    
+                    // Update is complete, nutrition is already in the meal object
                     self.isEditing = false
+                    
+                    // Show success toast
+                    self.toastMessage = "Meal updated successfully!"
+                    self.showSuccessToast = true
+                    
+                    // Hide toast after 2 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        self.showSuccessToast = false
+                    }
+                    
+                    // Post notifications to refresh all views
                     NotificationCenter.default.post(name: Notification.Name("MealUpdated"), object: nil)
+                    NotificationCenter.default.post(name: Notification.Name("MealSaved"), object: nil)
                 } else {
                     print("❌ Update failed with status code")
                 }
@@ -559,6 +604,7 @@ struct MealDetailView: View {
             self.isDeleting = false
             if success {
                 NotificationCenter.default.post(name: Notification.Name("MealDeleted"), object: nil)
+                NotificationCenter.default.post(name: Notification.Name("MealSaved"), object: nil)
                 self.dismiss()
             }
         }
@@ -570,10 +616,8 @@ struct MealDetailView: View {
         return image
     }
 
-    // UPDATED: Clean asterisks when parsing for editing
     func parseIngredientsToEditableFiltered(from text: String) -> [EditableIngredient] {
         return filteredIngredientLines(from: text).compactMap { line in
-            // Clean asterisks from the line first
             let cleanLine = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
             let parts = cleanLine.split(separator: "|").map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
             guard parts.count >= 3 else { return nil }
@@ -597,7 +641,7 @@ struct MealDetailView: View {
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - Supporting Views (keep existing)
 
 struct ActionButton: View {
     let icon: String
@@ -644,7 +688,6 @@ struct InfoPill: View {
         )
     }
 }
-
 
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
