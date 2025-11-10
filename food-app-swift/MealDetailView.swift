@@ -363,34 +363,25 @@ struct MealDetailView: View {
         return text.split(separator: "\n").compactMap { line in
             let trimmedLine = line.trimmingCharacters(in: .whitespaces)
             
-            // Skip empty lines
+            // Skip only truly empty lines
             if trimmedLine.isEmpty { return nil }
             
-            // Skip dashed placeholder lines
-            if trimmedLine.contains("------") || trimmedLine.hasPrefix("---") {
-                print("⏭️ Skipping dashed line in display: \(trimmedLine)")
+            // Skip only obvious header lines
+            if trimmedLine.lowercased() == "ingredient | quantity number | unit" {
                 return nil
             }
             
-            // Skip header lines
-            if trimmedLine.lowercased().contains("ingredient | quantity number | unit") {
-                print("⏭️ Skipping header line in display: \(trimmedLine)")
-                return nil
-            }
+            // DON'T skip lines with dashes or other content
+            // The Pydantic model ensures clean data, so we don't need aggressive filtering
             
             let parts = trimmedLine.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
             
-            // Skip lines with invalid ingredient names
-            if parts.count >= 1 {
-                let ingredientName = parts[0].lowercased()
-                if ingredientName.contains("---") || ingredientName == "ingredient" || ingredientName.isEmpty {
-                    print("⏭️ Skipping invalid ingredient: \(ingredientName)")
-                    return nil
-                }
+            // Accept any line with at least one part (ingredient name)
+            if parts.count >= 1 && !parts[0].isEmpty {
+                return String(trimmedLine)
             }
             
-            // Return valid ingredient lines
-            return String(trimmedLine)
+            return nil
         }
     }
     
