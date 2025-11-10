@@ -1,21 +1,27 @@
 # model_pipeline.py
-import sys
+from PIL import Image
+import google.generativeai as genai
+import base64
 import os
+import re
 import time
 from datetime import datetime
-from PIL import Image
-from io import BytesIO
 from dotenv import load_dotenv
 from pymongo import MongoClient
-from pydantic_ai import Agent
-from pydantic_ai.models.gemini import GeminiModel
-from pydantic import BaseModel, Field, field_validator
-from typing import List, Optional
+from io import BytesIO
 import traceback
-import base64
+import json
 
 # Load environment variables
 load_dotenv()
+
+# Gemini API Setup
+GEN_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEN_API_KEY:
+    raise ValueError("GEMINI_API_KEY is not set in environment variables.")
+
+genai.configure(api_key=GEN_API_KEY)
+gemini_model = genai.GenerativeModel('gemini-2.0-flash')
 
 # MongoDB Setup
 mongo_uri = os.getenv("MONGO_URI")
@@ -25,289 +31,415 @@ if mongo_uri:
     db = client[mongo_db]
     meals_collection = db["meals"]
 else:
-    print("⚠️ MongoDB connection not available")
+    print("⚠️ MongoDB not configured")
     meals_collection = None
 
-# Define Pydantic Models
-class Ingredient(BaseModel):
-    name: str = Field(description="Ingredient name (e.g., 'tomato', 'olive oil', 'salt')")
-    quantity: float = Field(description="Quantity as a number")
-    unit: str = Field(description="Unit (g, ml, pieces, etc)")
-    category: str = Field(default="visible", description="Either 'visible' or 'hidden'")
+def encode_image(image_path):
+    """Encode image to base64"""
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
 
-class NutritionInfo(BaseModel):
-    calories: float = Field(description="Total calories in kcal", ge=0)
-    protein: float = Field(description="Protein in grams", ge=0)
-    fat: float = Field(description="Total fat in grams", ge=0)
-    carbohydrates: float = Field(description="Carbohydrates in grams", ge=0)
-    fiber: float = Field(description="Fiber in grams", ge=0)
-    sugar: float = Field(description="Sugar in grams", ge=0)
-    sodium: float = Field(description="Sodium in milligrams", ge=0)
+def analyze_image_with_gemini(image_path):
+    """Enhanced analysis with validation to ensure REAL detection"""
+    try:
+        # Optimize image
+        image = Image.open(image_path)
+        
+        # Resize if too large
+        max_size = (1024, 1024)
+        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        # Convert to RGB
+        if image.mode not in ('RGB', 'L'):
+            image = image.convert('RGB')
+        
+        # Save optimized version
+        optimized_path = image_path.replace('.png', '_opt.jpg')
+        image.save(optimized_path, 'JPEG', quality=85)
+        
+        # Encode image
+        image_data = encode_image(optimized_path)
+        
+        # Clean up
+        try:
+            os.remove(optimized_path)
+        except:
+            pass
+        
+        # CRITICAL PROMPT - FORCE REAL ANALYSIS
+        prompt = """CRITICAL: You MUST analyze the ACTUAL image provided. DO NOT use generic or default values.
 
-class FoodAnalysisResult(BaseModel):
-    dish_name: str = Field(description="Main dish name identified in the image")
-    all_ingredients: List[Ingredient] = Field(description="ALL ingredients including smallest ones")
-    nutrition: NutritionInfo = Field(description="Total nutrition information")
-    confidence: float = Field(default=0.9, description="Analysis confidence score")
+Look at the ACTUAL food in this image and identify:
 
-# Food Analysis Service with Pydantic
-class FoodAnalysisService:
-    def __init__(self):
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("GEMINI_API_KEY not set")
+1. MAIN DISH NAME (what you actually see):
+Write the specific dish name on the first line.
+
+2. VISIBLE INGREDIENTS (what you can actually see in THIS image):
+List EVERY ingredient you can SEE in the image:
+- Main proteins (chicken, beef, fish, tofu, etc.)
+- Vegetables (onions, tomatoes, peppers, etc.)
+- Grains/carbs (rice, pasta, bread, etc.)
+- ALL garnishes even tiny ones (herbs, seeds, nuts)
+- ALL visible seasonings (pepper, paprika, sesame)
+- Sauces you can identify
+- ANY other visible component
+
+Format EXACTLY as (use realistic quantities based on what you see):
+Ingredient name | Quantity | Unit | Visible
+
+IMPORTANT RULES:
+- Only list ingredients you can ACTUALLY SEE in THIS specific image
+- Use realistic quantities based on portion size
+- Include even the smallest visible garnishes
+- Do NOT use generic lists
+- Do NOT use preset values
+- Base everything on THIS SPECIFIC IMAGE
+
+If you cannot clearly identify the food, say "Unable to identify food clearly"."""
+        
+        print("🔍 Analyzing actual image content...")
+        
+        response = gemini_model.generate_content([
+            prompt,
+            {"mime_type": "image/jpeg", "data": image_data}
+        ])
+        
+        if response and response.text:
+            # Validate response is not generic
+            response_text = response.text.strip()
             
-        # Initialize the Gemini model
-        model = GeminiModel('gemini-2.0-flash', api_key=api_key)
-        
-        self.analysis_agent = Agent(
-            model,
-            result_type=FoodAnalysisResult,
-            system_prompt=(
-                "You are an expert food analyst with deep knowledge of ingredients and nutrition. "
-                "Your task is to analyze food images with EXTREME attention to detail.\n\n"
-                "CRITICAL INSTRUCTIONS:\n"
-                "1. IDENTIFY EVERY SINGLE INGREDIENT - including the smallest garnishes, seasonings, herbs, spices\n"
-                "2. Look for:\n"
-                "   - Main ingredients (proteins, vegetables, grains)\n"
-                "   - Small visible items (sesame seeds, pepper flakes, herb leaves)\n"
-                "   - Sauces and dressings\n"
-                "   - Garnishes (parsley, scallions, cilantro)\n"
-                "   - Cooking ingredients (oil sheen, butter)\n"
-                "   - Hidden ingredients (salt, sugar in sauces, stock/broth)\n"
-                "3. For each ingredient, mark as 'visible' if you can see it, 'hidden' if likely used\n"
-                "4. Use appropriate units: g for solids, ml for liquids, pieces for countable items\n"
-                "5. Calculate accurate nutrition based on ALL ingredients\n"
-                "6. Even tiny amounts matter - include them!\n"
-                "7. If you see seeds, nuts, or small toppings - LIST THEM\n"
-                "8. If there's a sauce - break down its likely ingredients"
-            )
-        )
+            # Check for actual analysis
+            if "unable to identify" in response_text.lower():
+                raise Exception("Could not identify food in image")
+            
+            # Validate we got real ingredients (not empty or too short)
+            lines = response_text.split('\n')
+            ingredient_lines = [l for l in lines if '|' in l]
+            
+            if len(ingredient_lines) < 2:
+                raise Exception("Insufficient ingredients detected")
+            
+            print(f"✅ Detected {len(ingredient_lines)} real ingredients")
+            print(f"📊 First few ingredients:\n{chr(10).join(ingredient_lines[:3])}")
+            
+            return response_text
+        else:
+            raise Exception("Empty response from Gemini")
+            
+    except Exception as e:
+        print(f"❌ Gemini analysis error: {str(e)}")
+        raise e  # Re-raise to handle upstream
+
+def search_hidden_ingredients(dish_names, visible_ingredients):
+    """Find ACTUAL hidden ingredients based on the specific dish"""
     
-    def analyze_image(self, image_path: str, user_id: str) -> dict:
-        """Analyze food image and return structured results"""
+    # Only proceed if we have real visible ingredients
+    if not visible_ingredients or len(visible_ingredients.split('\n')) < 2:
+        return ""
+    
+    prompt = f"""Based on THIS SPECIFIC dish: {dish_names}
+And THESE EXACT visible ingredients:
+{visible_ingredients}
+
+What hidden ingredients were ACTUALLY used to cook THIS specific dish?
+Think about:
+- What oil would be used for THIS dish?
+- What seasonings are typical for THIS cuisine?
+- What liquid (water/stock/milk) for THIS preparation?
+- What thickeners or binders if any?
+
+List ONLY ingredients that would ACTUALLY be used for THIS dish:
+Format: Ingredient | Realistic quantity | Unit | Hidden
+
+BE SPECIFIC - match the cuisine and cooking style of the actual dish."""
+    
+    try:
+        print("🔍 Detecting actual hidden ingredients...")
+        response = gemini_model.generate_content(prompt)
         
-        print(f"🔍 Starting Pydantic analysis for user: {user_id}")
-        print(f"📸 Image: {image_path}")
+        if response and response.text:
+            lines = response.text.strip().split('\n')
+            valid_lines = []
+            
+            for line in lines:
+                line = line.strip()
+                if '|' in line and len(line.split('|')) >= 4:
+                    # Validate it's not a header
+                    if not any(x in line.lower() for x in ['ingredient', 'quantity', '---', 'example']):
+                        valid_lines.append(line)
+            
+            if valid_lines:
+                print(f"✅ Found {len(valid_lines)} actual hidden ingredients")
+                return '\n'.join(valid_lines)
+            
+        return ""  # Return empty if nothing specific found
+            
+    except Exception as e:
+        print(f"❌ Hidden ingredients error: {str(e)}")
+        return ""
+
+def calculate_actual_nutrition(dish_names, all_ingredients):
+    """Calculate REAL nutrition based on ACTUAL ingredients"""
+    
+    if not all_ingredients or len(all_ingredients.split('\n')) < 2:
+        raise Exception("Insufficient ingredients for nutrition calculation")
+    
+    prompt = f"""Calculate the ACTUAL nutritional values for THIS SPECIFIC meal:
+
+Dish: {dish_names}
+
+ACTUAL Ingredients detected:
+{all_ingredients}
+
+Instructions:
+1. Calculate nutrition based on THESE EXACT ingredients and quantities
+2. Sum up the nutritional contribution from EACH ingredient
+3. Use real nutritional data (not estimates)
+4. Account for cooking losses where applicable
+
+Provide CALCULATED values (not defaults):
+Calories|ACTUAL_CALCULATED_VALUE|kcal
+Protein|ACTUAL_CALCULATED_VALUE|g
+Fat|ACTUAL_CALCULATED_VALUE|g
+Carbohydrates|ACTUAL_CALCULATED_VALUE|g
+Fiber|ACTUAL_CALCULATED_VALUE|g
+Sugar|ACTUAL_CALCULATED_VALUE|g
+Sodium|ACTUAL_CALCULATED_VALUE|mg
+
+Show your work - base it on the actual ingredients listed above."""
+    
+    try:
+        print("📊 Calculating actual nutrition from ingredients...")
+        response = gemini_model.generate_content(prompt)
         
+        if response and response.text:
+            # Parse and validate response
+            lines = response.text.strip().split('\n')
+            nutrition_data = []
+            
+            # Expected nutrients
+            nutrients_found = {}
+            
+            for line in lines:
+                if '|' in line:
+                    parts = line.split('|')
+                    if len(parts) >= 3:
+                        nutrient = parts[0].strip()
+                        value_str = re.sub(r'[^\d.]', '', parts[1].strip())
+                        
+                        # Validate we got real values (not 0 or unrealistic)
+                        if value_str and float(value_str) > 0:
+                            for expected in ["Calories", "Protein", "Fat", "Carbohydrates", "Fiber", "Sugar", "Sodium"]:
+                                if expected.lower() in nutrient.lower():
+                                    nutrients_found[expected] = (value_str, parts[2].strip())
+                                    break
+            
+            # Build final nutrition with validated values
+            if len(nutrients_found) >= 4:  # At least have main macros
+                for nutrient in ["Calories", "Protein", "Fat", "Carbohydrates", "Fiber", "Sugar", "Sodium"]:
+                    if nutrient in nutrients_found:
+                        value, unit = nutrients_found[nutrient]
+                        nutrition_data.append(f"{nutrient}|{value}|{unit}")
+                    else:
+                        # Only these can be 0 realistically
+                        if nutrient in ["Fiber", "Sugar"]:
+                            nutrition_data.append(f"{nutrient}|0|{'g' if nutrient != 'Sodium' else 'mg'}")
+                
+                result = '\n'.join(nutrition_data)
+                print(f"✅ Calculated real nutrition for {len(nutrients_found)} nutrients")
+                return result
+            else:
+                raise Exception("Could not calculate realistic nutrition")
+            
+    except Exception as e:
+        print(f"❌ Nutrition calculation error: {str(e)}")
+        raise e
+
+def full_image_analysis(image_path, user_id):
+    """Complete analysis with REAL detection validation"""
+    try:
         start_time = time.time()
         
+        print(f"🤖 Starting REAL analysis for user: {user_id}")
+        print(f"📸 Image: {image_path}")
+        
+        # Step 1: Real image analysis
         try:
-            # Validate and preprocess image
-            is_valid, message = self.validate_image(image_path)
-            if not is_valid:
-                raise ValueError(f"Invalid image: {message}")
-            
-            # Read and encode image
-            image_data = self._prepare_image_data(image_path)
-            
-            # Run analysis with detailed prompt
-            result = self.analysis_agent.run_sync(
-                f"Analyze this food image comprehensively. "
-                f"Remember to identify EVERY ingredient including:\n"
-                f"- Smallest garnishes and herbs\n"
-                f"- Seeds, nuts, and toppings\n"
-                f"- All spices and seasonings visible\n"
-                f"- Hidden cooking ingredients\n"
-                f"- Sauce components\n"
-                f"User ID for tracking: {user_id}",
-                message_history=[
-                    {"role": "user", "content": [
-                        {"type": "text", "text": "Analyze this food image"},
-                        {"type": "image", "data": image_data, "mime_type": "image/jpeg"}
-                    ]}
-                ]
-            )
-            
-            analysis_time = time.time() - start_time
-            print(f"✅ Analysis completed in {analysis_time:.2f} seconds")
-            
-            # Convert to legacy format for compatibility
-            return self._convert_to_legacy_format(result.data)
-            
+            gemini_description = analyze_image_with_gemini(image_path)
         except Exception as e:
-            print(f"❌ Analysis error: {str(e)}")
-            traceback.print_exc()
-            # Return default structure on error
-            return self._get_default_result()
-    
-    def _prepare_image_data(self, image_path: str) -> str:
-        """Prepare image data as base64"""
+            return {
+                'dish_prediction': "Could not identify food",
+                'image_description': "Analysis failed | 0 | items | Unable to detect",
+                'hidden_ingredients': "",
+                'nutrition_info': "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg",
+                'analysis_time': time.time() - start_time,
+                'user_id': user_id,
+                'error': f"Detection failed: {str(e)}",
+                'analysis_confidence': 0
+            }
+        
+        # Step 2: Extract actual dish name
+        lines = gemini_description.strip().split('\n')
+        dish_names = lines[0].strip() if lines else "Unknown dish"
+        
+        # Validate dish name
+        if len(dish_names) < 3 or "unknown" in dish_names.lower():
+            raise Exception("Could not identify dish")
+        
+        print(f"✅ Identified dish: {dish_names}")
+        
+        # Step 3: Extract REAL visible ingredients
+        visible_ingredients = []
+        for line in lines[1:]:
+            line = line.strip()
+            if '|' in line and len(line.split('|')) >= 3:
+                parts = line.split('|')
+                # Validate it's a real ingredient
+                ingredient_name = parts[0].strip()
+                if len(ingredient_name) > 1 and not any(x in ingredient_name.lower() for x in ['ingredient', 'quantity', '---']):
+                    visible_ingredients.append(line)
+        
+        visible_text = '\n'.join(visible_ingredients)
+        
+        if len(visible_ingredients) < 2:
+            raise Exception(f"Insufficient ingredients detected (only {len(visible_ingredients)})")
+        
+        print(f"✅ Found {len(visible_ingredients)} real visible ingredients")
+        
+        # Step 4: Find actual hidden ingredients
+        hidden_ingredients = search_hidden_ingredients(dish_names, visible_text)
+        
+        # Step 5: Calculate REAL nutrition
+        all_ingredients = visible_text
+        if hidden_ingredients:
+            all_ingredients += '\n' + hidden_ingredients
+        
         try:
-            image = Image.open(image_path)
-            
-            # Resize if too large
-            max_size = (1024, 1024)
-            image.thumbnail(max_size, Image.Resampling.LANCZOS)
-            
-            # Convert to RGB
-            if image.mode not in ('RGB', 'L'):
-                image = image.convert('RGB')
-            
-            # Save to bytes buffer
-            buffer = BytesIO()
-            image.save(buffer, 'JPEG', quality=85)
-            buffer.seek(0)
-            
-            # Encode to base64
-            image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-            return image_base64
-            
+            nutrition_info = calculate_actual_nutrition(dish_names, all_ingredients)
         except Exception as e:
-            print(f"❌ Image preparation error: {str(e)}")
-            raise
-    
-    def _convert_to_legacy_format(self, result: FoodAnalysisResult) -> dict:
-        """Convert Pydantic result to legacy format for compatibility"""
+            print(f"⚠️ Nutrition calculation failed: {e}")
+            # Still return the detected ingredients even if nutrition fails
+            nutrition_info = "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg"
         
-        # Separate visible and hidden ingredients
-        visible_ingredients = [i for i in result.all_ingredients if i.category == 'visible']
-        hidden_ingredients = [i for i in result.all_ingredients if i.category == 'hidden']
+        analysis_time = time.time() - start_time
         
-        # Format ingredients as pipe-separated strings
-        visible_text = '\n'.join([
-            f"{ing.name} | {ing.quantity} | {ing.unit} | Visible in image"
-            for ing in visible_ingredients
-        ])
+        # Calculate confidence based on detection quality
+        confidence = min(100, len(visible_ingredients) * 10)
         
-        hidden_text = '\n'.join([
-            f"{ing.name} | {ing.quantity} | {ing.unit} | Likely used in cooking"
-            for ing in hidden_ingredients
-        ])
-        
-        # Format nutrition as pipe-separated
-        nutrition_text = f"""Calories|{int(result.nutrition.calories)}|kcal
-Protein|{result.nutrition.protein:.1f}|g
-Fat|{result.nutrition.fat:.1f}|g
-Carbohydrates|{result.nutrition.carbohydrates:.1f}|g
-Fiber|{result.nutrition.fiber:.1f}|g
-Sugar|{result.nutrition.sugar:.1f}|g
-Sodium|{int(result.nutrition.sodium)}|mg"""
+        print(f"✅ REAL analysis completed in {analysis_time:.2f} seconds")
+        print(f"📊 Detection summary:")
+        print(f"   - Dish: {dish_names}")
+        print(f"   - Visible ingredients: {len(visible_ingredients)}")
+        print(f"   - Hidden ingredients: {len(hidden_ingredients.split(chr(10))) if hidden_ingredients else 0}")
+        print(f"   - Confidence: {confidence}%")
         
         return {
-            'dish_prediction': result.dish_name,
+            'dish_prediction': dish_names,
             'image_description': visible_text,
-            'hidden_ingredients': hidden_text,
-            'nutrition_info': nutrition_text,
-            'analysis_method': 'pydantic_structured',
-            'ingredient_count': {
-                'visible': len(visible_ingredients),
-                'hidden': len(hidden_ingredients),
-                'total': len(result.all_ingredients)
+            'hidden_ingredients': hidden_ingredients,
+            'nutrition_info': nutrition_info,
+            'analysis_time': analysis_time,
+            'user_id': user_id,
+            'analysis_confidence': confidence,
+            'detection_stats': {
+                'visible_count': len(visible_ingredients),
+                'hidden_count': len(hidden_ingredients.split('\n')) if hidden_ingredients else 0,
+                'total_ingredients': len(all_ingredients.split('\n')),
+                'method': 'real_detection_v2'
             }
         }
-    
-    def validate_image(self, image_path: str) -> tuple:
-        """Validate image before analysis"""
-        try:
-            with Image.open(image_path) as img:
-                if img.width < 100 or img.height < 100:
-                    return False, "Image too small for analysis"
-                
-                if img.format not in ['JPEG', 'PNG', 'WEBP']:
-                    return False, f"Unsupported format: {img.format}"
-                
-                return True, "Image is valid"
-                
-        except Exception as e:
-            return False, f"Invalid image: {str(e)}"
-    
-    def _get_default_result(self) -> dict:
-        """Return default result on error"""
-        return {
-            'dish_prediction': 'Unable to analyze',
-            'image_description': 'Analysis failed | 0 | items | Error',
-            'hidden_ingredients': '',
-            'nutrition_info': 'Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg',
-            'error': True
-        }
-
-# Initialize service as singleton
-_service_instance = None
-
-def get_food_analysis_service():
-    """Get or create the food analysis service instance"""
-    global _service_instance
-    if _service_instance is None:
-        _service_instance = FoodAnalysisService()
-    return _service_instance
-
-# Main analysis function (replaces old one)
-def full_image_analysis(image_path: str, user_id: str) -> dict:
-    """Main entry point for image analysis - now using Pydantic"""
-    try:
-        service = get_food_analysis_service()
-        result = service.analyze_image(image_path, user_id)
-        
-        # Add metadata
-        result['user_id'] = user_id
-        result['analysis_time'] = time.time()
-        
-        print(f"📊 Analysis complete:")
-        print(f"  - Dish: {result.get('dish_prediction', 'Unknown')}")
-        print(f"  - Ingredients: {result.get('ingredient_count', {})}")
-        
-        return result
         
     except Exception as e:
-        print(f"❌ Full analysis error: {str(e)}")
+        print(f"❌ Analysis error: {str(e)}")
         traceback.print_exc()
         
+        # Return error response - NO defaults
         return {
-            'dish_prediction': 'Analysis failed',
-            'image_description': 'Unable to process | 0 | items | Error',
-            'hidden_ingredients': '',
-            'nutrition_info': 'Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg',
-            'user_id': user_id,
+            'dish_prediction': "Detection failed",
+            'image_description': f"Error: {str(e)} | 0 | items | Failed",
+            'hidden_ingredients': "",
+            'nutrition_info': "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg",
             'analysis_time': 0,
-            'error': str(e)
+            'user_id': user_id,
+            'error': str(e),
+            'analysis_confidence': 0
         }
 
-# Nutrition recalculation function
-def recalculate_nutrition_enhanced(ingredients_text: str) -> str:
-    """Recalculate nutrition from ingredients using Pydantic model"""
+def recalculate_nutrition_enhanced(ingredients_text):
+    """Recalculate ACTUAL nutrition from edited ingredients"""
     try:
-        service = get_food_analysis_service()
+        if not ingredients_text or len(ingredients_text.split('\n')) < 1:
+            raise Exception("No ingredients provided")
         
-        # Parse ingredients from text
-        ingredients = []
-        for line in ingredients_text.split('\n'):
-            if '|' in line:
-                parts = line.split('|')
-                if len(parts) >= 3:
-                    ingredients.append({
-                        'name': parts[0].strip(),
-                        'quantity': parts[1].strip(),
-                        'unit': parts[2].strip()
-                    })
+        print(f"🔄 Recalculating actual nutrition...")
+        print(f"📝 Ingredients: {ingredients_text[:200]}...")
         
-        if not ingredients:
-            return "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg"
+        prompt = f"""Calculate the ACTUAL nutritional values for these EXACT ingredients:
+
+{ingredients_text}
+
+Instructions:
+1. Calculate based on THESE SPECIFIC ingredients and quantities
+2. Use real nutritional databases
+3. Sum up all contributions
+4. DO NOT use generic values
+
+Return CALCULATED values:
+Calories|ACTUAL_VALUE|kcal
+Protein|ACTUAL_VALUE|g
+Fat|ACTUAL_VALUE|g
+Carbohydrates|ACTUAL_VALUE|g
+Fiber|ACTUAL_VALUE|g
+Sugar|ACTUAL_VALUE|g
+Sodium|ACTUAL_VALUE|mg"""
         
-        # Use agent to calculate nutrition
-        ingredients_str = ', '.join([f"{i['quantity']} {i['unit']} {i['name']}" for i in ingredients])
+        response = gemini_model.generate_content(prompt)
         
-        result = service.analysis_agent.run_sync(
-            f"Calculate the total nutrition for these ingredients: {ingredients_str}. "
-            f"Provide accurate nutrition values."
-        )
+        if response and response.text:
+            # Validate we got real values
+            lines = response.text.strip().split('\n')
+            has_real_values = False
+            
+            for line in lines:
+                if '|' in line:
+                    parts = line.split('|')
+                    if len(parts) >= 2:
+                        value = re.sub(r'[^\d.]', '', parts[1])
+                        if value and float(value) > 0:
+                            has_real_values = True
+                            break
+            
+            if has_real_values:
+                print("✅ Recalculated real nutrition values")
+                return response.text.strip()
+            else:
+                raise Exception("Failed to calculate real values")
         
-        # Format nutrition response
-        nutrition = result.data.nutrition
-        return f"""Calories|{int(nutrition.calories)}|kcal
-Protein|{nutrition.protein:.1f}|g
-Fat|{nutrition.fat:.1f}|g
-Carbohydrates|{nutrition.carbohydrates:.1f}|g
-Fiber|{nutrition.fiber:.1f}|g
-Sugar|{nutrition.sugar:.1f}|g
-Sodium|{int(nutrition.sodium)}|mg"""
-        
+        raise Exception("No response from calculation")
+            
     except Exception as e:
-        print(f"❌ Nutrition recalculation error: {str(e)}")
+        print(f"❌ Recalculation failed: {str(e)}")
+        # Return zeros to indicate failure - don't fake values
         return "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg"
 
-# Keep validate_image_for_analysis for backward compatibility
-def validate_image_for_analysis(image_path: str) -> tuple:
-    """Validate image before analysis - backward compatibility"""
-    service = get_food_analysis_service()
-    return service.validate_image(image_path)
+def validate_image_for_analysis(image_path):
+    """Validate image before analysis"""
+    try:
+        with Image.open(image_path) as img:
+            # Check dimensions
+            if img.width < 100 or img.height < 100:
+                return False, "Image too small for analysis"
+            
+            # Check format
+            if img.format not in ['JPEG', 'PNG', 'WEBP']:
+                return False, f"Unsupported format: {img.format}"
+            
+            # Check if image is not blank
+            extrema = img.convert("L").getextrema()
+            if extrema == (0, 0) or extrema == (255, 255):
+                return False, "Image appears to be blank"
+            
+            return True, "Image is valid"
+            
+    except Exception as e:
+        return False, f"Invalid image: {str(e)}"
