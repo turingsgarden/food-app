@@ -359,22 +359,7 @@ struct UploadMealView: View {
                                     VStack(spacing: 16) {
                                         BeautifulNutritionView(nutritionText: rawNutritionInfo)
                                         
-                                        // TEMPORARY DEBUG VIEW
-                                        if !rawNutritionInfo.isEmpty {
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                Text("DEBUG - Raw Nutrition:")
-                                                    .font(.caption)
-                                                    .foregroundColor(.red)
-                                                
-                                                Text(rawNutritionInfo)
-                                                    .font(.caption2)
-                                                    .foregroundColor(.gray)
-                                                    .padding()
-                                                    .background(Color.black)
-                                                    .cornerRadius(8)
-                                            }
-                                            .padding(.horizontal)
-                                        }
+                    
                                         
                                         // Recalculate button (if editing)
                                         if (isEditingIngredients || isEditingHidden) {

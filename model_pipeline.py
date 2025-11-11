@@ -197,63 +197,82 @@ Instructions:
 3. Use real nutritional data (not estimates)
 4. Account for cooking losses where applicable
 
-Provide CALCULATED values (not defaults):
-Calories|ACTUAL_CALCULATED_VALUE|kcal
-Protein|ACTUAL_CALCULATED_VALUE|g
-Fat|ACTUAL_CALCULATED_VALUE|g
-Carbohydrates|ACTUAL_CALCULATED_VALUE|g
-Fiber|ACTUAL_CALCULATED_VALUE|g
-Sugar|ACTUAL_CALCULATED_VALUE|g
-Sodium|ACTUAL_CALCULATED_VALUE|mg
+Provide CALCULATED values in EXACTLY this format (no extra text):
+Calories|ACTUAL_VALUE|kcal
+Protein|ACTUAL_VALUE|g
+Fat|ACTUAL_VALUE|g
+Carbohydrates|ACTUAL_VALUE|g
+Fiber|ACTUAL_VALUE|g
+Sugar|ACTUAL_VALUE|g
+Sodium|ACTUAL_VALUE|mg
 
-Show your work - base it on the actual ingredients listed above."""
+IMPORTANT: Return ONLY the nutrition lines in the exact format above, no other text."""
     
     try:
         print("📊 Calculating actual nutrition from ingredients...")
         response = gemini_model.generate_content(prompt)
         
         if response and response.text:
-            # Parse and validate response
+            # Clean and validate the response
             lines = response.text.strip().split('\n')
             nutrition_data = []
             
-            # Expected nutrients
-            nutrients_found = {}
-            
             for line in lines:
+                line = line.strip()
                 if '|' in line:
                     parts = line.split('|')
                     if len(parts) >= 3:
                         nutrient = parts[0].strip()
                         value_str = re.sub(r'[^\d.]', '', parts[1].strip())
+                        unit = parts[2].strip()
                         
-                        # Validate we got real values (not 0 or unrealistic)
-                        if value_str and float(value_str) > 0:
-                            for expected in ["Calories", "Protein", "Fat", "Carbohydrates", "Fiber", "Sugar", "Sodium"]:
-                                if expected.lower() in nutrient.lower():
-                                    nutrients_found[expected] = (value_str, parts[2].strip())
-                                    break
+                        # Validate we got real values
+                        if value_str and float(value_str) >= 0:
+                            # Ensure proper formatting
+                            nutrition_data.append(f"{nutrient}|{value_str}|{unit}")
             
-            # Build final nutrition with validated values
-            if len(nutrients_found) >= 4:  # At least have main macros
-                for nutrient in ["Calories", "Protein", "Fat", "Carbohydrates", "Fiber", "Sugar", "Sodium"]:
-                    if nutrient in nutrients_found:
-                        value, unit = nutrients_found[nutrient]
-                        nutrition_data.append(f"{nutrient}|{value}|{unit}")
-                    else:
-                        # Only these can be 0 realistically
-                        if nutrient in ["Fiber", "Sugar"]:
-                            nutrition_data.append(f"{nutrient}|0|{'g' if nutrient != 'Sodium' else 'mg'}")
-                
-                result = '\n'.join(nutrition_data)
-                print(f"✅ Calculated real nutrition for {len(nutrients_found)} nutrients")
-                return result
-            else:
-                raise Exception("Could not calculate realistic nutrition")
+            # Ensure we have all required nutrients
+            required_nutrients = {
+                "Calories": "kcal",
+                "Protein": "g",
+                "Fat": "g",
+                "Carbohydrates": "g",
+                "Fiber": "g",
+                "Sugar": "g",
+                "Sodium": "mg"
+            }
+            
+            # Create a dict of found nutrients
+            found_nutrients = {}
+            for line in nutrition_data:
+                parts = line.split('|')
+                if len(parts) >= 2:
+                    nutrient_name = parts[0]
+                    for req_nutrient in required_nutrients:
+                        if req_nutrient.lower() in nutrient_name.lower():
+                            found_nutrients[req_nutrient] = line
+                            break
+            
+            # Build final nutrition with all required nutrients
+            final_nutrition = []
+            for nutrient, unit in required_nutrients.items():
+                if nutrient in found_nutrients:
+                    final_nutrition.append(found_nutrients[nutrient])
+                else:
+                    # Add with 0 value if not found
+                    final_nutrition.append(f"{nutrient}|0|{unit}")
+            
+            result = '\n'.join(final_nutrition)
+            print(f"✅ Calculated nutrition successfully")
+            print(f"📊 Result:\n{result}")
+            return result
+        else:
+            raise Exception("No response from nutrition calculation")
             
     except Exception as e:
         print(f"❌ Nutrition calculation error: {str(e)}")
-        raise e
+        # Return proper format with zeros on error
+        return "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg"
 
 def full_image_analysis(image_path, user_id):
     """Complete analysis with REAL detection validation"""
