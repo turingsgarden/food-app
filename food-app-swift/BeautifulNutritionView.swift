@@ -15,7 +15,7 @@ struct BeautifulNutritionView: View {
     
     var hasValidNutrition: Bool {
         !nutritionItems.isEmpty && nutritionItems.contains { item in
-            if let value = Int(item.value), value > 0 {
+            if let value = Double(item.value), value > 0 {
                 return true
             }
             return false
@@ -54,7 +54,7 @@ struct BeautifulNutritionView: View {
                             GridItem(.flexible()),
                             GridItem(.flexible())
                         ], spacing: 12) {
-                            ForEach(otherItems) { item in
+                            ForEach(otherItems.prefix(6)) { item in
                                 NutrientCard(item: item)
                             }
                         }
@@ -71,12 +71,10 @@ struct BeautifulNutritionView: View {
                         .font(.headline)
                         .foregroundColor(.white)
                     
-                    if !nutritionText.isEmpty {
-                        Text("Processing nutrition information...")
-                            .font(.caption)
-                            .foregroundColor(.gray)
-                            .multilineTextAlignment(.center)
-                    }
+                    Text("Processing nutrition information...")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
@@ -105,8 +103,6 @@ struct BeautifulNutritionView: View {
             }
         }
         .onChange(of: nutritionText) { oldValue, newValue in
-            print("📊 BeautifulNutritionView - nutrition text changed")
-            print("📊 Old length: \(oldValue.count), New length: \(newValue.count)")
             if newValue != oldValue {
                 parseNutritionSimple()
             }
@@ -118,15 +114,10 @@ struct BeautifulNutritionView: View {
     private func parseNutritionSimple() {
         var items: [NutritionItem] = []
         
-        print("🔍 BeautifulNutritionView - Starting nutrition parse")
-        print("📊 Raw text: '\(nutritionText)'")
-        print("📊 Text length: \(nutritionText.count)")
-        
         // Handle both \n and \r\n line endings
         let lines = nutritionText.components(separatedBy: CharacterSet.newlines)
-        print("📊 Found \(lines.count) lines to parse")
         
-        for (index, line) in lines.enumerated() {
+        for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
             
             // Skip empty lines
@@ -134,24 +125,18 @@ struct BeautifulNutritionView: View {
                 continue
             }
             
-            print("📊 Processing line \(index): '\(trimmed)'")
-            
             // Try to parse lines with | separator
             if trimmed.contains("|") {
                 let parts = trimmed.components(separatedBy: "|")
                     .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                
-                print("📊 Parts found: \(parts)")
                 
                 if parts.count >= 3 {
                     let name = cleanNutrientName(parts[0])
                     let valueStr = cleanValueString(parts[1])
                     let unit = parts[2]
                     
-                    print("📊 Parsed: name='\(name)', value='\(valueStr)', unit='\(unit)'")
-                    
-                    // Validate that value is numeric
-                    if !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
+                    // Validate that this is a nutrition item (not an ID or other data)
+                    if isValidNutrientName(name) && !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
                         let item = NutritionItem(
                             name: name,
                             value: valueStr,
@@ -159,16 +144,13 @@ struct BeautifulNutritionView: View {
                             reasoning: nil
                         )
                         items.append(item)
-                        print("✅ Added nutrition item: \(name) = \(valueStr) \(unit)")
-                    } else {
-                        print("⚠️ Invalid value '\(valueStr)' for nutrient '\(name)'")
                     }
                 } else if parts.count == 2 {
                     // Handle format without unit (e.g., "Calories|450")
                     let name = cleanNutrientName(parts[0])
                     let valueStr = cleanValueString(parts[1])
                     
-                    if !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
+                    if isValidNutrientName(name) && !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
                         let unit = guessUnit(for: name)
                         let item = NutritionItem(
                             name: name,
@@ -177,32 +159,20 @@ struct BeautifulNutritionView: View {
                             reasoning: nil
                         )
                         items.append(item)
-                        print("✅ Added nutrition item (guessed unit): \(name) = \(valueStr) \(unit)")
                     }
-                }
-            } else {
-                print("📊 No pipe separator, trying alternative format")
-                if let item = parseAlternativeFormat(trimmed) {
-                    items.append(item)
-                    print("✅ Added from alt format: \(item.name) = \(item.value) \(item.unit)")
                 }
             }
         }
         
         // If we got valid items, use them
         if !items.isEmpty {
-            print("✅ Successfully parsed \(items.count) nutrition items")
-            for item in items {
-                print("  - \(item.name): \(item.value) \(item.unit)")
-            }
-            
             DispatchQueue.main.async {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     self.nutritionItems = items
                 }
             }
         } else {
-            print("⚠️ No nutrition items found, using defaults")
+            // Use default nutrition with zero values
             items = getDefaultNutrition()
             
             DispatchQueue.main.async {
@@ -211,6 +181,25 @@ struct BeautifulNutritionView: View {
                 }
             }
         }
+    }
+    
+    private func isValidNutrientName(_ name: String) -> Bool {
+        let validNutrients = ["calorie", "protein", "fat", "carb", "fiber", "fibre", "sugar", "sodium", "salt", "energy", "kcal"]
+        let lowercased = name.lowercased()
+        
+        // Check if name contains any valid nutrient word
+        for nutrient in validNutrients {
+            if lowercased.contains(nutrient) {
+                return true
+            }
+        }
+        
+        // Reject if it looks like an ID or random text
+        if lowercased.contains("id") || Int(name) != nil {
+            return false
+        }
+        
+        return false
     }
     
     private func cleanNutrientName(_ name: String) -> String {
@@ -222,7 +211,7 @@ struct BeautifulNutritionView: View {
     }
     
     private func cleanValueString(_ value: String) -> String {
-        // Clean up value strings - remove commas, extra spaces, etc.
+        // Clean up value strings - remove commas, spaces, etc.
         return value
             .replacingOccurrences(of: ",", with: "")
             .replacingOccurrences(of: " ", with: "")
@@ -238,35 +227,6 @@ struct BeautifulNutritionView: View {
         } else {
             return "g"
         }
-    }
-    
-    private func parseAlternativeFormat(_ line: String) -> NutritionItem? {
-        // Common patterns: "Calories: 500 kcal" or "Protein - 20g"
-        let patterns = [
-            #"(\w+)\s*:\s*(\d+\.?\d*)\s*(\w+)"#,
-            #"(\w+)\s*-\s*(\d+\.?\d*)\s*(\w+)"#,
-            #"(\w+)\s+(\d+\.?\d*)\s*(\w+)"#
-        ]
-        
-        for pattern in patterns {
-            if let regex = try? NSRegularExpression(pattern: pattern),
-               let match = regex.firstMatch(in: line, range: NSRange(location: 0, length: line.utf16.count)) {
-                
-                if let nameRange = Range(match.range(at: 1), in: line),
-                   let valueRange = Range(match.range(at: 2), in: line),
-                   let unitRange = Range(match.range(at: 3), in: line) {
-                    
-                    return NutritionItem(
-                        name: String(line[nameRange]),
-                        value: String(line[valueRange]),
-                        unit: String(line[unitRange]),
-                        reasoning: nil
-                    )
-                }
-            }
-        }
-        
-        return nil
     }
     
     private func getDefaultNutrition() -> [NutritionItem] {

@@ -1132,10 +1132,6 @@ struct DashboardView: View {
         """
     }
     
-    // Replace extractAllNutrients in DashboardView.swift with this fixed version:
-
-    // In DashboardView.swift, update the extractAllNutrients function:
-
     func extractAllNutrients(from text: String) -> (calories: Int, protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
         var calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0, sugar = 0, sodium = 0
         
@@ -1162,29 +1158,31 @@ struct DashboardView: View {
                     
                     // Match nutrients more flexibly
                     if name.contains("calorie") || name.contains("kcal") || name == "calories" {
-                        calories = max(calories, value) // Use max to avoid overwriting with 0
+                        calories = value
                     }
                     else if name.contains("protein") {
-                        protein = max(protein, value)
+                        protein = value
                     }
                     else if name.contains("carb") || name.contains("carbohydrate") {
-                        carbs = max(carbs, value)
+                        carbs = value
                     }
                     else if (name.contains("fat") || name == "fats") && !name.contains("saturated") && !name.contains("trans") {
-                        fat = max(fat, value)
+                        fat = value
                     }
                     else if name.contains("fiber") || name.contains("fibre") {
-                        fiber = max(fiber, value)
+                        fiber = value
                     }
                     else if name.contains("sugar") && !name.contains("added") {
-                        sugar = max(sugar, value)
+                        sugar = value
                     }
                     else if name.contains("sodium") || name.contains("salt") {
-                        sodium = max(sodium, value)
+                        sodium = value
                     }
                 }
             }
         }
+        
+        print("📊 Extracted nutrients - Cal: \(calories), P: \(protein), C: \(carbs), F: \(fat)")
         
         return (calories, protein, carbs, fat, fiber, sugar, sodium)
     }
@@ -1485,13 +1483,30 @@ struct DashboardView: View {
         var todaySodium = 0
         
         var monthlyCalories = 0
-        var monthlyDaysWithMeals = Set<String>()
+        var
+
+     monthlyDaysWithMeals = Set<String>()
         var todayMealCount = 0
         
         for meal in meals {
-            guard let savedAt = meal.saved_at,
-                  let mealDate = ISO8601DateFormatter().date(from: savedAt) else {
-                print("⚠️ Skipping meal with invalid date: \(meal.dish_prediction)")
+            guard let savedAt = meal.saved_at else {
+                print("⚠️ Skipping meal with no saved date: \(meal.dish_prediction)")
+                continue
+            }
+            
+            // Parse the date properly
+            let mealDate: Date?
+            if let isoDate = ISO8601DateFormatter().date(from: savedAt) {
+                mealDate = isoDate
+            } else {
+                // Try alternative date format
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+                mealDate = formatter.date(from: savedAt)
+            }
+            
+            guard let validMealDate = mealDate else {
+                print("⚠️ Could not parse date: \(savedAt)")
                 continue
             }
             
@@ -1500,7 +1515,7 @@ struct DashboardView: View {
             print("📊 Meal: \(meal.dish_prediction) - Cal: \(nutrition.calories), P: \(nutrition.protein), C: \(nutrition.carbs), F: \(nutrition.fat)")
             
             // Today's totals
-            if calendar.isDate(mealDate, inSameDayAs: today) {
+            if calendar.isDate(validMealDate, inSameDayAs: today) {
                 todayCalories += nutrition.calories
                 todayProtein += nutrition.protein
                 todayCarbs += nutrition.carbs
@@ -1509,13 +1524,13 @@ struct DashboardView: View {
                 todaySugar += nutrition.sugar
                 todaySodium += nutrition.sodium
                 todayMealCount += 1
-                print("✅ Added to today's totals: \(meal.dish_prediction)")
+                print("✅ Added to today's totals: \(meal.dish_prediction) - \(nutrition.calories) kcal")
             }
             
             // Monthly totals
-            if mealDate >= startOfMonth {
+            if validMealDate >= startOfMonth {
                 monthlyCalories += nutrition.calories
-                let dayKey = calendar.dateComponents([.year, .month, .day], from: mealDate)
+                let dayKey = calendar.dateComponents([.year, .month, .day], from: validMealDate)
                 monthlyDaysWithMeals.insert("\(dayKey.year!)-\(dayKey.month!)-\(dayKey.day!)")
             }
         }
@@ -1525,14 +1540,6 @@ struct DashboardView: View {
         print("💪 Protein: \(todayProtein)g")
         print("🌾 Carbs: \(todayCarbs)g")
         print("🥑 Fat: \(todayFat)g")
-        print("🌿 Fiber: \(todayFiber)g")
-        print("🍯 Sugar: \(todaySugar)g")
-        print("🧂 Sodium: \(todaySodium)mg")
-        
-        print("📊 MONTHLY STATS:")
-        print("📅 Days with meals: \(monthlyDaysWithMeals.count)")
-        print("🔥 Total calories: \(monthlyCalories)")
-        print("📈 Average per day: \(monthlyDaysWithMeals.count > 0 ? monthlyCalories / monthlyDaysWithMeals.count : 0)")
         
         withAnimation {
             self.todayCalories = todayCalories
