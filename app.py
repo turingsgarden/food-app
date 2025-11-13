@@ -1197,11 +1197,6 @@ def send_password_reset_code():
     else:
         return jsonify({"error": "Failed to send email"}), 500
 
-    
-    except Exception as e:
-        print("Error sending email:", e)
-        return jsonify({"error": "Failed to send email"}), 500
-
 
 @app.route("/send_verification", methods=["POST"])
 def send_verification():
