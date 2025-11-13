@@ -1268,40 +1268,6 @@ def verify_code():
 from flask import request, jsonify
 from werkzeug.security import generate_password_hash
 
-@app.route("/reset_password", methods=["POST"])
-def reset_password():
-    data = request.get_json()
-    email = data.get("email")
-    new_password = data.get("new_password")
-
-    # ------------------------------
-    # Validate input
-    # ------------------------------
-    if not email or not new_password:
-        return jsonify({"error": "Email and new password are required"}), 400
-
-    if len(new_password) < 6:
-        return jsonify({"error": "Password must be at least 6 characters"}), 400
-
-    # ------------------------------
-    # Check if email exists
-    # ------------------------------
-    user = users_collection.find_one({"email": email})
-    if not user:
-        return jsonify({"error": "Email not registered"}), 404
-
-    # ------------------------------
-    # Update password in MongoDB
-    # ------------------------------
-    hashed_pw = generate_password_hash(new_password)
-
-    users_collection.update_one(
-        {"email": email},
-        {"$set": {"password": hashed_pw}}
-    )
-
-    return jsonify({"status": "password_reset_success"}), 200
-
 
 
 def get_apple_public_keys():
