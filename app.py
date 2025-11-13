@@ -1110,12 +1110,17 @@ def get_user_insights():
 
 @app.route("/send_password_reset_code", methods=["POST"])
 def send_password_reset_code():
+    print("send_password_reset_code is called.")
     data = request.get_json()
     email = data.get("email")
 
     if not email:
         return jsonify({"error": "Email is required"}), 400
 
+    user = users_collection.find_one({"email": email})
+    if not user:
+        return jsonify({"error": "Email not registered"}), 404
+        
     # Create 6-digit code
     code = str(random.randint(100000, 999999))
     expires = int(time.time()) + 300  # 5 minutes
@@ -1190,6 +1195,7 @@ If you did not request a password reset, please ignore this email.
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
             server.login(sender_email, password)
             server.sendmail(sender_email, email, message.as_string())
+        print("Verification email sent.")
 
         return jsonify({"status": "ok"}), 200
 
@@ -1199,6 +1205,7 @@ If you did not request a password reset, please ignore this email.
 
 @app.route("/send_verification", methods=["POST"])
 def send_verification():
+    print("send_verification is called")
     data = request.get_json()
     email = data.get("email")
 
