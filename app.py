@@ -1110,46 +1110,49 @@ def get_user_insights():
 
 from gmail_sender import gmail_send_email
 
-@app.route("/send_password_reset_code", methods=["POST"])
-def send_password_reset_code():
+@app.route("/reset_password", methods=["POST"])
+def reset_password():
     data = request.get_json()
-    email = data.get("email")
 
-    if not email:
-        return jsonify({"error": "Email is required"}), 400
+    # ------------------------------
+    # Validate request body
+    # ------------------------------
+    if not data:
+        return jsonify({"error": "Empty request"}), 400
 
-    # Check user exists
+    required_fields = ["email", "new_password"]
+    missing = [f for f in required_fields if f not in data or not data[f]]
+
+    if missing:
+        return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+
+    email = data["email"]
+    new_password = data["new_password"]
+
+    if len(new_password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+    # ------------------------------
+    # Check email exists
+    # ------------------------------
     user = users_collection.find_one({"email": email})
     if not user:
         return jsonify({"error": "Email not registered"}), 404
 
-    # Create code
-    code = str(random.randint(100000, 999999))
-    expires = int(time.time()) + 300  # 5 minutes
+    # ------------------------------
+    # Create bcrypt hash (same as register)
+    # ------------------------------
+    hashed_pw = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt())
 
-    verification_store[email] = {"code": code, "expires": expires}
-
-    # Email body
-    text_body = f"Your NutriCam password reset code is: {code}\nValid for 5 minutes."
-    html_body = f"""
-        <p>Your NutriCam password reset code:</p>
-        <h2 style="color:#28a745;">{code}</h2>
-        <p>This code expires in <b>5 minutes</b>.</p>
-    """
-
-    # Send email using Gmail API
-    success = gmail_send_email(
-        to_email=email,
-        subject="NutriCam Password Reset Code",
-        html_body=html_body,
-        text_body=text_body
+    # ------------------------------
+    # Update in MongoDB
+    # ------------------------------
+    users_collection.update_one(
+        {"email": email},
+        {"$set": {"password": hashed_pw}}
     )
 
-    if success:
-        return jsonify({"status": "ok"}), 200
-    else:
-        return jsonify({"error": "Failed to send email"}), 500
-
+    return jsonify({"status": "password_reset_success"}), 200
 
 @app.route("/send_verification", methods=["POST"])
 def send_verification():
