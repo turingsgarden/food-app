@@ -1107,6 +1107,96 @@ def get_user_insights():
         print(f"❌ Error in get_user_insights: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
+@app.route("/send_password_reset_code", methods=["POST"])
+def send_password_reset_code():
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    # Create 6-digit code
+    code = str(random.randint(100000, 999999))
+    expires = int(time.time()) + 300  # 5 minutes
+
+    # Store code
+    verification_store[email] = {"code": code, "expires": expires}
+
+    # Send email
+    try:
+        sender_email = os.getenv("SENDER_EMAIL")
+        password = os.getenv("EMAIL_PASSWORD")
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "NutriCam Password Reset Code"
+        message["From"] = sender_email
+        message["To"] = email
+
+        # ----------- EMAIL TEXT VERSION -----------
+        text = f"""\
+NutriCam Password Reset Request
+
+Your password reset code is: {code}
+
+This code will expire in 5 minutes. 
+If you did not request a password reset, please ignore this email.
+
+— The NutriCam Team
+"""
+
+        # ----------- EMAIL HTML VERSION -----------
+        html = f"""\
+<html>
+  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+    <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px;
+                border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+      <h2 style="color: #dc3545; text-align: center;">Reset Your NutriCam Password</h2>
+
+      <p style="font-size: 16px; color: #333;">
+        You requested to reset your NutriCam password.
+      </p>
+
+      <p style="font-size: 16px; color: #333;">
+        Your verification code is:
+      </p>
+
+      <div style="text-align: center; margin: 20px 0;">
+        <span style="font-size: 28px; font-weight: bold; color: #28a745; letter-spacing: 3px;">{code}</span>
+      </div>
+
+      <p style="font-size: 14px; color: #666; text-align: center;">
+        This code expires in <b>5 minutes</b>.
+      </p>
+
+      <hr style="margin: 30px 0;">
+
+      <p style="font-size: 15px; color: #555;">
+        If you did not request this password change, you can safely ignore this email.
+      </p>
+
+      <p style="font-size: 16px; color: #333; margin-top: 20px;">
+        — The <b>NutriCam Team</b>
+      </p>
+    </div>
+  </body>
+</html>
+"""
+
+        message.attach(MIMEText(text, "plain"))
+        message.attach(MIMEText(html, "html"))
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, email, message.as_string())
+
+        return jsonify({"status": "ok"}), 200
+
+    except Exception as e:
+        print("Error sending email:", e)
+        return jsonify({"error": "Failed to send email"}), 500
+
 @app.route("/send_verification", methods=["POST"])
 def send_verification():
     data = request.get_json()
