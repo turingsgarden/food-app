@@ -1155,49 +1155,48 @@ def reset_password():
     return jsonify({"status": "password_reset_success"}), 200
 
 
+from gmail_sender import gmail_send_email
+
 @app.route("/send_password_reset_code", methods=["POST"])
 def send_password_reset_code():
-    print("send_password_reset_code is called.")
     data = request.get_json()
     email = data.get("email")
 
     if not email:
         return jsonify({"error": "Email is required"}), 400
 
-    # ---- CHECK IF EMAIL EXISTS IN DATABASE ----
+    # Check user exists
     user = users_collection.find_one({"email": email})
     if not user:
         return jsonify({"error": "Email not registered"}), 404
-    # -------------------------------------------
 
-    # Create 6-digit code
+    # Create code
     code = str(random.randint(100000, 999999))
     expires = int(time.time()) + 300  # 5 minutes
 
-    # Store the reset code
     verification_store[email] = {"code": code, "expires": expires}
 
-    # ------- Continue with sending the email (unchanged) -------
-    try:
-        sender_email = os.getenv("SENDER_EMAIL")
-        password = os.getenv("EMAIL_PASSWORD")
+    # Email body
+    text_body = f"Your NutriCam password reset code is: {code}\nValid for 5 minutes."
+    html_body = f"""
+        <p>Your NutriCam password reset code:</p>
+        <h2 style="color:#28a745;">{code}</h2>
+        <p>This code expires in <b>5 minutes</b>.</p>
+    """
 
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "NutriCam Password Reset Code"
-        message["From"] = sender_email
-        message["To"] = email
+    # Send email using Gmail API
+    success = gmail_send_email(
+        to_email=email,
+        subject="NutriCam Password Reset Code",
+        html_body=html_body,
+        text_body=text_body
+    )
 
-        # TEXT + HTML message etc...
-        # (same as in your existing code)
-        
-        message.attach(MIMEText("Your password reset code is: " + code, "plain"))
-
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
-            server.login(sender_email, password)
-            server.sendmail(sender_email, email, message.as_string())
-
+    if success:
         return jsonify({"status": "ok"}), 200
+    else:
+        return jsonify({"error": "Failed to send email"}), 500
+
     
     except Exception as e:
         print("Error sending email:", e)
