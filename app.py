@@ -1154,6 +1154,56 @@ def reset_password():
 
     return jsonify({"status": "password_reset_success"}), 200
 
+
+@app.route("/send_password_reset_code", methods=["POST"])
+def send_password_reset_code():
+    print("send_password_reset_code is called.")
+    data = request.get_json()
+    email = data.get("email")
+
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    # ---- CHECK IF EMAIL EXISTS IN DATABASE ----
+    user = users_collection.find_one({"email": email})
+    if not user:
+        return jsonify({"error": "Email not registered"}), 404
+    # -------------------------------------------
+
+    # Create 6-digit code
+    code = str(random.randint(100000, 999999))
+    expires = int(time.time()) + 300  # 5 minutes
+
+    # Store the reset code
+    verification_store[email] = {"code": code, "expires": expires}
+
+    # ------- Continue with sending the email (unchanged) -------
+    try:
+        sender_email = os.getenv("SENDER_EMAIL")
+        password = os.getenv("EMAIL_PASSWORD")
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "NutriCam Password Reset Code"
+        message["From"] = sender_email
+        message["To"] = email
+
+        # TEXT + HTML message etc...
+        # (same as in your existing code)
+        
+        message.attach(MIMEText("Your password reset code is: " + code, "plain"))
+
+        context = ssl.create_default_context()
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+            server.login(sender_email, password)
+            server.sendmail(sender_email, email, message.as_string())
+
+        return jsonify({"status": "ok"}), 200
+    
+    except Exception as e:
+        print("Error sending email:", e)
+        return jsonify({"error": "Failed to send email"}), 500
+
+
 @app.route("/send_verification", methods=["POST"])
 def send_verification():
     print("send_verification is called")
