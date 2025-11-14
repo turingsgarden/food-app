@@ -23,6 +23,12 @@ struct ProfileView: View {
     @State private var hasAppeared = false
     @State private var showHelpSupport = false
     
+    @State private var isEditingName = false
+    @State private var editedName = ""
+    @State private var isSavingName = false
+    @State private var nameError = ""
+
+    
     var body: some View {
         NavigationView {
             mainContent
@@ -260,10 +266,71 @@ struct ProfileView: View {
             .shadow(color: .orange.opacity(0.3), radius: 20)
             
             VStack(spacing: 4) {
-                Text(session.userName)
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
+                //Text(session.userName)
+                //    .font(.title2.bold())
+                //    .foregroundColor(.white)
                 
+                HStack(spacing: 8) {
+                        if !isEditingName {
+                            Text(session.userName)
+                                .font(.title2.bold())
+                                .foregroundColor(.white)
+
+                            Button(action: {
+                                editedName = session.userName
+                                nameError = ""
+                                isEditingName = true
+                            }) {
+                                Image(systemName: "pencil")
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                    }
+
+                    // 🔶 Edit mode UI
+                    if isEditingName {
+                        VStack(spacing: 10) {
+
+                            TextField("Enter new name", text: $editedName)
+                                .foregroundColor(.white)                 // <-- text becomes white
+                                .padding(10)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .stroke(Color.white.opacity(0.25), lineWidth: 1)  // <-- THIN border
+                                        .background(Color.white.opacity(0.05))            // <-- faint fill instead of full white
+                                )
+
+
+                            if !nameError.isEmpty {
+                                Text(nameError)
+                                    .font(.caption)
+                                    .foregroundColor(.red)
+                            }
+
+                            HStack(spacing: 20) {
+                                Button("Cancel") {
+                                    isEditingName = false
+                                    nameError = ""
+                                }
+                                .foregroundColor(.gray)
+
+                                Button(action: saveName) {
+                                    if isSavingName {
+                                        ProgressView().tint(.white)
+                                    } else {
+                                        Text("Save")
+                                    }
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 6)
+                                .background(Color.orange)
+                                .foregroundColor(.white)
+                                .cornerRadius(8)
+                                .disabled(isSavingName)
+                            }
+                        }
+                        .padding(.top, 4)
+                    }
                 if let profile = profileManager.userProfile {
                     Text("\(profile.age) years old • \(profile.gender)")
                         .font(.subheadline)
@@ -586,6 +653,60 @@ struct ProfileView: View {
             }
         }.resume()
     }
+    
+    func saveName() {
+        let trimmed = editedName.trimmingCharacters(in: .whitespaces)
+
+        guard trimmed.count >= 2 else {
+            nameError = "Name must be at least 2 characters"
+            return
+        }
+
+        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/update_name") else {
+            nameError = "Server error"
+            return
+        }
+
+        isSavingName = true
+        nameError = ""
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        if let token = session.getAuthToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        let body = ["name": trimmed]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                isSavingName = false
+
+                if let error = error {
+                    nameError = error.localizedDescription
+                    return
+                }
+
+                guard let http = response as? HTTPURLResponse else {
+                    nameError = "Invalid server response"
+                    return
+                }
+
+                if http.statusCode == 200 {
+                    // SUCCESS 🎉 Update session and UI
+                    session.userName = trimmed
+                    isEditingName = false
+                    profileManager.fetchProfile(force: true)
+                } else {
+                    nameError = "Failed to update name"
+                }
+            }
+        }.resume()
+    }
+
     
     func rateApp() {
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {

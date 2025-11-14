@@ -57,7 +57,6 @@ struct RegisterView: View {
                                 Button(action: { dismiss() }) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "chevron.left")
-                                        Text("Back")
                                     }
                                     .foregroundColor(.gray)
                                 }
@@ -325,6 +324,7 @@ struct RegisterView: View {
                 .scrollDismissesKeyboard(.interactively)
             }
             .preferredColorScheme(.dark)
+            .navigationBarBackButtonHidden(true)
             .navigationDestination(isPresented: $navigateToDashboard) {
                 DashboardView()
                     .navigationBarBackButtonHidden(true)

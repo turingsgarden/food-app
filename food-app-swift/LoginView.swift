@@ -3,6 +3,10 @@ import GoogleSignIn
 import GoogleSignInSwift
 import AuthenticationServices
 
+func debugLog(_ message: String) {
+    print("🟠 [LoginView LOG] \(Date()): \(message)")
+}
+
 struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
@@ -16,6 +20,9 @@ struct LoginView: View {
     @State private var navigateToDashboard = false
     @State private var isLoading = false
     @State private var showRegister = false
+    
+    @State private var showForgotPassword = false
+
     
     @FocusState private var focusedField: Field?
     
@@ -89,7 +96,10 @@ struct LoginView: View {
                                         .autocapitalization(.none)
                                         .foregroundColor(.white)
                                         .focused($focusedField, equals: .email)
-                                        .onChange(of: email) { _, _ in validateEmail() }
+                                        .onChange(of: email) { old, new in
+                                            debugLog("User typing email: '\(new)'")
+                                            validateEmail()
+                                        }
                                 }
                                 .padding()
                                 .background(
@@ -150,7 +160,11 @@ struct LoginView: View {
                                                 .stroke(passwordError.isEmpty ? Color.white.opacity(0.1) : Color.red.opacity(0.5), lineWidth: 1)
                                         )
                                 )
-                                .onChange(of: password) { _, _ in validatePassword() }
+                                .onChange(of: password) { old, new in
+                                    debugLog("User typing password: \(new.count) characters")
+                                    validatePassword()
+                                }
+
                                 
                                 if !passwordError.isEmpty {
                                     Text(passwordError)
@@ -164,6 +178,8 @@ struct LoginView: View {
                             HStack {
                                 Button(action: {
                                     rememberMe.toggle()
+                                    debugLog("User toggled RememberMe = \(rememberMe)")
+
                                 }) {
                                     HStack(spacing: 8) {
                                         Image(systemName: rememberMe ? "checkmark.square.fill" : "square")
@@ -181,6 +197,8 @@ struct LoginView: View {
                                 
                                 Button("Forgot Password?") {
                                     // Handle forgot password
+                                    debugLog("User tapped Forgot Password")
+                                    showForgotPassword = true
                                 }
                                 .buttonStyle(PlainButtonStyle())
                                 .font(.caption)
@@ -260,14 +278,17 @@ struct LoginView: View {
                             VStack(spacing: 12) {
                                 // Apple login button
                                 SignInWithAppleButton(.signIn) { request in
+                                    debugLog("User tapped Sign in with Apple")
                                     print("🍎 Apple SignIn request started")
                                     request.requestedScopes = [.fullName, .email]
+                                    debugLog("Apple login: Requesting scopes = fullName, email")
                                     print("🍎 Requested scopes: fullName & email")
                                 } onCompletion: { result in
                                     print("🍎 onCompletion triggered with result: \(result)")
                                     
                                     switch result {
                                     case .success(let authResults):
+                                        debugLog("Apple login SUCCESS: email=\(email)")
                                         print("✅ Authorization success, checking credential type...")
                                         
                                         if let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
@@ -303,6 +324,7 @@ struct LoginView: View {
                                         }
                                         
                                     case .failure(let error):
+                                        debugLog("Apple login FAILURE: \(error.localizedDescription)")
                                         print("❌ Sign in with Apple failed: \(error.localizedDescription)")
                                         self.loginFailed = true
                                         self.loginErrorMessage = error.localizedDescription
@@ -314,8 +336,12 @@ struct LoginView: View {
                                 
                                 // Google login button
                                 Button(action: {
+                                    debugLog("User tapped Sign in with Google")
+                                    debugLog("Email entered: \(email)")
+                                    debugLog("Password length: \(password.count)")
                                     focusedField = nil // Dismiss keyboard
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                                    debugLog("Google login UI presented")
                                     handleGoogleLogin()
                                 }) {
                                     HStack {
@@ -368,6 +394,9 @@ struct LoginView: View {
             .navigationDestination(isPresented: $showRegister) {
                 RegisterView()
             }
+            .navigationDestination(isPresented: $showForgotPassword) {
+                ForgotPasswordView()
+            }
         }
     }
     
@@ -388,6 +417,7 @@ struct LoginView: View {
     }
     
     private func attemptAppleLogin(email: String, token: String) {
+        debugLog("Starting email/password login request")
         isLoading = true
         loginFailed = false
         
@@ -404,6 +434,7 @@ struct LoginView: View {
                 
             case .failure(let error):
                 print("❌ Apple login failed: \(error)")
+                debugLog("Apple login FAILURE: \(error)")
                 self.loginFailed = true
                 self.loginErrorMessage = "Apple login failed. Please try again."
             }
@@ -421,12 +452,14 @@ struct LoginView: View {
         GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
             if let error = error {
                 print("❌ Google Sign-In failed:", error.localizedDescription)
+                debugLog("Google login FAILURE: \(error.localizedDescription)")
                 return
             }
             
             guard let user = result?.user,
                   let idToken = user.idToken?.tokenString else {
                 print("❌ Google Sign-In: no user or idToken")
+                debugLog("Google login FAILURE: no user or idToken")
                 return
             }
             
@@ -434,6 +467,7 @@ struct LoginView: View {
             let fullName = user.profile?.name ?? ""
             
             print("✅ Google login success")
+            debugLog("Google backend login SUCCESS: userId=\(email)")
             print("📧 Email:", email)
             print("🧑 Name:", fullName)
             print("🔑 idToken:", idToken.prefix(20), "...")
@@ -497,14 +531,14 @@ struct LoginView: View {
             
             switch result {
             case .success(let (userId, name, token)):
-                print("✅ Login successful - Token received")
+                debugLog("Login API returned SUCCESS: userId=\(userId), name=\(name)")
                 SessionManager.shared.login(id: userId, name: name, token: token)
                 withAnimation(.spring()) {
                     self.navigateToDashboard = true
                 }
                 
             case .failure(let error):
-                print("❌ Login failed: \(error)")
+                debugLog("Login API returned FAILURE: \(error.localizedDescription)")
                 self.loginFailed = true
                 
                 if let nsError = error as NSError? {
