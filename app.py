@@ -1593,6 +1593,40 @@ def delete_account():
             "details": str(e)
         }), 500
 
+@app.route("/update_name", methods=["POST"])
+@token_required
+def update_name():
+    try:
+        data = request.get_json()
+        if not data or "name" not in data:
+            return jsonify({"error": "Name is required"}), 400
+        
+        new_name = data["name"].strip()
+        if len(new_name) < 2:
+            return jsonify({"error": "Name must be at least 2 characters"}), 400
+        
+        user_id = request.user_id   # From JWT middleware
+
+        # Update the 'name' field in users_collection
+        result = users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {
+                "name": new_name,
+            }}
+        )
+
+        if result.matched_count == 0:
+            return jsonify({"error": "User not found"}), 404
+
+        return jsonify({
+            "message": "Name updated successfully",
+            "name": new_name
+        }), 200
+    
+    except Exception as e:
+        print(f"❌ Update name error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
 
 
 # Error handlers
