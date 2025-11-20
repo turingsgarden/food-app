@@ -127,10 +127,14 @@ with cols[0]:
         st.error("Image not found")
 
 # Right 3 columns: Model outputs
+# Right 3 columns: Model outputs
 for idx, (_, row) in enumerate(image_results.iterrows()):
     if idx >= 3:
         break
     with cols[idx + 1]:
+        # Pre-process the nutrition string outside the f-string
+        nutrition_formatted = str(row['full_nutrition']).replace('; ', '\n')
+        
         st.markdown(f"""
         <div class="model-box">
             <h3>{row['model']}</h3>
@@ -140,6 +144,6 @@ for idx, (_, row) in enumerate(image_results.iterrows()):
             <p><strong>Hidden:</strong></p>
             <p style="font-size:0.7rem; margin-left:8px;">{row['hidden_ingredients']}</p>
             <p><strong>Nutrition:</strong></p>
-            <p style="font-size:0.7rem; margin-left:8px; white-space:pre-line;">{str(row['full_nutrition']).replace('; ', '\n')}</p>
+            <p style="font-size:0.7rem; margin-left:8px; white-space:pre-line;">{nutrition_formatted}</p>
         </div>
         """, unsafe_allow_html=True)
