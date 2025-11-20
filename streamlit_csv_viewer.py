@@ -4,9 +4,59 @@ import pandas as pd
 import os
 from PIL import Image
 
-RESULTS_CSV = "analysis_results_viewer.csv"
+# RESULTS_CSV = "analysis_results_viewer.csv"
+RESULTS_CSV = "analysis_results.csv"
 
 st.set_page_config(page_title="🍔 Food Calorie Estimator", layout="wide")
+
+# Compact CSS styling
+st.markdown("""
+<style>
+    .stApp {
+        max-width: 100%;
+    }
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 0rem;
+    }
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .model-box {
+        border: 2px solid #333;
+        border-radius: 8px;
+        padding: 8px;
+        background-color: #000000;
+        color: #ffffff;
+        font-size: 0.75rem;
+        line-height: 1.3;
+        height: 100%;
+    }
+    .model-box h3 {
+        font-size: 0.9rem;
+        margin: 0 0 4px 0;
+        color: #ffffff;
+    }
+    .model-box p {
+        margin: 4px 0;
+        font-size: 0.75rem;
+        color: #ffffff;
+    }
+    .model-box strong {
+        font-size: 0.8rem;
+        color: #ffffff;
+    }
+    .stImage {
+        border: 2px solid #ddd;
+        border-radius: 8px;
+    }
+    div[data-testid="column"] {
+        padding: 0 4px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.title("📊 Food Image Results Viewer")
 
 @st.cache_data
@@ -55,12 +105,7 @@ with col2:
 with col3:
     st.button("Next →", on_click=next_image, disabled=(st.session_state.csv_idx == len(unique_images) - 1))
 
-new_idx = st.slider(
-    "Jump to image:", 
-    1, 
-    len(unique_images), 
-    st.session_state.csv_idx + 1
-) - 1
+new_idx = st.slider("Jump to image:", 1, len(unique_images), st.session_state.csv_idx + 1) - 1
 if new_idx != st.session_state.csv_idx:
     st.session_state.csv_idx = new_idx
 
@@ -68,28 +113,33 @@ if new_idx != st.session_state.csv_idx:
 current_image_path = unique_images[st.session_state.csv_idx]
 image_results = df[df['image_path'] == current_image_path]
 
-left_col, right_col = st.columns([1, 2])
+# 4-column layout: image, model 1, model 2, model 3
+models = image_results['model'].tolist()
+cols = st.columns([1.5, 2, 2, 2])
 
-with left_col:
-    st.subheader(f"📷 {os.path.basename(current_image_path)}")
+# Left column: Image
+with cols[0]:
+    st.markdown(f"**📷 {os.path.basename(current_image_path)}**")
     if os.path.exists(current_image_path):
         img = Image.open(current_image_path)
         st.image(img, use_container_width=True)
     else:
-        st.error(f"Image not found: {current_image_path}")
-    st.caption(f"Path: `{current_image_path}`")
+        st.error("Image not found")
 
-with right_col:
-    st.subheader("🤖 Model Outputs")
-    for _, row in image_results.iterrows():
-        model = row['model']
-        st.markdown(f"### 🤖 {model}")
-        st.text(f"🍽️ Dish: {row['dish_names']}")
-        with st.expander("🥦 Cleaned Ingredients"):
-            st.text(row['cleaned_ingredients'])
-        with st.expander("🧂 Hidden Ingredients"):
-            st.text(row['hidden_ingredients'])
-        with st.expander("📊 Nutrition Info"):
-            st.text(str(row['full_nutrition']).replace('; ', '\n'))
-        st.caption(f"Timestamp: {row['timestamp']}")
-        st.divider()
+# Right 3 columns: Model outputs
+for idx, (_, row) in enumerate(image_results.iterrows()):
+    if idx >= 3:
+        break
+    with cols[idx + 1]:
+        st.markdown(f"""
+        <div class="model-box">
+            <h3>{row['model']}</h3>
+            <p><strong>Dish:</strong> {row['dish_names']}</p>
+            <p><strong>Ingredients:</strong></p>
+            <p style="font-size:0.7rem; margin-left:8px;">{row['cleaned_ingredients']}</p>
+            <p><strong>Hidden:</strong></p>
+            <p style="font-size:0.7rem; margin-left:8px;">{row['hidden_ingredients']}</p>
+            <p><strong>Nutrition:</strong></p>
+            <p style="font-size:0.7rem; margin-left:8px; white-space:pre-line;">{str(row['full_nutrition']).replace('; ', '\n')}</p>
+        </div>
+        """, unsafe_allow_html=True)

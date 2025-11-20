@@ -17,9 +17,10 @@ DATASET_ROOT = os.path.join(
 
 # Define all Gemini models to test
 GEMINI_MODELS = [
-    'gemini-2.0-flash-exp',
+    # 'gemini-2.0-flash-exp',
     'gemini-2.5-pro',
-    'gemini-2.5-pro-preview-06-05',
+    'gemini-2.5-flash',
+    'gemini-2.5-pro-preview-03-25',
     'gemini-2.0-flash-001'
 ]
 
@@ -257,14 +258,17 @@ if mode == "📊 CSV Viewer":
         st.button("Next →", on_click=next_csv, disabled=(st.session_state.csv_idx==len(unique_images)-1))
     
     # Jump slider
-    new_idx = st.slider(
-        "Jump to image:", 
-        1, 
-        len(unique_images), 
-        st.session_state.csv_idx + 1
-    ) - 1
-    if new_idx != st.session_state.csv_idx:
-        st.session_state.csv_idx = new_idx
+    if len(unique_images) > 1:
+        new_idx = st.slider(
+            "Jump to image:", 
+            1, 
+            len(unique_images), 
+            st.session_state.csv_idx + 1
+        ) - 1
+        if new_idx != st.session_state.csv_idx:
+            st.session_state.csv_idx = new_idx
+    else:
+        st.info("📌 Only 1 image in dataset")
     
     # Current image
     current_image_path = unique_images[st.session_state.csv_idx]
@@ -315,10 +319,11 @@ if mode == "📊 CSV Viewer":
                     with st.expander("📊 Nutrition Info"):
                         nutrition = str(row['full_nutrition'])
                         if nutrition and nutrition != 'N/A':
-                            for line in nutrition.replace('; ', '\n').splitlines():
-                                parts = line.split('|')
-                                if len(parts) >= 3:
-                                    st.text(f"{parts[0]}: {parts[1].strip()} {parts[2].strip()}")
+                            st.text(nutrition)
+                            # for line in nutrition.replace('; ', '\n').splitlines():
+                            #     parts = line.split('|')
+                            #     if len(parts) >= 3:
+                            #         st.text(f"{parts[0]}: {parts[1].strip()} {parts[2].strip()}")
                         else:
                             st.text("N/A")
                 
