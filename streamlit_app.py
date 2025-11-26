@@ -24,8 +24,8 @@ GEMINI_MODELS = [
     'gemini-2.0-flash-001'
 ]
 
-st.set_page_config(page_title="🍔 Food Calorie Estimator", layout="wide")
-st.title("🍔 Food Calorie Estimator - Multi-Model Benchmark")
+st.set_page_config(page_title="Food Calorie Estimator", layout="wide")
+st.title("Food Calorie Estimator - Multi-Model Benchmark")
 
 # Helper: Load existing results from CSV
 @st.cache_data
@@ -54,11 +54,11 @@ def load_results_cache():
                 'nutrition_info': str(row.get('full_nutrition', 'N/A'))
             }
         
-        st.info(f"📦 Loaded {len(cache)} cached results from CSV")
+        st.info(f"Loaded {len(cache)} cached results from CSV")
         return cache
     except Exception as e:
-        st.warning(f"⚠️ Could not load cache: {e}")
-        st.info("💡 Tip: You may need to delete the CSV and start fresh")
+        st.warning(f"Could not load cache: {e}")
+        st.info("Tip: You may need to delete the CSV and start fresh")
         return {}
 
 # Helper: Load full CSV as DataFrame
@@ -124,7 +124,7 @@ def save_result_to_csv(image_path, model_name, result_data):
         st.cache_data.clear()
         
     except Exception as e:
-        st.error(f"❌ Failed to save to CSV: {e}")
+        st.error(f"Failed to save to CSV: {e}")
 
 # Helper: Get or compute result
 def get_or_compute_result(image_path, model_name, cache):
@@ -135,10 +135,10 @@ def get_or_compute_result(image_path, model_name, cache):
     cache_key = (image_path, model_name)
     
     if cache_key in cache:
-        st.success(f"✅ {model_name} - Loaded from cache")
+        st.success(f"{model_name} - Loaded from cache")
         return cache[cache_key], True
     
-    st.info(f"🔄 {model_name} - Computing new result...")
+    st.info(f"{model_name} - Computing new result...")
     try:
         result = full_image_analysis(image_path, user_id="streamlit_test", model_name=model_name)
         
@@ -151,11 +151,11 @@ def get_or_compute_result(image_path, model_name, cache):
         }
         
         save_result_to_csv(image_path, model_name, result_data)
-        st.success(f"✅ {model_name} - Computed and saved")
+        st.success(f"{model_name} - Computed and saved")
         return result_data, False
         
     except Exception as e:
-        st.error(f"❌ {model_name} failed: {e}")
+        st.error(f"{model_name} failed: {e}")
         import traceback
         st.text(traceback.format_exc())
         
@@ -183,23 +183,23 @@ def find_and_validate_images(root):
                         img.verify()
                     valid_images.append(full_path)
                 except Exception as e:
-                    st.warning(f"⚠️ Skipping invalid/missing image: {fn} - {str(e)}")
+                    st.warning(f"Skipping invalid/missing image: {fn} - {str(e)}")
                     continue
     
     return sorted(valid_images)
 
 # Sidebar: Mode selection
 with st.sidebar:
-    st.header("🎛️ Mode Selection")
+    st.header("Mode Selection")
     
     mode = st.radio(
         "Choose mode:",
-        ["📊 CSV Viewer", "🔄 Process Images"],
+        ["CSV Viewer", "Process Images"],
         index=0
     )
     
     st.divider()
-    st.header("📊 Stats")
+    st.header("Stats")
     
     # Load cache for stats
     results_cache = load_results_cache()
@@ -213,24 +213,24 @@ with st.sidebar:
     
     st.divider()
     
-    if st.button("🗑️ Delete CSV & Reset", type="secondary"):
+    if st.button("Delete CSV & Reset", type="secondary"):
         if os.path.exists(RESULTS_CSV):
             os.remove(RESULTS_CSV)
-            st.success("✅ CSV deleted")
+            st.success("CSV deleted")
         for key in list(st.session_state.keys()):
             del st.session_state[key]
         st.cache_data.clear()
         st.rerun()
 
 # === MODE 1: CSV VIEWER ===
-if mode == "📊 CSV Viewer":
-    st.header("📊 CSV Viewer Mode")
+if mode == "CSV Viewer":
+    st.header("CSV Viewer Mode")
     st.info("Browse all results stored in CSV with images")
     
     df = load_full_csv()
     
     if df is None or len(df) == 0:
-        st.warning("⚠️ No results in CSV yet. Run 'Process Images' mode first.")
+        st.warning("No results in CSV yet. Run 'Process Images' mode first.")
         st.stop()
     
     # Get unique images
@@ -268,7 +268,7 @@ if mode == "📊 CSV Viewer":
         if new_idx != st.session_state.csv_idx:
             st.session_state.csv_idx = new_idx
     else:
-        st.info("📌 Only 1 image in dataset")
+        st.info("Only 1 image in dataset")
     
     # Current image
     current_image_path = unique_images[st.session_state.csv_idx]
@@ -281,7 +281,7 @@ if mode == "📊 CSV Viewer":
     left_col, right_col = st.columns([1, 2])
     
     with left_col:
-        st.subheader(f"📷 {image_name}")
+        st.subheader(f"{image_name}")
         
         if os.path.exists(current_image_path):
             try:
@@ -290,33 +290,33 @@ if mode == "📊 CSV Viewer":
             except Exception as e:
                 st.error(f"Failed to load image: {e}")
         else:
-            st.error(f"❌ Image not found: {current_image_path}")
+            st.error(f"Image not found: {current_image_path}")
         
         st.caption(f"Path: `{current_image_path}`")
     
     with right_col:
-        st.subheader("🤖 Model Outputs")
+        st.subheader("Model Outputs")
         
         # Display results for each model
         for _, row in image_results.iterrows():
             model_name = row['model']
             
             with st.container():
-                st.markdown(f"### 🤖 {model_name}")
+                st.markdown(f"### {model_name}")
                 
                 col1, col2 = st.columns(2)
                 
                 with col1:
-                    st.text(f"🍽️ Dish: {row['dish_names']}")
+                    st.text(f"Dish: {row['dish_names']}")
                     
-                    with st.expander("🥦 Cleaned Ingredients"):
+                    with st.expander("Cleaned Ingredients"):
                         st.text(row['cleaned_ingredients'])
                 
                 with col2:
-                    with st.expander("🧂 Hidden Ingredients"):
+                    with st.expander("Hidden Ingredients"):
                         st.text(row['hidden_ingredients'])
                     
-                    with st.expander("📊 Nutrition Info"):
+                    with st.expander("Nutrition Info"):
                         nutrition = str(row['full_nutrition'])
                         if nutrition and nutrition != 'N/A':
                             st.text(nutrition)
@@ -332,17 +332,17 @@ if mode == "📊 CSV Viewer":
 
 # === MODE 2: PROCESS IMAGES ===
 else:
-    st.header("🔄 Process Images Mode")
+    st.header("Process Images Mode")
     
     # Load and validate image list
-    st.info("🔍 Scanning for valid images in dataset...")
+    st.info("Scanning for valid images in dataset...")
     image_files = find_and_validate_images(DATASET_ROOT)
     
     if not image_files:
-        st.error("❌ No valid images found in dataset path.")
+        st.error("No valid images found in dataset path.")
         st.stop()
     
-    st.success(f"✅ Found {len(image_files)} valid images")
+    st.success(f"Found {len(image_files)} valid images")
     
     # Load cache
     results_cache = load_results_cache()
@@ -354,7 +354,7 @@ else:
         st.session_state.processing_complete = False
         st.session_state.results = {}
     elif len(image_files) != len(st.session_state.get('image_subset', [])):
-        st.warning("⚠️ Image count changed, resetting processing state")
+        st.warning("Image count changed, resetting processing state")
         st.session_state.image_subset = sorted(image_files)
         st.session_state.current_processing_index = 0
         st.session_state.processing_complete = False
@@ -372,7 +372,7 @@ else:
         image_name = os.path.basename(image_path)
         
         if not os.path.exists(image_path):
-            st.error(f"❌ Image not found: {image_name}")
+            st.error(f"Image not found: {image_name}")
             st.session_state.current_processing_index += 1
             time.sleep(1)
             st.rerun()
@@ -383,7 +383,7 @@ else:
         left_col, right_col = st.columns([1, 2])
         
         with left_col:
-            st.subheader(f"📷 {image_name}")
+            st.subheader(f"{image_name}")
             try:
                 img = Image.open(image_path)
                 st.image(img, use_container_width=True)
@@ -399,7 +399,7 @@ else:
             
             for model_name in GEMINI_MODELS:
                 with st.container():
-                    st.markdown(f"### 🤖 {model_name}")
+                    st.markdown(f"### {model_name}")
                     
                     result_data, was_cached = get_or_compute_result(image_path, model_name, results_cache)
                     
@@ -407,14 +407,14 @@ else:
                         col1, col2 = st.columns(2)
                         
                         with col1:
-                            st.text(f"🍽️ Dish: {result_data.get('dish_names', 'N/A')}")
-                            with st.expander("🥦 Cleaned Ingredients"):
+                            st.text(f"Dish: {result_data.get('dish_names', 'N/A')}")
+                            with st.expander("Cleaned Ingredients"):
                                 st.text(result_data.get('cleaned_ingredients', 'N/A'))
                         
                         with col2:
-                            with st.expander("🧂 Hidden Ingredients"):
+                            with st.expander("Hidden Ingredients"):
                                 st.text(result_data.get('hidden_ingredients', 'N/A'))
-                            with st.expander("📊 Nutrition Info"):
+                            with st.expander("Nutrition Info"):
                                 nutrition_info = result_data.get('nutrition_info', 'N/A')
                                 if nutrition_info and nutrition_info != 'N/A':
                                     for line in nutrition_info.replace('; ', '\n').splitlines():
@@ -433,17 +433,17 @@ else:
         
         if st.session_state.current_processing_index >= len(st.session_state.image_subset):
             st.session_state.processing_complete = True
-            st.success("✅ All images processed! Switch to CSV Viewer mode to browse results.")
+            st.success("All images processed! Switch to CSV Viewer mode to browse results.")
         
         time.sleep(3)
         st.rerun()
     
     else:
         # PROCESSING COMPLETE
-        st.success(f"✅ Processing complete! {len(st.session_state.image_subset)} images processed.")
-        st.info("💡 Switch to 'CSV Viewer' mode in the sidebar to browse all results.")
+        st.success(f"Processing complete! {len(st.session_state.image_subset)} images processed.")
+        st.info("Switch to 'CSV Viewer' mode in the sidebar to browse all results.")
         
-        if st.button("🔄 Process More Images"):
+        if st.button("Process More Images"):
             st.session_state.processing_complete = False
             st.session_state.current_processing_index = 0
             st.rerun()

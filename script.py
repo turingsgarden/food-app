@@ -24,7 +24,7 @@
 #     shutil.copy2(img_path, dst_path)
 #     total_size += os.path.getsize(dst_path)
 #     if total_size >= limit:
-#         print(f"✅ Random subset ready ({total_size/1e6:.1f} MB)")
+#         print(f"Random subset ready ({total_size/1e6:.1f} MB)")
 #         break
 
 #above script was to take a random selection of the large ~3gb, below is to add images in csv
@@ -75,7 +75,7 @@
 #     ws.column_dimensions[get_column_letter(col)].width = 30
 
 # wb.save(XLSX_PATH)
-# print(f"✅ Saved Excel file with thumbnails → {XLSX_PATH}")
+# print(f"Saved Excel file with thumbnails → {XLSX_PATH}")
 
 #below is script to take only random 20 images, and to use those images only - 
 
@@ -89,14 +89,14 @@ DATASET_ROOT = "datasets/uecfood256-small-random/UECFOOD256"  # original dataset
 SUBSET_FOLDER = "datasets/uecfood256-20"  # folder for the 20 selected images
 
 # Print current working directory for debugging
-print(f"📍 Current working directory: {os.getcwd()}")
-print(f"🔍 Looking for images in: {os.path.abspath(DATASET_ROOT)}")
+print(f"Current working directory: {os.getcwd()}")
+print(f"Looking for images in: {os.path.abspath(DATASET_ROOT)}")
 
 # Check if source path exists
 if not os.path.exists(DATASET_ROOT):
-    print(f"\n❌ ERROR: Source path does not exist!")
+    print(f"\nERROR: Source path does not exist!")
     print(f"   Looking for: {os.path.abspath(DATASET_ROOT)}")
-    print(f"\n💡 Possible solutions:")
+    print(f"\nPossible solutions:")
     print(f"   1. Run this script from your project root directory")
     print(f"   2. Or change DATASET_ROOT to the full absolute path")
     
@@ -106,15 +106,14 @@ if not os.path.exists(DATASET_ROOT):
         "../datasets/uecfood256-small-random/UECFOOD256",
         "uecfood256-small-random/UECFOOD256",
     ]
-    print(f"\n🔎 Checking alternative paths:")
+    print(f"\nChecking alternative paths:")
     for path in possible_roots:
         exists = os.path.exists(path)
-        print(f"   {'✅' if exists else '❌'} {path}")
         if exists:
-            print(f"\n💡 Found it! Update DATASET_ROOT to: {path}")
+            print(f"\nFound it! Update DATASET_ROOT to: {path}")
     exit(1)
 
-print(f"✅ Source path exists!\n")
+print(f"Source path exists!\n")
 
 # Ensure subset folder exists
 os.makedirs(SUBSET_FOLDER, exist_ok=True)
@@ -124,7 +123,7 @@ exts = (".jpg", ".jpeg", ".png")
 all_images = []
 folder_count = 0
 
-print(f"🔍 Searching for images...")
+print(f"Searching for images...")
 
 for dirpath, dirnames, filenames in os.walk(DATASET_ROOT):
     image_files = [fn for fn in filenames if fn.lower().endswith(exts)]
@@ -133,29 +132,29 @@ for dirpath, dirnames, filenames in os.walk(DATASET_ROOT):
         for fn in image_files:
             all_images.append(os.path.join(dirpath, fn))
 
-print(f"📊 Found {len(all_images)} images across {folder_count} folders")
+print(f"Found {len(all_images)} images across {folder_count} folders")
 
 if len(all_images) == 0:
-    print("\n❌ ERROR: No images found!")
+    print("\nERROR: No images found!")
     print(f"   Checked in: {DATASET_ROOT}")
-    print(f"\n📁 Directory structure:")
+    print(f"\nDirectory structure:")
     if os.path.exists(DATASET_ROOT):
         for item in os.listdir(DATASET_ROOT)[:10]:
             print(f"   - {item}")
     exit(1)
 
 if len(all_images) < 20:
-    print(f"\n⚠️  WARNING: Only found {len(all_images)} images")
+    print(f"\nWARNING: Only found {len(all_images)} images")
     print(f"   Selecting all {len(all_images)} images")
     subset_images = all_images
 else:
     # Deterministically pick 20 images
     random.seed(42)  # fixed seed for reproducibility
     subset_images = random.sample(all_images, 20)
-    print(f"✅ Selected 20 random images (seed=42 for reproducibility)")
+    print(f"Selected 20 random images (seed=42 for reproducibility)")
 
 # Copy selected images to subset folder
-print(f"\n📁 Copying to: {os.path.abspath(SUBSET_FOLDER)}")
+print(f"\nCopying to: {os.path.abspath(SUBSET_FOLDER)}")
 print(f"─" * 60)
 
 for i, img_path in enumerate(subset_images, 1):
@@ -169,9 +168,9 @@ for i, img_path in enumerate(subset_images, 1):
     print(f"[{i:2d}/20] ✓ {img_path} → {new_name}")
 
 print(f"─" * 60)
-print(f"\n✅ SUCCESS! Created subset with {len(subset_images)} images")
-print(f"📂 Location: {os.path.abspath(SUBSET_FOLDER)}")
-print(f"\n📝 Sample images:")
+print(f"\nSUCCESS! Created subset with {len(subset_images)} images")
+print(f"Location: {os.path.abspath(SUBSET_FOLDER)}")
+print(f"\nSample images:")
 for img in os.listdir(SUBSET_FOLDER)[:5]:
     print(f"   - {img}")
 if len(os.listdir(SUBSET_FOLDER)) > 5:

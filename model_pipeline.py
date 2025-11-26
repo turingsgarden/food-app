@@ -30,7 +30,6 @@ class Ingredient(BaseModel):
             raise ValueError('Quantity must be positive')
         return v
 
-# ✅ FIXED: Use List[dict] instead of List[Ingredient] to avoid $ref
 class DishAnalysis(BaseModel):
     """Complete dish analysis with all ingredients"""
     dish_names: Optional[str] = Field(description="Comma-separated list of all dishes/items")
@@ -40,7 +39,6 @@ class HiddenIngredients(BaseModel):
     """Hidden/cooking ingredients not visible in image"""
     ingredients: Optional[list] = Field(description="List of ingredient dicts with name, quantity, unit")
 
-# ✅ FIXED: Flatten NutritionInfo to avoid nested models
 class NutritionInfo(BaseModel):
     """Complete nutrition information - all fields optional and flat"""
     calories_value: Optional[float] = Field(description="Calorie value")
@@ -160,17 +158,17 @@ def safe_parse_response(response, model_class, context=""):
         return model_class(**data)
         
     except json.JSONDecodeError as e:
-        print(f"❌ JSON decode error in {context}: {e}")
-        print(f"📄 Raw response (first 500 chars): {response.text[:500]}...")
+        print(f"JSON decode error in {context}: {e}")
+        print(f"Raw response (first 500 chars): {response.text[:500]}...")
         return None
         
     except ValidationError as e:
-        print(f"❌ Pydantic validation error in {context}:")
+        print(f"Pydantic validation error in {context}:")
         print(e)
         return None
         
     except Exception as e:
-        print(f"❌ Unexpected error parsing {context}: {e}")
+        print(f"Unexpected error parsing {context}: {e}")
         traceback.print_exc()
         return None
 
@@ -215,7 +213,7 @@ def call_gemini_with_retries(model, content, max_retries=3, base_delay=5, genera
         
         except Exception as e:
             error_text = str(e)
-            print(f"⚠️ Gemini request failed (attempt {attempt}/{max_retries}): {error_text}")
+            print(f"Gemini request failed (attempt {attempt}/{max_retries}): {error_text}")
 
             if attempt < max_retries:
                 # Parse retry delay from error message
@@ -225,14 +223,14 @@ def call_gemini_with_retries(model, content, max_retries=3, base_delay=5, genera
                 
                 if match:
                     retry_seconds = float(match.group(1)) + 1.0
-                    print(f"⏳ API suggests retrying in {retry_seconds:.1f}s")
+                    print(f"API suggests retrying in {retry_seconds:.1f}s")
                 else:
                     retry_seconds = base_delay * attempt + random.uniform(0, 2)
-                    print(f"⏳ Using exponential backoff: {retry_seconds:.1f}s")
+                    print(f"Using exponential backoff: {retry_seconds:.1f}s")
 
                 time.sleep(retry_seconds)
             else:
-                print("❌ All Gemini retries failed.")
+                print("All Gemini retries failed.")
                 raise
 
 # ==================== ENVIRONMENT SETUP ====================
@@ -314,7 +312,7 @@ def optimize_image(image_path):
         if os.path.exists(optimized_path):
             os.remove(optimized_path)
     except Exception as e:
-        print(f"⚠️ Could not delete temp file: {e}")
+        print(f"Could not delete temp file: {e}")
     
     return image_data
 
@@ -323,7 +321,7 @@ def optimize_image(image_path):
 def analyze_image_with_gemini(image_path, model_name='gemini-2.5-flash'):
     """Analyze image with Gemini"""
     try:
-        print(f"🔍 Analyzing image with {model_name}...")
+        print(f"Analyzing image with {model_name}...")
         
         gemini_model = genai.GenerativeModel(model_name)
         image_data = optimize_image(image_path)
@@ -353,12 +351,12 @@ DO NOT include hidden ingredients like cooking oil, salt, or spices."""
         )
         
         if response and response.text:
-            print(f"✅ {model_name} analysis successful")
+            print(f"{model_name} analysis successful")
             dish_analysis = safe_parse_response(response, DishAnalysis, "ingredients")
             
             if dish_analysis and dish_analysis.dish_names:
-                print(f"📊 Parsed dish: {dish_analysis.dish_names}")
-                print(f"📊 Ingredients count: {len(dish_analysis.visible_ingredients or [])}")
+                print(f"Parsed dish: {dish_analysis.dish_names}")
+                print(f"Ingredients count: {len(dish_analysis.visible_ingredients or [])}")
                 return dish_analysis
             else:
                 raise Exception("Failed to parse analysis response")
@@ -366,14 +364,14 @@ DO NOT include hidden ingredients like cooking oil, salt, or spices."""
             raise Exception("Empty response from Gemini")
             
     except Exception as e:
-        print(f"❌ {model_name} analysis error: {str(e)}")
+        print(f"{model_name} analysis error: {str(e)}")
         traceback.print_exc()
         return get_default_dish_analysis()
 
 def search_hidden_ingredients(dish_names, visible_ingredients_text, model_name='gemini-2.5-flash'):
     """Find hidden ingredients"""
     try:
-        print(f"🔍 Searching for hidden ingredients with {model_name}...")
+        print(f"Searching for hidden ingredients with {model_name}...")
         
         gemini_model = genai.GenerativeModel(model_name)
         
@@ -394,11 +392,11 @@ For each ingredient provide: name, quantity, unit."""
         response = call_gemini_with_retries(gemini_model, prompt, generation_config=generation_config)
         
         if response and response.text:
-            print(f"✅ Hidden ingredients response received")
+            print(f"Hidden ingredients response received")
             hidden = safe_parse_response(response, HiddenIngredients, "ingredients")
             
             if hidden and hidden.ingredients:
-                print(f"✅ Found {len(hidden.ingredients)} hidden ingredients")
+                print(f"Found {len(hidden.ingredients)} hidden ingredients")
                 return hidden
             else:
                 raise Exception("Failed to parse hidden ingredients")
@@ -406,13 +404,13 @@ For each ingredient provide: name, quantity, unit."""
             raise Exception("Empty response")
             
     except Exception as e:
-        print(f"❌ Hidden ingredients error with {model_name}: {str(e)}")
+        print(f"Hidden ingredients error with {model_name}: {str(e)}")
         return get_default_hidden_ingredients()
 
 def estimate_nutrition_from_ingredients(dish_names, all_ingredients_text, model_name='gemini-2.5-flash'):
     """Estimate nutrition"""
     try:
-        print(f"📊 Calculating nutrition with {model_name}...")
+        print(f"Calculating nutrition with {model_name}...")
         
         gemini_model = genai.GenerativeModel(model_name)
         
@@ -434,7 +432,7 @@ Provide nutrition facts: calories (kcal), protein (g), fat (g), carbohydrates (g
             nutrition = safe_parse_response(response, NutritionInfo, "nutrition")
             
             if nutrition and nutrition.calories_value is not None:
-                print(f"✅ Nutrition calculated: {nutrition.calories_value} kcal")
+                print(f"Nutrition calculated: {nutrition.calories_value} kcal")
                 return nutrition
             else:
                 raise Exception("Failed to parse nutrition response")
@@ -442,7 +440,7 @@ Provide nutrition facts: calories (kcal), protein (g), fat (g), carbohydrates (g
             raise Exception("Empty response")
             
     except Exception as e:
-        print(f"❌ Nutrition calculation error with {model_name}: {str(e)}")
+        print(f"Nutrition calculation error with {model_name}: {str(e)}")
         return get_default_nutrition()
 
 # ==================== MAIN PIPELINE ====================
@@ -483,9 +481,9 @@ def full_image_analysis(image_path, user_id, model_name='gemini-2.5-flash'):
         
         analysis_time = time.time() - start_time
         
-        print(f"✅ Analysis completed in {analysis_time:.2f} seconds with {model_name}")
-        print(f"🍴 Dishes: {dish_names}")
-        print(f"📋 Visible: {len(visible_dict)} | Hidden: {len(hidden_dict)}")
+        print(f"Analysis completed in {analysis_time:.2f} seconds with {model_name}")
+        print(f"Dishes: {dish_names}")
+        print(f"Visible: {len(visible_dict)} | Hidden: {len(hidden_dict)}")
         
         return {
             'dish_prediction': dish_names,
@@ -503,7 +501,7 @@ def full_image_analysis(image_path, user_id, model_name='gemini-2.5-flash'):
         }
         
     except Exception as e:
-        print(f"❌ Full analysis error with {model_name}: {str(e)}")
+        print(f"Full analysis error with {model_name}: {str(e)}")
         traceback.print_exc()
         
         default_nutrition = get_default_nutrition()
@@ -523,7 +521,7 @@ def full_image_analysis(image_path, user_id, model_name='gemini-2.5-flash'):
 def recalculate_nutrition_enhanced(ingredients_text, model_name='gemini-2.5-flash'):
     """Recalculate nutrition from ingredients text"""
     try:
-        print(f"🔄 Recalculating nutrition with {model_name}...")
+        print(f"Recalculating nutrition with {model_name}...")
         
         gemini_model = genai.GenerativeModel(model_name)
         
@@ -544,17 +542,17 @@ Provide accurate nutrition facts."""
             
             if nutrition:
                 result = nutrition_to_text(nutrition)
-                print(f"✅ Recalculated nutrition:\n{result}")
+                print(f"Recalculated nutrition:\n{result}")
                 return result
             else:
-                print("⚠️ Failed to parse response, using defaults")
+                print("Failed to parse response, using defaults")
                 return nutrition_to_text(get_default_nutrition())
         else:
-            print("⚠️ No response, using defaults")
+            print("No response, using defaults")
             return nutrition_to_text(get_default_nutrition())
             
     except Exception as e:
-        print(f"❌ Recalculation error with {model_name}: {str(e)}")
+        print(f"Recalculation error with {model_name}: {str(e)}")
         return nutrition_to_text(get_default_nutrition())
 
 def validate_image_for_analysis(image_path):
