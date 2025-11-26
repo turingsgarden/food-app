@@ -7,7 +7,7 @@ from PIL import Image
 # RESULTS_CSV = "analysis_results_viewer.csv"
 RESULTS_CSV = "analysis_results.csv"
 
-st.set_page_config(page_title="🍔 Food Calorie Estimator", layout="wide")
+st.set_page_config(page_title="Food Image Results Viewer", layout="wide")
 
 # Compact CSS styling
 st.markdown("""
@@ -57,7 +57,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📊 Food Image Results Viewer")
+st.title("Food Image Results Viewer")
 
 @st.cache_data
 def load_full_csv():
@@ -80,7 +80,7 @@ def load_full_csv():
 # Load results
 df = load_full_csv()
 if df is None or len(df) == 0:
-    st.warning("⚠️ No results in CSV yet.")
+    st.warning("No results in CSV yet.")
     st.stop()
 
 unique_images = df['image_path'].unique()
@@ -97,17 +97,30 @@ def next_image():
     if st.session_state.csv_idx < len(unique_images) - 1:
         st.session_state.csv_idx += 1
 
-col1, col2, col3 = st.columns([1, 6, 1])
-with col1:
-    st.button("← Prev", on_click=prev_image, disabled=(st.session_state.csv_idx == 0))
-with col2:
-    st.markdown(f"**Image {st.session_state.csv_idx + 1} / {len(unique_images)}**")
-with col3:
-    st.button("Next →", on_click=next_image, disabled=(st.session_state.csv_idx == len(unique_images) - 1))
+# === Single-row navigation: Prev | Slider | Next ===
+nav_left, nav_mid, nav_right = st.columns([1, 6, 1])
 
-new_idx = st.slider("Jump to image:", 1, len(unique_images), st.session_state.csv_idx + 1) - 1
-if new_idx != st.session_state.csv_idx:
-    st.session_state.csv_idx = new_idx
+with nav_left:
+    st.button("← Prev", on_click=prev_image,
+              disabled=(st.session_state.csv_idx == 0))
+
+with nav_mid:
+    new_idx = st.slider(
+        f"Image {st.session_state.csv_idx + 1} / {len(unique_images)}",
+        1,
+        len(unique_images),
+        st.session_state.csv_idx + 1,
+        label_visibility="visible",   # shows the counter above the slider
+    ) - 1
+
+    if new_idx != st.session_state.csv_idx:
+        st.session_state.csv_idx = new_idx
+
+with nav_right:
+    st.button("Next →", on_click=next_image,
+              disabled=(st.session_state.csv_idx == len(unique_images) - 1))
+
+
 
 # Display current image and results
 current_image_path = unique_images[st.session_state.csv_idx]
