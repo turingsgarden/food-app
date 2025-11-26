@@ -132,7 +132,7 @@ cols = st.columns([1.5, 2, 2, 2])
 
 # Left column: Image
 with cols[0]:
-    st.markdown(f"**📷 {os.path.basename(current_image_path)}**")
+    st.markdown(f"**{os.path.basename(current_image_path)}**")
     if os.path.exists(current_image_path):
         img = Image.open(current_image_path)
         st.image(img, use_container_width=True)
