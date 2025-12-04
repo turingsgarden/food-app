@@ -2,7 +2,6 @@ import streamlit as st
 import json
 import os
 from PIL import Image
-import glob
 
 def load_model_data():
     model_files = {"gemini-2.5-pro": "output/mass_prediction.json"}
@@ -81,15 +80,23 @@ def build_indices(model_data, available_models, ground_truth_data):
             if dish_id:
                 model_dish_mapping[model_name][str(dish_id)] = item
     
-    # Build ground truth index (by dish_id from image_filename)
+    # Build ground truth index - 关键修复：根据dish_id直接匹配
     ground_truth_mapping = {}
     for item in ground_truth_data:
-        if isinstance(item, dict) and 'image_filename' in item:
-            # Extract dish_id from image_filename (format: dish_1234567890_rgb.png)
-            filename = item['image_filename']
-            if filename.startswith('dish_') and '_rgb' in filename:
-                dish_id = filename.split('_')[1]  # Get the numeric dish_id
-                ground_truth_mapping[dish_id] = item
+        if isinstance(item, dict):
+            # 方法1: 直接从item中获取dish_id（如果存在）
+            if 'dish_id' in item:
+                ground_truth_mapping[str(item['dish_id'])] = item
+            # 方法2: 从image_filename中提取dish_id
+            elif 'image_filename' in item:
+                filename = item['image_filename']
+                # 格式: dish_1234567890_rgb.png
+                if filename.startswith('dish_') and '_rgb' in filename:
+                    # 提取数字部分作为dish_id
+                    parts = filename.split('_')
+                    if len(parts) >= 2 and parts[1].isdigit():
+                        dish_id = parts[1]
+                        ground_truth_mapping[dish_id] = item
     
     # Build image path index (by dish_id)
     image_files = get_all_images()
@@ -98,10 +105,24 @@ def build_indices(model_data, available_models, ground_truth_data):
         for img_path in image_files:
             filename = os.path.basename(img_path)
             # Try to extract dish_id from filename
-            # Support formats: dish_1234567890_rgb.png or 1234567890.jpg
+            # Support formats: dish_1234567890_rgb.png
             if filename.startswith('dish_') and '_rgb' in filename:
-                dish_id = filename.split('_')[1]  # dish_1234567890_rgb.png -> 1234567890
-                image_mapping[dish_id] = img_path
+                # 提取dish_id: dish_1234567890_rgb.png -> 1234567890
+                parts = filename.split('_')
+                if len(parts) >= 2 and parts[1].isdigit():
+                    dish_id = parts[1]
+                    image_mapping[dish_id] = img_path
+    
+    # 打印调试信息
+    print(f"Built indices:")
+    print(f"  - Model dishes: {len(model_dish_mapping.get('gemini-2.5-pro', {}))}")
+    print(f"  - Ground truth dishes: {len(ground_truth_mapping)}")
+    print(f"  - Image dishes: {len(image_mapping)}")
+    
+    # 打印一些dish_id示例
+    if ground_truth_mapping:
+        sample_ids = list(ground_truth_mapping.keys())[:5]
+        print(f"  - Sample ground truth dish_ids: {sample_ids}")
     
     return model_dish_mapping, ground_truth_mapping, image_mapping
 
@@ -113,10 +134,14 @@ def find_model_response_by_dish_id(dish_id, model_dish_mapping, model_name):
 
 def find_ground_truth_by_dish_id(dish_id, ground_truth_mapping):
     """Find ground truth by dish_id"""
+    if not dish_id:
+        return None
     return ground_truth_mapping.get(str(dish_id))
 
 def find_image_by_dish_id(dish_id, image_mapping):
     """Find image path by dish_id"""
+    if not dish_id:
+        return None
     return image_mapping.get(str(dish_id))
 
 def format_analysis_time(seconds):
@@ -159,16 +184,15 @@ def display_model_mass_prediction(response, model_name):
     for item in food_items:
         name = item.get("name", "Unknown")
         mass = item.get("predicted_mass_g", 0)
-        # Remove confidence display
         food_items_list.append(f"• {name:<25} {mass:>8.1f} g")
     
     food_items_text = "\n".join(food_items_list) if food_items_list else "No food items detected"
     
     content_html = f"""
 <div class='model-content'>
-<div class='model-title'>{model_name}</div>
+<div class='model-title'>{model_name} {time_display}</div>
 
-<div class='section-title'>Mass Prediction {time_display}</div>
+<div class='section-title'>Mass Prediction</div>
 <div class='content-box'>
 <strong>Total Mass:</strong> {total_mass_text}
 <strong>Calculated Volume:</strong> {volume_text}
@@ -183,7 +207,6 @@ def display_model_mass_prediction(response, model_name):
         f"""
     <div class="model-container">
         {content_html}
-    </div>
     """,
         unsafe_allow_html=True,
     )
@@ -240,7 +263,7 @@ def main():
         layout="wide"
     )
     
-    # CSS styles
+    # CSS styles - 移除多余的空白框
     st.markdown("""
     <style>
         .main-container {
@@ -279,14 +302,6 @@ def main():
             border: 1px solid #e1e4e8;
             font-size: 0.9em;
             color: #333;
-        }
-        
-        .analysis-time {
-            font-size: 1em !important;
-            color: #666;
-            margin-left: 8px;
-            font-weight: 500;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
         .model-title {
@@ -359,26 +374,12 @@ def main():
             border: 1px solid #e1e4e8;
         }
         
-        .nav-button {
-            margin: 0 5px;
-            font-size: 12px;
-            padding: 4px 8px;
-        }
-        
         .search-box {
             margin-bottom: 15px;
         }
         
         * {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-        }
-        
-        .stats-box {
-            background: #f0f8ff;
-            padding: 10px;
-            border-radius: 6px;
-            margin: 5px 0;
-            border-left: 4px solid #1f77b4;
         }
         
         .error-box {
@@ -397,12 +398,15 @@ def main():
             border-left: 4px solid #2ca02c;
         }
         
-        .info-box {
-            background: #e6f7ff;
-            padding: 10px;
-            border-radius: 6px;
-            margin: 5px 0;
-            border-left: 4px solid #1890ff;
+        /* 移除空白框样式 */
+        .stats-box {
+            display: none;
+        }
+        
+        /* 调整布局，移除多余空白 */
+        div[data-testid="stHorizontalBlock"] > div:nth-child(2) > div > div > div > div {
+            padding: 0 !important;
+            margin: 0 !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -526,6 +530,15 @@ def main():
         )
         current_ground_truth = find_ground_truth_by_dish_id(current_dish_id, ground_truth_mapping)
         
+        # 调试信息
+        with st.expander("Debug Info", expanded=False):
+            st.write(f"Current Dish ID: {current_dish_id}")
+            st.write(f"Ground Truth Found: {current_ground_truth is not None}")
+            if current_ground_truth:
+                st.write(f"Ground Truth Keys: {list(current_ground_truth.keys())}")
+                if 'nutrition' in current_ground_truth:
+                    st.write(f"Nutrition: {current_ground_truth['nutrition']}")
+        
         # Display dish ID
         st.markdown(f"<div class='dish-id-display'>Dish ID: {current_dish_id} (Page {current_page + 1}/{total_pages})</div>", unsafe_allow_html=True)
         
@@ -607,9 +620,8 @@ def main():
             # Display model prediction
             display_model_mass_prediction(current_model_response, "gemini-2.5-pro")
             
-            # Display additional info if model response exists
+            # Display success status only
             if current_model_response:
-                # Display success status
                 success = current_model_response.get("success", False)
                 if success:
                     st.markdown("<div class='success-box'>", unsafe_allow_html=True)
@@ -619,15 +631,6 @@ def main():
                     st.markdown("<div class='error-box'>", unsafe_allow_html=True)
                     st.markdown("**Status:** ❌ Failed")
                     st.markdown("</div>", unsafe_allow_html=True)
-                
-                # Display timestamps
-                st.markdown("<div class='stats-box'>", unsafe_allow_html=True)
-                st.markdown("**Timestamps:**")
-                if 'analysis_timestamp' in current_model_response:
-                    st.text(f"Analysis: {current_model_response['analysis_timestamp']}")
-                if 'processing_timestamp' in current_model_response:
-                    st.text(f"Processing: {current_model_response['processing_timestamp']}")
-                st.markdown("</div>", unsafe_allow_html=True)
         
         with col_right:
             # Display ground truth
@@ -650,7 +653,8 @@ def main():
                     if error_percent < 10:
                         box_class = "success-box"
                     elif error_percent < 30:
-                        box_class = "stats-box"
+                        box_class = "error-box"
+                        box_class = "error-box"  # 改为error-box
                     else:
                         box_class = "error-box"
                     
