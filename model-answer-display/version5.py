@@ -242,8 +242,10 @@ def display_ground_truth_mass(ground_truth):
     
     # Get ground truth mass from nutrition.mass
     ground_truth_mass = None
-    if 'nutrition' in ground_truth and isinstance(ground_truth['nutrition'], dict):
-        ground_truth_mass = ground_truth['nutrition'].get('mass')
+    if 'nutrition' in ground_truth:
+        nutrition_data = ground_truth['nutrition']
+    if isinstance(nutrition_data, dict) and 'mass' in nutrition_data:
+        ground_truth_mass = nutrition_data['mass']
     
     # Display ground truth mass
     mass_text = f"{ground_truth_mass:.1f} g" if ground_truth_mass is not None else "N/A"
