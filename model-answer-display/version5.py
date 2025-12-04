@@ -263,7 +263,7 @@ def main():
         layout="wide"
     )
     
-    # CSS styles - 移除多余的空白框
+    # CSS styles
     st.markdown("""
     <style>
         .main-container {
@@ -396,17 +396,6 @@ def main():
             border-radius: 6px;
             margin: 5px 0;
             border-left: 4px solid #2ca02c;
-        }
-        
-        /* 移除空白框样式 */
-        .stats-box {
-            display: none;
-        }
-        
-        /* 调整布局，移除多余空白 */
-        div[data-testid="stHorizontalBlock"] > div:nth-child(2) > div > div > div > div {
-            padding: 0 !important;
-            margin: 0 !important;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -619,18 +608,6 @@ def main():
         with col_mid:
             # Display model prediction
             display_model_mass_prediction(current_model_response, "gemini-2.5-pro")
-            
-            # Display success status only
-            if current_model_response:
-                success = current_model_response.get("success", False)
-                if success:
-                    st.markdown("<div class='success-box'>", unsafe_allow_html=True)
-                    st.markdown("**Status:** ✅ Success")
-                    st.markdown("</div>", unsafe_allow_html=True)
-                else:
-                    st.markdown("<div class='error-box'>", unsafe_allow_html=True)
-                    st.markdown("**Status:** ❌ Failed")
-                    st.markdown("</div>", unsafe_allow_html=True)
         
         with col_right:
             # Display ground truth
