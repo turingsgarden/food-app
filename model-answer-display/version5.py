@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import os
 from PIL import Image
+import glob
 
 def load_model_data():
     model_files = {"gemini-2.5-pro": "output/mass_prediction.json"}
@@ -11,7 +12,7 @@ def load_model_data():
     available_models = []
     ground_truth_data = []
 
-    
+    # Load model prediction data
     for model_name, file_path in model_files.items():
         try:
             encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
@@ -32,7 +33,7 @@ def load_model_data():
         except Exception as e:
             st.error(f"Error loading {model_name}: {e}")
 
-   
+    # Load ground truth data
     try:
         with open(ground_truth_path, 'r', encoding='utf-8') as f:
             ground_truth_data = json.load(f)
@@ -45,7 +46,7 @@ def load_model_data():
     return model_data, available_models, ground_truth_data
 
 def get_all_images():
-   
+    """Get all image paths, support multiple formats"""
     image_dir = "Nutrition5k/Nutrition5K-300"
     
     if not os.path.exists(image_dir):
@@ -70,64 +71,56 @@ def get_all_images():
     return image_files
 
 def build_indices(model_data, available_models, ground_truth_data):
-    
-    # 构建模型预测索引 (按dish_id)
+    """Build indices for fast lookup"""
+    # Build model prediction index (by dish_id)
     model_dish_mapping = {}
     for model_name in available_models:
         model_dish_mapping[model_name] = {}
         for item in model_data.get(model_name, []):
             dish_id = item.get("dish_id")
             if dish_id:
-                model_dish_mapping[model_name][dish_id] = item
+                model_dish_mapping[model_name][str(dish_id)] = item
     
-   
+    # Build ground truth index (by dish_id from image_filename)
     ground_truth_mapping = {}
     for item in ground_truth_data:
-        if isinstance(item, dict) and 'dish_id' in item:
-            ground_truth_mapping[str(item['dish_id'])] = item
-        elif isinstance(item, dict) and 'image_filename' in item:
-            
+        if isinstance(item, dict) and 'image_filename' in item:
+            # Extract dish_id from image_filename (format: dish_1234567890_rgb.png)
             filename = item['image_filename']
-           
             if filename.startswith('dish_') and '_rgb' in filename:
-                dish_id = filename.split('_')[1]
+                dish_id = filename.split('_')[1]  # Get the numeric dish_id
                 ground_truth_mapping[dish_id] = item
     
-   
+    # Build image path index (by dish_id)
     image_files = get_all_images()
     image_mapping = {}
     if image_files:
         for img_path in image_files:
             filename = os.path.basename(img_path)
-      
+            # Try to extract dish_id from filename
+            # Support formats: dish_1234567890_rgb.png or 1234567890.jpg
             if filename.startswith('dish_') and '_rgb' in filename:
-                dish_id = filename.split('_')[1]
-            elif filename.endswith('.jpg') or filename.endswith('.png'):
-                dish_id = filename.split('.')[0]
-            else:
-                dish_id = None
-            
-            if dish_id:
+                dish_id = filename.split('_')[1]  # dish_1234567890_rgb.png -> 1234567890
                 image_mapping[dish_id] = img_path
     
     return model_dish_mapping, ground_truth_mapping, image_mapping
 
 def find_model_response_by_dish_id(dish_id, model_dish_mapping, model_name):
-  
+    """Find model response by dish_id"""
     if model_name not in model_dish_mapping:
         return None
     return model_dish_mapping[model_name].get(str(dish_id))
 
 def find_ground_truth_by_dish_id(dish_id, ground_truth_mapping):
-   
+    """Find ground truth by dish_id"""
     return ground_truth_mapping.get(str(dish_id))
 
 def find_image_by_dish_id(dish_id, image_mapping):
- 
+    """Find image path by dish_id"""
     return image_mapping.get(str(dish_id))
 
 def format_analysis_time(seconds):
- 
+    """Format analysis time"""
     if seconds is None:
         return "N/A"
     if seconds < 60:
@@ -138,35 +131,36 @@ def format_analysis_time(seconds):
         return f"{minutes}m{remaining_seconds:.1f}s"
 
 def display_model_mass_prediction(response, model_name):
-   
+    """Display model's mass prediction"""
     if not response:
         st.info("No model response available")
         return
     
-  
+    # Get analysis time
     analysis_time_seconds = response.get("analysis_time_seconds")
     analysis_time_formatted = response.get("analysis_time", format_analysis_time(analysis_time_seconds))
     
-   
+    # Get mass estimation
     mass_estimation = response.get("mass_estimation", {})
     total_mass = mass_estimation.get("total_mass_g")
     calculated_volume = mass_estimation.get("calculated_volume_cm3")
     food_items = mass_estimation.get("food_items", [])
     
     time_display = f"({analysis_time_formatted})" if analysis_time_formatted and analysis_time_formatted != "N/A" else ""
-
+    
+    # Display total mass
     total_mass_text = f"{total_mass:.1f} g" if total_mass is not None else "N/A"
     
-  
+    # Display calculated volume
     volume_text = f"{calculated_volume:.1f} cm³" if calculated_volume is not None else "N/A"
     
-   
+    # Display food items (without confidence)
     food_items_list = []
     for item in food_items:
         name = item.get("name", "Unknown")
         mass = item.get("predicted_mass_g", 0)
-        confidence = item.get("confidence", 0)
-        food_items_list.append(f"• {name:<20} {mass:>8.1f} g (Confidence: {confidence:.2f})")
+        # Remove confidence display
+        food_items_list.append(f"• {name:<25} {mass:>8.1f} g")
     
     food_items_text = "\n".join(food_items_list) if food_items_list else "No food items detected"
     
@@ -174,13 +168,13 @@ def display_model_mass_prediction(response, model_name):
 <div class='model-content'>
 <div class='model-title'>{model_name}</div>
 
-<div class='section-title'>质量预测 {time_display}</div>
+<div class='section-title'>Mass Prediction {time_display}</div>
 <div class='content-box'>
-<strong>Total mass:</strong> {total_mass_text}
-<strong>Calculated Vol:</strong> {volume_text}
+<strong>Total Mass:</strong> {total_mass_text}
+<strong>Calculated Volume:</strong> {volume_text}
 </div>
 
-<div class='section-title'>食物项目</div>
+<div class='section-title'>Food Items</div>
 <div class='content-box'>{food_items_text}</div>
 </div>
 """
@@ -195,29 +189,39 @@ def display_model_mass_prediction(response, model_name):
     )
 
 def display_ground_truth_mass(ground_truth):
-
+    """Display ground truth mass information"""
     if not ground_truth:
         st.info("No ground truth available")
         return
     
-    
+    # Get ground truth mass from nutrition.mass
     ground_truth_mass = None
-    if 'ground_truth_mass_g' in ground_truth:
-        ground_truth_mass = ground_truth['ground_truth_mass_g']
-    elif 'mass_g' in ground_truth:
-        ground_truth_mass = ground_truth['mass_g']
-    elif 'nutrition' in ground_truth and 'mass' in ground_truth['nutrition']:
+    if 'nutrition' in ground_truth and 'mass' in ground_truth['nutrition']:
         ground_truth_mass = ground_truth['nutrition']['mass']
     
-
+    # Display ground truth mass
     mass_text = f"{ground_truth_mass:.1f} g" if ground_truth_mass is not None else "N/A"
+    
+    # Display ingredients if available
+    ingredients_text = "N/A"
+    if 'ingredients' in ground_truth and ground_truth['ingredients']:
+        ingredients_list = []
+        for ing in ground_truth['ingredients']:
+            name = ing.get('name', 'Unknown')
+            quantity = ing.get('quantity', 0)
+            unit = ing.get('unit', 'g')
+            ingredients_list.append(f"• {name:<25} {quantity:>8.1f} {unit}")
+        ingredients_text = "\n".join(ingredients_list)
     
     content_html = f"""
 <div class='model-content'>
 <div class='ground-truth-title'>Ground Truth</div>
 
-<div class='section-title'>
+<div class='section-title'>Actual Mass</div>
 <div class='content-box'>{mass_text}</div>
+
+<div class='section-title'>Ingredients</div>
+<div class='content-box'>{ingredients_text}</div>
 </div>
 """
 
@@ -236,7 +240,7 @@ def main():
         layout="wide"
     )
     
-    # CSS样式
+    # CSS styles
     st.markdown("""
     <style>
         .main-container {
@@ -246,7 +250,7 @@ def main():
         
         .model-container {
             height: auto !important;
-            min-height: 300px;
+            min-height: 400px;
             max-height: none !important;
             overflow: visible !important;
             border: 1px solid #e1e4e8;
@@ -266,14 +270,14 @@ def main():
         
         .content-box {
             white-space: pre-wrap;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
             margin: 6px 0;
             padding: 10px;
             background: #f8f9fa;
             border-radius: 6px;
             line-height: 1.5;
             border: 1px solid #e1e4e8;
-            font-size: 0.95em;
+            font-size: 0.9em;
             color: #333;
         }
         
@@ -347,6 +351,24 @@ def main():
             text-align: center;
         }
         
+        .nav-container {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #e1e4e8;
+        }
+        
+        .nav-button {
+            margin: 0 5px;
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+        
+        .search-box {
+            margin-bottom: 15px;
+        }
+        
         * {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
         }
@@ -358,12 +380,40 @@ def main():
             margin: 5px 0;
             border-left: 4px solid #1f77b4;
         }
+        
+        .error-box {
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 5px 0;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .success-box {
+            background: #e6ffe6;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 5px 0;
+            border-left: 4px solid #2ca02c;
+        }
+        
+        .info-box {
+            background: #e6f7ff;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 5px 0;
+            border-left: 4px solid #1890ff;
+        }
     </style>
     """, unsafe_allow_html=True)
     
-
-    if 'current_dish_id' not in st.session_state:
-        st.session_state.current_dish_id = None
+    # Initialize session state
+    if 'current_page' not in st.session_state:
+        st.session_state.current_page = 0
+    if 'search_dish_id' not in st.session_state:
+        st.session_state.search_dish_id = ""
+    if 'search_mode' not in st.session_state:
+        st.session_state.search_mode = False
     if 'model_dish_mapping' not in st.session_state:
         st.session_state.model_dish_mapping = None
     if 'available_models' not in st.session_state:
@@ -372,9 +422,12 @@ def main():
         st.session_state.ground_truth_mapping = None
     if 'image_mapping' not in st.session_state:
         st.session_state.image_mapping = None
+    if 'valid_images' not in st.session_state:
+        st.session_state.valid_images = None
     if 'data_loaded' not in st.session_state:
         st.session_state.data_loaded = False
     
+    # Load data
     if not st.session_state.data_loaded:
         with st.spinner("Loading data..."):
             model_data, available_models, ground_truth_data = load_model_data()
@@ -386,68 +439,156 @@ def main():
                 model_data, available_models, ground_truth_data
             )
             
+            # Create list of valid images for pagination
+            valid_images = []
+            for dish_id, img_path in image_mapping.items():
+                valid_images.append({
+                    'dish_id': dish_id,
+                    'image_path': img_path
+                })
+            
             st.session_state.model_dish_mapping = model_dish_mapping
             st.session_state.available_models = available_models
             st.session_state.ground_truth_mapping = ground_truth_mapping
             st.session_state.image_mapping = image_mapping
+            st.session_state.valid_images = valid_images
             st.session_state.data_loaded = True
     
-    
+    # Get data
     model_dish_mapping = st.session_state.model_dish_mapping
     available_models = st.session_state.available_models
     ground_truth_mapping = st.session_state.ground_truth_mapping
     image_mapping = st.session_state.image_mapping
-
+    valid_images = st.session_state.valid_images
+    
+    if not valid_images:
+        st.warning("No valid images with responses.")
+        return
+    
+    # Title
     st.title("🍽️ Food Mass Prediction Display")
     
-   
+    # Search box
     with st.container():
-        st.markdown("<div class='search-container'>", unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns([2, 1, 1])
+        st.markdown("<div class='search-box'>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns([3, 1, 1])
         
         with col1:
-            dish_id_input = st.text_input(
+            search_input = st.text_input(
                 "Search by Dish ID:",
+                value=st.session_state.search_dish_id,
                 placeholder="Enter dish ID (e.g., 1558113154)",
-                key="dish_id_search"
+                key="dish_id_search_input"
             )
         
         with col2:
             if st.button("🔍 Search", use_container_width=True):
-                if dish_id_input.strip():
-                    st.session_state.current_dish_id = dish_id_input.strip()
-                    st.rerun()
+                if search_input.strip():
+                    st.session_state.search_dish_id = search_input.strip()
+                    st.session_state.search_mode = True
+                    
+                    # Find the dish in valid_images
+                    found_index = -1
+                    for i, item in enumerate(valid_images):
+                        if item['dish_id'] == st.session_state.search_dish_id:
+                            found_index = i
+                            break
+                    
+                    if found_index >= 0:
+                        st.session_state.current_page = found_index
+                        st.success(f"Found dish ID: {st.session_state.search_dish_id}")
+                    else:
+                        st.error(f"Dish ID {st.session_state.search_dish_id} not found")
+                else:
+                    st.session_state.search_mode = False
         
         with col3:
-        
-            if st.button("🎲 Random Dish", use_container_width=True):
-                if image_mapping:
-                    random_dish_id = list(image_mapping.keys())[0]  # 取第一个
-                    st.session_state.current_dish_id = random_dish_id
-                    st.rerun()
+            if st.button("📄 Clear Search", use_container_width=True):
+                st.session_state.search_dish_id = ""
+                st.session_state.search_mode = False
+                st.session_state.current_page = 0
         
         st.markdown("</div>", unsafe_allow_html=True)
     
-   
-    current_dish_id = st.session_state.current_dish_id
+    # Navigation and pagination
+    total_pages = len(valid_images)
+    current_page = st.session_state.current_page
     
-    if current_dish_id:
-      
-        current_image_path = find_image_by_dish_id(current_dish_id, image_mapping)
+    if 0 <= current_page < total_pages:
+        current_item = valid_images[current_page]
+        current_dish_id = current_item['dish_id']
+        current_image_path = current_item['image_path']
+        image_name = os.path.basename(current_image_path)
+        
+        # Get current data
         current_model_response = find_model_response_by_dish_id(
             current_dish_id, model_dish_mapping, "gemini-2.5-pro"
         )
         current_ground_truth = find_ground_truth_by_dish_id(current_dish_id, ground_truth_mapping)
         
-    
-        st.markdown(f"<div class='dish-id-display'>Dish ID: {current_dish_id}</div>", unsafe_allow_html=True)
+        # Display dish ID
+        st.markdown(f"<div class='dish-id-display'>Dish ID: {current_dish_id} (Page {current_page + 1}/{total_pages})</div>", unsafe_allow_html=True)
         
+        # Navigation controls
+        with st.container():
+            st.markdown("<div class='nav-container'>", unsafe_allow_html=True)
+            
+            nav_cols = st.columns([1, 1, 1, 1, 1, 1, 1])
+            
+            with nav_cols[0]:
+                if st.button("⏮️ First", use_container_width=True):
+                    st.session_state.current_page = 0
+                    st.session_state.search_mode = False
+                    st.rerun()
+            
+            with nav_cols[1]:
+                if st.button("◀️ Prev", use_container_width=True, disabled=current_page <= 0):
+                    if current_page > 0:
+                        st.session_state.current_page -= 1
+                        st.session_state.search_mode = False
+                        st.rerun()
+            
+            with nav_cols[2]:
+                page_input = st.number_input(
+                    "Page",
+                    min_value=1,
+                    max_value=total_pages,
+                    value=current_page + 1,
+                    label_visibility="collapsed",
+                    key="page_jump_input"
+                )
+            
+            with nav_cols[3]:
+                if st.button("Go", use_container_width=True):
+                    if 1 <= page_input <= total_pages:
+                        st.session_state.current_page = page_input - 1
+                        st.session_state.search_mode = False
+                        st.rerun()
+            
+            with nav_cols[4]:
+                if st.button("Next ▶️", use_container_width=True, disabled=current_page >= total_pages - 1):
+                    if current_page < total_pages - 1:
+                        st.session_state.current_page += 1
+                        st.session_state.search_mode = False
+                        st.rerun()
+            
+            with nav_cols[5]:
+                if st.button("Last ⏭️", use_container_width=True):
+                    st.session_state.current_page = total_pages - 1
+                    st.session_state.search_mode = False
+                    st.rerun()
+            
+            with nav_cols[6]:
+                # Display current position
+                st.markdown(f"**{current_page + 1}/{total_pages}**")
+            
+            st.markdown("</div>", unsafe_allow_html=True)
         
+        # Three-column layout
         col_left, col_mid, col_right = st.columns([1, 1, 1])
         
         with col_left:
-           
+            # Display image
             if current_image_path:
                 try:
                     image = Image.open(current_image_path)
@@ -455,34 +596,33 @@ def main():
                     st.markdown("<div class='centered-image'>", unsafe_allow_html=True)
                     st.image(image, width='stretch')
                     st.markdown("</div>", unsafe_allow_html=True)
-                    st.markdown(f"<div class='filename-text'>{os.path.basename(current_image_path)}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='filename-text'>{image_name}</div>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
                 except Exception as e:
                     st.error(f"Unable to load image: {e}")
             else:
                 st.warning(f"No image found for dish ID: {current_dish_id}")
-              
-                if current_model_response and 'file_paths' in current_model_response:
-                    file_paths = current_model_response['file_paths']
-                    st.info("Available file paths in model data:")
-                    for key, path in file_paths.items():
-                        st.text(f"{key}: {path}")
         
         with col_mid:
-            
+            # Display model prediction
             display_model_mass_prediction(current_model_response, "gemini-2.5-pro")
             
-         
+            # Display additional info if model response exists
             if current_model_response:
-                st.markdown("<div class='stats-box'>", unsafe_allow_html=True)
-                st.markdown("**Additional Info:**")
-                
-              
+                # Display success status
                 success = current_model_response.get("success", False)
-                status = "✅ Success" if success else "❌ Failed"
-                st.text(f"Status: {status}")
+                if success:
+                    st.markdown("<div class='success-box'>", unsafe_allow_html=True)
+                    st.markdown("**Status:** ✅ Success")
+                    st.markdown("</div>", unsafe_allow_html=True)
+                else:
+                    st.markdown("<div class='error-box'>", unsafe_allow_html=True)
+                    st.markdown("**Status:** ❌ Failed")
+                    st.markdown("</div>", unsafe_allow_html=True)
                 
-               
+                # Display timestamps
+                st.markdown("<div class='stats-box'>", unsafe_allow_html=True)
+                st.markdown("**Timestamps:**")
                 if 'analysis_timestamp' in current_model_response:
                     st.text(f"Analysis: {current_model_response['analysis_timestamp']}")
                 if 'processing_timestamp' in current_model_response:
@@ -490,55 +630,46 @@ def main():
                 st.markdown("</div>", unsafe_allow_html=True)
         
         with col_right:
-           
+            # Display ground truth
             display_ground_truth_mass(current_ground_truth)
             
-            
-            if current_ground_truth:
-                st.markdown("<div class='stats-box'>", unsafe_allow_html=True)
-                st.markdown("**Ground Truth Details:**")
+            # Calculate error if both mass data exist
+            if (current_model_response and 
+                current_model_response.get('mass_estimation', {}).get('total_mass_g') is not None and
+                current_ground_truth and 
+                current_ground_truth.get('nutrition', {}).get('mass') is not None):
                 
-               
-                if 'dish_name' in current_ground_truth:
-                    st.text(f"Dish: {current_ground_truth['dish_name']}")
-                if 'ingredients' in current_ground_truth:
-                    st.text(f"Ingredients: {len(current_ground_truth['ingredients'])} items")
+                predicted_mass = current_model_response['mass_estimation']['total_mass_g']
+                true_mass = current_ground_truth['nutrition']['mass']
                 
-             
-                for key in ['calories', 'protein_g', 'fat_g', 'carbs_g']:
-                    if key in current_ground_truth:
-                        st.text(f"{key}: {current_ground_truth[key]}")
-                st.markdown("</div>", unsafe_allow_html=True)
-                
-              
-                if (current_model_response and 
-                    current_model_response.get('mass_estimation', {}).get('total_mass_g') and
-                    current_ground_truth.get('ground_truth_mass_g')):
+                if true_mass > 0:
+                    error = abs(predicted_mass - true_mass)
+                    error_percent = (error / true_mass) * 100
                     
-                    predicted_mass = current_model_response['mass_estimation']['total_mass_g']
-                    true_mass = current_ground_truth['ground_truth_mass_g']
+                    # Choose box color based on error percentage
+                    if error_percent < 10:
+                        box_class = "success-box"
+                    elif error_percent < 30:
+                        box_class = "stats-box"
+                    else:
+                        box_class = "error-box"
                     
+                    st.markdown(f"<div class='{box_class}'>", unsafe_allow_html=True)
+                    st.markdown("**Prediction Error:**")
+                    st.text(f"Absolute: {error:.1f} g")
+                    st.text(f"Relative: {error_percent:.1f}%")
+                    
+                    # Display mass ratio
                     if true_mass > 0:
-                        error = abs(predicted_mass - true_mass)
-                        error_percent = (error / true_mass) * 100
-                        
-                        st.markdown("<div class='stats-box' style='border-left-color: #ff6b6b;'>", unsafe_allow_html=True)
-                        st.markdown("**Prediction Error:**")
-                        st.text(f"Absolute: {error:.1f} g")
-                        st.text(f"Relative: {error_percent:.1f}%")
-                        st.markdown("</div>", unsafe_allow_html=True)
+                        mass_ratio = predicted_mass / true_mass
+                        st.text(f"Predicted/True: {mass_ratio:.2f}x")
+                    
+                    st.markdown("</div>", unsafe_allow_html=True)
     
     else:
-        st.info("👆 Enter a Dish ID to search for predictions")
-        if image_mapping:
-            total_dishes = len(image_mapping)
-            st.markdown(f"**Dataset Stats:** {total_dishes} dishes available")
-          
-            if total_dishes > 0:
-                st.markdown("**Sample Dish IDs:**")
-                sample_ids = list(image_mapping.keys())[:5]
-                for dish_id in sample_ids:
-                    st.text(f"• {dish_id}")
+        st.error(f"Invalid page number: {current_page}. Total pages: {total_pages}")
+        st.session_state.current_page = 0
+        st.rerun()
 
 def run_version5():
     main()
