@@ -80,23 +80,23 @@ def build_indices(model_data, available_models, ground_truth_data):
             if dish_id:
                 model_dish_mapping[model_name][str(dish_id)] = item
     
-    # Build ground truth index - 关键修复：根据dish_id直接匹配
+    # Build ground truth index - 关键修复：根据image_filename提取dish_id
     ground_truth_mapping = {}
     for item in ground_truth_data:
         if isinstance(item, dict):
-            # 方法1: 直接从item中获取dish_id（如果存在）
-            if 'dish_id' in item:
-                ground_truth_mapping[str(item['dish_id'])] = item
-            # 方法2: 从image_filename中提取dish_id
-            elif 'image_filename' in item:
+            # 从image_filename中提取dish_id
+            if 'image_filename' in item:
                 filename = item['image_filename']
                 # 格式: dish_1234567890_rgb.png
                 if filename.startswith('dish_') and '_rgb' in filename:
-                    # 提取数字部分作为dish_id
-                    parts = filename.split('_')
+                    # 提取数字部分作为dish_id: dish_1234567890_rgb.png -> 1234567890
+                    # 移除可能的扩展名
+                    filename_without_ext = filename.split('.')[0]
+                    parts = filename_without_ext.split('_')
                     if len(parts) >= 2 and parts[1].isdigit():
                         dish_id = parts[1]
                         ground_truth_mapping[dish_id] = item
+                        print(f"Mapped dish_id: {dish_id} from filename: {filename}")
     
     # Build image path index (by dish_id)
     image_files = get_all_images()
@@ -108,7 +108,8 @@ def build_indices(model_data, available_models, ground_truth_data):
             # Support formats: dish_1234567890_rgb.png
             if filename.startswith('dish_') and '_rgb' in filename:
                 # 提取dish_id: dish_1234567890_rgb.png -> 1234567890
-                parts = filename.split('_')
+                filename_without_ext = filename.split('.')[0]
+                parts = filename_without_ext.split('_')
                 if len(parts) >= 2 and parts[1].isdigit():
                     dish_id = parts[1]
                     image_mapping[dish_id] = img_path
@@ -123,9 +124,23 @@ def build_indices(model_data, available_models, ground_truth_data):
     if ground_truth_mapping:
         sample_ids = list(ground_truth_mapping.keys())[:5]
         print(f"  - Sample ground truth dish_ids: {sample_ids}")
+        # 打印示例数据中的mass信息
+        for dish_id in sample_ids:
+            item = ground_truth_mapping[dish_id]
+            if 'nutrition' in item and 'mass' in item['nutrition']:
+                print(f"    Dish {dish_id}: mass = {item['nutrition']['mass']} g")
     
     return model_dish_mapping, ground_truth_mapping, image_mapping
 
+
+    st.markdown(
+        f"""
+    <div class="model-container">
+        {content_html}
+    """,
+        unsafe_allow_html=True,
+    )
+    
 def find_model_response_by_dish_id(dish_id, model_dish_mapping, model_name):
     """Find model response by dish_id"""
     if model_name not in model_dish_mapping:
@@ -217,10 +232,18 @@ def display_ground_truth_mass(ground_truth):
         st.info("No ground truth available")
         return
     
+    # 添加调试信息
+    with st.expander("Debug Ground Truth", expanded=False):
+        st.write(f"Keys: {list(ground_truth.keys())}")
+        if 'nutrition' in ground_truth:
+            st.write(f"Nutrition keys: {list(ground_truth['nutrition'].keys())}")
+            st.write(f"Mass value: {ground_truth['nutrition'].get('mass')}")
+        st.write(f"Full data: {ground_truth}")
+    
     # Get ground truth mass from nutrition.mass
     ground_truth_mass = None
-    if 'nutrition' in ground_truth and 'mass' in ground_truth['nutrition']:
-        ground_truth_mass = ground_truth['nutrition']['mass']
+    if 'nutrition' in ground_truth and isinstance(ground_truth['nutrition'], dict):
+        ground_truth_mass = ground_truth['nutrition'].get('mass')
     
     # Display ground truth mass
     mass_text = f"{ground_truth_mass:.1f} g" if ground_truth_mass is not None else "N/A"
@@ -252,10 +275,12 @@ def display_ground_truth_mass(ground_truth):
         f"""
     <div class="model-container">
         {content_html}
-    </div>
     """,
         unsafe_allow_html=True,
     )
+
+
+
 
 def main():
     st.set_page_config(
@@ -518,15 +543,6 @@ def main():
             current_dish_id, model_dish_mapping, "gemini-2.5-pro"
         )
         current_ground_truth = find_ground_truth_by_dish_id(current_dish_id, ground_truth_mapping)
-        
-        # 调试信息
-        with st.expander("Debug Info", expanded=False):
-            st.write(f"Current Dish ID: {current_dish_id}")
-            st.write(f"Ground Truth Found: {current_ground_truth is not None}")
-            if current_ground_truth:
-                st.write(f"Ground Truth Keys: {list(current_ground_truth.keys())}")
-                if 'nutrition' in current_ground_truth:
-                    st.write(f"Nutrition: {current_ground_truth['nutrition']}")
         
         # Display dish ID
         st.markdown(f"<div class='dish-id-display'>Dish ID: {current_dish_id} (Page {current_page + 1}/{total_pages})</div>", unsafe_allow_html=True)
