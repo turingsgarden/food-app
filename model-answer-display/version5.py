@@ -232,13 +232,6 @@ def display_ground_truth_mass(ground_truth):
         st.info("No ground truth available")
         return
     
-    # 添加调试信息
-    with st.expander("Debug Ground Truth", expanded=False):
-        st.write(f"Keys: {list(ground_truth.keys())}")
-        if 'nutrition' in ground_truth:
-            st.write(f"Nutrition keys: {list(ground_truth['nutrition'].keys())}")
-            st.write(f"Mass value: {ground_truth['nutrition'].get('mass')}")
-        st.write(f"Full data: {ground_truth}")
     
     # Get ground truth mass from nutrition.mass
     ground_truth_mass = None
