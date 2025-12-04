@@ -1,0 +1,8620 @@
+
+
+[
+  {
+    "image_filename": "dish_1572974428_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 74.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "tomatoes",
+        "quantity": 15.57224,
+        "unit": "g"
+      },
+      {
+        "name": "avocado",
+        "quantity": 23.358358,
+        "unit": "g"
+      },
+      {
+        "name": "multigrain bread",
+        "quantity": 13.732376,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.89306,
+        "unit": "g"
+      },
+      {
+        "name": "edamame",
+        "quantity": 15.57224,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.045775,
+        "unit": "g"
+      },
+      {
+        "name": "sunflower seeds",
+        "quantity": 1.14116,
+        "unit": "g"
+      },
+      {
+        "name": "pumpkin seeds",
+        "quantity": 0.684788,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572464692_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 56.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hummus",
+        "quantity": 56.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931594_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 66.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "roasted potatoes",
+        "quantity": 66.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575478635_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 132.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 132.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572887017_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 274.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 43.0,
+        "unit": "g"
+      },
+      {
+        "name": "egg whites",
+        "quantity": 192.5,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 38.5,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572984706_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 118.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cauliflower",
+        "quantity": 114.253265,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.142249,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.012594,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 1.428166,
+        "unit": "g"
+      },
+      {
+        "name": "chive",
+        "quantity": 0.163726,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572453726_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 160.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 75.0,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 45.853661,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 38.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.146341,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572540238_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 236.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 46.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 68.0,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 38.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 84.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573762622_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 477.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brisket",
+        "quantity": 202.380951,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.638628,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 14.554514,
+        "unit": "g"
+      },
+      {
+        "name": "mashed potatoes",
+        "quantity": 202.380951,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 20.238096,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 3.638628,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931457_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 44.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 44.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573232499_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 474.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 36.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 269.0,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 45.853661,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.146341,
+        "unit": "g"
+      },
+      {
+        "name": "fried rice",
+        "quantity": 122.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574702473_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 161.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 47.0,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 114.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575664962_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 82.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "fish",
+        "quantity": 57.14286,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.571429,
+        "unit": "g"
+      },
+      {
+        "name": "shallots",
+        "quantity": 1.142857,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.285714,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.142857,
+        "unit": "g"
+      },
+      {
+        "name": "cherry tomatoes",
+        "quantity": 2.285714,
+        "unit": "g"
+      },
+      {
+        "name": "wheat berry",
+        "quantity": 11.428572,
+        "unit": "g"
+      },
+      {
+        "name": "chard",
+        "quantity": 5.142858,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 1.142857,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.571429,
+        "unit": "g"
+      },
+      {
+        "name": "chive",
+        "quantity": 0.142857,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571935895_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 222.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "oatmeal",
+        "quantity": 222.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571946018_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 97.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "onions",
+        "quantity": 10.047266,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 5.023633,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 20.094532,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.088602,
+        "unit": "g"
+      },
+      {
+        "name": "eggplant",
+        "quantity": 20.094532,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571932375_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 117.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 45.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 72.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572889151_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 174.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "greek yogurt",
+        "quantity": 174.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573233271_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 122.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "omelets",
+        "quantity": 122.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572453701_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 85.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 45.853661,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 38.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.146341,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572291671_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 108.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "chicken",
+        "quantity": 61.549423,
+        "unit": "g"
+      },
+      {
+        "name": "tomatoes",
+        "quantity": 7.693678,
+        "unit": "g"
+      },
+      {
+        "name": "bell peppers",
+        "quantity": 7.693678,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.538736,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 1.538736,
+        "unit": "g"
+      },
+      {
+        "name": "pepper",
+        "quantity": 0.288513,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "millet",
+        "quantity": 15.387356,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573072410_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 139.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.198418,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 16.793671,
+        "unit": "g"
+      },
+      {
+        "name": "barley",
+        "quantity": 79.0,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 4.198418,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572540876_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 65.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "roasted potatoes",
+        "quantity": 65.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572464738_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 188.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "tofu",
+        "quantity": 132.0,
+        "unit": "g"
+      },
+      {
+        "name": "hummus",
+        "quantity": 56.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571945939_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 97.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "celery",
+        "quantity": 5.397875,
+        "unit": "g"
+      },
+      {
+        "name": "shrimp",
+        "quantity": 43.182999,
+        "unit": "g"
+      },
+      {
+        "name": "mayonnaise",
+        "quantity": 21.888382,
+        "unit": "g"
+      },
+      {
+        "name": "shallots",
+        "quantity": 3.823494,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.031734,
+        "unit": "g"
+      },
+      {
+        "name": "sourdough bread",
+        "quantity": 14.470749,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 8.204769,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573243053_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 132.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "dumplings",
+        "quantity": 132.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931782_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 104.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 70.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 34.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574455517_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 192.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cucumbers",
+        "quantity": 21.0,
+        "unit": "g"
+      },
+      {
+        "name": "celery",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "snow peas",
+        "quantity": 24.0,
+        "unit": "g"
+      },
+      {
+        "name": "apple cider",
+        "quantity": 18.201782,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 1.153254,
+        "unit": "g"
+      },
+      {
+        "name": "broth",
+        "quantity": 6.96787,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.090288,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 113.761139,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574728229_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 233.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 12.090574,
+        "unit": "g"
+      },
+      {
+        "name": "tomatoes",
+        "quantity": 36.271721,
+        "unit": "g"
+      },
+      {
+        "name": "avocado",
+        "quantity": 18.13586,
+        "unit": "g"
+      },
+      {
+        "name": "multigrain bread",
+        "quantity": 0.426483,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 10.146175,
+        "unit": "g"
+      },
+      {
+        "name": "eggs",
+        "quantity": 18.765244,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 40.584702,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.03554,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 2.274575,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 10.146175,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572379407_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 124.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "chili",
+        "quantity": 124.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575481406_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 27.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 27.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573491305_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 70.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "egg whites",
+        "quantity": 70.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573763139_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 216.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 46.883709,
+        "unit": "g"
+      },
+      {
+        "name": "brisket",
+        "quantity": 79.523811,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.87907,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.646006,
+        "unit": "g"
+      },
+      {
+        "name": "mashed potatoes",
+        "quantity": 79.523811,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.005168,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 7.952381,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.586046,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571946063_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 218.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "celery",
+        "quantity": 6.733431,
+        "unit": "g"
+      },
+      {
+        "name": "shrimp",
+        "quantity": 53.867451,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 10.047266,
+        "unit": "g"
+      },
+      {
+        "name": "mayonnaise",
+        "quantity": 27.304064,
+        "unit": "g"
+      },
+      {
+        "name": "shallots",
+        "quantity": 4.769514,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 5.023633,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 20.094532,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.128188,
+        "unit": "g"
+      },
+      {
+        "name": "sourdough bread",
+        "quantity": 18.05114,
+        "unit": "g"
+      },
+      {
+        "name": "eggplant",
+        "quantity": 20.094532,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 10.234816,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572031580_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 90.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "tomatoes",
+        "quantity": 13.800453,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 5.018347,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.045071,
+        "unit": "g"
+      },
+      {
+        "name": "chicken thighs",
+        "quantity": 37.6376,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.025092,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.044254,
+        "unit": "g"
+      },
+      {
+        "name": "water",
+        "quantity": 20.361942,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 7.640433,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.078412,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.835555,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 0.627293,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 2.82282,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572988741_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 54.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cheese",
+        "quantity": 3.979933,
+        "unit": "g"
+      },
+      {
+        "name": "tortilla",
+        "quantity": 8.189308,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 8.001325,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 25.206244,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 8.623189,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573060410_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 152.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "figs",
+        "quantity": 36.118813,
+        "unit": "g"
+      },
+      {
+        "name": "granola",
+        "quantity": 18.059406,
+        "unit": "g"
+      },
+      {
+        "name": "grapes",
+        "quantity": 24.079208,
+        "unit": "g"
+      },
+      {
+        "name": "chia seeds",
+        "quantity": 1.504951,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 72.237625,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573764136_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 211.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "mashed potatoes",
+        "quantity": 100.476189,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 10.047619,
+        "unit": "g"
+      },
+      {
+        "name": "chard",
+        "quantity": 50.238094,
+        "unit": "g"
+      },
+      {
+        "name": "celery root",
+        "quantity": 50.238094,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572278943_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 96.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 61.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 35.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573665056_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 277.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 177.0,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 100.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573232461_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 352.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 36.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 269.0,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 45.853661,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.146341,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575999037_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 156.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 26.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571946265_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 86.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "onions",
+        "quantity": 8.907885,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.453942,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 17.815769,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.078554,
+        "unit": "g"
+      },
+      {
+        "name": "eggplant",
+        "quantity": 17.815769,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572035321_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 104.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "white rice",
+        "quantity": 51.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.708602,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 14.834409,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 3.708602,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573763118_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 167.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brisket",
+        "quantity": 79.523811,
+        "unit": "g"
+      },
+      {
+        "name": "mashed potatoes",
+        "quantity": 79.523811,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 7.952381,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571944238_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 349.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "squash",
+        "quantity": 117.247124,
+        "unit": "g"
+      },
+      {
+        "name": "celery",
+        "quantity": 3.482484,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 3.482484,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 3.482484,
+        "unit": "g"
+      },
+      {
+        "name": "apple cider",
+        "quantity": 27.859871,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.198383,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 1.765184,
+        "unit": "g"
+      },
+      {
+        "name": "seeds",
+        "quantity": 3.075982,
+        "unit": "g"
+      },
+      {
+        "name": "broth",
+        "quantity": 10.665107,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.151121,
+        "unit": "g"
+      },
+      {
+        "name": "honey",
+        "quantity": 1.465589,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 174.124191,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572901583_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 143.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "chicken",
+        "quantity": 69.466469,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 2.894436,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.633573,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 1.157774,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.696821,
+        "unit": "g"
+      },
+      {
+        "name": "water",
+        "quantity": 20.839943,
+        "unit": "g"
+      },
+      {
+        "name": "lime",
+        "quantity": 2.315549,
+        "unit": "g"
+      },
+      {
+        "name": "pinto beans",
+        "quantity": 13.893294,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 1.013053,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.723609,
+        "unit": "g"
+      },
+      {
+        "name": "jicama",
+        "quantity": 23.155491,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572453753_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 317.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 130.833328,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 75.0,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 45.853661,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 38.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.146341,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 26.166668,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574184971_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 50.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "chicken apple sausage",
+        "quantity": 50.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574711589_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 190.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 5.654009,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 52.624573,
+        "unit": "g"
+      },
+      {
+        "name": "radishes",
+        "quantity": 1.130802,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.14135,
+        "unit": "g"
+      },
+      {
+        "name": "chicken thighs",
+        "quantity": 56.540085,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.071162,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.725109,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 0.565401,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 10.076202,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.076476,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.657807,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (cooked)",
+        "quantity": 32.0,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 1.413502,
+        "unit": "g"
+      },
+      {
+        "name": "thyme",
+        "quantity": 0.2827,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.070675,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 2.801751,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.2827,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576259776_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 203.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 29.0,
+        "unit": "g"
+      },
+      {
+        "name": "omelets",
+        "quantity": 174.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574280343_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 71.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cucumbers",
+        "quantity": 71.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572548822_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 77.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "avocado",
+        "quantity": 31.150383,
+        "unit": "g"
+      },
+      {
+        "name": "radishes",
+        "quantity": 5.19173,
+        "unit": "g"
+      },
+      {
+        "name": "multigrain bread",
+        "quantity": 0.793577,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 5.19173,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.061044,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 20.766922,
+        "unit": "g"
+      },
+      {
+        "name": "pistachios",
+        "quantity": 5.19173,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 6.922307,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 1.730577,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573665025_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 177.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 177.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572538461_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 167.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 167.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574359130_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 111.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 111.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574281837_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 42.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cucumbers",
+        "quantity": 0.11812,
+        "unit": "g"
+      },
+      {
+        "name": "corn",
+        "quantity": 1.754926,
+        "unit": "g"
+      },
+      {
+        "name": "coleslaw",
+        "quantity": 2.699886,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 0.23624,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.030428,
+        "unit": "g"
+      },
+      {
+        "name": "eggs",
+        "quantity": 0.290238,
+        "unit": "g"
+      },
+      {
+        "name": "cornmeal",
+        "quantity": 0.742469,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.020285,
+        "unit": "g"
+      },
+      {
+        "name": "pepper",
+        "quantity": 0.004762,
+        "unit": "g"
+      },
+      {
+        "name": "mangos",
+        "quantity": 2.699886,
+        "unit": "g"
+      },
+      {
+        "name": "flatbread",
+        "quantity": 28.570724,
+        "unit": "g"
+      },
+      {
+        "name": "zucchini",
+        "quantity": 1.316194,
+        "unit": "g"
+      },
+      {
+        "name": "milk",
+        "quantity": 0.674971,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.033749,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.053237,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 2.574341,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571934124_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 98.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "roasted potatoes",
+        "quantity": 98.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572031211_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 80.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 5.59789,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 22.39156,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 5.59789,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572984792_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 315.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "potatoes",
+        "quantity": 30.072445,
+        "unit": "g"
+      },
+      {
+        "name": "cauliflower",
+        "quantity": 114.253265,
+        "unit": "g"
+      },
+      {
+        "name": "beef",
+        "quantity": 48.867722,
+        "unit": "g"
+      },
+      {
+        "name": "leeks",
+        "quantity": 3.759056,
+        "unit": "g"
+      },
+      {
+        "name": "snow peas",
+        "quantity": 30.072445,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.533786,
+        "unit": "g"
+      },
+      {
+        "name": "mustard",
+        "quantity": 6.600902,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.800786,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 0.9548,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.247535,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 1.27293,
+        "unit": "g"
+      },
+      {
+        "name": "sour cream",
+        "quantity": 3.759056,
+        "unit": "g"
+      },
+      {
+        "name": "sweet potato",
+        "quantity": 66.341461,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 1.428166,
+        "unit": "g"
+      },
+      {
+        "name": "chive",
+        "quantity": 0.163726,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574444158_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 162.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 135.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 27.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572464400_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 136.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 5.802357,
+        "unit": "g"
+      },
+      {
+        "name": "cucumbers",
+        "quantity": 15.272728,
+        "unit": "g"
+      },
+      {
+        "name": "bell peppers",
+        "quantity": 15.272728,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 1.450589,
+        "unit": "g"
+      },
+      {
+        "name": "tofu",
+        "quantity": 33.0,
+        "unit": "g"
+      },
+      {
+        "name": "radishes",
+        "quantity": 12.218182,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 0.580236,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.63399,
+        "unit": "g"
+      },
+      {
+        "name": "mustard",
+        "quantity": 0.763636,
+        "unit": "g"
+      },
+      {
+        "name": "shallots",
+        "quantity": 0.870354,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 12.43577,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 6.109091,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.072529,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.454348,
+        "unit": "g"
+      },
+      {
+        "name": "salmon",
+        "quantity": 29.011786,
+        "unit": "g"
+      },
+      {
+        "name": "lime",
+        "quantity": 0.036265,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 0.145059,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574197731_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 145.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "potatoes",
+        "quantity": 56.143372,
+        "unit": "g"
+      },
+      {
+        "name": "steak",
+        "quantity": 70.179214,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 3.094376,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.309438,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 14.035843,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572278972_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 181.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 61.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 35.0,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (cooked)",
+        "quantity": 85.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572376802_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 150.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cucumbers",
+        "quantity": 60.0,
+        "unit": "g"
+      },
+      {
+        "name": "cheddar cheese",
+        "quantity": 30.0,
+        "unit": "g"
+      },
+      {
+        "name": "hummus",
+        "quantity": 60.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573505208_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 192.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "lasagna",
+        "quantity": 192.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573679065_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 90.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "white rice",
+        "quantity": 9.195402,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 3.218391,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.114943,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 68.965515,
+        "unit": "g"
+      },
+      {
+        "name": "zucchini",
+        "quantity": 4.597701,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 2.298851,
+        "unit": "g"
+      },
+      {
+        "name": "rosemary",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.229885,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572035359_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 218.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "white rice",
+        "quantity": 51.0,
+        "unit": "g"
+      },
+      {
+        "name": "tomatoes",
+        "quantity": 17.480574,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 6.356573,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.323756,
+        "unit": "g"
+      },
+      {
+        "name": "chicken thighs",
+        "quantity": 47.674294,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.708602,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.031783,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 14.834409,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.056055,
+        "unit": "g"
+      },
+      {
+        "name": "water",
+        "quantity": 25.791792,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 9.677881,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.099321,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 3.708602,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 1.058369,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 0.794572,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 3.575572,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575997268_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 136.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 71.666664,
+        "unit": "g"
+      },
+      {
+        "name": "berries",
+        "quantity": 47.0,
+        "unit": "g"
+      },
+      {
+        "name": "grapes",
+        "quantity": 3.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 14.333334,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572279989_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 243.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 243.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572021459_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 108.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "omelets",
+        "quantity": 108.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572627130_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 231.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 192.5,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 38.5,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573159868_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 66.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.618259,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 18.473038,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 4.618259,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573491352_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 164.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 53.0,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 41.0,
+        "unit": "g"
+      },
+      {
+        "name": "egg whites",
+        "quantity": 70.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572464354_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 73.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 5.802357,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 1.450589,
+        "unit": "g"
+      },
+      {
+        "name": "tofu",
+        "quantity": 33.0,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 0.580236,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.870354,
+        "unit": "g"
+      },
+      {
+        "name": "shallots",
+        "quantity": 0.870354,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.217588,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.072529,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.072529,
+        "unit": "g"
+      },
+      {
+        "name": "salmon",
+        "quantity": 29.011786,
+        "unit": "g"
+      },
+      {
+        "name": "lime",
+        "quantity": 0.036265,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 0.145059,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572462136_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 307.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 44.533092,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 11.133273,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 4.453309,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 6.679964,
+        "unit": "g"
+      },
+      {
+        "name": "shallots",
+        "quantity": 6.679964,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.669991,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.556664,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.556664,
+        "unit": "g"
+      },
+      {
+        "name": "salmon",
+        "quantity": 222.665451,
+        "unit": "g"
+      },
+      {
+        "name": "lime",
+        "quantity": 0.278332,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 2.226655,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 2.226655,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 2.226655,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 1.113327,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572453675_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 38.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 38.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572376778_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 120.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cucumbers",
+        "quantity": 60.0,
+        "unit": "g"
+      },
+      {
+        "name": "hummus",
+        "quantity": 60.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571944487_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 130.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "turkey",
+        "quantity": 130.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573232835_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 27.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 27.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572627152_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 276.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 192.5,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 38.5,
+        "unit": "g"
+      },
+      {
+        "name": "zucchini",
+        "quantity": 45.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575997241_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 50.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "berries",
+        "quantity": 47.0,
+        "unit": "g"
+      },
+      {
+        "name": "grapes",
+        "quantity": 3.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572029300_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 40.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 2.798945,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 11.19578,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 2.798945,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575308389_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 146.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "omelets",
+        "quantity": 146.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572034012_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 271.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "white rice",
+        "quantity": 69.0,
+        "unit": "g"
+      },
+      {
+        "name": "tomatoes",
+        "quantity": 30.974352,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 11.2634,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 2.345603,
+        "unit": "g"
+      },
+      {
+        "name": "chicken thighs",
+        "quantity": 84.475502,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.056317,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.099326,
+        "unit": "g"
+      },
+      {
+        "name": "water",
+        "quantity": 45.701248,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 17.148527,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.175991,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 1.875356,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 1.407925,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 6.335663,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574369148_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 68.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "dumplings",
+        "quantity": 68.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573851651_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 420.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "squash",
+        "quantity": 60.3125,
+        "unit": "g"
+      },
+      {
+        "name": "fish",
+        "quantity": 60.3125,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.005811,
+        "unit": "g"
+      },
+      {
+        "name": "collards",
+        "quantity": 116.0,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.011792,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 2.005811,
+        "unit": "g"
+      },
+      {
+        "name": "curries",
+        "quantity": 60.3125,
+        "unit": "g"
+      },
+      {
+        "name": "sweet potato",
+        "quantity": 106.976585,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573849915_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 239.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "dumplings",
+        "quantity": 182.0,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (cooked)",
+        "quantity": 57.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571946737_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 145.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "celery",
+        "quantity": 2.244267,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 2.244267,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 2.244267,
+        "unit": "g"
+      },
+      {
+        "name": "apple cider",
+        "quantity": 17.954138,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 1.137563,
+        "unit": "g"
+      },
+      {
+        "name": "broth",
+        "quantity": 6.873069,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.08906,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 112.213371,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573073600_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 114.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "carrot",
+        "quantity": 3.572329,
+        "unit": "g"
+      },
+      {
+        "name": "fish",
+        "quantity": 8.57359,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 0.285786,
+        "unit": "g"
+      },
+      {
+        "name": "leeks",
+        "quantity": 1.428932,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.163813,
+        "unit": "g"
+      },
+      {
+        "name": "cabbage",
+        "quantity": 0.42868,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.242918,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 0.026792,
+        "unit": "g"
+      },
+      {
+        "name": "milk",
+        "quantity": 98.792061,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.004804,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.075912,
+        "unit": "g"
+      },
+      {
+        "name": "endive",
+        "quantity": 0.267925,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572548878_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 105.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "squash",
+        "quantity": 1.806217,
+        "unit": "g"
+      },
+      {
+        "name": "avocado",
+        "quantity": 31.150383,
+        "unit": "g"
+      },
+      {
+        "name": "cheese",
+        "quantity": 0.441053,
+        "unit": "g"
+      },
+      {
+        "name": "apple",
+        "quantity": 1.680202,
+        "unit": "g"
+      },
+      {
+        "name": "radishes",
+        "quantity": 5.19173,
+        "unit": "g"
+      },
+      {
+        "name": "coleslaw",
+        "quantity": 3.360405,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 0.693083,
+        "unit": "g"
+      },
+      {
+        "name": "multigrain bread",
+        "quantity": 0.793577,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 5.19173,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.666759,
+        "unit": "g"
+      },
+      {
+        "name": "eggs",
+        "quantity": 0.395907,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.061044,
+        "unit": "g"
+      },
+      {
+        "name": "water",
+        "quantity": 1.176142,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 20.766922,
+        "unit": "g"
+      },
+      {
+        "name": "pistachios",
+        "quantity": 5.19173,
+        "unit": "g"
+      },
+      {
+        "name": "flatbread",
+        "quantity": 17.780231,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 6.922307,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 1.730577,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574711451_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 91.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 52.624573,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.505761,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.725109,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 10.076202,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.005801,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.657807,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 2.519051,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573234760_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 21.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 21.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574455444_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 147.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "celery",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "apple cider",
+        "quantity": 18.201782,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 1.153254,
+        "unit": "g"
+      },
+      {
+        "name": "broth",
+        "quantity": 6.96787,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.090288,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 113.761139,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573849990_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 373.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 16.344532,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 20.430666,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 12.258399,
+        "unit": "g"
+      },
+      {
+        "name": "dumplings",
+        "quantity": 182.0,
+        "unit": "g"
+      },
+      {
+        "name": "goat cheese",
+        "quantity": 24.516798,
+        "unit": "g"
+      },
+      {
+        "name": "grapes",
+        "quantity": 16.344532,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (cooked)",
+        "quantity": 57.0,
+        "unit": "g"
+      },
+      {
+        "name": "chive",
+        "quantity": 0.864805,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571944214_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 225.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "celery",
+        "quantity": 3.482484,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 3.482484,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 3.482484,
+        "unit": "g"
+      },
+      {
+        "name": "apple cider",
+        "quantity": 27.859871,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 1.765184,
+        "unit": "g"
+      },
+      {
+        "name": "broth",
+        "quantity": 10.665107,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.138196,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 174.124191,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573764183_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 271.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 57.408627,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.076412,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.791028,
+        "unit": "g"
+      },
+      {
+        "name": "mashed potatoes",
+        "quantity": 100.476189,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.006328,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 10.047619,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.717608,
+        "unit": "g"
+      },
+      {
+        "name": "chard",
+        "quantity": 50.238094,
+        "unit": "g"
+      },
+      {
+        "name": "celery root",
+        "quantity": 50.238094,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574109245_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 122.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cauliflower",
+        "quantity": 35.600002,
+        "unit": "g"
+      },
+      {
+        "name": "pickles",
+        "quantity": 6.08547,
+        "unit": "g"
+      },
+      {
+        "name": "coleslaw",
+        "quantity": 12.17094,
+        "unit": "g"
+      },
+      {
+        "name": "barbecue sauce",
+        "quantity": 3.042735,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.042932,
+        "unit": "g"
+      },
+      {
+        "name": "flatbread",
+        "quantity": 64.397644,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576171237_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 339.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 100.0,
+        "unit": "g"
+      },
+      {
+        "name": "brussels sprouts",
+        "quantity": 76.312408,
+        "unit": "g"
+      },
+      {
+        "name": "almonds",
+        "quantity": 0.29442,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.430858,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.953905,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.008412,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 87.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 20.0,
+        "unit": "g"
+      },
+      {
+        "name": "chicken apple sausage",
+        "quantity": 53.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574193316_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 275.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "potatoes",
+        "quantity": 78.600723,
+        "unit": "g"
+      },
+      {
+        "name": "cauliflower",
+        "quantity": 72.0,
+        "unit": "g"
+      },
+      {
+        "name": "steak",
+        "quantity": 40.171551,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 58.079353,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 4.332127,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.433213,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 19.650181,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931482_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 337.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 44.0,
+        "unit": "g"
+      },
+      {
+        "name": "egg whites",
+        "quantity": 244.166656,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 48.833336,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572291722_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 245.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "chicken",
+        "quantity": 61.549423,
+        "unit": "g"
+      },
+      {
+        "name": "cucumbers",
+        "quantity": 73.0,
+        "unit": "g"
+      },
+      {
+        "name": "tomatoes",
+        "quantity": 7.693678,
+        "unit": "g"
+      },
+      {
+        "name": "bell peppers",
+        "quantity": 7.693678,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.538736,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 1.538736,
+        "unit": "g"
+      },
+      {
+        "name": "pepper",
+        "quantity": 0.288513,
+        "unit": "g"
+      },
+      {
+        "name": "hummus",
+        "quantity": 64.0,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "millet",
+        "quantity": 15.387356,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571944571_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 344.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "turkey",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "squash",
+        "quantity": 97.390755,
+        "unit": "g"
+      },
+      {
+        "name": "cucumbers",
+        "quantity": 20.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.826077,
+        "unit": "g"
+      },
+      {
+        "name": "seeds",
+        "quantity": 2.555049,
+        "unit": "g"
+      },
+      {
+        "name": "pita bread",
+        "quantity": 30.0,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.010736,
+        "unit": "g"
+      },
+      {
+        "name": "honey",
+        "quantity": 1.217384,
+        "unit": "g"
+      },
+      {
+        "name": "hummus",
+        "quantity": 61.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573161475_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 91.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cauliflower",
+        "quantity": 26.5541,
+        "unit": "g"
+      },
+      {
+        "name": "pickles",
+        "quantity": 4.539162,
+        "unit": "g"
+      },
+      {
+        "name": "coleslaw",
+        "quantity": 9.078324,
+        "unit": "g"
+      },
+      {
+        "name": "barbecue sauce",
+        "quantity": 2.269581,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.032023,
+        "unit": "g"
+      },
+      {
+        "name": "flatbread",
+        "quantity": 48.034309,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571934154_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 288.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 158.333328,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 98.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 31.666668,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572550743_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 107.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "mixed greens",
+        "quantity": 37.434402,
+        "unit": "g"
+      },
+      {
+        "name": "lettuce",
+        "quantity": 24.956268,
+        "unit": "g"
+      },
+      {
+        "name": "cucumbers",
+        "quantity": 12.478134,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 4.991254,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 9.982508,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 4.991254,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.623907,
+        "unit": "g"
+      },
+      {
+        "name": "pepper",
+        "quantity": 0.311953,
+        "unit": "g"
+      },
+      {
+        "name": "lime",
+        "quantity": 1.247813,
+        "unit": "g"
+      },
+      {
+        "name": "cherry tomatoes",
+        "quantity": 9.982508,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573851615_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 227.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 2.005811,
+        "unit": "g"
+      },
+      {
+        "name": "collards",
+        "quantity": 116.0,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.011792,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 2.005811,
+        "unit": "g"
+      },
+      {
+        "name": "sweet potato",
+        "quantity": 106.976585,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574269354_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 109.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cauliflower",
+        "quantity": 6.007874,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 10.299212,
+        "unit": "g"
+      },
+      {
+        "name": "avocado",
+        "quantity": 13.732284,
+        "unit": "g"
+      },
+      {
+        "name": "kale",
+        "quantity": 6.866142,
+        "unit": "g"
+      },
+      {
+        "name": "poached eggs",
+        "quantity": 12.015748,
+        "unit": "g"
+      },
+      {
+        "name": "vinaigrette",
+        "quantity": 6.866142,
+        "unit": "g"
+      },
+      {
+        "name": "sweet potato",
+        "quantity": 49.779526,
+        "unit": "g"
+      },
+      {
+        "name": "pumpkin seeds",
+        "quantity": 3.433071,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571946303_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 189.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "celery",
+        "quantity": 1.594204,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 1.594204,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 10.502089,
+        "unit": "g"
+      },
+      {
+        "name": "apple cider",
+        "quantity": 12.75363,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.453942,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 0.808062,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 17.815769,
+        "unit": "g"
+      },
+      {
+        "name": "broth",
+        "quantity": 4.882249,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.141817,
+        "unit": "g"
+      },
+      {
+        "name": "eggplant",
+        "quantity": 17.815769,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 79.71019,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571935085_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 85.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 17.548388,
+        "unit": "g"
+      },
+      {
+        "name": "tomatoes",
+        "quantity": 8.774194,
+        "unit": "g"
+      },
+      {
+        "name": "avocado",
+        "quantity": 8.774194,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 8.774194,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 23.39785,
+        "unit": "g"
+      },
+      {
+        "name": "quinoa",
+        "quantity": 17.548388,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 0.182796,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576258685_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 267.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 35.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 110.833328,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 99.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 22.166668,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574443257_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 160.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 31.0,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 129.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573491330_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 123.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 53.0,
+        "unit": "g"
+      },
+      {
+        "name": "egg whites",
+        "quantity": 70.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573579406_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 110.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 36.0,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 74.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576171204_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 252.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 100.0,
+        "unit": "g"
+      },
+      {
+        "name": "brussels sprouts",
+        "quantity": 76.312408,
+        "unit": "g"
+      },
+      {
+        "name": "almonds",
+        "quantity": 0.29442,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.430858,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.953905,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.008412,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 20.0,
+        "unit": "g"
+      },
+      {
+        "name": "chicken apple sausage",
+        "quantity": 53.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574720429_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 96.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "chicken apple sausage",
+        "quantity": 96.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572365415_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 289.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "greek yogurt",
+        "quantity": 289.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574098164_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 42.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 42.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573072479_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 396.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "carrot",
+        "quantity": 6.267244,
+        "unit": "g"
+      },
+      {
+        "name": "fish",
+        "quantity": 15.041388,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 0.50138,
+        "unit": "g"
+      },
+      {
+        "name": "leeks",
+        "quantity": 2.506898,
+        "unit": "g"
+      },
+      {
+        "name": "snow peas",
+        "quantity": 57.0,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.287392,
+        "unit": "g"
+      },
+      {
+        "name": "cabbage",
+        "quantity": 0.752069,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.198418,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 16.793671,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.426173,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 0.047004,
+        "unit": "g"
+      },
+      {
+        "name": "barley",
+        "quantity": 79.0,
+        "unit": "g"
+      },
+      {
+        "name": "milk",
+        "quantity": 173.319397,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.008428,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 4.198418,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.133179,
+        "unit": "g"
+      },
+      {
+        "name": "endive",
+        "quantity": 0.470043,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574193262_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 203.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "potatoes",
+        "quantity": 78.600723,
+        "unit": "g"
+      },
+      {
+        "name": "steak",
+        "quantity": 40.171551,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 58.079353,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 4.332127,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.433213,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 19.650181,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576258657_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 168.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 35.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 110.833328,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 22.166668,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572291695_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 181.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "chicken",
+        "quantity": 61.549423,
+        "unit": "g"
+      },
+      {
+        "name": "cucumbers",
+        "quantity": 73.0,
+        "unit": "g"
+      },
+      {
+        "name": "tomatoes",
+        "quantity": 7.693678,
+        "unit": "g"
+      },
+      {
+        "name": "bell peppers",
+        "quantity": 7.693678,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.538736,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 1.538736,
+        "unit": "g"
+      },
+      {
+        "name": "pepper",
+        "quantity": 0.288513,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 3.077471,
+        "unit": "g"
+      },
+      {
+        "name": "millet",
+        "quantity": 15.387356,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572625898_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 271.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 43.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "fried rice",
+        "quantity": 51.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 26.0,
+        "unit": "g"
+      },
+      {
+        "name": "zucchini",
+        "quantity": 21.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576100046_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 123.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 1.12146,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.013186,
+        "unit": "g"
+      },
+      {
+        "name": "eggplant",
+        "quantity": 119.622429,
+        "unit": "g"
+      },
+      {
+        "name": "pesto",
+        "quantity": 2.242921,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571932448_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 334.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "oatmeal",
+        "quantity": 334.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572021481_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 140.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "carrot",
+        "quantity": 30.840097,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.385501,
+        "unit": "g"
+      },
+      {
+        "name": "omelets",
+        "quantity": 108.0,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.0034,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 0.771002,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572540173_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 130.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 46.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 84.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575923584_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 224.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "pasta",
+        "quantity": 224.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574098218_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 116.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 42.0,
+        "unit": "g"
+      },
+      {
+        "name": "egg whites",
+        "quantity": 61.666664,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 12.333334,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931763_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 70.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 70.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572464329_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 40.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 5.802357,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 1.450589,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 0.580236,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.870354,
+        "unit": "g"
+      },
+      {
+        "name": "shallots",
+        "quantity": 0.870354,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.217588,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.072529,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.072529,
+        "unit": "g"
+      },
+      {
+        "name": "salmon",
+        "quantity": 29.011786,
+        "unit": "g"
+      },
+      {
+        "name": "lime",
+        "quantity": 0.036265,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.290118,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 0.145059,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572889747_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 39.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 39.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574098245_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 167.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 51.0,
+        "unit": "g"
+      },
+      {
+        "name": "bacon",
+        "quantity": 42.0,
+        "unit": "g"
+      },
+      {
+        "name": "egg whites",
+        "quantity": 61.666664,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 12.333334,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572033988_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 202.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "tomatoes",
+        "quantity": 30.974352,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 11.2634,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 2.345603,
+        "unit": "g"
+      },
+      {
+        "name": "chicken thighs",
+        "quantity": 84.475502,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.056317,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.099326,
+        "unit": "g"
+      },
+      {
+        "name": "water",
+        "quantity": 45.701248,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 17.148527,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.175991,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 1.875356,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 1.407925,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 6.335663,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572280018_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 261.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "egg whites",
+        "quantity": 217.5,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 43.5,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573072447_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 196.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "snow peas",
+        "quantity": 57.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.198418,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 16.793671,
+        "unit": "g"
+      },
+      {
+        "name": "barley",
+        "quantity": 79.0,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 4.198418,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573503054_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 128.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "lasagna",
+        "quantity": 128.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572625810_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 199.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 43.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 26.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575481443_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 85.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 58.0,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 27.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575997210_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 3.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "grapes",
+        "quantity": 3.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571934494_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 232.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "egg whites",
+        "quantity": 232.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572550690_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 169.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "spaghetti",
+        "quantity": 169.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931678_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 351.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 120.0,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 85.0,
+        "unit": "g"
+      },
+      {
+        "name": "egg whites",
+        "quantity": 80.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 66.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572538087_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 334.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "egg whites",
+        "quantity": 278.333313,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 55.666668,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573159903_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 180.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "squash",
+        "quantity": 110.533638,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 6.690765,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 18.473038,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.012184,
+        "unit": "g"
+      },
+      {
+        "name": "dates",
+        "quantity": 1.38167,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 4.618259,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572540910_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 266.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 201.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 65.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574711517_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 158.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 5.654009,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 52.624573,
+        "unit": "g"
+      },
+      {
+        "name": "radishes",
+        "quantity": 1.130802,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.14135,
+        "unit": "g"
+      },
+      {
+        "name": "chicken thighs",
+        "quantity": 56.540085,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.071162,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.725109,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 0.565401,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 10.076202,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.076476,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.657807,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 1.413502,
+        "unit": "g"
+      },
+      {
+        "name": "thyme",
+        "quantity": 0.2827,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.070675,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 2.801751,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.2827,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575307466_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 82.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "banana",
+        "quantity": 6.395482,
+        "unit": "g"
+      },
+      {
+        "name": "cashews",
+        "quantity": 20.145412,
+        "unit": "g"
+      },
+      {
+        "name": "yogurt",
+        "quantity": 40.290825,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.059217,
+        "unit": "g"
+      },
+      {
+        "name": "honey",
+        "quantity": 15.10906,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573579470_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 301.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 36.0,
+        "unit": "g"
+      },
+      {
+        "name": "cauliflower",
+        "quantity": 82.301079,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 88.333328,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 74.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.543145,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.009072,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 1.028764,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 17.666668,
+        "unit": "g"
+      },
+      {
+        "name": "chive",
+        "quantity": 0.117938,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931648_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 231.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 85.0,
+        "unit": "g"
+      },
+      {
+        "name": "egg whites",
+        "quantity": 80.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 66.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572278894_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 61.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 61.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576259732_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 174.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "omelets",
+        "quantity": 174.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573232434_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 83.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 36.0,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 45.853661,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.146341,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572540208_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 198.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 46.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 68.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 84.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574711418_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 55.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 52.624573,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.986711,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.725109,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.005801,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.657807,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574269685_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 149.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 149.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575998399_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 114.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 25.894392,
+        "unit": "g"
+      },
+      {
+        "name": "eggs",
+        "quantity": 20.094769,
+        "unit": "g"
+      },
+      {
+        "name": "yam",
+        "quantity": 25.894392,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.038058,
+        "unit": "g"
+      },
+      {
+        "name": "lentils",
+        "quantity": 38.841591,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572031254_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 133.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 5.59789,
+        "unit": "g"
+      },
+      {
+        "name": "lamb",
+        "quantity": 53.0,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 22.39156,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 5.59789,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571944507_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 150.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "turkey",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "cucumbers",
+        "quantity": 20.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572464284_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 72.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "leeks",
+        "quantity": 30.757072,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.542462,
+        "unit": "g"
+      },
+      {
+        "name": "yam",
+        "quantity": 14.763395,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 11.072546,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 1.845424,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 13.019097,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573679099_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 127.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "white rice",
+        "quantity": 9.195402,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 3.218391,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.114943,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 68.965515,
+        "unit": "g"
+      },
+      {
+        "name": "zucchini",
+        "quantity": 4.597701,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 2.298851,
+        "unit": "g"
+      },
+      {
+        "name": "rosemary",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.229885,
+        "unit": "g"
+      },
+      {
+        "name": "bok choy",
+        "quantity": 37.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573851578_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 116.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "collards",
+        "quantity": 116.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574097565_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 99.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 99.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573579635_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 54.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bread",
+        "quantity": 9.550688,
+        "unit": "g"
+      },
+      {
+        "name": "lemon",
+        "quantity": 0.225631,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 0.902524,
+        "unit": "g"
+      },
+      {
+        "name": "jams",
+        "quantity": 16.245434,
+        "unit": "g"
+      },
+      {
+        "name": "cream cheese",
+        "quantity": 27.075722,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931809_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 139.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 35.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 70.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 34.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573579355_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 36.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 36.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573760161_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 48.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 45.926899,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.861129,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.632822,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.005063,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.574086,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572454041_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 233.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 233.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575923893_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 115.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "pasta",
+        "quantity": 115.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572988785_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 107.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cheese",
+        "quantity": 3.979933,
+        "unit": "g"
+      },
+      {
+        "name": "tortilla",
+        "quantity": 8.189308,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 8.001325,
+        "unit": "g"
+      },
+      {
+        "name": "tacos",
+        "quantity": 53.0,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 25.206244,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 8.623189,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572984755_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 247.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "potatoes",
+        "quantity": 30.072445,
+        "unit": "g"
+      },
+      {
+        "name": "cauliflower",
+        "quantity": 114.253265,
+        "unit": "g"
+      },
+      {
+        "name": "beef",
+        "quantity": 48.867722,
+        "unit": "g"
+      },
+      {
+        "name": "leeks",
+        "quantity": 3.759056,
+        "unit": "g"
+      },
+      {
+        "name": "snow peas",
+        "quantity": 30.072445,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.533786,
+        "unit": "g"
+      },
+      {
+        "name": "mustard",
+        "quantity": 6.600902,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.142249,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 0.9548,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.247535,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 1.27293,
+        "unit": "g"
+      },
+      {
+        "name": "sour cream",
+        "quantity": 3.759056,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 1.428166,
+        "unit": "g"
+      },
+      {
+        "name": "chive",
+        "quantity": 0.163726,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574280383_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 113.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cucumbers",
+        "quantity": 71.0,
+        "unit": "g"
+      },
+      {
+        "name": "hummus",
+        "quantity": 42.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572035271_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 53.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 3.708602,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 14.834409,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 3.708602,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575393132_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 162.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "tomatoes",
+        "quantity": 34.09058,
+        "unit": "g"
+      },
+      {
+        "name": "avocado",
+        "quantity": 51.135868,
+        "unit": "g"
+      },
+      {
+        "name": "multigrain bread",
+        "quantity": 30.062771,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 8.522645,
+        "unit": "g"
+      },
+      {
+        "name": "edamame",
+        "quantity": 34.09058,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.100209,
+        "unit": "g"
+      },
+      {
+        "name": "sunflower seeds",
+        "quantity": 2.498216,
+        "unit": "g"
+      },
+      {
+        "name": "pumpkin seeds",
+        "quantity": 1.49913,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576171118_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 53.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "chicken apple sausage",
+        "quantity": 53.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572625859_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 250.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 43.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "fried rice",
+        "quantity": 51.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 26.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572886987_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 43.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 43.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576183111_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 34.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 2.379103,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 9.516413,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 2.379103,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574097587_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 118.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 19.0,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 99.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571931623_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 151.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 85.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 66.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572365610_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 167.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "roasted potatoes",
+        "quantity": 167.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573147034_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 101.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olives",
+        "quantity": 34.629097,
+        "unit": "g"
+      },
+      {
+        "name": "bell peppers",
+        "quantity": 14.841042,
+        "unit": "g"
+      },
+      {
+        "name": "almonds",
+        "quantity": 7.420521,
+        "unit": "g"
+      },
+      {
+        "name": "multigrain bread",
+        "quantity": 13.611073,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 7.420521,
+        "unit": "g"
+      },
+      {
+        "name": "eggs",
+        "quantity": 23.034122,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.043625,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571944648_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 88.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "celery",
+        "quantity": 4.897041,
+        "unit": "g"
+      },
+      {
+        "name": "shrimp",
+        "quantity": 39.176327,
+        "unit": "g"
+      },
+      {
+        "name": "mayonnaise",
+        "quantity": 19.857502,
+        "unit": "g"
+      },
+      {
+        "name": "shallots",
+        "quantity": 3.468737,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.02879,
+        "unit": "g"
+      },
+      {
+        "name": "sourdough bread",
+        "quantity": 13.128101,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 7.443502,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574111587_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 161.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 0.001059,
+        "unit": "g"
+      },
+      {
+        "name": "white rice",
+        "quantity": 0.001059,
+        "unit": "g"
+      },
+      {
+        "name": "broccoli",
+        "quantity": 3.843713,
+        "unit": "g"
+      },
+      {
+        "name": "chicken",
+        "quantity": 153.748505,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 0.240232,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.035591,
+        "unit": "g"
+      },
+      {
+        "name": "teriyaki sauce",
+        "quantity": 0.240232,
+        "unit": "g"
+      },
+      {
+        "name": "green onions",
+        "quantity": 1.084665,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571932398_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 220.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 103.0,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 45.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 72.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573848859_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 277.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "curries",
+        "quantity": 277.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572625763_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 156.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 26.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572540934_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 357.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 201.0,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 91.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 65.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573156908_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 123.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "squash",
+        "quantity": 119.259979,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.236125,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.013146,
+        "unit": "g"
+      },
+      {
+        "name": "dates",
+        "quantity": 1.49075,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572032356_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 262.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "tomatoes",
+        "quantity": 28.674276,
+        "unit": "g"
+      },
+      {
+        "name": "cheese",
+        "quantity": 1.774963,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 10.42701,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 2.171425,
+        "unit": "g"
+      },
+      {
+        "name": "chicken thighs",
+        "quantity": 78.202568,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.887481,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.052135,
+        "unit": "g"
+      },
+      {
+        "name": "corn on the cob",
+        "quantity": 70.998505,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.099777,
+        "unit": "g"
+      },
+      {
+        "name": "water",
+        "quantity": 42.30759,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 15.875121,
+        "unit": "g"
+      },
+      {
+        "name": "sour cream",
+        "quantity": 1.331222,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.162922,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 1.736097,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 1.303376,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 5.865193,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571946767_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 195.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "celery",
+        "quantity": 2.244267,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 2.244267,
+        "unit": "g"
+      },
+      {
+        "name": "orange",
+        "quantity": 6.563804,
+        "unit": "g"
+      },
+      {
+        "name": "radishes",
+        "quantity": 0.205119,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 2.244267,
+        "unit": "g"
+      },
+      {
+        "name": "apple cider",
+        "quantity": 17.954138,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.540443,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 1.137563,
+        "unit": "g"
+      },
+      {
+        "name": "broth",
+        "quantity": 6.873069,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.118001,
+        "unit": "g"
+      },
+      {
+        "name": "goat cheese",
+        "quantity": 1.640951,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 112.213371,
+        "unit": "g"
+      },
+      {
+        "name": "beets",
+        "quantity": 32.819019,
+        "unit": "g"
+      },
+      {
+        "name": "pistachios",
+        "quantity": 2.051189,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 0.205119,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 1.663514,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572540136_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 46.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 46.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573679123_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 152.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "white rice",
+        "quantity": 9.195402,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 3.218391,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.114943,
+        "unit": "g"
+      },
+      {
+        "name": "lentils",
+        "quantity": 25.0,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 68.965515,
+        "unit": "g"
+      },
+      {
+        "name": "zucchini",
+        "quantity": 4.597701,
+        "unit": "g"
+      },
+      {
+        "name": "arugula",
+        "quantity": 2.298851,
+        "unit": "g"
+      },
+      {
+        "name": "rosemary",
+        "quantity": 0.45977,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.229885,
+        "unit": "g"
+      },
+      {
+        "name": "bok choy",
+        "quantity": 37.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573579439_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 216.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 36.0,
+        "unit": "g"
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 88.333328,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 74.0,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 17.666668,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571944549_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 283.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "turkey",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "squash",
+        "quantity": 97.390755,
+        "unit": "g"
+      },
+      {
+        "name": "cucumbers",
+        "quantity": 20.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.826077,
+        "unit": "g"
+      },
+      {
+        "name": "seeds",
+        "quantity": 2.555049,
+        "unit": "g"
+      },
+      {
+        "name": "pita bread",
+        "quantity": 30.0,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.010736,
+        "unit": "g"
+      },
+      {
+        "name": "honey",
+        "quantity": 1.217384,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574193218_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 83.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "potatoes",
+        "quantity": 32.137241,
+        "unit": "g"
+      },
+      {
+        "name": "steak",
+        "quantity": 40.171551,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.771264,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.177126,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 8.03431,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576258613_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 35.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 35.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572021506_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 193.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "carrot",
+        "quantity": 30.840097,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.385501,
+        "unit": "g"
+      },
+      {
+        "name": "fried rice",
+        "quantity": 53.0,
+        "unit": "g"
+      },
+      {
+        "name": "omelets",
+        "quantity": 108.0,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.0034,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 0.771002,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572032323_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 75.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cheese",
+        "quantity": 1.774963,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.887481,
+        "unit": "g"
+      },
+      {
+        "name": "corn on the cob",
+        "quantity": 70.998505,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.007826,
+        "unit": "g"
+      },
+      {
+        "name": "sour cream",
+        "quantity": 1.331222,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574443421_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 91.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "banana",
+        "quantity": 14.304625,
+        "unit": "g"
+      },
+      {
+        "name": "oats",
+        "quantity": 15.980589,
+        "unit": "g"
+      },
+      {
+        "name": "almond milk",
+        "quantity": 59.569225,
+        "unit": "g"
+      },
+      {
+        "name": "chia seeds",
+        "quantity": 1.145562,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575307819_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 114.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 114.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573506378_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 78.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 6.172107,
+        "unit": "g"
+      },
+      {
+        "name": "chicken",
+        "quantity": 61.721069,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 6.172107,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.308605,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.234421,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.308605,
+        "unit": "g"
+      },
+      {
+        "name": "rosemary",
+        "quantity": 0.077151,
+        "unit": "g"
+      },
+      {
+        "name": "chard",
+        "quantity": 1.543027,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.231454,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 0.077151,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 0.077151,
+        "unit": "g"
+      },
+      {
+        "name": "chive",
+        "quantity": 0.077151,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574443234_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 129.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 129.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575478663_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 220.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 132.0,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 88.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572031606_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 150.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "tomatoes",
+        "quantity": 13.800453,
+        "unit": "g"
+      },
+      {
+        "name": "cheese",
+        "quantity": 1.41997,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 5.018347,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 1.045071,
+        "unit": "g"
+      },
+      {
+        "name": "chicken thighs",
+        "quantity": 37.6376,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.709985,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.025092,
+        "unit": "g"
+      },
+      {
+        "name": "corn on the cob",
+        "quantity": 56.798805,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.050515,
+        "unit": "g"
+      },
+      {
+        "name": "water",
+        "quantity": 20.361942,
+        "unit": "g"
+      },
+      {
+        "name": "cream",
+        "quantity": 7.640433,
+        "unit": "g"
+      },
+      {
+        "name": "sour cream",
+        "quantity": 1.064978,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.078412,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.835555,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 0.627293,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 2.82282,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572376754_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 60.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cucumbers",
+        "quantity": 60.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572552638_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 165.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "spaghetti",
+        "quantity": 165.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575653017_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 71.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "pears",
+        "quantity": 18.656935,
+        "unit": "g"
+      },
+      {
+        "name": "honey",
+        "quantity": 6.218978,
+        "unit": "g"
+      },
+      {
+        "name": "quinoa",
+        "quantity": 24.875912,
+        "unit": "g"
+      },
+      {
+        "name": "parsley",
+        "quantity": 1.036496,
+        "unit": "g"
+      },
+      {
+        "name": "ginger",
+        "quantity": 1.554744,
+        "unit": "g"
+      },
+      {
+        "name": "greek yogurt",
+        "quantity": 18.656935,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571944531_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 253.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "turkey",
+        "quantity": 130.0,
+        "unit": "g"
+      },
+      {
+        "name": "squash",
+        "quantity": 97.390755,
+        "unit": "g"
+      },
+      {
+        "name": "cucumbers",
+        "quantity": 20.0,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.826077,
+        "unit": "g"
+      },
+      {
+        "name": "seeds",
+        "quantity": 2.555049,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.010736,
+        "unit": "g"
+      },
+      {
+        "name": "honey",
+        "quantity": 1.217384,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573849852_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 182.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "dumplings",
+        "quantity": 182.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573666680_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 125.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 24.992655,
+        "unit": "g"
+      },
+      {
+        "name": "bell peppers",
+        "quantity": 24.992655,
+        "unit": "g"
+      },
+      {
+        "name": "spinach (raw)",
+        "quantity": 12.496327,
+        "unit": "g"
+      },
+      {
+        "name": "mushroom",
+        "quantity": 12.496327,
+        "unit": "g"
+      },
+      {
+        "name": "eggs",
+        "quantity": 37.488979,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.036733,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573073741_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 327.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 14.352157,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 7.583366,
+        "unit": "g"
+      },
+      {
+        "name": "fish",
+        "quantity": 18.200079,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 0.606669,
+        "unit": "g"
+      },
+      {
+        "name": "leeks",
+        "quantity": 3.033346,
+        "unit": "g"
+      },
+      {
+        "name": "garlic",
+        "quantity": 0.347744,
+        "unit": "g"
+      },
+      {
+        "name": "cabbage",
+        "quantity": 0.910004,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 5.167257,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.197757,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 19.592615,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.517251,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 0.056875,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.179402,
+        "unit": "g"
+      },
+      {
+        "name": "milk",
+        "quantity": 209.716476,
+        "unit": "g"
+      },
+      {
+        "name": "lemon juice",
+        "quantity": 0.010198,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 4.898154,
+        "unit": "g"
+      },
+      {
+        "name": "cilantro",
+        "quantity": 0.161147,
+        "unit": "g"
+      },
+      {
+        "name": "endive",
+        "quantity": 0.568752,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573665080_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 340.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 177.0,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 63.0,
+        "unit": "g"
+      },
+      {
+        "name": "sausage",
+        "quantity": 100.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575404926_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 89.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "dumplings",
+        "quantity": 89.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574359160_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 211.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 111.0,
+        "unit": "g"
+      },
+      {
+        "name": "crepes",
+        "quantity": 100.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572541487_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 199.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "greek yogurt",
+        "quantity": 199.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574702427_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 114.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 114.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573760187_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 388.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 45.926899,
+        "unit": "g"
+      },
+      {
+        "name": "brisket",
+        "quantity": 161.90477,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.861129,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.632822,
+        "unit": "g"
+      },
+      {
+        "name": "mashed potatoes",
+        "quantity": 161.90477,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.005063,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 16.190477,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.574086,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573762582_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 425.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brisket",
+        "quantity": 202.380951,
+        "unit": "g"
+      },
+      {
+        "name": "mashed potatoes",
+        "quantity": 202.380951,
+        "unit": "g"
+      },
+      {
+        "name": "butter",
+        "quantity": 20.238096,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575307845_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 143.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 29.0,
+        "unit": "g"
+      },
+      {
+        "name": "hash browns",
+        "quantity": 114.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573492999_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 113.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "banana",
+        "quantity": 8.813286,
+        "unit": "g"
+      },
+      {
+        "name": "cashews",
+        "quantity": 27.761362,
+        "unit": "g"
+      },
+      {
+        "name": "yogurt",
+        "quantity": 55.522724,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.081605,
+        "unit": "g"
+      },
+      {
+        "name": "honey",
+        "quantity": 20.821022,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573073699_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 85.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 14.352157,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 5.167257,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.197757,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 19.592615,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.001582,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.179402,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 4.898154,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573848236_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 41.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 2.868919,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 11.475675,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 2.868919,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573156961_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 318.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cauliflower",
+        "quantity": 56.901642,
+        "unit": "g"
+      },
+      {
+        "name": "squash",
+        "quantity": 119.259979,
+        "unit": "g"
+      },
+      {
+        "name": "pickles",
+        "quantity": 9.726776,
+        "unit": "g"
+      },
+      {
+        "name": "coleslaw",
+        "quantity": 19.453552,
+        "unit": "g"
+      },
+      {
+        "name": "barbecue sauce",
+        "quantity": 4.863388,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.236125,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.081767,
+        "unit": "g"
+      },
+      {
+        "name": "dates",
+        "quantity": 1.49075,
+        "unit": "g"
+      },
+      {
+        "name": "flatbread",
+        "quantity": 102.930664,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573159511_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 121.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "squash",
+        "quantity": 117.320793,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.199765,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.012932,
+        "unit": "g"
+      },
+      {
+        "name": "dates",
+        "quantity": 1.46651,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571932341_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 45.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 45.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574357682_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 68.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "sausage",
+        "quantity": 68.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573232405_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 36.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "bacon",
+        "quantity": 36.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574728191_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 145.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 10.146175,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 40.584702,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 10.146175,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573072381_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 60.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.198418,
+        "unit": "g"
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 16.793671,
+        "unit": "g"
+      },
+      {
+        "name": "basil",
+        "quantity": 4.198418,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573233324_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 189.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "hash browns",
+        "quantity": 67.0,
+        "unit": "g"
+      },
+      {
+        "name": "omelets",
+        "quantity": 122.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575407477_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 77.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "dumplings",
+        "quantity": 77.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1572453962_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 261.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "egg whites",
+        "quantity": 217.5,
+        "unit": "g"
+      },
+      {
+        "name": "salsa",
+        "quantity": 43.5,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574455483_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 168.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "cucumbers",
+        "quantity": 21.0,
+        "unit": "g"
+      },
+      {
+        "name": "celery",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "carrot",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "onions",
+        "quantity": 2.275223,
+        "unit": "g"
+      },
+      {
+        "name": "apple cider",
+        "quantity": 18.201782,
+        "unit": "g"
+      },
+      {
+        "name": "vinegar",
+        "quantity": 1.153254,
+        "unit": "g"
+      },
+      {
+        "name": "broth",
+        "quantity": 6.96787,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.090288,
+        "unit": "g"
+      },
+      {
+        "name": "pork",
+        "quantity": 113.761139,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1571934465_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 232.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 232.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1573073666_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 15.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "broccoli",
+        "quantity": 14.352157,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 0.269103,
+        "unit": "g"
+      },
+      {
+        "name": "bread crumbs",
+        "quantity": 0.197757,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.001582,
+        "unit": "g"
+      },
+      {
+        "name": "jalapenos",
+        "quantity": 0.179402,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1575924356_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 103.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "pasta",
+        "quantity": 103.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1574359199_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 329.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 111.0,
+        "unit": "g"
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 118.0,
+        "unit": "g"
+      },
+      {
+        "name": "crepes",
+        "quantity": 100.0,
+        "unit": "g"
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1576171157_rgb.png",
+    "nutrition": {
+      "calories": 0.0,
+      "mass": 132.0,
+      "fat": 0.0,
+      "carbohydrates": 0.0,
+      "protein": 0.0
+    },
+    "ingredients": [
+      {
+        "name": "brussels sprouts",
+        "quantity": 76.312408,
+        "unit": "g"
+      },
+      {
+        "name": "almonds",
+        "quantity": 0.29442,
+        "unit": "g"
+      },
+      {
+        "name": "olive oil",
+        "quantity": 1.430858,
+        "unit": "g"
+      },
+      {
+        "name": "chili",
+        "quantity": 0.953905,
+        "unit": "g"
+      },
+      {
+        "name": "salt",
+        "quantity": 0.008412,
+        "unit": "g"
+      },
+      {
+        "name": "chicken apple sausage",
+        "quantity": 53.0,
+        "unit": "g"
+      }
+    ]
+  }
+]
