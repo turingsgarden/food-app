@@ -232,7 +232,7 @@ def display_ground_truth_mass(ground_truth):
         st.info("No ground truth available")
         return
     
-    # 添加调试信息
+    # Debug info
     with st.expander("Debug Ground Truth", expanded=False):
         st.write(f"Keys: {list(ground_truth.keys())}")
         if 'nutrition' in ground_truth:
@@ -240,17 +240,14 @@ def display_ground_truth_mass(ground_truth):
             st.write(f"Mass value: {ground_truth['nutrition'].get('mass')}")
         st.write(f"Full data: {ground_truth}")
     
-    # Get ground truth mass from nutrition.mass
+    # Corrected ground truth mass extraction
     ground_truth_mass = None
-    if 'nutrition' in ground_truth:
-        nutrition_data = ground_truth['nutrition']
-    if isinstance(nutrition_data, dict) and 'mass' in nutrition_data:
-        ground_truth_mass = nutrition_data['mass']
+    if 'nutrition' in ground_truth and isinstance(ground_truth['nutrition'], dict):
+        ground_truth_mass = ground_truth['nutrition'].get('mass')
     
-    # Display ground truth mass
     mass_text = f"{ground_truth_mass:.1f} g" if ground_truth_mass is not None else "N/A"
     
-    # Display ingredients if available
+    # Ingredients
     ingredients_text = "N/A"
     if 'ingredients' in ground_truth and ground_truth['ingredients']:
         ingredients_list = []
@@ -272,16 +269,10 @@ def display_ground_truth_mass(ground_truth):
 <div class='content-box'>{ingredients_text}</div>
 </div>
 """
-
     st.markdown(
-        f"""
-    <div class="model-container">
-        {content_html}
-    """,
+        f"<div class='model-container'>{content_html}</div>",
         unsafe_allow_html=True,
     )
-
-
 
 
 def main():
