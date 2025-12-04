@@ -281,14 +281,13 @@ def display_ground_truth_mass(ground_truth):
 
 
 
-
 def main():
     st.set_page_config(
         page_title="Food Mass Prediction Display",
         layout="wide"
     )
     
-    # CSS styles
+    # CSS styles - 修改这部分
     st.markdown("""
     <style>
         .main-container {
@@ -383,12 +382,17 @@ def main():
             margin-bottom: 15px;
         }
         
+        /* 修复这个类 - 添加顶部边距避免与标题重叠 */
         .dish-id-display {
             font-size: 1.2em;
             font-weight: 600;
             color: #333;
-            margin-bottom: 10px;
+            margin: 25px 0 15px 0;  /* 增加顶部边距 */
             text-align: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e1e4e8;
         }
         
         .nav-container {
@@ -421,6 +425,22 @@ def main():
             border-radius: 6px;
             margin: 5px 0;
             border-left: 4px solid #2ca02c;
+        }
+        
+        /* 添加这个类来给主标题更多空间 */
+        .main-title-container {
+            margin-bottom: 20px;
+        }
+        
+        /* 给所有容器添加一些内边距 */
+        .stApp {
+            padding-top: 10px;
+        }
+        
+        /* 防止Streamlit的默认元素重叠 */
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
         }
     </style>
     """, unsafe_allow_html=True)
@@ -483,8 +503,10 @@ def main():
         st.warning("No valid images with responses.")
         return
     
-    # Title
+    # Title - 添加一个容器来更好地控制间距
+    st.markdown("<div class='main-title-container'>", unsafe_allow_html=True)
     st.title("🍽️ Food Mass Prediction Display")
+    st.markdown("</div>", unsafe_allow_html=True)
     
     # Search box
     with st.container():
@@ -544,7 +566,7 @@ def main():
         )
         current_ground_truth = find_ground_truth_by_dish_id(current_dish_id, ground_truth_mapping)
         
-        # Display dish ID
+        # Display dish ID - 现在会有更多空间
         st.markdown(f"<div class='dish-id-display'>Dish ID: {current_dish_id} (Page {current_page + 1}/{total_pages})</div>", unsafe_allow_html=True)
         
         # Navigation controls
@@ -628,45 +650,12 @@ def main():
         with col_right:
             # Display ground truth
             display_ground_truth_mass(current_ground_truth)
-            
-            # Calculate error if both mass data exist
-            if (current_model_response and 
-                current_model_response.get('mass_estimation', {}).get('total_mass_g') is not None and
-                current_ground_truth and 
-                current_ground_truth.get('nutrition', {}).get('mass') is not None):
-                
-                predicted_mass = current_model_response['mass_estimation']['total_mass_g']
-                true_mass = current_ground_truth['nutrition']['mass']
-                
-                if true_mass > 0:
-                    error = abs(predicted_mass - true_mass)
-                    error_percent = (error / true_mass) * 100
-                    
-                    # Choose box color based on error percentage
-                    if error_percent < 10:
-                        box_class = "success-box"
-                    elif error_percent < 30:
-                        box_class = "error-box"
-                        box_class = "error-box"  # 改为error-box
-                    else:
-                        box_class = "error-box"
-                    
-                    st.markdown(f"<div class='{box_class}'>", unsafe_allow_html=True)
-                    st.markdown("**Prediction Error:**")
-                    st.text(f"Absolute: {error:.1f} g")
-                    st.text(f"Relative: {error_percent:.1f}%")
-                    
-                    # Display mass ratio
-                    if true_mass > 0:
-                        mass_ratio = predicted_mass / true_mass
-                        st.text(f"Predicted/True: {mass_ratio:.2f}x")
-                    
-                    st.markdown("</div>", unsafe_allow_html=True)
     
     else:
         st.error(f"Invalid page number: {current_page}. Total pages: {total_pages}")
         st.session_state.current_page = 0
         st.rerun()
+
 
 def run_version5():
     main()
