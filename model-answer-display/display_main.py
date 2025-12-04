@@ -3,7 +3,8 @@ import traceback
 from version1 import run_version1
 from version2 import run_version2
 from version3 import run_version3
-from version4 import run_version4  # Add Version 4 import
+from version4 import run_version4
+from version5 import run_version5  # 添加Version 5导入
 
 
 # -------------------------------
@@ -42,6 +43,14 @@ def clear_version_state(version_prefix):
         "v4_response_data", "v4_result_display", "v4_structured_data",
         "v4_advanced_settings", "v4_custom_config"
     ]
+    
+    keywords_v5 = [
+        "v5_current_dish_id", "v5_show_console_output", "v5_model_dish_mapping",
+        "v5_available_models", "v5_ground_truth_mapping", "v5_image_mapping",
+        "v5_data_loaded", "v5_search_query", "v5_current_response",
+        "v5_current_ground_truth", "v5_current_image_path", "v5_error_stats",
+        "v5_display_mode", "v5_filter_mode", "v5_sort_order"
+    ]
 
     to_delete = []
     for key in list(st.session_state.keys()):
@@ -52,6 +61,8 @@ def clear_version_state(version_prefix):
         elif version_prefix == "v3" and any(k in key for k in keywords_v3):
             to_delete.append(key)
         elif version_prefix == "v4" and any(k in key for k in keywords_v4):
+            to_delete.append(key)
+        elif version_prefix == "v5" and any(k in key for k in keywords_v5):
             to_delete.append(key)
 
     for key in to_delete:
@@ -76,9 +87,9 @@ if "version_initialized" not in st.session_state:
 # 🔹 UI: Version Selector (Only show when no version is selected)
 # -------------------------------
 if not st.session_state.selected_version:
-    # Update selection box to include Version 3 and Version 4
+    # Update selection box to include all versions
     st.selectbox("Select version to display:", 
-                ["Version 1", "Version 2", "Version 3", "Version 4"],  # Add Version 4
+                ["Version 1", "Version 2", "Version 3", "Version 4", "Version 5"],  # 添加Version 5
                 key="page_select")
 
     if st.button("✅ Confirm Selection"):
@@ -92,8 +103,10 @@ if not st.session_state.selected_version:
             clear_version_state("v2")
         elif prev_version == "Version 3":
             clear_version_state("v3")
-        elif prev_version == "Version 4":  # Add Version 4 cleanup
+        elif prev_version == "Version 4":
             clear_version_state("v4")
+        elif prev_version == "Version 5":  # 添加Version 5清理
+            clear_version_state("v5")
 
         # ✅ Update selection and mark as freshly initialized
         st.session_state.selected_version = new_version
@@ -117,8 +130,10 @@ if st.session_state.selected_version:
             run_version2()
         elif st.session_state.selected_version == "Version 3": 
             run_version3()
-        elif st.session_state.selected_version == "Version 4":  # Add Version 4 execution
+        elif st.session_state.selected_version == "Version 4":
             run_version4()
+        elif st.session_state.selected_version == "Version 5":  # 添加Version 5执行
+            run_version5()
     except Exception as e:
         st.error("❌ Error occurred while executing subpage, please check traceback:")
         st.text(traceback.format_exc())
@@ -133,8 +148,10 @@ if st.session_state.selected_version:
             clear_version_state("v2")
         elif current_version == "Version 3": 
             clear_version_state("v3")
-        elif current_version == "Version 4":  # Add Version 4 cleanup
+        elif current_version == "Version 4":
             clear_version_state("v4")
+        elif current_version == "Version 5":  # 添加Version 5清理
+            clear_version_state("v5")
 
         st.session_state.selected_version = ""
         st.session_state.version_initialized = False
