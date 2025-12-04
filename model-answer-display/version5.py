@@ -170,6 +170,61 @@ def format_analysis_time(seconds):
         remaining_seconds = seconds % 60
         return f"{minutes}m{remaining_seconds:.1f}s"
 
+# def display_model_mass_prediction(response, model_name):
+#     """Display model's mass prediction"""
+#     if not response:
+#         st.info("No model response available")
+#         return
+    
+#     # Get analysis time
+#     analysis_time_seconds = response.get("analysis_time_seconds")
+#     analysis_time_formatted = response.get("analysis_time", format_analysis_time(analysis_time_seconds))
+    
+#     # Get mass estimation
+#     mass_estimation = response.get("mass_estimation", {})
+#     total_mass = mass_estimation.get("total_mass_g")
+#     calculated_volume = mass_estimation.get("calculated_volume_cm3")
+#     food_items = mass_estimation.get("food_items", [])
+    
+#     time_display = f"({analysis_time_formatted})" if analysis_time_formatted and analysis_time_formatted != "N/A" else ""
+    
+#     # Display total mass
+#     total_mass_text = f"{total_mass:.1f} g" if total_mass is not None else "N/A"
+    
+#     # Display calculated volume
+#     volume_text = f"{calculated_volume:.1f} cm³" if calculated_volume is not None else "N/A"
+    
+#     # Display food items (without confidence)
+#     food_items_list = []
+#     for item in food_items:
+#         name = item.get("name", "Unknown")
+#         mass = item.get("predicted_mass_g", 0)
+#         food_items_list.append(f"• {name:<25} {mass:>8.1f} g")
+    
+#     food_items_text = "\n".join(food_items_list) if food_items_list else "No food items detected"
+    
+#     content_html = f"""
+# <div class='model-content'>
+# <div class='model-title'>{model_name} {time_display}</div>
+
+# <div class='section-title'>Mass Prediction</div>
+# <div class='content-box'>
+# <strong>Total Mass:</strong> {total_mass_text}
+# <strong>Calculated Volume:</strong> {volume_text}
+# </div>
+
+# <div class='section-title'>Food Items</div>
+# <div class='content-box'>{food_items_text}</div>
+# </div>
+# """
+
+#     st.markdown(
+#         f"""
+#     <div class="model-container">
+#         {content_html}
+#     """,
+#         unsafe_allow_html=True,
+#     )
 def display_model_mass_prediction(response, model_name):
     """Display model's mass prediction"""
     if not response:
@@ -209,7 +264,7 @@ def display_model_mass_prediction(response, model_name):
 
 <div class='section-title'>Mass Prediction</div>
 <div class='content-box'>
-<strong>Total Mass:</strong> {total_mass_text}
+<strong>Total Mass:</strong> {total_mass_text}<br>
 <strong>Calculated Volume:</strong> {volume_text}
 </div>
 
@@ -343,10 +398,10 @@ def main():
         
         .image-container {
             background: white;
-            padding: 15px;
+            padding: 0 15px 10px 15px;   /* 去掉顶部 padding */
             border-radius: 8px;
             border: 1px solid #e1e4e8;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -380,13 +435,14 @@ def main():
             font-size: 1.2em;
             font-weight: 600;
             color: #333;
-            margin: 25px 0 15px 0;  /* 增加顶部边距 */
+            margin: 5px 0 8px 0;       /* 大幅减少上下间距 */
             text-align: center;
-            padding: 12px;
+            padding: 6px 10px;         /* 减少 padding */
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 6px;
             border: 1px solid #e1e4e8;
         }
+
         
         .nav-container {
             margin-bottom: 15px;
