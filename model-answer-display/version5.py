@@ -227,37 +227,135 @@ def display_model_mass_prediction(response, model_name):
     )
 
 def display_ground_truth_mass(ground_truth):
-    """Display ground truth mass information"""
+    """Display ground truth mass information (robust + debug)"""
     if not ground_truth:
         st.info("No ground truth available")
         return
-    
-    # Debug info
-    with st.expander("Debug Ground Truth", expanded=False):
-        st.write(f"Keys: {list(ground_truth.keys())}")
-        if 'nutrition' in ground_truth:
-            st.write(f"Nutrition keys: {list(ground_truth['nutrition'].keys())}")
-            st.write(f"Mass value: {ground_truth['nutrition'].get('mass')}")
-        st.write(f"Full data: {ground_truth}")
-    
-    # Corrected ground truth mass extraction
+
+    # 1) 完整展示原始 ground_truth，方便调试
+    with st.expander("Debug Ground Truth (full JSON)", expanded=True):
+        try:
+            # 完整可读的 json 展示
+            st.json(ground_truth)
+        except Exception:
+            st.write(ground_truth)
+
+    # 2) 尝试从多种可能位置解析 mass（兼容不同命名 / 字符串 / 列表等）
+    def try_parse_mass(obj):
+        """尝试从 obj 中解析出 mass，返回 float 或 None"""
+        if obj is None:
+            return None
+
+        # 如果直接是数字
+        if isinstance(obj, (int, float)):
+            return float(obj)
+
+        # 如果是字符串，尝试去掉非数字字符后解析
+        if isinstance(obj, str):
+            s = obj.strip()
+            # 常见："88", "88.0", "88 g", "88.0 g"
+            import re
+            m = re.search(r"(-?\d+(\.\d+)?)", s)
+            if m:
+                try:
+                    return float(m.group(1))
+                except:
+                    return None
+            return None
+
+        # 如果是 dict，优先取常见键
+        if isinstance(obj, dict):
+            # 常见键名集合（按优先级）
+            keys_to_try = ['mass', 'weight', 'total_mass', 'total_mass_g', 'mass_g', 'mass_in_g']
+            for k in keys_to_try:
+                if k in obj and obj[k] is not None:
+                    parsed = try_parse_mass(obj[k])
+                    if parsed is not None:
+                        return parsed
+            # 有时质量放在 nested structure，例如 {'nutrition': {...}}
+            for v in obj.values():
+                parsed = try_parse_mass(v)
+                if parsed is not None:
+                    return parsed
+            return None
+
+        # 如果是可迭代（例如 list），尝试逐项解析并取第一个可用
+        if isinstance(obj, (list, tuple)):
+            for v in obj:
+                parsed = try_parse_mass(v)
+                if parsed is not None:
+                    return parsed
+            return None
+
+        return None
+
+    # 3) 使用上述工具解析
     ground_truth_mass = None
+
+    # 常见位置一： ground_truth['nutrition'] 是 dict，如 sample
     if 'nutrition' in ground_truth and isinstance(ground_truth['nutrition'], dict):
-        ground_truth_mass = ground_truth['nutrition'].get('mass')
-    
-    mass_text = f"{ground_truth_mass:.1f} g" if ground_truth_mass is not None else "N/A"
-    
-    # Ingredients
+        ground_truth_mass = try_parse_mass(ground_truth['nutrition'].get('mass'))
+        # 如果没有直接的 'mass'，再尝试解析整个 nutrition dict（以防命名不一致）
+        if ground_truth_mass is None:
+            ground_truth_mass = try_parse_mass(ground_truth['nutrition'])
+
+    # 常见位置二：有时 mass 在根对象或其他键
+    if ground_truth_mass is None:
+        ground_truth_mass = try_parse_mass(ground_truth.get('mass'))
+    if ground_truth_mass is None:
+        # 尝试常见其他键
+        for alt in ('total_mass', 'weight', 'total_mass_g', 'mass_g'):
+            if alt in ground_truth:
+                ground_truth_mass = try_parse_mass(ground_truth.get(alt))
+                if ground_truth_mass is not None:
+                    break
+
+    # 退路：如果没有 nutrition.mass，但有 ingredients 且每个 ingredient 有 quantity（单位为 g），
+    # 可以把 ingredients 的 quantity 求和作为一个近似 ground truth（作为 fallback）
+    ingredients_sum = None
+    if ground_truth_mass is None and 'ingredients' in ground_truth and isinstance(ground_truth['ingredients'], (list, tuple)):
+        qtys = []
+        for ing in ground_truth['ingredients']:
+            if isinstance(ing, dict):
+                q = try_parse_mass(ing.get('quantity') or ing.get('qty') or ing.get('amount'))
+                # 若 unit 字段存在且非 g，可考虑跳过或转换，这里仅处理明显为 g 的情况或无 unit
+                unit = ing.get('unit') if isinstance(ing.get('unit'), str) else None
+                if q is not None:
+                    # 若单位为非 g，则不纳入（避免误算），若 unit 为 None 或 'g' 则纳入
+                    if unit is None or unit.lower() in ('g', 'gram', 'grams'):
+                        qtys.append(q)
+        if qtys:
+            ingredients_sum = sum(qtys)
+
+    # 4) 显示结果（优先实际提取到的 ground_truth_mass，再 fallback 到 ingredients_sum）
+    display_mass_value = ground_truth_mass if ground_truth_mass is not None else ingredients_sum
+
+    mass_text = f"{display_mass_value:.1f} g" if display_mass_value is not None else "N/A"
+
+    # Ingredients 文本（和你现有格式类似）
     ingredients_text = "N/A"
     if 'ingredients' in ground_truth and ground_truth['ingredients']:
         ingredients_list = []
         for ing in ground_truth['ingredients']:
+            if not isinstance(ing, dict):
+                continue
             name = ing.get('name', 'Unknown')
-            quantity = ing.get('quantity', 0)
+            quantity = ing.get('quantity') if ing.get('quantity') is not None else ing.get('qty') if ing.get('qty') is not None else 0
+            # 尝试解析量为数值
+            try:
+                quantity_val = float(quantity)
+            except Exception:
+                # 试做更稳健的解析（如字符串 "36 g"）
+                import re
+                if isinstance(quantity, str):
+                    m = re.search(r"(-?\d+(\.\d+)?)", quantity)
+                    quantity_val = float(m.group(1)) if m else 0.0
+                else:
+                    quantity_val = 0.0
             unit = ing.get('unit', 'g')
-            ingredients_list.append(f"• {name:<25} {quantity:>8.1f} {unit}")
+            ingredients_list.append(f"• {name:<25} {quantity_val:>8.1f} {unit}")
         ingredients_text = "\n".join(ingredients_list)
-    
+
     content_html = f"""
 <div class='model-content'>
 <div class='ground-truth-title'>Ground Truth</div>
