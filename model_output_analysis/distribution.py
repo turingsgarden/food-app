@@ -4,7 +4,7 @@ from statistics import mean
 import numpy as np
 
 
-input_path = r"C:\Users\PC\OneDrive\Desktop\Nutrify\food-app\mass_prediction\mass_comparison.xlsx"
+input_path = "model_output_analysis/mass_prediction_data_and_result/mass_comparison.xlsx"
 
 
 COLUMN_DISH_ID = 1                    # colA: dish_id
@@ -1089,4 +1089,5 @@ if not dish_pct_diffs and not ingredient_pct_diffs:
     print("   2. Excel file has the expected columns")
     print("   3. 'Prediction_correctness' column has 'Correct' values (for dish analysis)")
     print("   4. 'confidence' column has '✅ High' or '🟡 Contained' values (for ingredient analysis)")
+
     print("   5. Percentage difference columns have numeric values")
