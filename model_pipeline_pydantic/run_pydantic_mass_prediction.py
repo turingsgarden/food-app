@@ -15,14 +15,14 @@ from model_pipeline_pydantic_mass import FoodMassEstimationService, MassEstimati
 import google.api_core.exceptions as gcp_exceptions  
 
 # -------------------- Configuration --------------------
-dataset_dir = "model-answer-display/Nutrition5k/Nutrition5k-merged"
-segmentation_dir = "/scratch/ht2604/food-app/segmentation/results"
+dataset_dir = "nutrition5k-merged/rgb"
+segmentation_dir = "/nutrition5k-merged/segementation/segmentation"
 metadata_path = "model-answer-display/Nutrition5k/metadata/metadata/dish_metadata_cafe1.json"
 output_dir = "model_output_analysis/mass_prediction_data_and_result/mass_prediction.json"
 os.makedirs(output_dir, exist_ok=True)
 
-# 使用正确的原始深度图目录
-raw_depth_dir = "/scratch/ht2604/food-app/Nutrition5k/Nutrition5k-merged/raw_depth"
+
+raw_depth_dir = "nutrition5k-merged/raw_depth"
 
 output_json_path = os.path.join(output_dir, "Nutrition5k_mass_estimation_results_volume_based.json")
 user_id = "batch_user_mass_estimation"
@@ -50,7 +50,7 @@ def load_ground_truth_metadata(metadata_path):
             if true_mass is not None:
                 gt_mapping[dish_id] = true_mass
             else:
-                # 如果没有mass字段，计算ingredients的总和
+              
                 ingredients = item.get("ingredients", [])
                 total_mass = sum(ing.get("quantity", 0) for ing in ingredients)
                 if total_mass > 0:
@@ -564,3 +564,4 @@ print(f"   • Used volume calculation for ALL {len(file_triplets)} dishes")
 print(f"   • No scale factor used - pure volume-based estimation")
 print(f"   • Used raw depth maps from: {raw_depth_dir}")
 print(f"   • Results include both mass estimates and calculated volumes")
+
