@@ -142,7 +142,7 @@ def plot_accuracy_bar_chart(results):
 
 def main():
     # Excel file path
-    file_path = r"C:\Users\PC\OneDrive\Desktop\Nutrify\food-app\mass_prediction\mass_comparison.xlsx"
+    file_path = "model_output_analysis/mass_prediction_data_and_result/mass_comparison.xlsx"
     
     # Check file existence
     if not os.path.exists(file_path):
@@ -216,3 +216,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
