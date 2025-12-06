@@ -1,4 +1,4 @@
-# # batch_mass_estimation.py
+
 import os
 import json
 import io
@@ -11,48 +11,46 @@ from PIL import Image
 import numpy as np
 
 # Import your Mass Estimation service
-from model_pipeline_pydantic_mass import FoodMassEstimationService, MassEstimationOutput
+from model_pipeline_pydantic_mass import FoodMassEstimationService, MassEstimationOutput, calculate_volume_from_depth_and_mask
 import google.api_core.exceptions as gcp_exceptions  
 
 # -------------------- Configuration --------------------
-dataset_dir = "/scratch/ht2604/food-app/Nutrition5k/Nutrition5k-merged"
+dataset_dir = "model-answer-display/Nutrition5k/Nutrition5k-merged"
 segmentation_dir = "/scratch/ht2604/food-app/segmentation/results"
-metadata_path = "/scratch/ht2604/food-app/Nutrition5k/metadata/metadata/dish_metadata_cafe1.json"
-output_dir = "/scratch/ht2604/food-app/output/mass_estimation"
+metadata_path = "model-answer-display/Nutrition5k/metadata/metadata/dish_metadata_cafe1.json"
+output_dir = "model_output_analysis/mass_prediction_data_and_result/mass_prediction.json"
 os.makedirs(output_dir, exist_ok=True)
 
-output_json_path = os.path.join(output_dir, "Nutrition5k_mass_estimation_results_ALL_fixed_0.003.json")
+# 使用正确的原始深度图目录
+raw_depth_dir = "/scratch/ht2604/food-app/Nutrition5k/Nutrition5k-merged/raw_depth"
+
+output_json_path = os.path.join(output_dir, "Nutrition5k_mass_estimation_results_volume_based.json")
 user_id = "batch_user_mass_estimation"
 supported_formats = (".jpg", ".jpeg", ".png", ".webp")
-batch_size = 5  # Can increase batch size since currently only testing one scale factor per dish
-sleep_time = 3  # Can reduce wait time
+batch_size = 5
+sleep_time = 3
 
-# -------------------- Fixed Scaling Factor Configuration --------------------
-# 固定使用表现最好的scaling factor
-FIXED_SCALE_FACTOR = 0.005 #0.003, 0.002, 0.001中选择一个最佳值
-SELECTED_SCALE_FACTORS = [FIXED_SCALE_FACTOR]  # Only test one value
-
-TEST_LIMIT = None  # Set to None to process all images
+TEST_LIMIT = None 
 
 # -------------------- Load Ground Truth Metadata --------------------
 def load_ground_truth_metadata(metadata_path):
-    """Load ground truth mass data"""
+
     print(f"📖 Loading ground truth metadata from: {metadata_path}")
     with open(metadata_path, "r", encoding="utf-8") as f:
         metadata = json.load(f)
     
-    # Create a mapping from dish_id to true mass
+
     gt_mapping = {}
     for item in metadata:
         dish_id = extract_dish_id(item.get("image_filename", ""))
         if dish_id:
-            # Get true total mass
+
             nutrition = item.get("nutrition", {})
             true_mass = nutrition.get("mass")
             if true_mass is not None:
                 gt_mapping[dish_id] = true_mass
             else:
-                # If there is no mass field, calculate the sum of ingredients
+                # 如果没有mass字段，计算ingredients的总和
                 ingredients = item.get("ingredients", [])
                 total_mass = sum(ing.get("quantity", 0) for ing in ingredients)
                 if total_mass > 0:
@@ -60,7 +58,7 @@ def load_ground_truth_metadata(metadata_path):
     
     print(f"✅ Loaded ground truth masses for {len(gt_mapping)} dishes")
     
-    # Print some statistics
+
     if gt_mapping:
         masses = list(gt_mapping.values())
         print(f"📊 Ground truth mass statistics:")
@@ -89,6 +87,28 @@ def extract_dish_id(filename):
             return part
     return None
 
+def find_depth_file_for_dish(dish_id, raw_depth_dir):
+
+    exact_patterns = [
+        f"dish_{dish_id}_depth_raw.png",
+        f"{dish_id}_depth_raw.png",
+        f"dish_{dish_id}_raw_depth.png", 
+        f"{dish_id}_raw_depth.png"
+    ]
+    
+    for pattern in exact_patterns:
+        potential_path = os.path.join(raw_depth_dir, pattern)
+        if os.path.exists(potential_path):
+            return potential_path
+    
+
+    for filename in os.listdir(raw_depth_dir):
+        if dish_id in filename and any(keyword in filename.lower() for keyword in ['depth_raw', 'raw_depth', 'depth']):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                return os.path.join(raw_depth_dir, filename)
+    
+    return None
+
 # -------------------- Load Ground Truth Data --------------------
 ground_truth_mapping = load_ground_truth_metadata(metadata_path)
 
@@ -96,7 +116,6 @@ ground_truth_mapping = load_ground_truth_metadata(metadata_path)
 print("Scanning dataset directory structure...")
 
 rgb_dir = os.path.join(dataset_dir, "rgb")
-color_depth_dir = os.path.join(dataset_dir, "color_depth")
 
 rgb_files = {}
 for file in os.listdir(rgb_dir):
@@ -111,7 +130,7 @@ print(f"Found {len(rgb_files)} RGB images")
 file_triplets = []
 
 for dish_id, rgb_path in rgb_files.items():
-    # Check if there is ground truth mass data
+
     if dish_id not in ground_truth_mapping:
         print(f"⚠️ No ground truth mass data for dish {dish_id}")
         continue
@@ -141,29 +160,11 @@ for dish_id, rgb_path in rgb_files.items():
         print(f"⚠️ No segmentation mask found for dish {dish_id}")
         continue
     
-    # Find depth file
-    depth_patterns = [
-        f"dish_{dish_id}_depth_color.png",
-        f"dish_{dish_id}_color_depth.png", 
-        f"{dish_id}_depth_color.png"
-    ]
-    
-    depth_path = None
-    for pattern in depth_patterns:
-        potential_path = os.path.join(color_depth_dir, pattern)
-        if os.path.exists(potential_path):
-            depth_path = potential_path
-            break
+    # Find depth file - 
+    depth_path = find_depth_file_for_dish(dish_id, raw_depth_dir)
     
     if not depth_path:
-        # Try to find by scanning all depth files
-        for depth_file in os.listdir(color_depth_dir):
-            if dish_id in depth_file and 'color' in depth_file and depth_file.lower().endswith(supported_formats):
-                depth_path = os.path.join(color_depth_dir, depth_file)
-                break
-    
-    if not depth_path:
-        print(f"⚠️ No color depth image found for dish {dish_id}")
+        print(f"⚠️ No raw depth image found for dish {dish_id} in {raw_depth_dir}")
         continue
     
     file_triplets.append({
@@ -171,10 +172,9 @@ for dish_id, rgb_path in rgb_files.items():
         'rgb': rgb_path,
         'segmentation': seg_path,
         'depth': depth_path,
-        'true_mass_g': ground_truth_mapping[dish_id]  # Add true mass
+        'true_mass_g': ground_truth_mapping[dish_id]
     })
 
-# Only show test mode if there is a test limit
 if TEST_LIMIT:
     file_triplets = file_triplets[:TEST_LIMIT]
     print(f"🔬 TEST MODE: Only testing first {TEST_LIMIT} images")
@@ -193,7 +193,7 @@ failed_images = []
 
 def mass_result_to_dict(result: MassEstimationOutput, file_triplet: dict, console_output: str = "", 
                        analysis_time_seconds: float = None, analysis_time_formatted: str = None,
-                       scale_factor: float = FIXED_SCALE_FACTOR) -> dict:
+                       calculated_volume: float = None) -> dict:
     """Convert MassEstimationOutput to serializable dictionary"""
     
     result_dict = {
@@ -206,7 +206,7 @@ def mass_result_to_dict(result: MassEstimationOutput, file_triplet: dict, consol
         "ground_truth_mass_g": file_triplet['true_mass_g'],
         "mass_estimation": {
             "total_mass_g": result.total_mass_g,
-            "scale_factor_used": scale_factor,
+            "calculated_volume_cm3": calculated_volume,
             "food_items": [
                 {
                     "name": item.name,
@@ -247,10 +247,10 @@ def error_result_to_dict(file_triplet: dict, error_msg: str, console_output: str
     return result_dict
 
 print(f"Starting mass estimation for {len(file_triplets)} dishes...")
-print(f"🎯 Using FIXED scale factor: {FIXED_SCALE_FACTOR}")
+print(f"🎯 Using VOLUME-BASED estimation with RAW DEPTH maps")
 print(f"📦 Processing ALL available images")
+print(f"📁 Raw depth directory: {raw_depth_dir}")
 
-# Add progress bar to show overall progress
 total_batches = (len(file_triplets) + batch_size - 1) // batch_size
 print(f"📊 Total batches to process: {total_batches}")
 
@@ -263,6 +263,7 @@ for i in range(0, len(file_triplets), batch_size):
         f = io.StringIO()
         analysis_time_seconds = None
         analysis_time_formatted = None
+        calculated_volume = None
         
         try:
             sys.stdout = f
@@ -272,17 +273,22 @@ for i in range(0, len(file_triplets), batch_size):
             segmentation_img = Image.open(triplet['segmentation'])
             depth_img = Image.open(triplet['depth'])
             
+
             if segmentation_img.mode != 'L':
                 segmentation_img = segmentation_img.convert('L')
             
+
+            print(f"🔍 Calculating volume for dish {triplet['dish_id']}...")
+            calculated_volume = calculate_volume_from_depth_and_mask(depth_img, segmentation_img)
+            print(f"📊 Calculated volume: {calculated_volume:.2f} cm³")
+            
             analysis_start_time = time.time()
             
-            # Using fixed scale factor
+
             mass_result = service.run_estimation(
                 rgb_img=rgb_img,
                 segmentation_img=segmentation_img,
-                colorized_depth_img=depth_img,
-                scale_s=FIXED_SCALE_FACTOR,
+                depth_img=depth_img,
                 user_id=user_id
             )
             
@@ -299,7 +305,7 @@ for i in range(0, len(file_triplets), batch_size):
                 console_text, 
                 analysis_time_seconds,
                 analysis_time_formatted,
-                FIXED_SCALE_FACTOR
+                calculated_volume
             )
             batch_results.append(result_dict)
 
@@ -308,13 +314,12 @@ for i in range(0, len(file_triplets), batch_size):
             error = abs(pred_mass - true_mass)
             percentage_error = (error / true_mass) * 100 if true_mass > 0 else 0
             
-            # Only display detailed results for each dish in detailed mode to avoid excessive output
-            if len(file_triplets) <= 50:  # If total count is less than 50, show detailed info
-                print(f"✅ dish_{triplet['dish_id']}: {pred_mass:.1f}g (True: {true_mass:.1f}g, Error: {error:.1f}g, {percentage_error:.1f}%), {analysis_time_formatted}")
+
+            if len(file_triplets) <= 50:
+                print(f"✅ dish_{triplet['dish_id']}: {pred_mass:.1f}g (True: {true_mass:.1f}g, Error: {error:.1f}g, {percentage_error:.1f}%), Volume: {calculated_volume:.1f}cm³, Time: {analysis_time_formatted}")
             else:
-                # For large datasets, display progress every 10 dishes
                 if (i + batch_triplets.index(triplet)) % 10 == 0:
-                    print(f"✅ Progress: {i + batch_triplets.index(triplet) + 1}/{len(file_triplets)} - dish_{triplet['dish_id']}: {pred_mass:.1f}g (Error: {error:.1f}g)")
+                    print(f"✅ Progress: {i + batch_triplets.index(triplet) + 1}/{len(file_triplets)} - dish_{triplet['dish_id']}: {pred_mass:.1f}g (Error: {error:.1f}g, Volume: {calculated_volume:.1f}cm³)")
 
         except gcp_exceptions.DeadlineExceeded:
             sys.stdout = sys.__stdout__
@@ -344,7 +349,7 @@ for i in range(0, len(file_triplets), batch_size):
 
     all_results.extend(batch_results)
 
-    # Save progress after each batch
+
     with open(output_json_path, "w", encoding="utf-8") as f:
         json.dump(all_results, f, ensure_ascii=False, indent=4)
 
@@ -360,10 +365,10 @@ summary = {
         "failed_processing": len(failed_images),
         "processing_date": datetime.now().isoformat(),
         "user_id": user_id,
-        "service_type": "Food Mass Estimation with Fixed Scale Factor",
+        "service_type": "Food Mass Estimation with Volume Calculation",
         "dataset": "Nutrition5k-merged",
-        "fixed_scale_factor": FIXED_SCALE_FACTOR,
-        "test_limit": "ALL_IMAGES"  # Marked as processing all images
+        "raw_depth_directory": raw_depth_dir,
+        "test_limit": "ALL_IMAGES" if not TEST_LIMIT else f"FIRST_{TEST_LIMIT}_IMAGES"
     },
     "performance_metrics": {
         "average_analysis_time_seconds": None,
@@ -381,6 +386,12 @@ summary = {
         "min_error_g": None,
         "max_error_g": None,
         "accuracy_distribution": None
+    },
+    "volume_metrics": {
+        "average_volume_cm3": None,
+        "min_volume_cm3": None,
+        "max_volume_cm3": None,
+        "volume_mass_correlation": None
     },
     "mass_statistics": {
         "true_mass_stats": {
@@ -430,10 +441,12 @@ if successful_results:
     percentage_errors = []
     true_masses = []
     predicted_masses = []
+    volumes = []
     
     for result in successful_results:
         true_mass = result["ground_truth_mass_g"]
         pred_mass = result["mass_estimation"]["total_mass_g"]
+        volume = result["mass_estimation"].get("calculated_volume_cm3", 0)
         error = abs(pred_mass - true_mass)
         percentage_error = (error / true_mass) * 100 if true_mass > 0 else 0
         
@@ -441,6 +454,7 @@ if successful_results:
         percentage_errors.append(percentage_error)
         true_masses.append(true_mass)
         predicted_masses.append(pred_mass)
+        volumes.append(volume)
     
     if errors:
         summary["accuracy_metrics"].update({
@@ -458,6 +472,22 @@ if successful_results:
             range_name = f"{error_ranges[i]}-{error_ranges[i+1]}g" if error_ranges[i+1] != float('inf') else f">{error_ranges[i]}g"
             accuracy_distribution[range_name] = count
         summary["accuracy_metrics"]["accuracy_distribution"] = accuracy_distribution
+    
+    # Volume metrics
+    if volumes:
+        summary["volume_metrics"].update({
+            "average_volume_cm3": sum(volumes) / len(volumes),
+            "min_volume_cm3": min(volumes),
+            "max_volume_cm3": max(volumes)
+        })
+        
+       
+        if len(volumes) > 1 and len(true_masses) > 1:
+            try:
+                volume_mass_corr = np.corrcoef(volumes, true_masses)[0, 1]
+                summary["volume_metrics"]["volume_mass_correlation"] = round(volume_mass_corr, 4)
+            except:
+                summary["volume_metrics"]["volume_mass_correlation"] = "Could not calculate"
     
     # Mass statistics
     if true_masses:
@@ -486,7 +516,7 @@ if successful_results:
     summary["mass_statistics"]["most_common_foods"] = food_counter.most_common(10)
 
 # Save summary
-summary_path = os.path.join(output_dir, "mass_estimation_summary_ALL_fixed_0.003.json")
+summary_path = os.path.join(output_dir, "mass_estimation_summary_volume_based.json")
 with open(summary_path, "w", encoding="utf-8") as f:
     json.dump(summary, f, ensure_ascii=False, indent=4)
 
@@ -496,18 +526,25 @@ print(f"📈 Summary saved to: {summary_path}")
 print(f"✅ Successful: {summary['processing_summary']['successful_processing']}")
 print(f"❌ Failed: {summary['processing_summary']['failed_processing']}")
 print(f"📋 Total: {summary['processing_summary']['total_triplets']}")
-print(f"🎯 Fixed Scale Factor: {FIXED_SCALE_FACTOR}")
-print(f"🌐 Processed: ALL available images")
+print(f"🎯 Method: Volume-based estimation with raw depth maps")
+print(f"📁 Raw depth directory: {raw_depth_dir}")
 
 # Print accuracy metrics
 if summary["accuracy_metrics"]["mean_absolute_error_g"]:
-    print(f"\n🎯 Accuracy Metrics (Fixed Scale {FIXED_SCALE_FACTOR}):")
+    print(f"\n🎯 Accuracy Metrics (Volume-based):")
     print(f"   Mean Absolute Error: {summary['accuracy_metrics']['mean_absolute_error_g']:.1f}g")
     print(f"   Mean Absolute Percentage Error: {summary['accuracy_metrics']['mean_absolute_percentage_error']:.1f}%")
     print(f"   Min Error: {summary['accuracy_metrics']['min_error_g']:.1f}g")
     print(f"   Max Error: {summary['accuracy_metrics']['max_error_g']:.1f}g")
     
-    # Display accuracy distribution
+
+    if summary["volume_metrics"]["average_volume_cm3"]:
+        print(f"\n📊 Volume Statistics:")
+        print(f"   Average Volume: {summary['volume_metrics']['average_volume_cm3']:.1f} cm³")
+        print(f"   Volume Range: {summary['volume_metrics']['min_volume_cm3']:.1f} - {summary['volume_metrics']['max_volume_cm3']:.1f} cm³")
+        if summary["volume_metrics"]["volume_mass_correlation"]:
+            print(f"   Volume-Mass Correlation: {summary['volume_metrics']['volume_mass_correlation']}")
+    
     if "accuracy_distribution" in summary["accuracy_metrics"]:
         print(f"\n📊 Error Distribution:")
         for range_name, count in summary["accuracy_metrics"]["accuracy_distribution"].items():
@@ -517,423 +554,13 @@ if summary["accuracy_metrics"]["mean_absolute_error_g"]:
 # Print failed images for review
 if failed_images:
     print(f"\n⚠️ Failed dishes ({len(failed_images)} total):")
-    for dish_id, error in failed_images[:10]:  
+    for dish_id, error in failed_images[:10]:
         print(f"   dish_{dish_id}: {error}")
     if len(failed_images) > 10:
         print(f"   ... and {len(failed_images) - 10} more")
 
-print(f"\n💡 Full Dataset Test Complete:")
-print(f"   • Used fixed scale factor {FIXED_SCALE_FACTOR} for ALL {len(file_triplets)} dishes")
-print(f"   • Provides comprehensive evaluation of scaling factor performance")
-print(f"   • Results can be used for final model validation")
-
-
-#===============================================
-#Handling Failed images
-# batch_mass_estimation_retry_failed.py
-# import os
-# import json
-# import io
-# import sys
-# import time
-# from tqdm import tqdm
-# from pathlib import Path
-# from datetime import datetime
-# from PIL import Image
-# import numpy as np
-
-# # Import your Mass Estimation service
-# from model_pipeline_scaling_mass import FoodMassEstimationService, MassEstimationOutput
-# import google.api_core.exceptions as gcp_exceptions  
-
-# # -------------------- Configuration --------------------
-# dataset_dir = "/scratch/ht2604/food-app/Nutrition5k/Nutrition5k-merged"
-# segmentation_dir = "/scratch/ht2604/food-app/segmentation/results"
-# metadata_path = "/scratch/ht2604/food-app/Nutrition5k/metadata/metadata/dish_metadata_cafe1.json"
-# output_dir = "/scratch/ht2604/food-app/output/mass_estimation"
-# os.makedirs(output_dir, exist_ok=True)
-
-# existing_output_path = os.path.join(output_dir, "Nutrition5k_mass_estimation_results_ALL_fixed_0.003.json")
-# new_output_path = os.path.join(output_dir, "Nutrition5k_mass_estimation_results_ALL_fixed_0.003_with_retry.json")
-
-# user_id = "batch_user_mass_estimation_retry"
-# supported_formats = (".jpg", ".jpeg", ".png", ".webp")
-# batch_size = 3  
-# sleep_time = 5  
-
-# # -------------------- Fixed Scaling Factor Configuration --------------------
-# FIXED_SCALE_FACTOR = 0.003
-
-# # -------------------- Load Existing Results --------------------
-# def load_existing_results(existing_path):
-#     """Load existing results file"""
-#     print(f"📖 Loading existing results from: {existing_path}")
-    
-#     if not os.path.exists(existing_path):
-#         print(f"❌ Existing results file not found: {existing_path}")
-#         return [], []
-    
-#     with open(existing_path, "r", encoding="utf-8") as f:
-#         existing_data = json.load(f)
-    
-#     # Separate successful and failed records
-#     successful_results = [r for r in existing_data if r.get("success", False)]
-#     failed_results = [r for r in existing_data if not r.get("success", False)]
-    
-#     print(f"✅ Loaded {len(existing_data)} existing records:")
-#     print(f"   Successful: {len(successful_results)}")
-#     print(f"   Failed: {len(failed_results)}")
-    
-#     return existing_data, failed_results
-
-# # -------------------- Load Ground Truth Metadata --------------------
-# def load_ground_truth_metadata(metadata_path):
-#     """Load ground truth mass data"""
-#     print(f"📖 Loading ground truth metadata from: {metadata_path}")
-#     with open(metadata_path, "r", encoding="utf-8") as f:
-#         metadata = json.load(f)
-    
-#     # Create mapping from dish_id to ground truth mass
-#     gt_mapping = {}
-#     for item in metadata:
-#         dish_id = extract_dish_id(item.get("image_filename", ""))
-#         if dish_id:
-#             nutrition = item.get("nutrition", {})
-#             true_mass = nutrition.get("mass")
-#             if true_mass is not None:
-#                 gt_mapping[dish_id] = true_mass
-#             else:
-#                 ingredients = item.get("ingredients", [])
-#                 total_mass = sum(ing.get("quantity", 0) for ing in ingredients)
-#                 if total_mass > 0:
-#                     gt_mapping[dish_id] = total_mass
-    
-#     print(f"✅ Loaded ground truth masses for {len(gt_mapping)} dishes")
-#     return gt_mapping
-
-# # -------------------- Helper Functions --------------------
-# def format_analysis_time(seconds):
-#     """Format analysis time in human-readable format: 1m30s, 40s, etc."""
-#     if seconds < 60:
-#         return f"{seconds:.1f}s"
-#     else:
-#         minutes = int(seconds // 60)
-#         remaining_seconds = seconds % 60
-#         return f"{minutes}m{remaining_seconds:.1f}s"
-
-# def extract_dish_id(filename):
-#     """Extract dish ID from filename patterns"""
-#     parts = filename.split('_')
-#     for part in parts:
-#         if part.isdigit() and len(part) >= 9:
-#             return part
-#     return None
-
-# def find_file_triplets(failed_results, ground_truth_mapping):
-#     """Find file triplets for failed records"""
-#     file_triplets = []
-    
-#     for failed_record in failed_results:
-#         dish_id = failed_record['dish_id']
-        
-#         # Check if ground truth mass data exists
-#         if dish_id not in ground_truth_mapping:
-#             print(f"⚠️ No ground truth mass data for failed dish {dish_id}")
-#             continue
-        
-#         file_paths = failed_record['file_paths']
-#         rgb_path = file_paths['rgb']
-#         seg_path = file_paths['segmentation']
-#         depth_path = file_paths['depth']
-        
-#         # Check if files exist
-#         if not all(os.path.exists(path) for path in [rgb_path, seg_path, depth_path]):
-#             print(f"⚠️ Some files missing for failed dish {dish_id}")
-#             # Try to find files again
-#             rgb_path, seg_path, depth_path = find_files_for_dish(dish_id)
-#             if not all([rgb_path, seg_path, depth_path]):
-#                 print(f"❌ Could not find all files for failed dish {dish_id}")
-#                 continue
-        
-#         file_triplets.append({
-#             'dish_id': dish_id,
-#             'rgb': rgb_path,
-#             'segmentation': seg_path,
-#             'depth': depth_path,
-#             'true_mass_g': ground_truth_mapping[dish_id],
-#             'original_error': failed_record.get('error', 'Unknown error')
-#         })
-    
-#     return file_triplets
-
-# def find_files_for_dish(dish_id):
-#     """Find files for a given dish_id"""
-#     rgb_dir = os.path.join(dataset_dir, "rgb")
-#     color_depth_dir = os.path.join(dataset_dir, "color_depth")
-    
-#     # Find RGB files
-#     rgb_patterns = [f"dish_{dish_id}_rgb.png", f"{dish_id}_rgb.png"]
-#     rgb_path = None
-#     for pattern in rgb_patterns:
-#         potential_path = os.path.join(rgb_dir, pattern)
-#         if os.path.exists(potential_path):
-#             rgb_path = potential_path
-#             break
-    
-#     # Find segmentation files
-#     seg_patterns = [
-#         f"mask_dish_{dish_id}_rgb.png",
-#         f"mask_{dish_id}.png",
-#         f"mask_dish_{dish_id}.png"
-#     ]
-#     seg_path = None
-#     for pattern in seg_patterns:
-#         potential_path = os.path.join(segmentation_dir, pattern)
-#         if os.path.exists(potential_path):
-#             seg_path = potential_path
-#             break
-    
-#     # Find depth files
-#     depth_patterns = [
-#         f"dish_{dish_id}_depth_color.png",
-#         f"dish_{dish_id}_color_depth.png", 
-#         f"{dish_id}_depth_color.png"
-#     ]
-#     depth_path = None
-#     for pattern in depth_patterns:
-#         potential_path = os.path.join(color_depth_dir, pattern)
-#         if os.path.exists(potential_path):
-#             depth_path = potential_path
-#             break
-    
-#     return rgb_path, seg_path, depth_path
-
-# # -------------------- Main Retry Logic --------------------
-# def main():
-#     print("🔄 Starting retry process for failed images...")
-    
-#     # Load existing results
-#     existing_data, failed_results = load_existing_results(existing_output_path)
-    
-#     if not failed_results:
-#         print("🎉 No failed images to retry!")
-#         return
-    
-#     print(f"\n🔍 Found {len(failed_results)} failed images to retry")
-    
-#     # Load ground truth mass data
-#     ground_truth_mapping = load_ground_truth_metadata(metadata_path)
-    
-#     # Find file triplets for failed records
-#     retry_triplets = find_file_triplets(failed_results, ground_truth_mapping)
-    
-#     if not retry_triplets:
-#         print("❌ Could not find file triplets for any failed images")
-#         return
-    
-#     print(f"✅ Preparing to retry {len(retry_triplets)} failed images")
-    
-#     # Show images to retry
-#     print(f"\n📋 Images to retry:")
-#     for triplet in retry_triplets:
-#         print(f"   • dish_{triplet['dish_id']} - Previous error: {triplet['original_error']}")
-    
-#     # Initialize service
-#     print("\nInitializing Food Mass Estimation Service...")
-#     service = FoodMassEstimationService()
-    
-#     # Process retries
-#     retry_results = []
-#     new_failed_images = []
-    
-#     def mass_result_to_dict(result: MassEstimationOutput, file_triplet: dict, console_output: str = "", 
-#                            analysis_time_seconds: float = None, analysis_time_formatted: str = None) -> dict:
-#         """Convert MassEstimationOutput to serializable dictionary"""
-        
-#         result_dict = {
-#             "dish_id": file_triplet['dish_id'],
-#             "file_paths": {
-#                 "rgb": file_triplet['rgb'],
-#                 "segmentation": file_triplet['segmentation'],
-#                 "depth": file_triplet['depth']
-#             },
-#             "ground_truth_mass_g": file_triplet['true_mass_g'],
-#             "mass_estimation": {
-#                 "total_mass_g": result.total_mass_g,
-#                 "scale_factor_used": FIXED_SCALE_FACTOR,
-#                 "food_items": [
-#                     {
-#                         "name": item.name,
-#                         "predicted_mass_g": item.predicted_mass_g,
-#                         "confidence": item.confidence
-#                     } for item in result.food_items
-#                 ]
-#             },
-#             "analysis_timestamp": datetime.now().isoformat(),
-#             "processing_timestamp": datetime.now().isoformat(),
-#             "analysis_time_seconds": analysis_time_seconds,
-#             "analysis_time": analysis_time_formatted,
-#             "console_output": console_output,
-#             "success": True,
-#             "retry_attempt": True,  # 标记为重试结果
-#             "previous_error": file_triplet.get('original_error', 'Unknown')
-#         }
-        
-#         return result_dict
-
-#     def error_result_to_dict(file_triplet: dict, error_msg: str, console_output: str = "",
-#                             analysis_time_seconds: float = None, analysis_time_formatted: str = None) -> dict:
-#         """Create error result dictionary for retry"""
-#         result_dict = {
-#             "dish_id": file_triplet['dish_id'],
-#             "file_paths": {
-#                 "rgb": file_triplet['rgb'],
-#                 "segmentation": file_triplet['segmentation'],
-#                 "depth": file_triplet['depth']
-#             },
-#             "ground_truth_mass_g": file_triplet['true_mass_g'],
-#             "error": error_msg,
-#             "console_output": console_output,
-#             "success": False,
-#             "processing_timestamp": datetime.now().isoformat(),
-#             "analysis_time_seconds": analysis_time_seconds,
-#             "analysis_time": analysis_time_formatted,
-#             "retry_attempt": True,  # 标记为重试结果
-#             "previous_error": file_triplet.get('original_error', 'Unknown')
-#         }
-        
-#         return result_dict
-
-#     print(f"\n🔄 Starting retry process for {len(retry_triplets)} failed dishes...")
-#     print(f"🎯 Using FIXED scale factor: {FIXED_SCALE_FACTOR}")
-    
-#     total_batches = (len(retry_triplets) + batch_size - 1) // batch_size
-#     print(f"📊 Total batches to process: {total_batches}")
-    
-#     for i in range(0, len(retry_triplets), batch_size):
-#         batch_triplets = retry_triplets[i:i+batch_size]
-#         batch_results = []
-
-#         for triplet in tqdm(batch_triplets, desc=f"Retry Batch {i//batch_size + 1}/{total_batches}"):
-            
-#             f = io.StringIO()
-#             analysis_time_seconds = None
-#             analysis_time_formatted = None
-            
-#             try:
-#                 sys.stdout = f
-                
-#                 # Load images
-#                 rgb_img = Image.open(triplet['rgb'])
-#                 segmentation_img = Image.open(triplet['segmentation'])
-#                 depth_img = Image.open(triplet['depth'])
-                
-#                 if segmentation_img.mode != 'L':
-#                     segmentation_img = segmentation_img.convert('L')
-                
-#                 analysis_start_time = time.time()
-                
-#                 # 使用固定的scale factor
-#                 mass_result = service.run_estimation(
-#                     rgb_img=rgb_img,
-#                     segmentation_img=segmentation_img,
-#                     colorized_depth_img=depth_img,
-#                     scale_s=FIXED_SCALE_FACTOR,
-#                     user_id=user_id
-#                 )
-                
-#                 analysis_end_time = time.time()
-#                 analysis_time_seconds = analysis_end_time - analysis_start_time
-#                 analysis_time_formatted = format_analysis_time(analysis_time_seconds)
-                
-#                 sys.stdout = sys.__stdout__
-#                 console_text = f.getvalue()
-
-#                 result_dict = mass_result_to_dict(
-#                     mass_result, 
-#                     triplet, 
-#                     console_text, 
-#                     analysis_time_seconds,
-#                     analysis_time_formatted
-#                 )
-#                 batch_results.append(result_dict)
-
-#                 true_mass = triplet['true_mass_g']
-#                 pred_mass = mass_result.total_mass_g
-#                 error = abs(pred_mass - true_mass)
-#                 percentage_error = (error / true_mass) * 100 if true_mass > 0 else 0
-                
-#                 print(f"✅ RETRY SUCCESS: dish_{triplet['dish_id']}: {pred_mass:.1f}g (True: {true_mass:.1f}g, Error: {error:.1f}g, {percentage_error:.1f}%), {analysis_time_formatted}")
-#                 print(f"   Previous error: {triplet.get('original_error', 'Unknown')}")
-
-#             except gcp_exceptions.DeadlineExceeded:
-#                 sys.stdout = sys.__stdout__
-#                 console_text = f.getvalue()
-#                 print(f"⏱ RETRY TIMEOUT: dish_{triplet['dish_id']}: Timeout")
-#                 print(f"   Previous error: {triplet.get('original_error', 'Unknown')}")
-                
-#                 error_result = error_result_to_dict(
-#                     triplet, "DeadlineExceeded (Retry)", console_text,
-#                     analysis_time_seconds, analysis_time_formatted
-#                 )
-#                 batch_results.append(error_result)
-#                 new_failed_images.append((triplet['dish_id'], "DeadlineExceeded (Retry)"))
-
-#             except Exception as e:
-#                 sys.stdout = sys.__stdout__
-#                 console_text = f.getvalue()
-#                 print(f"❌ RETRY FAILED: dish_{triplet['dish_id']}: {str(e)}")
-#                 print(f"   Previous error: {triplet.get('original_error', 'Unknown')}")
-                
-#                 error_result = error_result_to_dict(
-#                     triplet, f"Retry failed: {str(e)}", console_text,
-#                     analysis_time_seconds, analysis_time_formatted
-#                 )
-#                 batch_results.append(error_result)
-#                 new_failed_images.append((triplet['dish_id'], f"Retry failed: {str(e)}"))
-
-#             time.sleep(sleep_time)
-
-#         retry_results.extend(batch_results)
-
-#         # 每批处理后保存进度
-#         combined_results = existing_data + retry_results
-#         with open(new_output_path, "w", encoding="utf-8") as f:
-#             json.dump(combined_results, f, ensure_ascii=False, indent=4)
-
-#         completed = min(i + batch_size, len(retry_triplets))
-#         progress_percentage = (completed / len(retry_triplets)) * 100
-#         print(f"✅ Retry Batch {i//batch_size + 1}/{total_batches} saved - Progress: {completed}/{len(retry_triplets)} ({progress_percentage:.1f}%)")
-
-#     # Generate retry statistics report
-#     successful_retries = [r for r in retry_results if r.get("success", False)]
-#     failed_retries = [r for r in retry_results if not r.get("success", False)]
-    
-#     print(f"\n🎉 Retry process complete!")
-#     print(f"📊 Combined results saved to: {new_output_path}")
-#     print(f"🔄 Retry Statistics:")
-#     print(f"   Total retried: {len(retry_results)}")
-#     print(f"   ✅ Successfully recovered: {len(successful_retries)}")
-#     print(f"   ❌ Still failed: {len(failed_retries)}")
-#     print(f"   📈 Recovery rate: {(len(successful_retries) / len(retry_results)) * 100:.1f}%")
-    
-#     # show successfully recovered images
-#     if successful_retries:
-#         print(f"\n✅ Successfully recovered images:")
-#         for result in successful_retries:
-#             dish_id = result['dish_id']
-#             pred_mass = result['mass_estimation']['total_mass_g']
-#             true_mass = result['ground_truth_mass_g']
-#             error = abs(pred_mass - true_mass)
-#             print(f"   • dish_{dish_id}: {pred_mass:.1f}g (Error: {error:.1f}g)")
-    
-#     # show image still failed after retry
-#     if failed_retries:
-#         print(f"\n❌ Images that still failed after retry:")
-#         for result in failed_retries:
-#             dish_id = result['dish_id']
-#             error = result['error']
-#             print(f"   • dish_{dish_id}: {error}")
-
-# if __name__ == "__main__":
-#     main()
+print(f"\n💡 Volume-Based Test Complete:")
+print(f"   • Used volume calculation for ALL {len(file_triplets)} dishes")
+print(f"   • No scale factor used - pure volume-based estimation")
+print(f"   • Used raw depth maps from: {raw_depth_dir}")
+print(f"   • Results include both mass estimates and calculated volumes")
