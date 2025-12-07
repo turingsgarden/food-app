@@ -23,8 +23,9 @@ struct food_app_swiftApp: App {
                     switch newPhase {
                     case .background:
                         print("📱 App moved to background")
-                        // Save timestamp for session timeout
-                        UserDefaults.standard.set(Date(), forKey: "app_background_time")
+                        // Update last activity timestamp for 30-day inactivity tracking
+                        // Note: We no longer log out based on background time
+                        UserDefaults.standard.set(Date(), forKey: "last_activity_time")
                         
                     case .inactive:
                         print("📱 App became inactive")
@@ -46,20 +47,37 @@ struct food_app_swiftApp: App {
     }
     
     private func checkSessionTimeout() {
-        // Only check for actual timeout, not profile status
-        if let backgroundTime = UserDefaults.standard.object(forKey: "app_background_time") as? Date {
-            let timeInBackground = Date().timeIntervalSince(backgroundTime)
-            let timeoutDuration: TimeInterval = 300 // 5 minutes
+        // Check for 30-day inactivity timeout (not background time)
+        // Users should stay logged in unless inactive for 30 days
+        
+        if session.isLoggedIn {
+            // Update last activity timestamp
+            UserDefaults.standard.set(Date(), forKey: "last_activity_time")
             
-            // Only logout if session has actually timed out
-            if timeInBackground > timeoutDuration && session.isLoggedIn {
-                print("⏰ Session timeout - app was in background for \(Int(timeInBackground)) seconds")
-                performLogout()
+            // Check if session has been inactive for 30 days
+            if let lastActivity = UserDefaults.standard.object(forKey: "last_activity_time") as? Date {
+                let inactivityDuration = Date().timeIntervalSince(lastActivity)
+                let thirtyDaysInSeconds: TimeInterval = 30 * 24 * 60 * 60 // 30 days
+                
+                if inactivityDuration > thirtyDaysInSeconds {
+                    print("⏰ Session expired - inactive for \(Int(inactivityDuration / 86400)) days")
+                    performLogout()
+                    return
+                }
             }
             
-            // Clear the background timestamp
-            UserDefaults.standard.removeObject(forKey: "app_background_time")
+            // Validate that auth token still exists
+            if SessionManager.shared.getAuthToken() == nil {
+                print("⏰ Session invalid - no auth token found")
+                performLogout()
+                return
+            }
+            
+            print("✅ Session still valid")
         }
+        
+        // Clear the old background timestamp (no longer used for logout)
+        UserDefaults.standard.removeObject(forKey: "app_background_time")
     }
     
     private func performLogout() {

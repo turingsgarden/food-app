@@ -40,7 +40,7 @@ APPLE_KEYS_LAST_FETCH = 0
 
 # JWT Configuration
 app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
-app.config['JWT_EXPIRATION_HOURS'] = 24 * 7  # 7 days
+app.config['JWT_EXPIRATION_HOURS'] = 24 * 30  # 30 days - matches iOS session persistence
 
 # Configure MongoDB with error handling and retry logic
 def init_mongodb():
