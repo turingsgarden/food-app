@@ -76,8 +76,9 @@ def init_mongodb():
         users_collection = db["users"]
         profiles_collection = db["profiles"] 
         meals_collection = db["meals"]
+        analysis_collection = db["analysis_record"]
         
-        return client, db, users_collection, profiles_collection, meals_collection
+        return client, db, users_collection, profiles_collection, meals_collection, analysis_collection
         
     except Exception as e:
         print(f"❌ MongoDB connection failed: {str(e)}")
@@ -86,7 +87,7 @@ def init_mongodb():
         return None, None, None, None, None
 
 # Initialize MongoDB
-client, db, users_collection, profiles_collection, meals_collection = init_mongodb()
+client, db, users_collection, profiles_collection, meals_collection, analysis_collection = init_mongodb()
 
 # Only create indexes if connection successful
 if client is not None and users_collection is not None:
@@ -94,6 +95,7 @@ if client is not None and users_collection is not None:
         users_collection.create_index("email", unique=True)
         profiles_collection.create_index("user_id")
         meals_collection.create_index([("user_id", 1), ("saved_at", -1)])
+        analysis_collection.create_index([("user_id", 1), ("analyzed_at", -1)])
         print("✅ Database indexes created successfully")
     except Exception as e:
         print(f"⚠️ Index creation failed (may already exist): {str(e)}")
@@ -103,6 +105,7 @@ else:
     users_collection = None
     profiles_collection = None
     meals_collection = None
+    analysis_collection = None
 
 # Configure Gemini for nutrition recalculation
 try:
@@ -456,7 +459,31 @@ def analyze():
         print(f"📊 Nutrition info exists: {bool(nutrition_info)}")
         print(f"📊 Nutrition info length: {len(nutrition_info)}")
         print(f"📊 Nutrition info content:\n{nutrition_info}")
+
+        try:
+            if analysis_collection is not None:
+                analysis_doc = {
+                    "user_id": user_id,
+                    "dish_prediction": result.get("dish_prediction", ""),
+                    "image_description": result.get("image_description", ""),
+                    "nutrition_info": nutrition_info,
+                    "hidden_ingredients": result.get("hidden_ingredients", ""),
+                    "image_full": result.get("image_full"),
+                    "image_thumb": result.get("image_thumb"),
+                    "meal_type": result.get("meal_type", "Unknown"),
+                    "analysis_method": "dynamic_ai",
+                    "contains_hardcoded_values": False,
+                    "analysis_time": result.get("analysis_time"),
+                    "analyzed_at": datetime.now().isoformat()
+                }
         
+                analysis_collection.insert_one(analysis_doc)
+                print("📝 Analysis auto-saved to analysis_record")
+        
+        except Exception as e:
+            # Do NOT break analyze response if logging fails
+            print("⚠️ Analysis auto-save failed:", str(e))
+                
         # Also check if it's properly formatted
         if nutrition_info:
             lines = nutrition_info.split('\n')
