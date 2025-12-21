@@ -459,6 +459,14 @@ def analyze():
         print(f"📊 Nutrition info exists: {bool(nutrition_info)}")
         print(f"📊 Nutrition info length: {len(nutrition_info)}")
         print(f"📊 Nutrition info content:\n{nutrition_info}")
+        image_base64 = None
+        image_thumb = None
+        
+        try:
+            image_base64 = image_file_to_base64(image_path)
+            image_thumb = compress_base64_image(image_base64)
+        except Exception as e:
+            print("⚠️ Failed to generate base64 images:", str(e))
 
         try:
             if analysis_collection is not None:
@@ -468,8 +476,8 @@ def analyze():
                     "image_description": result.get("image_description", ""),
                     "nutrition_info": nutrition_info,
                     "hidden_ingredients": result.get("hidden_ingredients", ""),
-                    "image_full": result.get("image_full"),
-                    "image_thumb": result.get("image_thumb"),
+                    "image_full": image_base64,
+                    "image_thumb": image_thumb,
                     "meal_type": result.get("meal_type", "Unknown"),
                     "analysis_method": "dynamic_ai",
                     "contains_hardcoded_values": False,
@@ -524,6 +532,11 @@ def compress_base64_image(base64_str, quality=5):
     except Exception as e:
         print("❌ Compression Error:", str(e))
         return None
+        
+def image_file_to_base64(image_path):
+    with open(image_path, "rb") as f:
+        return base64.b64encode(f.read()).decode("utf-8")
+
 
 @app.route("/save-meal", methods=["POST"])
 @token_required
