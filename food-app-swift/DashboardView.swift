@@ -43,6 +43,7 @@ struct DashboardView: View {
     @State private var showNetworkAlert = false
     @State private var networkError: NetworkError?
     @State private var showProfileAlert = false
+    @State private var selectedMealForDetail: Meal?
     
     // Summary toggle state - UPDATED: Focus only on nutrition
     @State private var selectedSummaryTab = 0 // 0 = Today's Nutrition, 1 = Weekly Nutrition
@@ -278,6 +279,11 @@ struct DashboardView: View {
             }
             .sheet(isPresented: $showWeightTracking) {
                 WeightTrackingView()
+            }
+            .sheet(item: $selectedMealForDetail) { meal in
+                NavigationView {
+                    MealDetailView(meal: meal)
+                }
             }
             .alert("Complete Your Profile", isPresented: $showProfileAlert) {
                 Button("Complete Now") {
@@ -837,7 +843,7 @@ struct DashboardView: View {
                         ForEach(Array(meals.prefix(6))) { meal in
                             FixedSizeMealCard(meal: meal)
                                 .onTapGesture {
-                                    print("🍽️ Meal tapped: \(meal.dish_prediction)")
+                                    selectedMealForDetail = meal
                                 }
                         }
                     }
@@ -1973,10 +1979,6 @@ struct FixedSizeMealCard: View {
         )
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isPressed)
-        .onTapGesture {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
-        }
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in
