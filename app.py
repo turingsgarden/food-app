@@ -247,7 +247,8 @@ def register():
             return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
             
         # Check if email already exists
-        if users_collection.find_one({"email": data["email"]}):
+        existing_user = users_collection.find_one({"email": data["email"]})
+        if existing_user:
             return jsonify({"error": "Email already registered"}), 409
 
         # Hash password with bcrypt
@@ -256,7 +257,8 @@ def register():
         user = {
             "name": data["name"],
             "email": data["email"],
-            "password": hashed_pw,  # Store as bytes
+            "password": hashed_pw,
+            "login_methods": ["email"],  # ← 新增这一行
             "created_at": datetime.now().isoformat()
         }
         
@@ -268,7 +270,9 @@ def register():
         return jsonify({
             "user_id": str(result.inserted_id), 
             "name": data["name"],
-            "token": token
+            "email": data["email"],
+            "token": token,
+            "login_methods": ["email"]  # ← 新增这一行
         }), 200
         
     except Exception as e:
@@ -291,22 +295,44 @@ def login():
         if not user:
             return jsonify({"error": "Invalid email or password"}), 401
 
+        # Check if user has password (email-registered users)
+        if "password" not in user or not user["password"]:
+            # User registered with Google/Apple, no password set
+            login_methods = user.get("login_methods", [])
+            return jsonify({
+                "error": f"This email is registered with {', '.join(login_methods)}. Please use that method to login, or set a password first."
+            }), 401
+
         # Check password with bcrypt
         if not bcrypt.checkpw(data["password"].encode('utf-8'), user["password"]):
             return jsonify({"error": "Invalid email or password"}), 401
 
-        # Generate JWT token
+        # Update login_methods (add 'email' if not present)
+        login_methods = user.get("login_methods", [])
+        if "email" not in login_methods:
+            login_methods.append("email")
+            users_collection.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"login_methods": login_methods}}
+            )
+
+        # Generate JWT token (7 days)
         token = generate_token(user["_id"])
 
         return jsonify({
             "user_id": str(user["_id"]), 
             "name": user["name"],
-            "token": token
+            "email": user["email"],
+            "token": token,
+            "login_methods": login_methods
         }), 200
         
     except Exception as e:
         print(f"❌ Login error: {str(e)}")
         return jsonify({"error": "Login failed"}), 500
+
+
+
 
 @app.route("/save-profile", methods=["POST"])
 @token_required
@@ -1450,41 +1476,63 @@ def apple_login():
             email = f"{apple_sub}@apple.local"
             print("🔍 No email provided, using fallback:", email)
 
-        # 查找或创建用户
+        # 🔑 关键：查找是否已存在该 email 的账号
         print("🔍 Looking up user by email:", email)
         user = users_collection.find_one({"email": email})
 
-        if not user:
+        if user:
+            # 账号已存在，添加 Apple 登录方式
+            login_methods = user.get("login_methods", [])
+            
+            if "apple" not in login_methods:
+                login_methods.append("apple")
+                users_collection.update_one(
+                    {"_id": user["_id"]},
+                    {
+                        "$set": {
+                            "login_methods": login_methods,
+                            "apple_sub": apple_sub  # 保存 Apple ID
+                        }
+                    }
+                )
+                print(f"✅ Added Apple login to existing account: {email}")
+            
+            user_id = user["_id"]
+            user_name = user.get("name", "Apple User")
+            
+        else:
+            # 新用户
             print("🔍 No user found, creating new account")
             user_doc = {
                 "name": data.get("name", "Apple User"),
                 "email": email,
                 "apple_sub": apple_sub,
-                "password": None,
+                "login_methods": ["apple"],  # ← 新增
                 "created_at": datetime.now().isoformat()
             }
             result = users_collection.insert_one(user_doc)
             user_id = result.inserted_id
             user_name = user_doc["name"]
+            login_methods = ["apple"]
             print(f"✅ New user created with _id={user_id}, email={email}")
-        else:
-            user_id = user["_id"]
-            user_name = user.get("name", "Apple User")
-            print(f"✅ Existing user found _id={user_id}, email={email}")
 
-        # 生成 JWT
+        # 生成 JWT (7天)
         token = generate_token(user_id)
         print("✅ Generated JWT for user:", token[:30], "...")
 
         return jsonify({
             "user_id": str(user_id),
             "name": user_name,
-            "token": token
+            "email": email,
+            "token": token,
+            "login_methods": user.get("login_methods", ["apple"]) if user else ["apple"]
         }), 200
 
     except Exception as e:
         print("❌ Apple login error:", str(e))
         return jsonify({"error": "Apple login failed"}), 500
+
+
 
 @app.route("/google_login", methods=["POST"])
 @db_required
@@ -1504,13 +1552,14 @@ def google_login():
             idinfo = id_token.verify_oauth2_token(
                 google_token,
                 grequests.Request(),
-                os.getenv("GOOGLE_CLIENT_ID")  # 确保你在 .env 配置了 GOOGLE_CLIENT_ID
+                os.getenv("GOOGLE_CLIENT_ID")
             )
             print("✅ Google token verified successfully")
             print("📝 Full payload:", idinfo)
 
             google_sub = idinfo["sub"]
             email = idinfo.get("email", f"{google_sub}@google.local")
+            name = data.get("name", idinfo.get("name", "Google User"))
             print("👤 UserID (sub):", google_sub)
             print("📧 Email:", email)
 
@@ -1518,36 +1567,56 @@ def google_login():
             print("❌ Google token verification failed:", str(e))
             return jsonify({"error": "Invalid Google identityToken"}), 401
 
-        # 查找或创建用户
+        # 🔑 关键：查找是否已存在该 email 的账号
         print("🔍 Looking up user by email:", email)
         user = users_collection.find_one({"email": email})
 
-        if not user:
+        if user:
+            # 账号已存在，添加 Google 登录方式
+            login_methods = user.get("login_methods", [])
+            
+            if "google" not in login_methods:
+                login_methods.append("google")
+                users_collection.update_one(
+                    {"_id": user["_id"]},
+                    {
+                        "$set": {
+                            "login_methods": login_methods,
+                            "google_sub": google_sub  # 保存 Google ID
+                        }
+                    }
+                )
+                print(f"✅ Added Google login to existing account: {email}")
+            
+            user_id = user["_id"]
+            user_name = user.get("name", name)
+            
+        else:
+            # 新用户，创建账号
             print("🔍 No user found, creating new account")
             user_doc = {
-                "name": data.get("name", idinfo.get("name", "Google User")),
+                "name": name,
                 "email": email,
                 "google_sub": google_sub,
-                "password": None,
+                "login_methods": ["google"],  # ← 新增
                 "created_at": datetime.now().isoformat()
             }
             result = users_collection.insert_one(user_doc)
             user_id = result.inserted_id
-            user_name = user_doc["name"]
+            user_name = name
+            login_methods = ["google"]
             print(f"✅ New user created with _id={user_id}, email={email}")
-        else:
-            user_id = user["_id"]
-            user_name = user.get("name", "Google User")
-            print(f"✅ Existing user found _id={user_id}, email={email}")
 
-        # 生成 JWT
+        # 生成 JWT (7天)
         token = generate_token(user_id)
         print("✅ Generated JWT for user:", token[:30], "...")
 
         return jsonify({
             "user_id": str(user_id),
             "name": user_name,
-            "token": token
+            "email": email,
+            "token": token,
+            "login_methods": user.get("login_methods", ["google"]) if user else ["google"]
         }), 200
 
     except Exception as e:
@@ -1681,6 +1750,85 @@ def internal_error(error):
 @app.errorhandler(413)
 def payload_too_large(error):
     return jsonify({"error": "Request payload too large"}), 413
+
+
+
+@app.route("/get-login-methods", methods=["GET"])
+@token_required
+@db_required
+def get_login_methods():
+    """Get user's connected login methods"""
+    try:
+        user_id = request.user_id
+        
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        return jsonify({
+            "email": user.get("email", ""),
+            "login_methods": user.get("login_methods", []),
+            "has_password": "password" in user and user["password"] is not None
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error in get_login_methods: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/link-email-password", methods=["POST"])
+@token_required
+@db_required  
+def link_email_password():
+    """Link email/password to existing account"""
+    try:
+        user_id = request.user_id
+        data = request.get_json()
+        password = data.get("password")
+        
+        if not password or len(password) < 6:
+            return jsonify({"error": "Password must be at least 6 characters"}), 400
+        
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Check if password already exists
+        if "password" in user and user["password"]:
+            return jsonify({"error": "Email/password already linked"}), 400
+        
+        # Add password
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        login_methods = user.get("login_methods", [])
+        
+        if "email" not in login_methods:
+            login_methods.append("email")
+        
+        users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "password": hashed_password,
+                    "login_methods": login_methods
+                }
+            }
+        )
+        
+        print(f"✅ Email/password linked for user {user_id}")
+        
+        return jsonify({
+            "success": True,
+            "login_methods": login_methods
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Error in link_email_password: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
