@@ -1,0 +1,29 @@
+{
+    "processing_summary": {
+        "total_images": 1,
+        "successful_processing": 1,
+        "failed_processing": 0,
+        "processing_date": "2026-02-24T11:52:00.123097",
+        "user_id": "batch_user_pydantic"
+    },
+    "performance_metrics": {
+        "average_analysis_time_seconds": 21.491188049316406,
+        "average_analysis_time_formatted": "21.5s",
+        "min_analysis_time_seconds": 21.491188049316406,
+        "min_analysis_time_formatted": "21.5s",
+        "max_analysis_time_seconds": 21.491188049316406,
+        "max_analysis_time_formatted": "21.5s",
+        "total_processing_time_seconds": 21.491188049316406,
+        "total_processing_time_formatted": "21.5s"
+    },
+    "failed_images": [],
+    "statistics": {
+        "average_calories": 625.0,
+        "most_common_dishes": [
+            [
+                "Frozen Yogurt",
+                1
+            ]
+        ]
+    }
+}

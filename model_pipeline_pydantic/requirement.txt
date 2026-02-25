@@ -1,0 +1,6 @@
+certifi
+Pillow
+numpy
+pydantic
+pydantic-ai
+tqdm
