@@ -71,7 +71,7 @@ def clear_version_state(version_prefix):
     if to_delete:
         print(f"🧹 Clean {version_prefix} keys: {to_delete}")
 
-
+print("DEBUG HERE in display_main")
 # -------------------------------
 # 🔹 Initialize
 # -------------------------------

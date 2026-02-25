@@ -395,6 +395,7 @@ def main():
         }
     </style>
     """, unsafe_allow_html=True)
+    print("DEBUG HERE in version2")
     
     
     if 'current_page' not in st.session_state:
