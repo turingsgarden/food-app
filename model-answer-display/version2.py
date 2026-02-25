@@ -10,8 +10,8 @@ import glob
 def load_model_data():
 
     model_files = {
-        "gemini-2.5-flash": "output/Gemini-2.5-flash_pydantic_food_dataset_analysis.json",
-        "gemini-2.5-pro": "output/Gemini-2.5-pro_pydantic_food_dataset_analysis.json"
+        "gemini-2.5-flash": "output/ver3_Gemini-2.5-flash_pydantic_food_dataset_analysis.json"
+        # "gemini-2.5-pro": "output/Gemini-2.5-pro_pydantic_food_dataset_analysis.json"
     }
     
     model_data = {}
@@ -103,20 +103,48 @@ def display_model_response(response, model_name, page_num):
 
     visible_list = []
     for ing in visible_ingredients:
-        line = f"• {ing['name']:<20} {ing['quantity']:>6} {ing['unit']:<6}"
+        name = ing.get("name", "")
+        quantity = ing.get("quantity", "")
+        unit = ing.get("unit", "")
+
+        # Handle range (list)
+        if isinstance(quantity, list):
+            if len(quantity) == 2:
+                quantity_str = f"{quantity[0]}–{quantity[1]}"
+            else:
+                quantity_str = ", ".join(map(str, quantity))
+        else:
+            quantity_str = str(quantity)
+
+        line = f"• {name:<20} {quantity_str:>10} {unit:<6}"
         visible_list.append(line)
     visible_text = "\n".join(visible_list) if visible_list else "N/A"
 
     
     hidden_list = []
-    for i, ing in enumerate(hidden_ingredients):
-        if isinstance(ing, dict):
-            line = f"• {ing.get('name', ''):<20} {ing.get('quantity', ''):>6} {ing.get('unit', ''):<6}"
-        else:
 
-            line = f"• {repr(ing)}"
+    for ing in hidden_ingredients:
+        if isinstance(ing, dict):
+            name = ing.get("name", "")
+            quantity = ing.get("quantity", "")
+            unit = ing.get("unit", "")
+
+            # Handle quantity range
+            if isinstance(quantity, list):
+                if len(quantity) == 2:
+                    quantity_str = f"{quantity[0]}–{quantity[1]}"
+                else:
+                    quantity_str = ", ".join(map(str, quantity))
+            else:
+                quantity_str = str(quantity)
+
+            line = f"• {name:<20} {quantity_str:>10} {unit:<6}"
+        else:
+            # Fallback if it's not a dict
+            line = f"• {str(ing)}"
+
         hidden_list.append(line)
-    
+
     hidden_text = "\n".join(hidden_list) if hidden_list else "N/A"
 
     
@@ -131,9 +159,16 @@ def display_model_response(response, model_name, page_num):
         'sodium': 'mg'
     }
     
+    # for k, v in nutrition.items():
+    #     unit = nutri_units.get(k, '')
+    #     nutri_lines.append(f"• {k.capitalize():<15} {v} {unit}")
     for k, v in nutrition.items():
         unit = nutri_units.get(k, '')
-        nutri_lines.append(f"• {k.capitalize():<15} {v} {unit}")
+        if isinstance(v, (list, tuple)) and len(v) == 2:
+            v_str = f"{v[0]}–{v[1]}"
+        else:
+            v_str = str(v)
+        nutri_lines.append(f"• {k.capitalize():<15} {v_str} {unit}")
     nutrition_text = "\n".join(nutri_lines) if nutri_lines else "N/A"
 
     

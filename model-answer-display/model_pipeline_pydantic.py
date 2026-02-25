@@ -11,6 +11,7 @@ from pydantic_ai import Agent, BinaryContent
 from pydantic import BaseModel, Field, validator
 from typing import List
 import re
+from typing import Tuple
 
 # Load environment variables
 load_dotenv()
@@ -25,7 +26,8 @@ meals_collection = db["meals"]
 # Define Pydantic Models
 class Ingredient(BaseModel):
     name: str = Field(description="Ingredient name")
-    quantity: float = Field(description="Quantity")
+    # quantity: float = Field(description="Quantity")
+    quantity_range: Tuple[float, float] = Field(description="Estimated quantity range (min, max)")
     unit: str = Field(description="Unit - use 'g' for solids, 'ml' for liquids")
     _original_unit: str = None  # Internal field to store original unit
 
@@ -52,7 +54,7 @@ class Ingredient(BaseModel):
             # Default to grams for unknown units
             return 'g'
 
-    @validator('quantity', always=True)
+    @validator('quantity_range', always=True)
     def convert_quantity(cls, v, values):
         """Convert quantity to standardized units (g or ml)"""
         if 'unit' not in values:
@@ -78,26 +80,45 @@ class Ingredient(BaseModel):
             'tbsp': 15, 'tablespoon': 15, 'tablespoons': 15
         }
         
-        # Apply conversion based on original unit
+        # # Apply conversion based on original unit
+        # if original_unit in solid_conversion:
+        #     converted_quantity = v * solid_conversion[original_unit]
+        #     print(f"Converted {v} {original_unit} to {converted_quantity} g")
+        #     return converted_quantity
+        # elif original_unit in liquid_conversion:
+        #     converted_quantity = v * liquid_conversion[original_unit]
+        #     print(f"Converted {v} {original_unit} to {converted_quantity} ml")
+        #     return converted_quantity
+        
+        # return v
+        # Apply conversion to BOTH numbers in the tuple (min, max)
         if original_unit in solid_conversion:
-            converted_quantity = v * solid_conversion[original_unit]
-            print(f"Converted {v} {original_unit} to {converted_quantity} g")
-            return converted_quantity
+            mult = solid_conversion[original_unit]
+            return (v[0] * mult, v[1] * mult) # v is a tuple (min, max)
+            
         elif original_unit in liquid_conversion:
-            converted_quantity = v * liquid_conversion[original_unit]
-            print(f"Converted {v} {original_unit} to {converted_quantity} ml")
-            return converted_quantity
+            mult = liquid_conversion[original_unit]
+            return (v[0] * mult, v[1] * mult)
         
         return v
 
+# class NutritionInfo(BaseModel):
+#     calories: float = Field(description="Calories in kcal", ge=0)
+#     protein: float = Field(description="Protein in grams", ge=0)
+#     fat: float = Field(description="Fat in grams", ge=0)
+#     carbohydrates: float = Field(description="Carbohydrates in grams", ge=0)
+#     fiber: float = Field(description="Fiber in grams", ge=0)
+#     sugar: float = Field(description="Sugar in grams", ge=0)
+#     sodium: float = Field(description="Sodium in milligrams", ge=0)
+
 class NutritionInfo(BaseModel):
-    calories: float = Field(description="Calories in kcal", ge=0)
-    protein: float = Field(description="Protein in grams", ge=0)
-    fat: float = Field(description="Fat in grams", ge=0)
-    carbohydrates: float = Field(description="Carbohydrates in grams", ge=0)
-    fiber: float = Field(description="Fiber in grams", ge=0)
-    sugar: float = Field(description="Sugar in grams", ge=0)
-    sodium: float = Field(description="Sodium in milligrams", ge=0)
+    calories: Tuple[float, float] = Field(description="Calories range in kcal", min_items=2, max_items=2)
+    protein: Tuple[float, float] = Field(description="Protein range in grams")
+    fat: Tuple[float, float] = Field(description="Fat range in grams")
+    carbohydrates: Tuple[float, float] = Field(description="Carbohydrates range in grams")
+    fiber: Tuple[float, float] = Field(description="Fiber range in grams")
+    sugar: Tuple[float, float] = Field(description="Sugar range in grams")
+    sodium: Tuple[float, float] = Field(description="Sodium range in milligrams")
 
 class FoodAnalysisResult(BaseModel):
     dish_names: List[str] = Field(description="Identified dish names - only the main dish")
@@ -132,23 +153,36 @@ def validate_image_for_analysis(image_path):
 
 class FoodAnalysisService:
     def __init__(self):
+        # self.analysis_agent = Agent(
+        #     'google-gla:gemini-2.5-flash',
+        #     output_type=FoodAnalysisResult,
+        #     system_prompt=(
+        #         "You are a professional food analysis expert. "
+        #         "Analyze food images to identify dishes, ingredients, and estimate nutrition. "
+        #         "Be thorough and accurate in your analysis. "
+        #         "IMPORTANT INSTRUCTIONS:\n"
+        #         "1. For units: use 'g' for solid ingredients, 'ml' for liquid ingredients\n"
+        #         "2. For nutrition information: use kcal for calories, g for protein/fat/carbs/fiber/sugar, mg for sodium\n"
+        #         "3. For dish names: identify ONLY the main dish (the most prominent food item in the image)\n"
+        #         "4. For ingredients: DO NOT include source dish names in the ingredient list\n"
+        #         "5. Estimate quantities and nutrition based on standard portion sizes\n"
+        #         "Identify all visible ingredients with quantities using correct units, "
+        #         "estimate hidden cooking ingredients, and calculate nutrition information."
+        #     )
+        # )
         self.analysis_agent = Agent(
-            'google-gla:gemini-2.5-pro',
-            output_type=FoodAnalysisResult,
-            system_prompt=(
-                "You are a professional food analysis expert. "
-                "Analyze food images to identify dishes, ingredients, and estimate nutrition. "
-                "Be thorough and accurate in your analysis. "
-                "IMPORTANT INSTRUCTIONS:\n"
-                "1. For units: use 'g' for solid ingredients, 'ml' for liquid ingredients\n"
-                "2. For nutrition information: use kcal for calories, g for protein/fat/carbs/fiber/sugar, mg for sodium\n"
-                "3. For dish names: identify ONLY the main dish (the most prominent food item in the image)\n"
-                "4. For ingredients: DO NOT include source dish names in the ingredient list\n"
-                "5. Estimate quantities and nutrition based on standard portion sizes\n"
-                "Identify all visible ingredients with quantities using correct units, "
-                "estimate hidden cooking ingredients, and calculate nutrition information."
-            )
-        )
+    'google-gla:gemini-2.5-flash',
+    output_type=FoodAnalysisResult,
+    system_prompt=(
+        "You are a professional food analysis expert. "
+        "Analyze food images to identify dishes, ingredients, and estimate nutrition. "
+        "For all ingredients, provide quantity ranges (e.g., 80-120g for solids, 150-250ml for liquids). "
+        "For nutrition, provide estimated ranges (e.g., calories: 500-600 kcal). "
+        "Use 'g' for solids, 'ml' for liquids. "
+        "Return ONLY the main dish. "
+        "Do NOT include source dish names."
+    )
+)
 
     def full_analysis_pydantic(self, image_path: str, user_id: str) -> FoodAnalysisResult:
         """Complete Pydantic version analysis using BinaryContent"""
@@ -168,18 +202,33 @@ class FoodAnalysisService:
             image_bytes = self._preprocess_image(image_path)
             
             # Use BinaryContent to pass the image
+            # result = self.analysis_agent.run_sync(
+            #     [
+            #         f"Comprehensively analyze this food image. User ID: {user_id}\n"
+            #         "IMPORTANT: Follow these exact formats:\n"
+            #         "- Use 'g' for solids, 'ml' for liquids\n" 
+            #         "- Nutrition: calories(kcal), protein(g), fat(g), carbs(g), fiber(g), sugar(g), sodium(mg)\n"
+            #         "- Return ONLY the main dish name\n"
+            #         "- For ingredients: List only name, quantity, unit - NO source dish names\n"
+            #         "- Be precise with quantities and nutrition estimates",
+            #         BinaryContent(data=image_bytes, media_type='image/jpeg')
+            #     ]
+            # )
             result = self.analysis_agent.run_sync(
-                [
-                    f"Comprehensively analyze this food image. User ID: {user_id}\n"
-                    "IMPORTANT: Follow these exact formats:\n"
-                    "- Use 'g' for solids, 'ml' for liquids\n" 
-                    "- Nutrition: calories(kcal), protein(g), fat(g), carbs(g), fiber(g), sugar(g), sodium(mg)\n"
-                    "- Return ONLY the main dish name\n"
-                    "- For ingredients: List only name, quantity, unit - NO source dish names\n"
-                    "- Be precise with quantities and nutrition estimates",
-                    BinaryContent(data=image_bytes, media_type='image/jpeg')
-                ]
-            )
+    [
+        f"Comprehensively analyze this food image. User ID: {user_id}\n"
+        "IMPORTANT: Follow these exact formats:\n"
+        "- Use 'g' for solids, 'ml' for liquids\n"
+        "- For quantities: Provide a realistic RANGE (e.g., 80-120g, 150-250ml)\n"
+        "- Do NOT give exact single numbers\n"
+        "- Nutrition: Provide estimated RANGE values in this format,formatted as [min, max]:\n"
+        "  calories(kcal), protein(g), fat(g), carbs(g), fiber(g), sugar(g), sodium(mg)\n"
+        "- Return ONLY the main dish name\n"
+        "- For ingredients: List only name, quantity_range, unit - NO source dish names\n"
+        "- Use reasonable uncertainty based on visual estimation",
+        BinaryContent(data=image_bytes, media_type='image/jpeg')
+    ]
+)
             
             analysis_time = time.time() - start_time
             print(f"Pydantic analysis completed in {analysis_time:.2f} seconds")
@@ -217,6 +266,47 @@ class FoodAnalysisService:
             with open(image_path, "rb") as f:
                 return f.read()
     
+    # def save_to_database(self, analysis_result: FoodAnalysisResult, user_id: str):
+    #     """Save analysis result to MongoDB"""
+    #     try:
+    #         document = {
+    #             'user_id': user_id,
+    #             'dish_names': analysis_result.dish_names,
+    #             'visible_ingredients': [
+    #                 {
+    #                     'name': ing.name,
+    #                     'quantity': ing.quantity,
+    #                     'unit': ing.unit
+    #                 } for ing in analysis_result.visible_ingredients
+    #             ],
+    #             'hidden_ingredients': [
+    #                 {
+    #                     'name': ing.name,
+    #                     'quantity': ing.quantity,
+    #                     'unit': ing.unit
+    #                 } for ing in analysis_result.hidden_ingredients
+    #             ],
+    #             'nutrition': {
+    #                 'calories': analysis_result.nutrition.calories,
+    #                 'protein': analysis_result.nutrition.protein,
+    #                 'fat': analysis_result.nutrition.fat,
+    #                 'carbohydrates': analysis_result.nutrition.carbohydrates,
+    #                 'fiber': analysis_result.nutrition.fiber,
+    #                 'sugar': analysis_result.nutrition.sugar,
+    #                 'sodium': analysis_result.nutrition.sodium
+    #             },
+    #             'analysis_timestamp': analysis_result.analysis_timestamp,
+    #             'created_at': datetime.now()
+    #         }
+            
+    #         result = meals_collection.insert_one(document)
+    #         print(f"Analysis saved to database with ID: {result.inserted_id}")
+    #         return result.inserted_id
+            
+    #     except Exception as e:
+    #         print(f"Database save error: {str(e)}")
+    #         raise
+    
     def save_to_database(self, analysis_result: FoodAnalysisResult, user_id: str):
         """Save analysis result to MongoDB"""
         try:
@@ -226,14 +316,16 @@ class FoodAnalysisService:
                 'visible_ingredients': [
                     {
                         'name': ing.name,
-                        'quantity': ing.quantity,
+                        # Changed from ing.quantity to ing.quantity_range
+                        'quantity_range': ing.quantity_range, 
                         'unit': ing.unit
                     } for ing in analysis_result.visible_ingredients
                 ],
                 'hidden_ingredients': [
                     {
                         'name': ing.name,
-                        'quantity': ing.quantity,
+                        # Changed from ing.quantity to ing.quantity_range
+                        'quantity_range': ing.quantity_range,
                         'unit': ing.unit
                     } for ing in analysis_result.hidden_ingredients
                 ],

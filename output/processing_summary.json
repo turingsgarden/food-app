@@ -1,0 +1,24 @@
+{
+    "processing_summary": {
+        "total_images": 0,
+        "successful_processing": 0,
+        "failed_processing": 0,
+        "processing_date": "2026-02-21T00:51:14.470280",
+        "user_id": "batch_user_pydantic"
+    },
+    "performance_metrics": {
+        "average_analysis_time_seconds": null,
+        "average_analysis_time_formatted": null,
+        "min_analysis_time_seconds": null,
+        "min_analysis_time_formatted": null,
+        "max_analysis_time_seconds": null,
+        "max_analysis_time_formatted": null,
+        "total_processing_time_seconds": null,
+        "total_processing_time_formatted": null
+    },
+    "failed_images": [],
+    "statistics": {
+        "average_calories": null,
+        "most_common_dishes": null
+    }
+}
