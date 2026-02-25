@@ -16,8 +16,14 @@ def load_model_data():
     
     model_data = {}
     available_models = []
-    
+    print("=== DEBUG START ===")
+    print("Current working directory:", os.getcwd())
+    print("Root files:", os.listdir())
+
     for model_name, file_path in model_files.items():
+        print("\nChecking file:", file_path)
+        print("Exists?", os.path.exists(file_path))
+
         try:
             encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
             loaded = False
@@ -36,9 +42,7 @@ def load_model_data():
             pass
         except Exception:
             pass
-        print("Current working directory:", os.getcwd())
-        print("File exists:", os.path.exists(file_path))
-        print("Trying to open:", file_path)
+
     return model_data, available_models
 
 def get_all_images():
