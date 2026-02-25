@@ -36,6 +36,9 @@ def load_model_data():
             pass
         except Exception:
             pass
+        print("Current working directory:", os.getcwd())
+        print("File exists:", os.path.exists(file_path))
+        print("Trying to open:", file_path)
     return model_data, available_models
 
 def get_all_images():
