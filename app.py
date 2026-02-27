@@ -1068,7 +1068,13 @@ def get_user_insights():
                     parts = line.split('|')
                     if len(parts) >= 2:
                         try:
-                            today_calories += int(parts[1].strip())
+                            # today_calories += int(parts[1].strip())
+                            value = parts[1].strip()
+                            if '-' in value:
+                                min_val, max_val = value.split('-')
+                                today_calories += (int(max_val) +int(min_val)) /2 # Use MAX for safety
+                            else:
+                                today_calories += int(value)
                         except:
                             pass
         

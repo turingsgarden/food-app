@@ -84,10 +84,14 @@ List EVERY ingredient you can SEE in the image:
 - Sauces you can identify
 - ANY other visible component
 
-Format EXACTLY as (use realistic quantities based on what you see):
-Ingredient name | Quantity | Unit | Visible
+Format EXACTLY as:
+Ingredient name | Min quantity | Max quantity | Unit | Visible
 
-IMPORTANT RULES:
+IMPORTANT:
+- Use realistic RANGES based on portion size
+- Example: Chicken breast | 120 | 180 | g | Visible
+- DO NOT give a single number
+- Min and Max must both be numbers
 - Only list ingredients you can ACTUALLY SEE in THIS specific image
 - Use realistic quantities based on portion size
 - Include even the smallest visible garnishes
@@ -149,7 +153,12 @@ Think about:
 - What thickeners or binders if any?
 
 List ONLY ingredients that would ACTUALLY be used for THIS dish:
-Format: Ingredient | Realistic quantity | Unit | Hidden
+Format:
+Ingredient | Min quantity | Max quantity | Unit | Hidden
+
+Use realistic cooking ranges.
+Example:
+Olive oil | 5 | 15 | ml | Hidden
 
 BE SPECIFIC - match the cuisine and cooking style of the actual dish."""
     
@@ -179,59 +188,76 @@ BE SPECIFIC - match the cuisine and cooking style of the actual dish."""
         return ""
 
 def calculate_actual_nutrition(dish_names, all_ingredients):
-    """Calculate REAL nutrition based on ACTUAL ingredients"""
-    
-    if not all_ingredients or len(all_ingredients.split('\n')) < 2:
+
+    """Calculate MIN and MAX nutrition range based on ingredient quantity ranges"""
+
+    if not all_ingredients or len(all_ingredients.split('\n')) < 1:
         raise Exception("Insufficient ingredients for nutrition calculation")
-    
-    prompt = f"""Calculate the ACTUAL nutritional values for THIS SPECIFIC meal:
+
+    prompt = f"""Calculate the MINIMUM and MAXIMUM nutritional values for THIS SPECIFIC meal.
 
 Dish: {dish_names}
+
+Ingredients are given in this format:
+Ingredient | Min quantity | Max quantity | Unit
 
 ACTUAL Ingredients detected:
 {all_ingredients}
 
 Instructions:
-1. Calculate nutrition based on THESE EXACT ingredients and quantities
-2. Sum up the nutritional contribution from EACH ingredient
-3. Use real nutritional data (not estimates)
-4. Account for cooking losses where applicable
+1. Calculate TOTAL MINIMUM nutrition using ALL minimum quantities.
+2. Calculate TOTAL MAXIMUM nutrition using ALL maximum quantities.
+3. Sum contributions from each ingredient.
+4. Use real nutritional data.
+5. Account for cooking losses if applicable.
 
-Provide CALCULATED values in EXACTLY this format (no extra text):
-Calories|ACTUAL_VALUE|kcal
-Protein|ACTUAL_VALUE|g
-Fat|ACTUAL_VALUE|g
-Carbohydrates|ACTUAL_VALUE|g
-Fiber|ACTUAL_VALUE|g
-Sugar|ACTUAL_VALUE|g
-Sodium|ACTUAL_VALUE|mg
+Return ONLY in this EXACT format:
 
-IMPORTANT: Return ONLY the nutrition lines in the exact format above, no other text."""
-    
+Calories|MIN_VALUE-MAX_VALUE|kcal
+Protein|MIN_VALUE-MAX_VALUE|g
+Fat|MIN_VALUE-MAX_VALUE|g
+Carbohydrates|MIN_VALUE-MAX_VALUE|g
+Fiber|MIN_VALUE-MAX_VALUE|g
+Sugar|MIN_VALUE-MAX_VALUE|g
+Sodium|MIN_VALUE-MAX_VALUE|mg
+
+IMPORTANT:
+- Each value MUST be a numeric range separated by a dash (-)
+- Example: 450-620
+- Do NOT return extra text.
+"""
+
     try:
-        print("📊 Calculating actual nutrition from ingredients...")
+        print("📊 Calculating nutrition RANGE from ingredient ranges...")
         response = gemini_model.generate_content(prompt)
-        
+
         if response and response.text:
-            # Clean and validate the response
             lines = response.text.strip().split('\n')
             nutrition_data = []
-            
+
             for line in lines:
                 line = line.strip()
-                if '|' in line:
-                    parts = line.split('|')
-                    if len(parts) >= 3:
-                        nutrient = parts[0].strip()
-                        value_str = re.sub(r'[^\d.]', '', parts[1].strip())
-                        unit = parts[2].strip()
-                        
-                        # Validate we got real values
-                        if value_str and float(value_str) >= 0:
-                            # Ensure proper formatting
-                            nutrition_data.append(f"{nutrient}|{value_str}|{unit}")
-            
-            # Ensure we have all required nutrients
+                if '|' not in line:
+                    continue
+
+                parts = line.split('|')
+                if len(parts) >= 3:
+                    nutrient = parts[0].strip()
+                    value_range = parts[1].strip()
+                    unit = parts[2].strip()
+
+                    # Validate range format like 450-620
+                    if '-' in value_range:
+                        min_val, max_val = value_range.split('-', 1)
+
+                        min_val = re.sub(r'[^\d.]', '', min_val)
+                        max_val = re.sub(r'[^\d.]', '', max_val)
+
+                        if min_val and max_val:
+                            nutrition_data.append(
+                                f"{nutrient}|{min_val}-{max_val}|{unit}"
+                            )
+
             required_nutrients = {
                 "Calories": "kcal",
                 "Protein": "g",
@@ -241,38 +267,139 @@ IMPORTANT: Return ONLY the nutrition lines in the exact format above, no other t
                 "Sugar": "g",
                 "Sodium": "mg"
             }
-            
-            # Create a dict of found nutrients
+
             found_nutrients = {}
+
             for line in nutrition_data:
                 parts = line.split('|')
-                if len(parts) >= 2:
-                    nutrient_name = parts[0]
-                    for req_nutrient in required_nutrients:
-                        if req_nutrient.lower() in nutrient_name.lower():
-                            found_nutrients[req_nutrient] = line
-                            break
-            
-            # Build final nutrition with all required nutrients
+                nutrient_name = parts[0]
+
+                for req_nutrient in required_nutrients:
+                    if req_nutrient.lower() in nutrient_name.lower():
+                        found_nutrients[req_nutrient] = line
+                        break
+
             final_nutrition = []
+
             for nutrient, unit in required_nutrients.items():
                 if nutrient in found_nutrients:
                     final_nutrition.append(found_nutrients[nutrient])
                 else:
-                    # Add with 0 value if not found
-                    final_nutrition.append(f"{nutrient}|0|{unit}")
-            
+                    final_nutrition.append(f"{nutrient}|0-0|{unit}")
+
             result = '\n'.join(final_nutrition)
-            print(f"✅ Calculated nutrition successfully")
+
+            print("✅ Calculated nutrition RANGE successfully")
             print(f"📊 Result:\n{result}")
+
             return result
+
         else:
             raise Exception("No response from nutrition calculation")
-            
+
     except Exception as e:
         print(f"❌ Nutrition calculation error: {str(e)}")
-        # Return proper format with zeros on error
-        return "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg"
+        return """Calories|0-0|kcal
+Protein|0-0|g
+Fat|0-0|g
+Carbohydrates|0-0|g
+Fiber|0-0|g
+Sugar|0-0|g
+Sodium|0-0|mg"""
+#     """Calculate REAL nutrition based on ACTUAL ingredients"""
+    
+#     if not all_ingredients or len(all_ingredients.split('\n')) < 2:
+#         raise Exception("Insufficient ingredients for nutrition calculation")
+    
+#     prompt = f"""Calculate the ACTUAL nutritional values for THIS SPECIFIC meal:
+
+# Dish: {dish_names}
+
+# ACTUAL Ingredients detected:
+# {all_ingredients}
+
+# Instructions:
+# 1. Calculate nutrition based on THESE EXACT ingredients and quantities
+# 2. Sum up the nutritional contribution from EACH ingredient
+# 3. Use real nutritional data (not estimates)
+# 4. Account for cooking losses where applicable
+
+# Provide CALCULATED values in EXACTLY this format (no extra text):
+# Calories|ACTUAL_VALUE|kcal
+# Protein|ACTUAL_VALUE|g
+# Fat|ACTUAL_VALUE|g
+# Carbohydrates|ACTUAL_VALUE|g
+# Fiber|ACTUAL_VALUE|g
+# Sugar|ACTUAL_VALUE|g
+# Sodium|ACTUAL_VALUE|mg
+
+# IMPORTANT: Return ONLY the nutrition lines in the exact format above, no other text."""
+    
+#     try:
+#         print("📊 Calculating actual nutrition from ingredients...")
+#         response = gemini_model.generate_content(prompt)
+        
+#         if response and response.text:
+#             # Clean and validate the response
+#             lines = response.text.strip().split('\n')
+#             nutrition_data = []
+            
+#             for line in lines:
+#                 line = line.strip()
+#                 if '|' in line:
+#                     parts = line.split('|')
+#                     if len(parts) >= 3:
+#                         nutrient = parts[0].strip()
+#                         value_str = re.sub(r'[^\d.]', '', parts[1].strip())
+#                         unit = parts[2].strip()
+                        
+#                         # Validate we got real values
+#                         if value_str and float(value_str) >= 0:
+#                             # Ensure proper formatting
+#                             nutrition_data.append(f"{nutrient}|{value_str}|{unit}")
+            
+#             # Ensure we have all required nutrients
+#             required_nutrients = {
+#                 "Calories": "kcal",
+#                 "Protein": "g",
+#                 "Fat": "g",
+#                 "Carbohydrates": "g",
+#                 "Fiber": "g",
+#                 "Sugar": "g",
+#                 "Sodium": "mg"
+#             }
+            
+#             # Create a dict of found nutrients
+#             found_nutrients = {}
+#             for line in nutrition_data:
+#                 parts = line.split('|')
+#                 if len(parts) >= 2:
+#                     nutrient_name = parts[0]
+#                     for req_nutrient in required_nutrients:
+#                         if req_nutrient.lower() in nutrient_name.lower():
+#                             found_nutrients[req_nutrient] = line
+#                             break
+            
+#             # Build final nutrition with all required nutrients
+#             final_nutrition = []
+#             for nutrient, unit in required_nutrients.items():
+#                 if nutrient in found_nutrients:
+#                     final_nutrition.append(found_nutrients[nutrient])
+#                 else:
+#                     # Add with 0 value if not found
+#                     final_nutrition.append(f"{nutrient}|0|{unit}")
+            
+#             result = '\n'.join(final_nutrition)
+#             print(f"✅ Calculated nutrition successfully")
+#             print(f"📊 Result:\n{result}")
+#             return result
+#         else:
+#             raise Exception("No response from nutrition calculation")
+            
+#     except Exception as e:
+#         print(f"❌ Nutrition calculation error: {str(e)}")
+#         # Return proper format with zeros on error
+#         return "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg"
 
 def full_image_analysis(image_path, user_id):
     """Complete analysis with REAL detection validation"""
@@ -311,12 +438,19 @@ def full_image_analysis(image_path, user_id):
         visible_ingredients = []
         for line in lines[1:]:
             line = line.strip()
-            if '|' in line and len(line.split('|')) >= 3:
-                parts = line.split('|')
-                # Validate it's a real ingredient
-                ingredient_name = parts[0].strip()
-                if len(ingredient_name) > 1 and not any(x in ingredient_name.lower() for x in ['ingredient', 'quantity', '---']):
-                    visible_ingredients.append(line)
+            # if '|' in line and len(line.split('|')) >= 3:
+            if '|' in line:
+                parts = [p.strip() for p in line.split('|')]
+                if len(parts) >= 5:
+                    ingredient_name = parts[0]
+                    min_qty = parts[1]
+                    max_qty = parts[2]
+                    unit = parts[3]
+                    parts = line.split('|')
+                    # Validate it's a real ingredient
+                    ingredient_name = parts[0].strip()
+                    if len(ingredient_name) > 1 and not any(x in ingredient_name.lower() for x in ['ingredient', 'quantity', '---']):
+                        visible_ingredients.append(line)
         
         visible_text = '\n'.join(visible_ingredients)
         
@@ -383,63 +517,155 @@ def full_image_analysis(image_path, user_id):
             'error': str(e),
             'analysis_confidence': 0
         }
-
 def recalculate_nutrition_enhanced(ingredients_text):
-    """Recalculate ACTUAL nutrition from edited ingredients"""
+    """Recalculate nutrition RANGE from edited ingredient ranges"""
+
     try:
         if not ingredients_text or len(ingredients_text.split('\n')) < 1:
             raise Exception("No ingredients provided")
-        
-        print(f"🔄 Recalculating actual nutrition...")
-        print(f"📝 Ingredients: {ingredients_text[:200]}...")
-        
-        prompt = f"""Calculate the ACTUAL nutritional values for these EXACT ingredients:
 
+        print("🔄 Recalculating nutrition RANGE...")
+        print(f"📝 Ingredients: {ingredients_text[:200]}...")
+
+        prompt = f"""Calculate the MINIMUM and MAXIMUM nutritional values 
+for these EXACT ingredients.
+
+Ingredients are given in this format:
+Ingredient | Min quantity | Max quantity | Unit
+
+Ingredients:
 {ingredients_text}
 
 Instructions:
-1. Calculate based on THESE SPECIFIC ingredients and quantities
-2. Use real nutritional databases
-3. Sum up all contributions
-4. DO NOT use generic values
+1. Use ALL minimum quantities to compute TOTAL MIN nutrition.
+2. Use ALL maximum quantities to compute TOTAL MAX nutrition.
+3. Sum nutritional contributions from each ingredient.
+4. Use real nutritional databases.
+5. Do NOT use generic estimates.
 
-Return CALCULATED values:
-Calories|ACTUAL_VALUE|kcal
-Protein|ACTUAL_VALUE|g
-Fat|ACTUAL_VALUE|g
-Carbohydrates|ACTUAL_VALUE|g
-Fiber|ACTUAL_VALUE|g
-Sugar|ACTUAL_VALUE|g
-Sodium|ACTUAL_VALUE|mg"""
-        
+Return ONLY in this EXACT format:
+
+Calories|MIN_VALUE-MAX_VALUE|kcal
+Protein|MIN_VALUE-MAX_VALUE|g
+Fat|MIN_VALUE-MAX_VALUE|g
+Carbohydrates|MIN_VALUE-MAX_VALUE|g
+Fiber|MIN_VALUE-MAX_VALUE|g
+Sugar|MIN_VALUE-MAX_VALUE|g
+Sodium|MIN_VALUE-MAX_VALUE|mg
+
+IMPORTANT:
+- Each value must be numeric range separated by dash (-)
+- Example: 420-580
+- No extra text.
+"""
+
         response = gemini_model.generate_content(prompt)
-        
+
         if response and response.text:
-            # Validate we got real values
             lines = response.text.strip().split('\n')
-            has_real_values = False
-            
+            nutrition_data = []
+            has_valid_range = False
+
             for line in lines:
-                if '|' in line:
-                    parts = line.split('|')
-                    if len(parts) >= 2:
-                        value = re.sub(r'[^\d.]', '', parts[1])
-                        if value and float(value) > 0:
-                            has_real_values = True
-                            break
-            
-            if has_real_values:
-                print("✅ Recalculated real nutrition values")
-                return response.text.strip()
-            else:
-                raise Exception("Failed to calculate real values")
-        
+                line = line.strip()
+
+                if '|' not in line:
+                    continue
+
+                parts = line.split('|')
+                if len(parts) >= 3:
+                    nutrient = parts[0].strip()
+                    value_range = parts[1].strip()
+                    unit = parts[2].strip()
+
+                    if '-' in value_range:
+                        min_val, max_val = value_range.split('-', 1)
+
+                        min_val = re.sub(r'[^\d.]', '', min_val)
+                        max_val = re.sub(r'[^\d.]', '', max_val)
+
+                        if min_val and max_val:
+                            has_valid_range = True
+                            nutrition_data.append(
+                                f"{nutrient}|{min_val}-{max_val}|{unit}"
+                            )
+
+            if has_valid_range:
+                print("✅ Recalculated nutrition RANGE successfully")
+                return "\n".join(nutrition_data)
+
+            raise Exception("Failed to calculate valid nutrition range")
+
         raise Exception("No response from calculation")
-            
+
     except Exception as e:
         print(f"❌ Recalculation failed: {str(e)}")
-        # Return zeros to indicate failure - don't fake values
-        return "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg"
+
+        # Return zero ranges instead of single zero
+        return """Calories|0-0|kcal
+Protein|0-0|g
+Fat|0-0|g
+Carbohydrates|0-0|g
+Fiber|0-0|g
+Sugar|0-0|g
+Sodium|0-0|mg"""
+
+# def recalculate_nutrition_enhanced(ingredients_text):
+#     """Recalculate ACTUAL nutrition from edited ingredients"""
+#     try:
+#         if not ingredients_text or len(ingredients_text.split('\n')) < 1:
+#             raise Exception("No ingredients provided")
+        
+#         print(f"🔄 Recalculating actual nutrition...")
+#         print(f"📝 Ingredients: {ingredients_text[:200]}...")
+        
+#         prompt = f"""Calculate the ACTUAL nutritional values for these EXACT ingredients:
+
+# {ingredients_text}
+
+# Instructions:
+# 1. Calculate based on THESE SPECIFIC ingredients and quantities
+# 2. Use real nutritional databases
+# 3. Sum up all contributions
+# 4. DO NOT use generic values
+
+# Return CALCULATED values:
+# Calories|ACTUAL_VALUE|kcal
+# Protein|ACTUAL_VALUE|g
+# Fat|ACTUAL_VALUE|g
+# Carbohydrates|ACTUAL_VALUE|g
+# Fiber|ACTUAL_VALUE|g
+# Sugar|ACTUAL_VALUE|g
+# Sodium|ACTUAL_VALUE|mg"""
+        
+#         response = gemini_model.generate_content(prompt)
+        
+#         if response and response.text:
+#             # Validate we got real values
+#             lines = response.text.strip().split('\n')
+#             has_real_values = False
+            
+#             for line in lines:
+#                 if '|' in line:
+#                     parts = line.split('|')
+#                     if len(parts) >= 2:
+#                         value = re.sub(r'[^\d.]', '', parts[1])
+#                         if value and float(value) > 0:
+#                             has_real_values = True
+#                             break
+            
+#             if has_real_values:
+#                 print("✅ Recalculated real nutrition values")
+#                 return response.text.strip()
+#             else:
+#                 raise Exception("Failed to calculate real values")
+        
+#         raise Exception("No response from calculation")
+            
+#     except Exception as e:
+#         print(f"❌ Recalculation failed: {str(e)}")
+#         # Return zeros to indicate failure - don't fake values
+#         return "Calories|0|kcal\nProtein|0|g\nFat|0|g\nCarbohydrates|0|g\nFiber|0|g\nSugar|0|g\nSodium|0|mg"
 
 def validate_image_for_analysis(image_path):
     """Validate image before analysis"""
