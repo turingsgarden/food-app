@@ -21,7 +21,7 @@ if not GEN_API_KEY:
     raise ValueError("GEMINI_API_KEY is not set in environment variables.")
 
 genai.configure(api_key=GEN_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-2.0-flash')
+gemini_model = genai.GenerativeModel('gemini-2.5-pro')
 
 # MongoDB Setup
 mongo_uri = os.getenv("MONGO_URI")
