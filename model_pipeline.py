@@ -36,14 +36,6 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 def analyze_image_single_pass(image_path):
-    """
-    ✅ 单次 Gemini 调用完成所有分析：
-    - 识别菜名
-    - 可见食材
-    - 隐藏食材
-    - 营养计算
-    原来需要 3 次串行调用，现在 1 次搞定，速度快 3x
-    """
     image = Image.open(image_path)
     image.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
     if image.mode not in ('RGB', 'L'):
