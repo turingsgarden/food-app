@@ -52,9 +52,27 @@ struct DashboardView: View {
     @State private var totalProtein: Int = 0
     @State private var totalCarbs: Int = 0
     @State private var totalFat: Int = 0
+    @State private var totalCalories: Int = 0
     @State private var totalFiber: Int = 0
     @State private var totalSugar: Int = 0
     @State private var totalSodium: Int = 0
+
+    // Preview initializer to set state for Xcode previews
+    init(
+        sampleMeals: [Meal] = [],
+        sampleTodayCalories: Int = 0,
+        sampleTotalCalories: Int = 0,
+        sampleMonthlyCalories: Int = 0,
+        sampleTodayWater: Double = 0.0,
+        sampleSelectedSummaryTab: Int = 0
+    ) {
+        _meals = State(initialValue: sampleMeals)
+        _todayCalories = State(initialValue: sampleTodayCalories)
+        _totalCalories = State(initialValue: sampleTotalCalories)
+        _monthlyCalories = State(initialValue: sampleMonthlyCalories)
+        _todayWater = State(initialValue: sampleTodayWater)
+        _selectedSummaryTab = State(initialValue: sampleSelectedSummaryTab)
+    }
     
     // Streaks and achievements
     @State private var currentStreak: Int = 0
@@ -1140,56 +1158,71 @@ struct DashboardView: View {
     
     func extractAllNutrients(from text: String) -> (calories: Int, protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
         var calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0, sugar = 0, sodium = 0
-        
+
         let lines = text.components(separatedBy: .newlines)
-        
+
         for line in lines {
             let trimmedLine = line.trimmingCharacters(in: .whitespaces)
             if trimmedLine.isEmpty { continue }
-            
+
             let parts = trimmedLine.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-            
-            if parts.count >= 2 {
-                let name = parts[0].lowercased()
-                
-                // Clean the value - remove commas, spaces, and handle decimals
-                let cleanedValue = parts[1]
-                    .replacingOccurrences(of: ",", with: "")
-                    .replacingOccurrences(of: " ", with: "")
-                    .trimmingCharacters(in: .whitespaces)
-                
-                // Try to parse as Float first, then convert to Int
-                if let floatValue = Float(cleanedValue) {
-                    let value = Int(floatValue.rounded())
-                    
-                    // Match nutrients more flexibly
-                    if name.contains("calorie") || name.contains("kcal") || name == "calories" {
-                        calories = value
-                    }
-                    else if name.contains("protein") {
-                        protein = value
-                    }
-                    else if name.contains("carb") || name.contains("carbohydrate") {
-                        carbs = value
-                    }
-                    else if (name.contains("fat") || name == "fats") && !name.contains("saturated") && !name.contains("trans") {
-                        fat = value
-                    }
-                    else if name.contains("fiber") || name.contains("fibre") {
-                        fiber = value
-                    }
-                    else if name.contains("sugar") && !name.contains("added") {
-                        sugar = value
-                    }
-                    else if name.contains("sodium") || name.contains("salt") {
-                        sodium = value
-                    }
+            if parts.count < 2 { continue }
+
+            let name = parts[0].lowercased()
+
+            // Determine numeric value (average if a range is provided)
+            var valueInt: Int? = nil
+
+            // Case 1: explicit min and max fields: name | min | max | unit
+            if parts.count >= 3 {
+                let minStr = parts[1].replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")
+                let maxStr = parts[2].replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")
+                if let minF = Double(minStr), let maxF = Double(maxStr) {
+                    valueInt = Int(((minF + maxF) / 2.0).rounded())
                 }
             }
+
+            // Case 2: single field that may contain a hyphen range like "420-580"
+            if valueInt == nil {
+                let cleaned = parts[1].replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces)
+                if cleaned.contains("-") {
+                    let rangeParts = cleaned.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                    if rangeParts.count == 2, let minF = Double(rangeParts[0].replacingOccurrences(of: ",", with: "")), let maxF = Double(rangeParts[1].replacingOccurrences(of: ",", with: "")) {
+                        valueInt = Int(((minF + maxF) / 2.0).rounded())
+                    }
+                } else if let f = Double(cleaned) {
+                    valueInt = Int(f.rounded())
+                }
+            }
+
+            guard let value = valueInt else { continue }
+
+            // Match nutrients more flexibly
+            if name.contains("calorie") || name.contains("kcal") || name == "calories" {
+                calories = value
+            }
+            else if name.contains("protein") {
+                protein = value
+            }
+            else if name.contains("carb") || name.contains("carbohydrate") {
+                carbs = value
+            }
+            else if (name.contains("fat") || name == "fats") && !name.contains("saturated") && !name.contains("trans") {
+                fat = value
+            }
+            else if name.contains("fiber") || name.contains("fibre") {
+                fiber = value
+            }
+            else if name.contains("sugar") && !name.contains("added") {
+                sugar = value
+            }
+            else if name.contains("sodium") || name.contains("salt") {
+                sodium = value
+            }
         }
-        
+
         print("📊 Extracted nutrients - Cal: \(calories), P: \(protein), C: \(carbs), F: \(fat)")
-        
+
         return (calories, protein, carbs, fat, fiber, sugar, sodium)
     }
     
@@ -1756,6 +1789,35 @@ struct DashboardView: View {
     }
 }
 
+// MARK: - Previews
+
+struct DashboardView_Previews: PreviewProvider {
+    static var sampleMeal: Meal {
+        Meal(
+            _id: "m1",
+            user_id: "u1",
+            dish_prediction: "Grilled Salmon",
+            image_description: "Salmon | 150 | 200 | g | Visible",
+            hidden_ingredients: "Olive oil | 5 | 10 | ml | Hidden",
+            nutrition_info: "Calories|400|520|kcal\nProtein|30|40|g\nFat|20|30|g",
+            image_full: nil,
+            image_thumb: nil,
+            saved_at: ISO8601DateFormatter().string(from: Date()),
+            meal_type: "Dinner"
+        )
+    }
+
+    static var previews: some View {
+        Group {
+            DashboardView(sampleMeals: [sampleMeal], sampleTodayCalories: 450, sampleTotalCalories: 1200, sampleMonthlyCalories: 24000, sampleTodayWater: 1.2)
+                .preferredColorScheme(.dark)
+
+            DashboardView(sampleMeals: [sampleMeal], sampleTodayCalories: 450, sampleTotalCalories: 1200, sampleMonthlyCalories: 24000, sampleTodayWater: 1.2)
+                .preferredColorScheme(.light)
+        }
+    }
+}
+
 // MARK: - NEW: Enhanced Nutrition Components
 
 struct TodaysNutrientCircle: View {
@@ -2121,7 +2183,30 @@ struct FixedSizeMealCard: View {
         for line in text.split(separator: "\n") {
             let parts = line.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
             if parts.count >= 2, parts[0].lowercased().contains("calorie") {
-                return Int(parts[1])
+                // Explicit min|max fields: Calories | min | max | unit
+                if parts.count >= 3 {
+                    let minStr = parts[1].replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")
+                    let maxStr = parts[2].replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")
+                    if let minF = Double(minStr), let maxF = Double(maxStr) {
+                        return Int(((minF + maxF) / 2.0).rounded())
+                    }
+                }
+
+                // Hyphenated range in single field: "420-580"
+                let cleaned = parts[1].replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces)
+                if cleaned.contains("-") {
+                    let rangeParts = cleaned.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                    if rangeParts.count == 2, let minF = Double(rangeParts[0].replacingOccurrences(of: ",", with: "")), let maxF = Double(rangeParts[1].replacingOccurrences(of: ",", with: "")) {
+                        return Int(((minF + maxF) / 2.0).rounded())
+                    }
+                }
+
+                // Fallback single numeric value
+                if let v = Int(cleaned) {
+                    return v
+                } else if let f = Double(cleaned) {
+                    return Int(f.rounded())
+                }
             }
         }
         return nil

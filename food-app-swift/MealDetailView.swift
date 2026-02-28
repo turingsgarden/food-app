@@ -475,7 +475,23 @@ struct MealDetailView: View {
         
         // First, recalculate nutrition with the new quantities
         let allIngredients = editedVisibleIngredients + editedHiddenIngredients
-        let ingredientsList = allIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit)" }.joined(separator: "\n")
+        // Build ingredient lines in the new expected format: name | min | max | unit
+        let ingredientsList = allIngredients.map { ing -> String in
+            // If the editable quantity contains a range like "min-max", use it
+            let qty = ing.quantity.trimmingCharacters(in: .whitespaces)
+            var minVal = qty
+            var maxVal = qty
+
+            if qty.contains("-") {
+                let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count >= 2 {
+                    minVal = String(parts[0])
+                    maxVal = String(parts[1])
+                }
+            }
+
+            return "\(ing.name) | \(minVal) | \(maxVal) | \(ing.unit)"
+        }.joined(separator: "\n")
         
         print("📊 Recalculating nutrition for edited meal...")
         print("📊 Ingredients list:\n\(ingredientsList)")
@@ -510,13 +526,38 @@ struct MealDetailView: View {
     private func performSave() {
         // Update meal data
         meal.dish_prediction = editedDishName
-        meal.image_description = editedVisibleIngredients.map {
-            "\($0.name) | \($0.quantity) | \($0.unit) | User edited"
+        // Save visible ingredients using the new 5-field format: name | min | max | unit | visibility
+        meal.image_description = editedVisibleIngredients.map { ing -> String in
+            let qty = ing.quantity.trimmingCharacters(in: .whitespaces)
+            var minVal = qty
+            var maxVal = qty
+
+            if qty.contains("-") {
+                let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count >= 2 {
+                    minVal = String(parts[0])
+                    maxVal = String(parts[1])
+                }
+            }
+
+            return "\(ing.name) | \(minVal) | \(maxVal) | \(ing.unit) | User edited"
         }.joined(separator: "\n")
         
         // Update hidden ingredients
-        let hiddenIngredientsString = editedHiddenIngredients.map {
-            "\($0.name) | \($0.quantity) | \($0.unit) | User edited"
+        let hiddenIngredientsString = editedHiddenIngredients.map { ing -> String in
+            let qty = ing.quantity.trimmingCharacters(in: .whitespaces)
+            var minVal = qty
+            var maxVal = qty
+
+            if qty.contains("-") {
+                let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count >= 2 {
+                    minVal = String(parts[0])
+                    maxVal = String(parts[1])
+                }
+            }
+
+            return "\(ing.name) | \(minVal) | \(maxVal) | \(ing.unit) | User edited"
         }.joined(separator: "\n")
         
         meal.hidden_ingredients = hiddenIngredientsString
@@ -620,13 +661,35 @@ struct MealDetailView: View {
         return filteredIngredientLines(from: text).compactMap { line in
             let cleanLine = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
             let parts = cleanLine.split(separator: "|").map { $0.trimmingCharacters(in: CharacterSet.whitespaces) }
-            guard parts.count >= 3 else { return nil }
-            return EditableIngredient(
-                id: UUID().uuidString,
-                name: parts[0],
-                quantity: parts[1],
-                unit: parts[2]
-            )
+            // Support both legacy format (name | qty | unit) and new format (name | min | max | unit | visibility)
+            if parts.count >= 5 {
+                let name = parts[0]
+                let minStr = parts[1]
+                let maxStr = parts[2]
+                let unit = parts[3]
+
+                // Prefer showing an averaged single editable quantity for the UI
+                var displayQty = minStr
+                if let minVal = Double(minStr.replacingOccurrences(of: ",", with: "")), let maxVal = Double(maxStr.replacingOccurrences(of: ",", with: "")) {
+                    let avg = (minVal + maxVal) / 2.0
+                    if avg.truncatingRemainder(dividingBy: 1) == 0 {
+                        displayQty = String(Int(avg))
+                    } else {
+                        displayQty = String(format: "%.1f", avg)
+                    }
+                }
+
+                return EditableIngredient(id: UUID().uuidString, name: name, quantity: displayQty, unit: unit)
+            } else if parts.count >= 3 {
+                return EditableIngredient(
+                    id: UUID().uuidString,
+                    name: parts[0],
+                    quantity: parts[1],
+                    unit: parts[2]
+                )
+            }
+
+            return nil
         }
     }
     
@@ -658,6 +721,39 @@ struct ActionButton: View {
                         .fill(Color.black.opacity(0.5))
                         .blur(radius: 10)
                 )
+        }
+    }
+}
+
+// MARK: - Previews
+
+struct MealDetailView_Previews: PreviewProvider {
+    static var sampleMeal: Meal {
+        Meal(
+            _id: "sample1",
+            user_id: "user1",
+            dish_prediction: "Grilled Chicken Salad",
+            image_description: "Chicken breast | 120 | 180 | g | Visible\nLettuce | 30 | 50 | g | Visible\nTomato | 20 | 30 | g | Visible",
+            hidden_ingredients: "Olive oil | 5 | 15 | ml | Hidden\nSalt | 1 | 3 | g | Hidden",
+            nutrition_info: "Calories|420|580|kcal\nProtein|30|40|g\nFat|20|30|g\nCarbohydrates|10|20|g\nFiber|3|5|g\nSugar|2|4|g\nSodium|400|800|mg",
+            image_full: nil,
+            image_thumb: nil,
+            saved_at: ISO8601DateFormatter().string(from: Date()),
+            meal_type: "Lunch"
+        )
+    }
+
+    static var previews: some View {
+        Group {
+            NavigationView {
+                MealDetailView(meal: sampleMeal)
+            }
+            .preferredColorScheme(.dark)
+
+            NavigationView {
+                MealDetailView(meal: sampleMeal)
+            }
+            .preferredColorScheme(.light)
         }
     }
 }

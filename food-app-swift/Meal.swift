@@ -30,31 +30,56 @@ struct NutritionRecalculationResult: Codable {
 
 func parseIngredientLines(from text: String) -> [String] {
     text.split(separator: "\n").compactMap { line in
-        let parts = line.split(separator: "|")
-        guard parts.count == 4 else { return nil }
-        return "\(parts[0].trimmingCharacters(in: .whitespaces)) — \(parts[1].trimmingCharacters(in: .whitespaces)) \(parts[2].trimmingCharacters(in: .whitespaces)) (\(parts[3].trimmingCharacters(in: .whitespaces)))"
+        let parts = line.split(separator: "|").map {
+            $0.trimmingCharacters(in: .whitespaces)
+        }
+
+        // Now expecting 5 parts: name | min | max | unit | visibility
+        guard parts.count == 5 else { return nil }
+
+        let name = parts[0]
+        let min = parts[1]
+        let max = parts[2]
+        let unit = parts[3]
+        let visibility = parts[4]
+
+        return "\(name) — \(min)-\(max) \(unit) (\(visibility))"
     }
 }
 
 func parseNutritionLines(from text: String) -> [String] {
     text.split(separator: "\n").compactMap { line in
-        let parts = line.split(separator: "|")
+        let parts = line.split(separator: "|").map {
+            $0.trimmingCharacters(in: .whitespaces)
+        }
+
+        // name | min | max | unit
         guard parts.count == 4 else { return nil }
-        return "\(parts[0].trimmingCharacters(in: .whitespaces)) — \(parts[1].trimmingCharacters(in: .whitespaces)) \(parts[2].trimmingCharacters(in: .whitespaces)) (\(parts[3].trimmingCharacters(in: .whitespaces)))"
+
+        let name = parts[0]
+        let min = parts[1]
+        let max = parts[2]
+        let unit = parts[3]
+
+        return "\(name) — \(min)-\(max) \(unit)"
     }
 }
 
-// In Meal.swift, replace the extractCalories function with this:
+// In Meal.swift, replace the extractCalories function with this: average
 
 func extractCalories(from text: String) -> Int? {
     for line in text.split(separator: "\n") {
-        let parts = line.split(separator: "|")
-        if parts.count >= 2, parts[0].lowercased().contains("calories") {
-            // Get the value and clean it
-            let valueString = parts[1].trimmingCharacters(in: .whitespaces)
-            // Remove commas from numbers like "1,200" -> "1200"
-            let cleanedValue = valueString.replacingOccurrences(of: ",", with: "")
-            return Int(cleanedValue)
+        let parts = line.split(separator: "|").map {
+            $0.trimmingCharacters(in: .whitespaces)
+        }
+
+        // Calories | min | max | kcal
+        if parts.count >= 3,
+           parts[0].lowercased().contains("calories"),
+           let min = Int(parts[1].replacingOccurrences(of: ",", with: "")),
+           let max = Int(parts[2].replacingOccurrences(of: ",", with: "")) {
+
+            return (min + max) / 2   // return average
         }
     }
     return nil

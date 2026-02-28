@@ -60,25 +60,42 @@ struct QuantityOnlyIngredientRow: View {
                                 .stroke(Color.orange.opacity(0.3), lineWidth: 1)
                         )
                 )
-                .keyboardType(.decimalPad)
+                // Allow numbers, decimal and hyphen for ranges
+                .keyboardType(.numbersAndPunctuation)
                 .focused($isFocused)
                 .onChange(of: quantityText) { oldValue, newValue in
-                    // Allow only numbers and decimal point
-                    let filtered = newValue.filter { $0.isNumber || $0 == "." }
-                    
-                    // Ensure only one decimal point
-                    let decimalCount = filtered.filter { $0 == "." }.count
-                    if decimalCount > 1 {
+                    // Allow digits, decimal point and single hyphen for ranges
+                    var filtered = newValue.filter { $0.isNumber || $0 == "." || $0 == "-" }
+
+                    // Ensure only one hyphen
+                    let hyphenCount = filtered.filter { $0 == "-" }.count
+                    if hyphenCount > 1 {
                         quantityText = oldValue
                         return
                     }
-                    
-                    // Prevent starting with decimal point
-                    if filtered.first == "." {
-                        quantityText = "0."
+
+                    // Prevent starting with hyphen
+                    if filtered.first == "-" {
+                        quantityText = oldValue
                         return
                     }
-                    
+
+                    // Validate decimal points per segment (split by hyphen)
+                    let segments = filtered.split(separator: "-")
+                    for seg in segments {
+                        let segStr = String(seg)
+                        let dotCount = segStr.filter { $0 == "." }.count
+                        if dotCount > 1 {
+                            quantityText = oldValue
+                            return
+                        }
+                    }
+
+                    // Prevent starting with decimal point in any segment
+                    if filtered.first == "." {
+                        filtered = "0." + filtered.dropFirst()
+                    }
+
                     // Update if valid
                     if filtered != newValue {
                         quantityText = filtered

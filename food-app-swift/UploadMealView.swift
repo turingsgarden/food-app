@@ -39,6 +39,27 @@ struct UploadMealView: View {
     
     @Environment(\.dismiss) var dismiss
 
+    // Preview initializer - optional parameters for Xcode previews
+    init(
+        previewImage: UIImage? = nil,
+        previewDetectedDish: String = "",
+        previewVisibleIngredients: [EditableIngredient] = [],
+        previewHiddenIngredients: [EditableIngredient] = [],
+        previewNutritionInfo: String = "",
+        previewIsLoading: Bool = false,
+        previewErrorMessage: String = ""
+    ) {
+        _selectedImage = State(initialValue: previewImage)
+        _detectedDish = State(initialValue: previewDetectedDish)
+        _visibleIngredients = State(initialValue: previewVisibleIngredients)
+        _hiddenIngredients = State(initialValue: previewHiddenIngredients)
+        _rawNutritionInfo = State(initialValue: previewNutritionInfo)
+        _isLoading = State(initialValue: previewIsLoading)
+        _errorMessage = State(initialValue: previewErrorMessage)
+        // editableDishName follows detectedDish
+        _editableDishName = State(initialValue: previewDetectedDish)
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -539,7 +560,22 @@ struct UploadMealView: View {
         
         // Combine visible and hidden ingredients for recalculation
         let allIngredients = visibleIngredients + hiddenIngredients
-        let ingredientsList = allIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit)" }.joined(separator: "\n")
+        // Build ingredients in new expected format: name | min | max | unit
+        let ingredientsList = allIngredients.map { ing -> String in
+            let qty = ing.quantity.trimmingCharacters(in: .whitespaces)
+            var minVal = qty
+            var maxVal = qty
+
+            if qty.contains("-") {
+                let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count >= 2 {
+                    minVal = String(parts[0])
+                    maxVal = String(parts[1])
+                }
+            }
+
+            return "\(ing.name) | \(minVal) | \(maxVal) | \(ing.unit)"
+        }.joined(separator: "\n")
         
         NetworkManager.shared.recalculateNutrition(ingredients: ingredientsList) { result in
             self.isRecalculatingNutrition = false
@@ -712,12 +748,37 @@ struct UploadMealView: View {
         print("📸 Full image size: \((fullImageBase64.count / 1024)) KB")
         print("📸 Thumbnail size: \((thumbnailBase64.count / 1024)) KB")
         
-        let visibleIngredientsString = visibleIngredients.map {
-            "\($0.name) | \($0.quantity) | \($0.unit) | User edited"
+        // Save ingredients in new 5-field format: name | min | max | unit | visibility
+        let visibleIngredientsString = visibleIngredients.map { ing -> String in
+            let qty = ing.quantity.trimmingCharacters(in: .whitespaces)
+            var minVal = qty
+            var maxVal = qty
+
+            if qty.contains("-") {
+                let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count >= 2 {
+                    minVal = String(parts[0])
+                    maxVal = String(parts[1])
+                }
+            }
+
+            return "\(ing.name) | \(minVal) | \(maxVal) | \(ing.unit) | User edited"
         }.joined(separator: "\n")
-        
-        let hiddenIngredientsString = hiddenIngredients.map {
-            "\($0.name) | \($0.quantity) | \($0.unit) | User edited"
+
+        let hiddenIngredientsString = hiddenIngredients.map { ing -> String in
+            let qty = ing.quantity.trimmingCharacters(in: .whitespaces)
+            var minVal = qty
+            var maxVal = qty
+
+            if qty.contains("-") {
+                let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count >= 2 {
+                    minVal = String(parts[0])
+                    maxVal = String(parts[1])
+                }
+            }
+
+            return "\(ing.name) | \(minVal) | \(maxVal) | \(ing.unit) | User edited"
         }.joined(separator: "\n")
 
         let payload: [String: Any] = [
@@ -766,6 +827,18 @@ struct UploadMealView: View {
     func parseIngredientsToEditable(from text: String) -> [EditableIngredient] {
         text.split(separator: "\n").compactMap { line in
             let parts = line.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
+            // Support new format: name | min | max | unit | visibility
+            if parts.count >= 5 {
+                let name = parts[0]
+                let minStr = parts[1]
+                let maxStr = parts[2]
+                let unit = parts[3]
+                // Represent quantity as a range for editing
+                let qty = "\(minStr)-\(maxStr)"
+                return EditableIngredient(id: UUID().uuidString, name: name, quantity: qty, unit: unit)
+            }
+
+            // Legacy format: name | qty | unit
             guard parts.count >= 3 else { return nil }
             return EditableIngredient(
                 id: UUID().uuidString,
@@ -973,6 +1046,49 @@ struct AnalyzingView: View {
         .padding()
         .onAppear {
             dots = 3
+        }
+    }
+}
+
+// MARK: - Previews
+
+struct UploadMealView_Previews: PreviewProvider {
+    static var sampleIngredients: [EditableIngredient] {
+        [
+            EditableIngredient(id: "1", name: "Chicken breast", quantity: "120-180", unit: "g"),
+            EditableIngredient(id: "2", name: "Lettuce", quantity: "30-50", unit: "g")
+        ]
+    }
+
+    static var sampleHidden: [EditableIngredient] {
+        [EditableIngredient(id: "h1", name: "Olive oil", quantity: "5-15", unit: "ml")]
+    }
+
+    static var sampleNutrition = "Calories|420|580|kcal\nProtein|30|40|g\nFat|20|30|g"
+
+    static var previews: some View {
+        Group {
+            NavigationView {
+                UploadMealView()
+            }
+            .previewDisplayName("Empty - Select Image")
+
+            NavigationView {
+                UploadMealView(previewIsLoading: true)
+            }
+            .previewDisplayName("Analyzing")
+
+            NavigationView {
+                UploadMealView(
+                    previewImage: UIImage(systemName: "photo"),
+                    previewDetectedDish: "Grilled Chicken Salad",
+                    previewVisibleIngredients: sampleIngredients,
+                    previewHiddenIngredients: sampleHidden,
+                    previewNutritionInfo: sampleNutrition,
+                    previewIsLoading: false
+                )
+            }
+            .previewDisplayName("Results")
         }
     }
 }

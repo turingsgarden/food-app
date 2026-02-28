@@ -15,10 +15,7 @@ struct BeautifulNutritionView: View {
     
     var hasValidNutrition: Bool {
         !nutritionItems.isEmpty && nutritionItems.contains { item in
-            if let value = Double(item.value), value > 0 {
-                return true
-            }
-            return false
+            return valueIsPositive(item.value)
         }
     }
     
@@ -132,26 +129,25 @@ struct BeautifulNutritionView: View {
                 
                 if parts.count >= 3 {
                     let name = cleanNutrientName(parts[0])
-                    let valueStr = cleanValueString(parts[1])
-                    let unit = parts[2]
-                    
-                    // Validate that this is a nutrition item (not an ID or other data)
-                    if isValidNutrientName(name) && !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
-                        let item = NutritionItem(
-                            name: name,
-                            value: valueStr,
-                            unit: unit,
-                            reasoning: nil
-                        )
-                        items.append(item)
+                    var valueStr = ""
+                    var unit = ""
+
+                    if parts.count >= 4 {
+                        // name | min | max | unit  -> normalize to min-max
+                        let minStr = cleanValueString(parts[1])
+                        let maxStr = cleanValueString(parts[2])
+                        unit = parts[3]
+                        if !minStr.isEmpty && !maxStr.isEmpty {
+                            valueStr = "\(minStr)-\(maxStr)"
+                        }
+                    } else {
+                        // parts.count == 3 -> name | value | unit
+                        let rawVal = parts[1]
+                        unit = parts[2]
+                        valueStr = cleanValueString(rawVal)
                     }
-                } else if parts.count == 2 {
-                    // Handle format without unit (e.g., "Calories|450")
-                    let name = cleanNutrientName(parts[0])
-                    let valueStr = cleanValueString(parts[1])
-                    
-                    if isValidNutrientName(name) && !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
-                        let unit = guessUnit(for: name)
+
+                    if isValidNutrientName(name) && !valueStr.isEmpty && isNumericOrRange(valueStr) {
                         let item = NutritionItem(
                             name: name,
                             value: valueStr,
@@ -239,6 +235,34 @@ struct BeautifulNutritionView: View {
             NutritionItem(name: "Sugar", value: "0", unit: "g", reasoning: nil),
             NutritionItem(name: "Sodium", value: "0", unit: "mg", reasoning: nil)
         ]
+    }
+
+    // MARK: - Range Helpers
+
+    private func isNumericOrRange(_ s: String) -> Bool {
+        let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        if Double(trimmed) != nil { return true }
+
+        let pattern = "^\\d+(?:\\.\\d+)?-\\d+(?:\\.\\d+)?$"
+        if let _ = trimmed.range(of: pattern, options: .regularExpression) {
+            return true
+        }
+        return false
+    }
+
+    private func valueIsPositive(_ s: String) -> Bool {
+        let trimmed = s.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let v = Double(trimmed) {
+            return v > 0
+        }
+
+        // range
+        let parts = trimmed.split(separator: "-").map { String($0) }
+        if parts.count == 2, let a = Double(parts[0]), let b = Double(parts[1]) {
+            return (a + b) / 2.0 > 0
+        }
+
+        return false
     }
 }
 
