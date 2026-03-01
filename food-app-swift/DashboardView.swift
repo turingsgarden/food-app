@@ -810,7 +810,7 @@ struct DashboardView: View {
     
     private func getCalorieStatusMessage() -> String {
         if profileManager.isNewUser { return "Set up profile for personalized goals" }
-        else if calorieProgress < 0.3 { return "Great start! Keep it up" }
+        else if calorieProgress < 0.3 { return "Greatttt start! Keep it up" }
         else if calorieProgress < 0.7 { return "On track for your goal" }
         else if calorieProgress < 1.0 { return "Almost there!" }
         else if calorieProgress < 1.2 { return "Goal achieved!" }
