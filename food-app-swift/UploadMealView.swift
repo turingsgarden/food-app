@@ -303,16 +303,7 @@ struct UploadMealView: View {
                                             title: "Visible Ingredients",
                                             icon: "leaf.fill",
                                             color: Color.green,
-                                            action: {
-                                                // If finishing edit, recalculate nutrition then save to backend
-                                                let willEnd = isEditingIngredients
-                                                isEditingIngredients.toggle()
-                                                if willEnd {
-                                                    recalculateNutrition {
-                                                        saveMealToBackend()
-                                                    }
-                                                }
-                                            },
+                                            action: { isEditingIngredients.toggle() },
                                             actionIcon: isEditingIngredients ? "checkmark" : "pencil"
                                         )
                                         
@@ -351,15 +342,7 @@ struct UploadMealView: View {
                                                 title: "Hidden Ingredients",
                                                 icon: "eye.slash.fill",
                                                 color: Color.pink,
-                                                action: {
-                                                    let willEnd = isEditingHidden
-                                                    isEditingHidden.toggle()
-                                                    if willEnd {
-                                                        recalculateNutrition {
-                                                            saveMealToBackend()
-                                                        }
-                                                    }
-                                                },
+                                                action: { isEditingHidden.toggle() },
                                                 actionIcon: isEditingHidden ? "checkmark" : "pencil"
                                             )
                                             
@@ -572,7 +555,7 @@ struct UploadMealView: View {
         ))
     }
     
-    func recalculateNutrition(completion: (() -> Void)? = nil) {
+    func recalculateNutrition() {
         isRecalculatingNutrition = true
         
         // Combine visible and hidden ingredients for recalculation
@@ -595,25 +578,20 @@ struct UploadMealView: View {
         }.joined(separator: "\n")
         
         NetworkManager.shared.recalculateNutrition(ingredients: ingredientsList) { result in
-            DispatchQueue.main.async {
-                self.isRecalculatingNutrition = false
-
-                switch result {
-                case .success(let nutritionData):
-                    // Update the raw nutrition info for the Beautiful Nutrition View
-                    self.rawNutritionInfo = nutritionData.nutrition_info
-
-                    // Also update the legacy arrays for compatibility
-                    self.nutritionLines = self.parseNutritionLines(from: nutritionData.nutrition_info)
-                    self.calories = self.extractCalories(from: nutritionData.nutrition_info)
-
-                case .failure(let error):
-                    print("❌ Nutrition recalculation failed: \(error)")
-                    self.errorMessage = "Failed to recalculate nutrition"
-                }
-
-                // call completion so caller can persist changes (e.g., save to backend)
-                completion?()
+            self.isRecalculatingNutrition = false
+            
+            switch result {
+            case .success(let nutritionData):
+                // Update the raw nutrition info for the Beautiful Nutrition View
+                self.rawNutritionInfo = nutritionData.nutrition_info
+                
+                // Also update the legacy arrays for compatibility
+                self.nutritionLines = self.parseNutritionLines(from: nutritionData.nutrition_info)
+                self.calories = self.extractCalories(from: nutritionData.nutrition_info)
+                
+            case .failure(let error):
+                print("❌ Nutrition recalculation failed: \(error)")
+                self.errorMessage = "Failed to recalculate nutrition"
             }
         }
     }
