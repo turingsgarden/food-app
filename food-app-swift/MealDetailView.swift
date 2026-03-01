@@ -668,18 +668,9 @@ struct MealDetailView: View {
                 let maxStr = parts[2]
                 let unit = parts[3]
 
-                // Prefer showing an averaged single editable quantity for the UI
-                var displayQty = minStr
-                if let minVal = Double(minStr.replacingOccurrences(of: ",", with: "")), let maxVal = Double(maxStr.replacingOccurrences(of: ",", with: "")) {
-                    let avg = (minVal + maxVal) / 2.0
-                    if avg.truncatingRemainder(dividingBy: 1) == 0 {
-                        displayQty = String(Int(avg))
-                    } else {
-                        displayQty = String(format: "%.1f", avg)
-                    }
-                }
-
-                return EditableIngredient(id: UUID().uuidString, name: name, quantity: displayQty, unit: unit)
+                // Preserve explicit range so min and max can be edited: "min-max"
+                let rangeQty = "\(minStr)-\(maxStr)"
+                return EditableIngredient(id: UUID().uuidString, name: name, quantity: rangeQty, unit: unit)
             } else if parts.count >= 3 {
                 return EditableIngredient(
                     id: UUID().uuidString,

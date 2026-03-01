@@ -5,13 +5,32 @@ import Combine
 struct QuantityOnlyIngredientRow: View {
     @Binding var ingredient: EditableIngredient
     let onDelete: (() -> Void)?
-    @State private var quantityText: String = ""
+    @State private var minText: String = ""
+    @State private var maxText: String = ""
     @FocusState private var isFocused: Bool
     
     init(ingredient: Binding<EditableIngredient>, onDelete: (() -> Void)? = nil) {
         self._ingredient = ingredient
         self.onDelete = onDelete
-        self._quantityText = State(initialValue: ingredient.wrappedValue.quantity)
+        // Initialize min/max from existing quantity (support "min-max" or single value)
+        let qty = ingredient.wrappedValue.quantity.trimmingCharacters(in: .whitespaces)
+        var initMin = ""
+        var initMax = ""
+        if qty.contains("-") {
+            let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count >= 2 {
+                initMin = String(parts[0])
+                initMax = String(parts[1])
+            } else {
+                initMin = qty
+                initMax = qty
+            }
+        } else if !qty.isEmpty {
+            initMin = qty
+            initMax = qty
+        }
+        self._minText = State(initialValue: initMin)
+        self._maxText = State(initialValue: initMax)
     }
     
     var body: some View {
@@ -44,73 +63,87 @@ struct QuantityOnlyIngredientRow: View {
                     )
             )
             
-            // Quantity field (editable with numeric validation)
-            TextField("0", text: $quantityText)
-                .font(.subheadline)
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .frame(width: 70)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.orange.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                        )
-                )
-                // Allow numbers, decimal and hyphen for ranges
-                .keyboardType(.numbersAndPunctuation)
-                .focused($isFocused)
-                .onChange(of: quantityText) { oldValue, newValue in
-                    // Allow digits, decimal point and single hyphen for ranges
-                    var filtered = newValue.filter { $0.isNumber || $0 == "." || $0 == "-" }
-
-                    // Ensure only one hyphen
-                    let hyphenCount = filtered.filter { $0 == "-" }.count
-                    if hyphenCount > 1 {
-                        quantityText = oldValue
-                        return
+            // Quantity: edit min and max separately with fixed dash between
+            HStack(spacing: 8) {
+                TextField("min", text: $minText)
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 70)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.orange.opacity(0.1))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                    .keyboardType(.numbersAndPunctuation)
+                    .focused($isFocused)
+                    .onChange(of: minText) { oldValue in
+                        var filtered = minText.filter { $0.isNumber || $0 == "." }
+                        let dotCount = filtered.filter { $0 == "." }.count
+                        if dotCount > 1 { minText = oldValue; return }
+                        if filtered.first == "." { filtered = "0." + filtered.dropFirst() }
+                        if filtered != minText { minText = filtered }
+                        var minVal = filtered.trimmingCharacters(in: .whitespaces)
+                        var maxVal = maxText.trimmingCharacters(in: .whitespaces)
+                        if minVal.isEmpty && maxVal.isEmpty { minVal = "0"; maxVal = "0" }
+                        else if minVal.isEmpty { minVal = maxVal }
+                        else if maxVal.isEmpty { maxVal = minVal }
+                        minText = minVal
+                        maxText = maxVal
+                        ingredient.minQuantity = minVal
+                        ingredient.maxQuantity = maxVal
                     }
 
-                    // Prevent starting with hyphen
-                    if filtered.first == "-" {
-                        quantityText = oldValue
-                        return
-                    }
+                Text("-")
+                    .font(.subheadline)
+                    .foregroundColor(.white)
 
-                    // Validate decimal points per segment (split by hyphen)
-                    let segments = filtered.split(separator: "-")
-                    for seg in segments {
-                        let segStr = String(seg)
-                        let dotCount = segStr.filter { $0 == "." }.count
-                        if dotCount > 1 {
-                            quantityText = oldValue
-                            return
+                TextField("max", text: $maxText)
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 70)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.orange.opacity(0.1))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            )
+                    )
+                    .keyboardType(.numbersAndPunctuation)
+                    .onChange(of: maxText) { oldValue in
+                        var filtered = maxText.filter { $0.isNumber || $0 == "." }
+                        let dotCount = filtered.filter { $0 == "." }.count
+                        if dotCount > 1 { maxText = oldValue; return }
+                        if filtered.first == "." { filtered = "0." + filtered.dropFirst() }
+                        if filtered != maxText { maxText = filtered }
+                        var maxVal = filtered.trimmingCharacters(in: .whitespaces)
+                        var minVal = minText.trimmingCharacters(in: .whitespaces)
+                        if minVal.isEmpty && maxVal.isEmpty { minVal = "0"; maxVal = "0" }
+                        else if maxVal.isEmpty { maxVal = minVal }
+                        else if minVal.isEmpty { minVal = maxVal }
+                        minText = minVal
+                        maxText = maxVal
+                        ingredient.minQuantity = minVal
+                        ingredient.maxQuantity = maxVal
+                    }
+                    .toolbar {
+                        ToolbarItemGroup(placement: .keyboard) {
+                            Spacer()
+                            Button("Done") {
+                                isFocused = false
+                            }
                         }
                     }
-
-                    // Prevent starting with decimal point in any segment
-                    if filtered.first == "." {
-                        filtered = "0." + filtered.dropFirst()
-                    }
-
-                    // Update if valid
-                    if filtered != newValue {
-                        quantityText = filtered
-                    } else {
-                        ingredient.quantity = filtered.isEmpty ? "0" : filtered
-                    }
-                }
-                .toolbar {
-                    ToolbarItemGroup(placement: .keyboard) {
-                        Spacer()
-                        Button("Done") {
-                            isFocused = false
-                        }
-                    }
-                }
+            }
             
             // Unit field (read-only)
             Text(ingredient.unit)

@@ -17,11 +17,47 @@ struct EditableIngredient: Identifiable, Hashable {
     }
 }
 
+// Computed accessors for min/max to keep compatibility with existing `quantity` string
+extension EditableIngredient {
+    var minQuantity: String {
+        get {
+            let qty = quantity.trimmingCharacters(in: .whitespaces)
+            if qty.contains("-") {
+                let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count >= 1 { return String(parts[0]) }
+            }
+            return qty
+        }
+        set {
+            let maxQ = maxQuantity
+            quantity = "\(newValue)-\(maxQ)"
+        }
+    }
+
+    var maxQuantity: String {
+        get {
+            let qty = quantity.trimmingCharacters(in: .whitespaces)
+            if qty.contains("-") {
+                let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count >= 2 { return String(parts[1]) }
+                if parts.count == 1 { return String(parts[0]) }
+            }
+            return qty
+        }
+        set {
+            let minQ = minQuantity
+            quantity = "\(minQ)-\(newValue)"
+        }
+    }
+}
+
 // MARK: - Shared View Components
 
 struct EditableIngredientRow: View {
     @Binding var ingredient: EditableIngredient
     let onDelete: () -> Void
+    @State private var minQuantity: String = ""
+    @State private var maxQuantity: String = ""
     
     var body: some View {
         HStack(spacing: 12) {
@@ -43,18 +79,92 @@ struct EditableIngredientRow: View {
                         .fill(Color.white.opacity(0.08))
                 )
             
-            // Quantity field
-            TextField("Qty", text: $ingredient.quantity)
-                .font(.subheadline)
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .frame(width: 60)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white.opacity(0.08))
-                )
+            // Quantity: split into min - max with non-editable dash
+            HStack(spacing: 6) {
+                TextField("min", text: $minQuantity)
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 48)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.white.opacity(0.08))
+                    )
+
+                // Non-editable separator
+                Text("-")
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+
+                TextField("max", text: $maxQuantity)
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .frame(width: 48)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.white.opacity(0.08))
+                    )
+            }
+            .onAppear {
+                // initialize min/max from legacy quantity string
+                let qty = ingredient.quantity.trimmingCharacters(in: .whitespaces)
+                if qty.contains("-") {
+                    let parts = qty.split(separator: "-").map { $0.trimmingCharacters(in: .whitespaces) }
+                    if parts.count >= 2 {
+                        minQuantity = String(parts[0])
+                        maxQuantity = String(parts[1])
+                    } else {
+                        minQuantity = qty
+                        maxQuantity = qty
+                    }
+                } else if !qty.isEmpty {
+                    minQuantity = qty
+                    maxQuantity = qty
+                } else {
+                    minQuantity = ""
+                    maxQuantity = ""
+                }
+            }
+            .onChange(of: minQuantity) { newVal in
+                let minTrim = newVal.trimmingCharacters(in: .whitespaces)
+                var minVal = minTrim
+                var maxVal = maxQuantity.trimmingCharacters(in: .whitespaces)
+                if minVal.isEmpty && maxVal.isEmpty {
+                    minVal = "0"
+                    maxVal = "0"
+                } else if minVal.isEmpty {
+                    minVal = maxVal
+                } else if maxVal.isEmpty {
+                    maxVal = minVal
+                }
+                // write back normalized values to state and model
+                minQuantity = minVal
+                maxQuantity = maxVal
+                ingredient.minQuantity = minVal
+                ingredient.maxQuantity = maxVal
+            }
+            .onChange(of: maxQuantity) { newVal in
+                let maxTrim = newVal.trimmingCharacters(in: .whitespaces)
+                var maxVal = maxTrim
+                var minVal = minQuantity.trimmingCharacters(in: .whitespaces)
+                if minVal.isEmpty && maxVal.isEmpty {
+                    minVal = "0"
+                    maxVal = "0"
+                } else if maxVal.isEmpty {
+                    maxVal = minVal
+                } else if minVal.isEmpty {
+                    minVal = maxVal
+                }
+                minQuantity = minVal
+                maxQuantity = maxVal
+                ingredient.minQuantity = minVal
+                ingredient.maxQuantity = maxVal
+            }
             
             // Unit field
             TextField("Unit", text: $ingredient.unit)
