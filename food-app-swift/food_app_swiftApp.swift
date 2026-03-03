@@ -49,7 +49,7 @@ struct food_app_swiftApp: App {
         // Only check for actual timeout, not profile status
         if let backgroundTime = UserDefaults.standard.object(forKey: "app_background_time") as? Date {
             let timeInBackground = Date().timeIntervalSince(backgroundTime)
-            let timeoutDuration: TimeInterval = 300 // 5 minutes
+            let timeoutDuration: TimeInterval = 7 * 24 * 60 * 60
             
             // Only logout if session has actually timed out
             if timeInBackground > timeoutDuration && session.isLoggedIn {

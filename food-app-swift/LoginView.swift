@@ -22,7 +22,7 @@ struct LoginView: View {
     @State private var showRegister = false
     
     @State private var showForgotPassword = false
-
+    
     
     @FocusState private var focusedField: Field?
     
@@ -45,7 +45,6 @@ struct LoginView: View {
                 )
                 .ignoresSafeArea()
                 .onTapGesture {
-                    // FIXED: Only dismiss keyboard, don't block button taps
                     focusedField = nil
                 }
                 
@@ -164,7 +163,7 @@ struct LoginView: View {
                                     debugLog("User typing password: \(new.count) characters")
                                     validatePassword()
                                 }
-
+                                
                                 
                                 if !passwordError.isEmpty {
                                     Text(passwordError)
@@ -179,14 +178,14 @@ struct LoginView: View {
                                 Button(action: {
                                     rememberMe.toggle()
                                     debugLog("User toggled RememberMe = \(rememberMe)")
-
+                                    
                                 }) {
                                     HStack(spacing: 8) {
                                         Image(systemName: rememberMe ? "checkmark.square.fill" : "square")
                                             .foregroundColor(rememberMe ? .orange : .gray)
                                             .font(.title3)
                                         
-                                        Text("Remember me")
+                                        Text("Remember me for 7 days")
                                             .font(.caption)
                                             .foregroundColor(.gray)
                                     }
@@ -196,7 +195,6 @@ struct LoginView: View {
                                 Spacer()
                                 
                                 Button("Forgot Password?") {
-                                    // Handle forgot password
                                     debugLog("User tapped Forgot Password")
                                     showForgotPassword = true
                                 }
@@ -205,9 +203,9 @@ struct LoginView: View {
                                 .foregroundColor(.orange)
                             }
                             
-                            // Login Button - FIXED
+                            // Login Button
                             Button(action: {
-                                focusedField = nil // Dismiss keyboard
+                                focusedField = nil
                                 UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 validateEmail()
                                 validatePassword()
@@ -229,7 +227,7 @@ struct LoginView: View {
                                 }
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 50) // FIXED: Explicit minimum height
+                                .frame(height: 50)
                                 .background(
                                     LinearGradient(
                                         gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
@@ -242,7 +240,7 @@ struct LoginView: View {
                             }
                             .disabled(isLoading)
                             .buttonStyle(PlainButtonStyle())
-                            .contentShape(Rectangle()) // FIXED: Ensure entire button area is tappable
+                            .contentShape(Rectangle())
                             
                             if loginFailed {
                                 HStack {
@@ -288,14 +286,14 @@ struct LoginView: View {
                                     
                                     switch result {
                                     case .success(let authResults):
-                                        debugLog("Apple login SUCCESS: email=\(email)")
+                                        debugLog("Apple login SUCCESS")
                                         print("✅ Authorization success, checking credential type...")
                                         
                                         if let credential = authResults.credential as? ASAuthorizationAppleIDCredential {
                                             print("🔑 Credential received: \(credential)")
                                             
                                             let userId = credential.user
-                                            let email = credential.email ?? "\(userId)@apple.local"
+                                            let email = credential.email ?? "\(userId)@privaterelay.appleid.com"
                                             let identityToken = credential.identityToken
                                             
                                             print("🎉 Apple login success")
@@ -337,9 +335,7 @@ struct LoginView: View {
                                 // Google login button
                                 Button(action: {
                                     debugLog("User tapped Sign in with Google")
-                                    debugLog("Email entered: \(email)")
-                                    debugLog("Password length: \(password.count)")
-                                    focusedField = nil // Dismiss keyboard
+                                    focusedField = nil
                                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                                     debugLog("Google login UI presented")
                                     handleGoogleLogin()
@@ -351,7 +347,7 @@ struct LoginView: View {
                                     }
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
-                                    .frame(height: 50) // FIXED: Explicit minimum height
+                                    .frame(height: 50)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
                                             .fill(Color.white.opacity(0.1))
@@ -362,7 +358,7 @@ struct LoginView: View {
                                     )
                                 }
                                 .buttonStyle(PlainButtonStyle())
-                                .contentShape(Rectangle()) // FIXED: Ensure entire button area is tappable
+                                .contentShape(Rectangle())
                             }
                             
                             // Register Link
@@ -416,8 +412,9 @@ struct LoginView: View {
         }
     }
     
+    // UPDATED: Apple login with email tracking
     private func attemptAppleLogin(email: String, token: String) {
-        debugLog("Starting email/password login request")
+        debugLog("Starting Apple login request")
         isLoading = true
         loginFailed = false
         
@@ -427,7 +424,14 @@ struct LoginView: View {
             switch result {
             case .success(let (userId, name, jwtToken)):
                 print("✅ Apple login successful")
-                SessionManager.shared.login(id: userId, name: name, token: jwtToken)
+                // UPDATED: Pass email and login method
+                SessionManager.shared.login(
+                    id: userId,
+                    name: name,
+                    email: email,
+                    token: jwtToken,
+                    loginMethod: "apple"
+                )
                 withAnimation(.spring()) {
                     self.navigateToDashboard = true
                 }
@@ -442,7 +446,6 @@ struct LoginView: View {
     }
     
     private func handleGoogleLogin() {
-        // Get the root view controller using the modern iOS 15+ API
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootVC = windowScene.windows.first?.rootViewController else {
             print("❌ No root view controller")
@@ -472,67 +475,83 @@ struct LoginView: View {
             print("🧑 Name:", fullName)
             print("🔑 idToken:", idToken.prefix(20), "...")
             
-            sendGoogleTokenToBackend(idToken: idToken, email: email)
+            self.sendGoogleTokenToBackend(idToken: idToken, email: email)
         }
     }
     
+    // UPDATED: Google login with email tracking
     private func sendGoogleTokenToBackend(idToken: String, email: String) {
         guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/google_login") else { return }
         
+        // ← 加 timeout
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 90  // ← 原来没有这行！
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let body: [String: Any] = ["idToken": idToken, "email": email]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
         
+        DispatchQueue.main.async { self.isLoading = true }  // ← 加 loading
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async { self.isLoading = false }
+            
             if let error = error {
                 print("❌ Network error:", error.localizedDescription)
+                DispatchQueue.main.async {
+                    self.loginFailed = true
+                    self.loginErrorMessage = "Google login failed, please retry"
+                }
                 return
             }
             
-            if let httpResponse = response as? HTTPURLResponse {
-                print("🌐 Backend response code:", httpResponse.statusCode)
-            }
-            
-            if let data = data {
-                do {
-                    if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                        print("📦 Backend response:", json)
-                        
-                        if let userId = json["user_id"] as? String,
-                           let name = json["name"] as? String,
-                           let token = json["token"] as? String {
-                            print("✅ Google login successful - Saving session")
-                            DispatchQueue.main.async {
-                                SessionManager.shared.login(id: userId, name: name, token: token)
-                                withAnimation(.spring()) {
-                                    self.navigateToDashboard = true
-                                }
-                            }
-                        } else {
-                            print("❌ Missing fields in backend response")
-                        }
+            if let data = data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let userId = json["user_id"] as? String,
+               let name = json["name"] as? String,
+               let token = json["token"] as? String {
+                
+                DispatchQueue.main.async {
+                    SessionManager.shared.login(
+                        id: userId,
+                        name: name,
+                        email: email,
+                        token: token,
+                        loginMethod: "google"
+                    )
+                    withAnimation(.spring()) {
+                        self.navigateToDashboard = true
                     }
-                } catch {
-                    print("❌ JSON parse error:", error.localizedDescription)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    self.loginFailed = true
+                    self.loginErrorMessage = "Google login failed, please retry"
                 }
             }
         }.resume()
     }
-    
+    // UPDATED: Email login with email tracking and optimized timeout
     private func attemptLogin() {
         isLoading = true
         loginFailed = false
+        loginErrorMessage = "Starting up server, please wait..."  // ← 先显示提示
         
-        NetworkManager.shared.login(email: email, password: password) { result in
+        NetworkManager.shared.loginFast(email: email, password: password) { result in
             self.isLoading = false
+            self.loginErrorMessage = ""
             
             switch result {
             case .success(let (userId, name, token)):
                 debugLog("Login API returned SUCCESS: userId=\(userId), name=\(name)")
-                SessionManager.shared.login(id: userId, name: name, token: token)
+                SessionManager.shared.login(
+                    id: userId,
+                    name: name,
+                    email: self.email,
+                    token: token,
+                    loginMethod: "email"
+                )
                 withAnimation(.spring()) {
                     self.navigateToDashboard = true
                 }
@@ -542,10 +561,17 @@ struct LoginView: View {
                 self.loginFailed = true
                 
                 if let nsError = error as NSError? {
-                    if nsError.code == 401 {
+                    switch nsError.code {
+                    case 401:
                         self.loginErrorMessage = "Invalid email or password"
-                    } else {
-                        self.loginErrorMessage = nsError.localizedDescription
+                    case NSURLErrorTimedOut:
+                        self.loginErrorMessage = "Server is starting up, please try again in 30 seconds"
+                    case NSURLErrorNotConnectedToInternet:
+                        self.loginErrorMessage = "No internet connection"
+                    case NSURLErrorNetworkConnectionLost:
+                        self.loginErrorMessage = "Connection lost, please retry"
+                    default:
+                        self.loginErrorMessage = "Login failed. Please try again."
                     }
                 } else {
                     self.loginErrorMessage = "Login failed. Please try again."
@@ -554,5 +580,3 @@ struct LoginView: View {
         }
     }
 }
-
-

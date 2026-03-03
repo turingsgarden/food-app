@@ -19,6 +19,17 @@ class NetworkManager {
         return URLSession(configuration: config)
     }()
     
+    // OPTIMIZED: Faster session for login
+    private lazy var fastSession: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 90   // 冷启动需要60秒+处理时间
+        config.timeoutIntervalForResource = 120 // resource要比request长
+        config.waitsForConnectivity = true      // 等网络，不要直接失败
+        config.allowsCellularAccess = true
+        config.httpAdditionalHeaders = ["Accept": "application/json"]
+        return URLSession(configuration: config)
+    }()
+    
     private init() {}
     
     // MARK: - Token Management
@@ -104,6 +115,28 @@ class NetworkManager {
             }
         }
     }
+    
+    // 唤醒服务器（用于冷启动）
+    func warmUpServer(completion: @escaping (Bool) -> Void) {
+        guard let url = URL(string: "\(baseURL)/ping") else {
+            completion(false)
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 90  // 给足够时间让服务器冷启动
+        
+        print("🔥 Warming up server...")
+        
+        URLSession.shared.dataTask(with: request) { _, response, _ in
+            DispatchQueue.main.async {
+                let ok = (response as? HTTPURLResponse)?.statusCode == 200
+                print(ok ? "✅ Server warmed up!" : "⚠️ Server warm-up uncertain")
+                completion(ok)
+            }
+        }.resume()
+    }
+    
 
     // Enhanced upload with cold start handling
     func uploadImageWithColdStartHandling(
@@ -250,6 +283,181 @@ class NetworkManager {
             }
         }.resume()
     }
+    
+    func loginFast(email: String, password: String, completion: @escaping (Result<(userId: String, name: String, token: String), Error>) -> Void) {
+        print("🚀 Login initiated for: \(email)")
+        
+        // 先 ping 唤醒服务器，再登录
+        warmUpServer { [weak self] _ in
+            self?.performLogin(email: email, password: password, completion: completion)
+        }
+    }
+
+    private func performLogin(email: String, password: String, completion: @escaping (Result<(userId: String, name: String, token: String), Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/login") else {
+            completion(.failure(NSError(domain: "NetworkManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 60
+        
+        let payload = ["email": email, "password": password]
+        guard let body = try? JSONSerialization.data(withJSONObject: payload) else {
+            completion(.failure(NSError(domain: "NetworkManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "Encode failed"])))
+            return
+        }
+        request.httpBody = body
+        
+        let startTime = Date()
+        
+        fastSession.dataTask(with: request) { data, response, error in
+            let duration = Date().timeIntervalSince(startTime)
+            print("⏱️ Login completed in \(String(format: "%.2f", duration))s")
+            
+            DispatchQueue.main.async {
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                guard let data = data,
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                    completion(.failure(NSError(domain: "NetworkManager", code: -3, userInfo: [NSLocalizedDescriptionKey: "No data"])))
+                    return
+                }
+                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+                    let msg = json["error"] as? String ?? "Login failed"
+                    completion(.failure(NSError(domain: "API", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: msg])))
+                    return
+                }
+                guard let userId = json["user_id"] as? String,
+                      let name = json["name"] as? String,
+                      let token = json["token"] as? String else {
+                    completion(.failure(NSError(domain: "NetworkManager", code: -4, userInfo: [NSLocalizedDescriptionKey: "Invalid response"])))
+                    return
+                }
+                self.saveToken(token)
+                print("✅ Login successful!")
+                completion(.success((userId, name, token)))
+            }
+        }.resume()
+    }
+    
+    // 获取登录方式
+    func getLoginMethods(completion: @escaping (Result<[String], Error>) -> Void) {
+        guard let url = URL(string: "\(baseURL)/get-login-methods") else {
+            completion(.failure(NSError(domain: "NetworkManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        
+        var request = createAuthenticatedRequest(url: url)
+        request.httpMethod = "GET"
+        
+        session.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("❌ Get login methods error: \(error)")
+                    completion(.failure(error))
+                    return
+                }
+                
+                guard let data = data else {
+                    completion(.failure(NSError(domain: "NetworkManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("📡 Get login methods status: \(httpResponse.statusCode)")
+                    
+                    if httpResponse.statusCode == 401 {
+                        self.clearToken()
+                        completion(.failure(NSError(domain: "API", code: 401, userInfo: [NSLocalizedDescriptionKey: "Authentication required"])))
+                        return
+                    }
+                    
+                    if httpResponse.statusCode != 200 {
+                        completion(.failure(NSError(domain: "API", code: httpResponse.statusCode, userInfo: [NSLocalizedDescriptionKey: "Failed to get login methods"])))
+                        return
+                    }
+                }
+                
+                do {
+                    let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                    let methods = json?["login_methods"] as? [String] ?? []
+                    print("✅ Login methods: \(methods)")
+                    completion(.success(methods))
+                } catch {
+                    print("❌ JSON parsing error: \(error)")
+                    completion(.failure(error))
+                }
+            }
+        }.resume()
+    }
+    // 连接 Email/Password
+    func linkEmailPassword(password: String, completion: @escaping (Bool, String?) -> Void) {
+        guard let url = URL(string: "\(baseURL)/link-email-password") else {
+            completion(false, "Invalid URL")
+            return
+        }
+        
+        var request = createAuthenticatedRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let payload = ["password": password]
+        
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        } catch {
+            completion(false, "Failed to encode data")
+            return
+        }
+        
+        session.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    print("❌ Link email/password error: \(error)")
+                    completion(false, error.localizedDescription)
+                    return
+                }
+                
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("📡 Link email/password status: \(httpResponse.statusCode)")
+                    
+                    if httpResponse.statusCode == 401 {
+                        self.clearToken()
+                        completion(false, "Authentication required")
+                        return
+                    }
+                    
+                    if httpResponse.statusCode == 200 {
+                        print("✅ Email/password linked successfully")
+                        completion(true, nil)
+                    } else {
+                        // 尝试获取错误消息
+                        if let data = data,
+                           let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                           let errorMsg = json["error"] as? String {
+                            completion(false, errorMsg)
+                        } else {
+                            completion(false, "Failed to link email/password")
+                        }
+                    }
+                } else {
+                    completion(false, "Unknown error")
+                }
+            }
+        }.resume()
+    }
+    
+    
+    
+    
+    
+    
+    
     
     // MARK: - Image Upload
     
@@ -750,6 +958,7 @@ class NetworkManager {
     
     // MARK: - Apple Sign in
     func appleLogin(email: String, identityToken: String, completion: @escaping (Result<(userId: String, name: String, token: String), Error>) -> Void) {
+        print("🍎 Apple login initiated for: \(email)")
         guard let url = URL(string: "\(baseURL)/apple_login") else {
             completion(.failure(NSError(domain: "NetworkManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
@@ -758,7 +967,7 @@ class NetworkManager {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
+        request.timeoutInterval = 15
         let payload = [
             "email": email,
             "identityToken": identityToken
@@ -771,7 +980,7 @@ class NetworkManager {
             return
         }
         
-        session.dataTask(with: request) { data, response, error in
+        fastSession.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     completion(.failure(error))

@@ -4,344 +4,269 @@ struct BeautifulNutritionView: View {
     let nutritionText: String
     @State private var nutritionItems: [NutritionItem] = []
     @State private var hasInitialized = false
-    
+
     var caloriesItem: NutritionItem? {
         nutritionItems.first { $0.name.lowercased().contains("calorie") }
     }
-    
-    var otherItems: [NutritionItem] {
-        nutritionItems.filter { !$0.name.lowercased().contains("calorie") }
-    }
-    
-    var hasValidNutrition: Bool {
-        !nutritionItems.isEmpty && nutritionItems.contains { item in
-            if let value = Double(item.value), value > 0 {
-                return true
-            }
-            return false
+
+    var gridItems: [NutritionItem] {
+        let order = ["protein", "fat", "carb", "fiber", "sugar", "sodium"]
+        return order.compactMap { keyword in
+            nutritionItems.first { $0.name.lowercased().contains(keyword) }
         }
     }
-    
+
+    var hasValidNutrition: Bool {
+        nutritionItems.contains { Double($0.value) ?? 0 > 0 }
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Header
-            HStack {
-                Image(systemName: "chart.pie.fill")
-                    .foregroundColor(.orange)
-                    .font(.title2)
-                
-                Text("Nutrition Facts")
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
-                
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Rectangle().fill(Color.orange).frame(width: 3, height: 18).cornerRadius(2)
+                Text("NUTRITION")
+                    .font(.system(size: 11, weight: .heavy, design: .monospaced))
+                    .foregroundColor(.orange).kerning(3)
                 Spacer()
             }
-            
+            .padding(.bottom, 16)
+
             if hasValidNutrition {
-                // Calories Highlight (if available)
-                if let calories = caloriesItem {
-                    CaloriesHighlightCard(item: calories)
+                if let cal = caloriesItem {
+                    CaloriesBigRow(item: cal).padding(.bottom, 20)
                 }
-                
-                // Other Nutrients Grid
-                if !otherItems.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Detailed Breakdown")
-                            .font(.headline)
-                            .foregroundColor(.white.opacity(0.9))
-                        
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 12) {
-                            ForEach(otherItems.prefix(6)) { item in
-                                NutrientCard(item: item)
-                            }
+                if !gridItems.isEmpty {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ], spacing: 16) {
+                        ForEach(gridItems) { item in
+                            NutrientFlatCell(item: item)
                         }
                     }
                 }
             } else {
-                // Loading or empty state
-                VStack(spacing: 16) {
-                    Image(systemName: "chart.pie")
-                        .font(.system(size: 40))
-                        .foregroundColor(.orange.opacity(0.6))
-                    
-                    Text("Nutrition data unavailable")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    Text("Processing nutrition information...")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
+                emptyState
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(
-                            LinearGradient(
-                                colors: [.orange.opacity(0.3), .orange.opacity(0.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                )
-        )
+        .padding(.vertical, 16).padding(.horizontal, 4)
         .onAppear {
-            if !hasInitialized {
-                hasInitialized = true
-                parseNutritionSimple()
-            }
+            if !hasInitialized { hasInitialized = true; parseNutrition() }
         }
-        .onChange(of: nutritionText) { oldValue, newValue in
-            if newValue != oldValue {
-                parseNutritionSimple()
-            }
-        }
+        .onChange(of: nutritionText) { _, _ in parseNutrition() }
     }
-    
-    // MARK: - Enhanced Nutrition Parsing
-    
-    private func parseNutritionSimple() {
+
+    var emptyState: some View {
+        HStack {
+            Spacer()
+            VStack(spacing: 8) {
+                Image(systemName: "chart.bar").font(.system(size: 32)).foregroundColor(.white.opacity(0.15))
+                Text("No nutrition data").font(.caption).foregroundColor(.white.opacity(0.3))
+            }
+            Spacer()
+        }
+        .padding(.vertical, 32)
+    }
+
+    private func parseNutrition() {
         var items: [NutritionItem] = []
-        
-        // Handle both \n and \r\n line endings
-        let lines = nutritionText.components(separatedBy: CharacterSet.newlines)
-        
-        for line in lines {
+        for line in nutritionText.components(separatedBy: CharacterSet.newlines) {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            
-            // Skip empty lines
-            if trimmed.isEmpty {
-                continue
-            }
-            
-            // Try to parse lines with | separator
-            if trimmed.contains("|") {
-                let parts = trimmed.components(separatedBy: "|")
-                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                
-                if parts.count >= 3 {
-                    let name = cleanNutrientName(parts[0])
-                    let valueStr = cleanValueString(parts[1])
-                    let unit = parts[2]
-                    
-                    // Validate that this is a nutrition item (not an ID or other data)
-                    if isValidNutrientName(name) && !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
-                        let item = NutritionItem(
-                            name: name,
-                            value: valueStr,
-                            unit: unit,
-                            reasoning: nil
-                        )
-                        items.append(item)
-                    }
-                } else if parts.count == 2 {
-                    // Handle format without unit (e.g., "Calories|450")
-                    let name = cleanNutrientName(parts[0])
-                    let valueStr = cleanValueString(parts[1])
-                    
-                    if isValidNutrientName(name) && !valueStr.isEmpty && (Double(valueStr) != nil || Int(valueStr) != nil) {
-                        let unit = guessUnit(for: name)
-                        let item = NutritionItem(
-                            name: name,
-                            value: valueStr,
-                            unit: unit,
-                            reasoning: nil
-                        )
-                        items.append(item)
-                    }
-                }
-            }
+            guard trimmed.contains("|") else { continue }
+            let parts = trimmed.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            guard parts.count >= 2 else { continue }
+            let name = parts[0].replacingOccurrences(of: "*", with: "").trimmingCharacters(in: .whitespaces)
+            let valueStr = parts[1].replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces)
+            // ✅ 修复：第三列是数字（参考值）时忽略，改用默认单位
+            let rawUnit = parts.count >= 3 ? parts[2] : ""
+            let unit = (Double(rawUnit) != nil || rawUnit.isEmpty) ? guessUnit(for: name) : rawUnit
+            guard isValidNutrient(name), Double(valueStr) != nil else { continue }
+            items.append(NutritionItem(name: name, value: valueStr, unit: unit, reasoning: nil))
         }
-        
-        // If we got valid items, use them
-        if !items.isEmpty {
-            DispatchQueue.main.async {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    self.nutritionItems = items
-                }
-            }
-        } else {
-            // Use default nutrition with zero values
-            items = getDefaultNutrition()
-            
-            DispatchQueue.main.async {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    self.nutritionItems = items
-                }
-            }
+        if items.isEmpty { items = defaultNutrition() }
+        DispatchQueue.main.async {
+            withAnimation(.easeInOut(duration: 0.3)) { self.nutritionItems = items }
         }
     }
-    
-    private func isValidNutrientName(_ name: String) -> Bool {
-        let validNutrients = ["calorie", "protein", "fat", "carb", "fiber", "fibre", "sugar", "sodium", "salt", "energy", "kcal"]
-        let lowercased = name.lowercased()
-        
-        // Check if name contains any valid nutrient word
-        for nutrient in validNutrients {
-            if lowercased.contains(nutrient) {
-                return true
-            }
-        }
-        
-        // Reject if it looks like an ID or random text
-        if lowercased.contains("id") || Int(name) != nil {
-            return false
-        }
-        
-        return false
+
+    private func isValidNutrient(_ name: String) -> Bool {
+        let keywords = ["calorie", "protein", "fat", "carb", "fiber", "fibre", "sugar", "sodium", "salt", "energy", "kcal"]
+        return keywords.contains { name.lowercased().contains($0) }
     }
-    
-    private func cleanNutrientName(_ name: String) -> String {
-        // Clean up nutrient names
-        return name
-            .replacingOccurrences(of: "**", with: "")
-            .replacingOccurrences(of: "*", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+    private func guessUnit(for name: String) -> String {
+        let l = name.lowercased()
+        if l.contains("calorie") || l.contains("energy") { return "kcal" }
+        if l.contains("sodium") { return "mg" }
+        return "g"
     }
-    
-    private func cleanValueString(_ value: String) -> String {
-        // Clean up value strings - remove commas, spaces, etc.
-        return value
-            .replacingOccurrences(of: ",", with: "")
-            .replacingOccurrences(of: " ", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-    
-    private func guessUnit(for nutrient: String) -> String {
-        let lowercased = nutrient.lowercased()
-        if lowercased.contains("calorie") || lowercased.contains("energy") {
-            return "kcal"
-        } else if lowercased.contains("sodium") {
-            return "mg"
-        } else {
-            return "g"
-        }
-    }
-    
-    private func getDefaultNutrition() -> [NutritionItem] {
-        return [
-            NutritionItem(name: "Calories", value: "0", unit: "kcal", reasoning: nil),
-            NutritionItem(name: "Protein", value: "0", unit: "g", reasoning: nil),
-            NutritionItem(name: "Fat", value: "0", unit: "g", reasoning: nil),
-            NutritionItem(name: "Carbohydrates", value: "0", unit: "g", reasoning: nil),
-            NutritionItem(name: "Fiber", value: "0", unit: "g", reasoning: nil),
-            NutritionItem(name: "Sugar", value: "0", unit: "g", reasoning: nil),
-            NutritionItem(name: "Sodium", value: "0", unit: "mg", reasoning: nil)
+
+    private func defaultNutrition() -> [NutritionItem] {
+        [
+            NutritionItem(name: "Calories",      value: "0", unit: "kcal", reasoning: nil),
+            NutritionItem(name: "Protein",       value: "0", unit: "g",    reasoning: nil),
+            NutritionItem(name: "Fat",           value: "0", unit: "g",    reasoning: nil),
+            NutritionItem(name: "Carbohydrates", value: "0", unit: "g",    reasoning: nil),
+            NutritionItem(name: "Fiber",         value: "0", unit: "g",    reasoning: nil),
+            NutritionItem(name: "Sugar",         value: "0", unit: "g",    reasoning: nil),
+            NutritionItem(name: "Sodium",        value: "0", unit: "mg",   reasoning: nil),
         ]
     }
 }
 
-// MARK: - Supporting Views (keep existing)
+// MARK: - 卡路里大数字
+
+struct CaloriesBigRow: View {
+    let item: NutritionItem
+
+    var displayUnit: String {
+        Double(item.unit) != nil || item.unit.isEmpty ? "kcal" : item.unit
+    }
+
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(item.value)
+                    .font(.system(size: 52, weight: .black, design: .rounded))
+                    .foregroundColor(.white)
+                HStack(spacing: 4) {
+                    Text(displayUnit.uppercased())
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(.orange).kerning(2)
+                    Text("·").foregroundColor(.white.opacity(0.2))
+                    Text("CALORIES")
+                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.4)).kerning(1)
+                }
+            }
+            Spacer()
+            Image(systemName: "flame.fill").font(.system(size: 36))
+                .foregroundStyle(LinearGradient(colors: [.orange, .yellow], startPoint: .bottom, endPoint: .top))
+                .opacity(0.6)
+        }
+        .padding(.horizontal, 4)
+    }
+}
+
+// MARK: - 无框营养素格子
+
+struct NutrientFlatCell: View {
+    let item: NutritionItem
+
+    var label: String {
+        let n = item.name.lowercased()
+        if n.contains("protein")                      { return "Protein" }
+        if n.contains("fat")                          { return "Fat" }
+        if n.contains("carb")                         { return "Carbs" }
+        if n.contains("fiber") || n.contains("fibre") { return "Fiber" }
+        if n.contains("sugar")                        { return "Sugar" }
+        if n.contains("sodium")                       { return "Sodium" }
+        return item.name
+    }
+
+    var accentColor: Color {
+        let n = item.name.lowercased()
+        if n.contains("protein") { return Color(red: 0.3, green: 0.7, blue: 1.0) }
+        if n.contains("fat")     { return Color(red: 1.0, green: 0.75, blue: 0.3) }
+        if n.contains("carb")    { return Color(red: 0.4, green: 0.9, blue: 0.5) }
+        if n.contains("fiber")   { return Color(red: 0.6, green: 0.4, blue: 0.9) }
+        if n.contains("sugar")   { return Color(red: 1.0, green: 0.4, blue: 0.6) }
+        if n.contains("sodium")  { return Color(red: 1.0, green: 0.5, blue: 0.4) }
+        return .gray
+    }
+
+    var displayUnit: String {
+        if Double(item.unit) != nil || item.unit.isEmpty {
+            let n = item.name.lowercased()
+            if n.contains("calorie") || n.contains("energy") { return "kcal" }
+            if n.contains("sodium") { return "mg" }
+            return "g"
+        }
+        return item.unit
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label.uppercased())
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(accentColor)
+                .kerning(0.5)
+            HStack(alignment: .bottom, spacing: 2) {
+                Text(item.value)
+                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+                Text(displayUnit)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white.opacity(0.5))
+                    .padding(.bottom, 2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - 旧版组件保留（兼容）
 
 struct CaloriesHighlightCard: View {
     let item: NutritionItem
-    
     var body: some View {
         HStack(spacing: 16) {
-            // Icon
             ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.red.opacity(0.3), .orange.opacity(0.3)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 60, height: 60)
-                
-                Image(systemName: "flame.fill")
-                    .font(.title2)
-                    .foregroundColor(.orange)
+                Circle().fill(LinearGradient(colors: [.red.opacity(0.3), .orange.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 60, height: 60)
+                Image(systemName: "flame.fill").font(.title2).foregroundColor(.orange)
             }
-            
-            // Content
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .bottom, spacing: 4) {
-                    Text(item.value)
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                    
-                    Text(item.unit)
-                        .font(.title3)
-                        .foregroundColor(.gray)
-                        .padding(.bottom, 4)
+                    Text(item.value).font(.system(size: 32, weight: .bold, design: .rounded)).foregroundColor(.white)
+                    Text(item.unit).font(.title3).foregroundColor(.gray).padding(.bottom, 4)
                 }
-                
-                Text(item.name)
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
+                Text(item.name).font(.subheadline).foregroundColor(.gray)
             }
-            
             Spacer()
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(
-                    LinearGradient(
-                        colors: [.red.opacity(0.1), .orange.opacity(0.05)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.orange.opacity(0.2), lineWidth: 1)
-                )
-        )
+        .background(RoundedRectangle(cornerRadius: 16).fill(LinearGradient(colors: [.red.opacity(0.1), .orange.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing)).overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.orange.opacity(0.2), lineWidth: 1)))
     }
 }
 
 struct NutrientCard: View {
     let item: NutritionItem
-    
     var body: some View {
         VStack(spacing: 12) {
-            // Icon
-            Image(systemName: item.icon)
-                .font(.title2)
-                .foregroundColor(item.color)
-            
-            // Value
+            Image(systemName: item.icon).font(.title2).foregroundColor(item.color)
             VStack(spacing: 2) {
                 HStack(alignment: .bottom, spacing: 2) {
-                    Text(item.value)
-                        .font(.title3.bold())
-                        .foregroundColor(.white)
-                    
-                    Text(item.unit)
-                        .font(.caption)
-                        .foregroundColor(.gray)
+                    Text(item.value).font(.title3.bold()).foregroundColor(.white)
+                    Text(item.unit).font(.caption).foregroundColor(.gray)
                 }
-                
-                Text(item.name)
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                Text(item.name).font(.caption).foregroundColor(.gray).multilineTextAlignment(.center).lineLimit(2)
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(item.color.opacity(0.1))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(item.color.opacity(0.2), lineWidth: 1)
-                )
-        )
+        .frame(maxWidth: .infinity).padding(.vertical, 16)
+        .background(RoundedRectangle(cornerRadius: 12).fill(item.color.opacity(0.1)).overlay(RoundedRectangle(cornerRadius: 12).stroke(item.color.opacity(0.2), lineWidth: 1)))
     }
+}
+
+struct MacroProgressRow: View {
+    let item: NutritionItem
+    let animate: Bool
+    var body: some View { EmptyView() }
+}
+
+struct MicroNutrientCell: View {
+    let item: NutritionItem
+    var body: some View { EmptyView() }
+}
+
+struct UnifiedNutrientRow: View {
+    let item: NutritionItem
+    let animate: Bool
+    let progress: Double?
+    let accentColor: Color
+    let label: String
+    let subtitle: String?
+    var body: some View { EmptyView() }
 }

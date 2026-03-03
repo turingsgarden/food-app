@@ -261,7 +261,7 @@ struct DashboardView: View {
                 MealHistoryView()
             }
             .sheet(isPresented: $showUploadMeal) {
-                UploadMealView()
+                BatchUploadView()
             }
             .sheet(isPresented: $showProfile) {
                 ProfileView()
