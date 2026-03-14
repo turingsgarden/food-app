@@ -404,7 +404,7 @@ def analyze():
         if file_size < 1024:  # Too small
             return jsonify({"error": "Image too small. Please use a clearer image"}), 400
 
-        filename = f"image_{int(time.time())}.png"
+        filename = f"image_{int(time.time() * 1000)}.png"
         image_path = os.path.join("/tmp", filename)
         image_file.save(image_path)
 
