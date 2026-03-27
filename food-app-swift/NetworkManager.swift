@@ -689,41 +689,44 @@ class NetworkManager {
     }
     
     func recalculateNutrition(ingredients: String, completion: @escaping (Result<NutritionRecalculationResult, Error>) -> Void) {
+        recalculateNutritionBackground(ingredients: ingredients, completion: completion)
+    }
+     
+    // MARK: - 新的后台版本，timeout 120秒
+    func recalculateNutritionBackground(ingredients: String, completion: @escaping (Result<NutritionRecalculationResult, Error>) -> Void) {
         guard let url = URL(string: "\(baseURL)/recalculate-nutrition") else {
             completion(.failure(NSError(domain: "NetworkManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
             return
         }
-        
+     
         let payload: [String: Any] = ["ingredients": ingredients]
-        
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
             completion(.failure(NSError(domain: "NetworkManager", code: -2, userInfo: [NSLocalizedDescriptionKey: "Failed to encode data"])))
             return
         }
-        
+     
         var request = createAuthenticatedRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = jsonData
-        
-        session.dataTask(with: request) { data, response, error in
+        request.timeoutInterval = 120  // ← 关键：给 Gemini 足够时间
+     
+        // 用 fastSession（resource timeout 120s）
+        fastSession.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {
                     completion(.failure(error))
                     return
                 }
-                
                 guard let data = data else {
                     completion(.failure(NSError(domain: "NetworkManager", code: -3, userInfo: [NSLocalizedDescriptionKey: "No data received"])))
                     return
                 }
-                
                 if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
                     self.clearToken()
                     completion(.failure(NSError(domain: "API", code: 401, userInfo: [NSLocalizedDescriptionKey: "Authentication required"])))
                     return
                 }
-                
                 do {
                     let result = try JSONDecoder().decode(NutritionRecalculationResult.self, from: data)
                     completion(.success(result))
@@ -733,7 +736,6 @@ class NetworkManager {
             }
         }.resume()
     }
-    
     func updateMeal(mealId: String, dishName: String, ingredients: String, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "\(baseURL)/update-meal") else {
             completion(false)

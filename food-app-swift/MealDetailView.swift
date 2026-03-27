@@ -6,6 +6,7 @@ struct MealDetailView: View {
     @State private var editedDishName: String = ""
     @State private var editedVisibleIngredients: [EditableIngredient] = []
     @State private var editedHiddenIngredients: [EditableIngredient] = []
+    @State private var quantityInputs: [String: String] = [:]
     @State private var showDeleteAlert = false
     @State private var isDeleting = false
     @State private var isSaving = false
@@ -68,6 +69,14 @@ struct MealDetailView: View {
         }
         .preferredColorScheme(.dark)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+            }
+        }
         .alert("Delete Meal", isPresented: $showDeleteAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) { deleteMeal() }
@@ -83,23 +92,22 @@ struct MealDetailView: View {
 
     var heroImage: some View {
         GeometryReader { geo in
+            let width = geo.size.width > 0 ? geo.size.width : UIScreen.main.bounds.width
             ZStack(alignment: .bottom) {
                 if let base64 = meal.image_full, let uiImage = decodeBase64ToUIImage(base64) {
                     Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: geo.size.width, height: 350)
-                        .clipped()
+                        .resizable().scaledToFill()
+                        .frame(width: width, height: 350).clipped()
                 } else {
                     Rectangle()
                         .fill(LinearGradient(gradient: Gradient(colors: [.orange.opacity(0.4), .orange.opacity(0.2)]), startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(width: geo.size.width, height: 350)
+                        .frame(width: width, height: 350)
                         .overlay(Image(systemName: "photo").font(.system(size: 60)).foregroundColor(.white.opacity(0.5)))
                 }
                 LinearGradient(gradient: Gradient(colors: [.clear, .black.opacity(0.7), .black.opacity(0.9)]), startPoint: .top, endPoint: .bottom)
-                    .frame(width: geo.size.width, height: 150)
+                    .frame(width: width, height: 150)
             }
-            .frame(width: geo.size.width, height: 350)
+            .frame(width: width, height: 350)
             .overlay(alignment: .topTrailing) {
                 HStack(spacing: 12) {
                     ActionButton(icon: "square.and.arrow.up") { showShareSheet = true }
@@ -143,39 +151,37 @@ struct MealDetailView: View {
         if isEditing {
             editingIngredientsView
         } else {
-            // 非编辑：合并显示表格
             if !allDisplayIngredients.isEmpty {
                 IngredientTableView(ingredients: allDisplayIngredients)
             }
         }
     }
 
+    // MARK: - Editing Ingredients View
+    // ✅ TextField 直接绑定 quantityInputs 字典，完全绕开子 view binding 问题
+
     var editingIngredientsView: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Visible
             if !editedVisibleIngredients.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("VISIBLE")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(.green.opacity(0.7)).kerning(2)
-                    ForEach($editedVisibleIngredients) { $ingredient in
-                        QuantityOnlyIngredientRow(ingredient: $ingredient, onDelete: nil)
+                    ForEach(editedVisibleIngredients, id: \.id) { ing in
+                        ingredientInputRow(ing: ing)
                     }
                 }
             }
-
-            // Hidden
             if !editedHiddenIngredients.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("HIDDEN")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(.pink.opacity(0.7)).kerning(2)
-                    ForEach($editedHiddenIngredients) { $ingredient in
-                        QuantityOnlyIngredientRow(ingredient: $ingredient, onDelete: nil)
+                    ForEach(editedHiddenIngredients, id: \.id) { ing in
+                        ingredientInputRow(ing: ing)
                     }
                 }
             }
-
             HStack(spacing: 6) {
                 Image(systemName: "info.circle.fill").font(.caption).foregroundColor(.orange.opacity(0.8))
                 Text("Only quantities can be edited").font(.caption).foregroundColor(.gray)
@@ -185,6 +191,69 @@ struct MealDetailView: View {
         }
         .padding(16)
         .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.04)).overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.07), lineWidth: 1)))
+    }
+
+    // ✅ 每行的 UI，TextField 直接读写 quantityInputs[ing.id]
+    func ingredientInputRow(ing: EditableIngredient) -> some View {
+        HStack(spacing: 12) {
+            // Name (read-only)
+            HStack {
+                Text(ing.name)
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.9))
+                Spacer()
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.white.opacity(0.04))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.1), lineWidth: 0.5))
+            )
+
+            // ✅ 直接绑定 quantityInputs 字典，没有任何子 view 传递
+            TextField("0", text: Binding(
+                get: { quantityInputs[ing.id] ?? ing.quantity },
+                set: { quantityInputs[ing.id] = $0 }
+            ))
+            .font(.subheadline)
+            .foregroundColor(.white)
+            .multilineTextAlignment(.center)
+            .frame(width: 70)
+            .padding(.horizontal, 8).padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.orange.opacity(0.1))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.orange.opacity(0.3), lineWidth: 1))
+            )
+            .keyboardType(.decimalPad)
+
+            // Unit (read-only)
+            Text(displayUnit(for: ing))
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.7))
+                .frame(width: 60)
+                .padding(.horizontal, 8).padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.white.opacity(0.04))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.1), lineWidth: 0.5))
+                )
+        }
+    }
+
+    func displayUnit(for ing: EditableIngredient) -> String {
+        let u = ing.unit.trimmingCharacters(in: .whitespaces)
+        if Double(u) != nil || u.isEmpty { return guessUnit(for: ing.name) }
+        return u
+    }
+
+    func guessUnit(for name: String) -> String {
+        let n = name.lowercased()
+        if n.contains("bread") || n.contains("egg") || n.contains("slice") { return "pcs" }
+        if n.contains("salt") || n.contains("pepper") || n.contains("spice") || n.contains("powder") { return "tsp" }
+        if n.contains("oil") || n.contains("sauce") || n.contains("milk") { return "ml" }
+        return "g"
     }
 
     // MARK: - Action Buttons
@@ -229,7 +298,6 @@ struct MealDetailView: View {
                     .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]), startPoint: .topLeading, endPoint: .bottomTrailing))
                     .cornerRadius(12)
                 }
-
                 Button(action: { showDeleteAlert = true }) {
                     HStack {
                         if isDeleting {
@@ -256,11 +324,18 @@ struct MealDetailView: View {
     }
 
     func startEditing() {
+        print("🔍 RAW image_description:\n\(meal.image_description)")
+        print("🔍 RAW hidden:\n\(meal.hidden_ingredients ?? "nil")")
         isEditing = true
         editedDishName = meal.dish_prediction
         editedVisibleIngredients = parseIngredientsToEditableFiltered(from: meal.image_description)
         editedHiddenIngredients = parseIngredientsToEditableFiltered(from: meal.hidden_ingredients ?? "")
         updatedNutritionInfo = meal.nutrition_info
+        // ✅ 初始化 quantityInputs
+        quantityInputs = [:]
+        for ing in editedVisibleIngredients + editedHiddenIngredients {
+            quantityInputs[ing.id] = ing.quantity
+        }
     }
 
     func cancelEditing() {
@@ -268,63 +343,65 @@ struct MealDetailView: View {
         editedDishName = ""
         editedVisibleIngredients = []
         editedHiddenIngredients = []
+        quantityInputs = [:]
         updatedNutritionInfo = ""
     }
 
     func saveChanges() {
-        isSaving = true; isRecalculatingNutrition = true
-        let ingredientsList = allEditedIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit)" }.joined(separator: "\n")
-        NetworkManager.shared.recalculateNutrition(ingredients: ingredientsList) { result in
-            self.isRecalculatingNutrition = false
-            switch result {
-            case .success(let data):
-                self.updatedNutritionInfo = data.nutrition_info
-                self.meal.nutrition_info = data.nutrition_info
-                self.performSave()
-            case .failure:
-                self.performSave()
-            }
-        }
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        executeSave()
     }
 
-    private func performSave() {
+    private func executeSave() {
+        let ingredientsList = (editedVisibleIngredients + editedHiddenIngredients)
+            .map { ing in
+                let qty = quantityInputs[ing.id] ?? ing.quantity
+                let unit = displayUnit(for: ing)  // ✅
+                return "\(ing.name) | \(qty) | \(unit)"
+            }
+            .joined(separator: "\n")
+
+        print("💾 saveChanges called")
+        print("📝 ingredientsList: \(ingredientsList)")
+        print("🥘 mealId: \(meal._id)")
+
         meal.dish_prediction = editedDishName
-        meal.image_description = editedVisibleIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit) | User edited" }.joined(separator: "\n")
-        let hiddenStr = editedHiddenIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit) | User edited" }.joined(separator: "\n")
-        meal.hidden_ingredients = hiddenStr
-        if !updatedNutritionInfo.isEmpty { meal.nutrition_info = updatedNutritionInfo }
-        updateMealInBackend(hiddenIngredients: hiddenStr)
-    }
-
-    func updateMealInBackend(hiddenIngredients: String) {
-        guard let token = SessionManager.shared.getAuthToken() else { self.isSaving = false; return }
-        let payload: [String: Any] = [
-            "meal_id": meal._id, "dish_prediction": meal.dish_prediction,
-            "image_description": meal.image_description, "hidden_ingredients": hiddenIngredients,
-            "nutrition_info": meal.nutrition_info, "meal_type": meal.meal_type ?? "LUNCH"
-        ]
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/update-meal"),
-              let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
-            self.isSaving = false; return
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "PUT"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.httpBody = jsonData
-        URLSession.shared.dataTask(with: request) { _, response, _ in
-            DispatchQueue.main.async {
-                self.isSaving = false
-                if (response as? HTTPURLResponse)?.statusCode == 200 {
-                    self.isEditing = false
-                    self.toastMessage = "Meal updated successfully!"
-                    self.showSuccessToast = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.showSuccessToast = false }
-                    NotificationCenter.default.post(name: Notification.Name("MealUpdated"), object: nil)
-                    NotificationCenter.default.post(name: Notification.Name("MealSaved"), object: nil)
-                }
+        // visible — 用 displayUnit 函数确保存的是真实单位
+        meal.image_description = editedVisibleIngredients
+            .map { ing in
+                let qty = quantityInputs[ing.id] ?? ing.quantity
+                let unit = displayUnit(for: ing)  // ✅ 用已有的 displayUnit 函数
+                return "\(ing.name) | \(qty) | \(unit) | User edited"
             }
-        }.resume()
+            .joined(separator: "\n")
+
+        let hiddenStr = editedHiddenIngredients
+            .map { ing in
+                let qty = quantityInputs[ing.id] ?? ing.quantity
+                let unit = displayUnit(for: ing)  // ✅ 同上
+                return "\(ing.name) | \(qty) | \(unit) | User edited"
+            }
+            .joined(separator: "\n")
+        let mealDataForUpdate: [String: Any] = [
+            "meal_id": meal._id,
+            "dish_prediction": meal.dish_prediction,
+            "image_description": meal.image_description,
+            "hidden_ingredients": hiddenStr,
+            "nutrition_info": meal.nutrition_info,
+            "meal_type": meal.meal_type ?? "LUNCH"
+        ]
+
+        isEditing = false
+        dismiss()
+
+        RecalculationManager.shared.startRecalculation(
+            mealId: meal._id,
+            ingredients: ingredientsList,
+            mealData: mealDataForUpdate
+        ) { _ in
+            NotificationCenter.default.post(name: Notification.Name("MealUpdated"), object: nil)
+            NotificationCenter.default.post(name: Notification.Name("MealSaved"), object: nil)
+        }
     }
 
     func deleteMeal() {
@@ -357,8 +434,23 @@ struct MealDetailView: View {
         filteredIngredientLines(from: text).compactMap { line in
             let clean = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
             let parts = clean.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-            guard parts.count >= 3 else { return nil }
-            return EditableIngredient(id: UUID().uuidString, name: parts[0], quantity: parts[1], unit: parts[2])
+            guard parts.count >= 2 else { return nil }
+
+            let name = parts[0]
+            let quantity = parts[1]
+
+            // ✅ 找第一个不是数字、不是"User edited"的部分作为unit
+            var unit = ""
+            for i in 2..<parts.count {
+                let p = parts[i]
+                if p.lowercased() == "user edited" { continue }
+                if Double(p) != nil { continue }  // 跳过纯数字
+                unit = p
+                break
+            }
+
+            guard !name.isEmpty else { return nil }
+            return EditableIngredient(id: name, name: name, quantity: quantity, unit: unit)
         }
     }
 

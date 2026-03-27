@@ -4,6 +4,7 @@ struct BeautifulNutritionView: View {
     let nutritionText: String
     @State private var nutritionItems: [NutritionItem] = []
     @State private var hasInitialized = false
+    @State private var selectedItem: NutritionItem? = nil
 
     var caloriesItem: NutritionItem? {
         nutritionItems.first { $0.name.lowercased().contains("calorie") }
@@ -28,12 +29,17 @@ struct BeautifulNutritionView: View {
                     .font(.system(size: 11, weight: .heavy, design: .monospaced))
                     .foregroundColor(.orange).kerning(3)
                 Spacer()
+                Text("tap for range")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.2))
+                    .kerning(1)
             }
             .padding(.bottom, 16)
 
             if hasValidNutrition {
                 if let cal = caloriesItem {
-                    CaloriesBigRow(item: cal).padding(.bottom, 20)
+                    CaloriesBigRow(item: cal, onTap: { selectedItem = cal })
+                        .padding(.bottom, 20)
                 }
                 if !gridItems.isEmpty {
                     LazyVGrid(columns: [
@@ -42,7 +48,7 @@ struct BeautifulNutritionView: View {
                         GridItem(.flexible())
                     ], spacing: 16) {
                         ForEach(gridItems) { item in
-                            NutrientFlatCell(item: item)
+                            NutrientFlatCell(item: item, onTap: { selectedItem = item })
                         }
                     }
                 }
@@ -55,6 +61,12 @@ struct BeautifulNutritionView: View {
             if !hasInitialized { hasInitialized = true; parseNutrition() }
         }
         .onChange(of: nutritionText) { _, _ in parseNutrition() }
+        // Range popup
+        .overlay {
+            if let item = selectedItem {
+                NutrientRangePopup(item: item, onDismiss: { selectedItem = nil })
+            }
+        }
     }
 
     var emptyState: some View {
@@ -78,7 +90,6 @@ struct BeautifulNutritionView: View {
             guard parts.count >= 2 else { continue }
             let name = parts[0].replacingOccurrences(of: "*", with: "").trimmingCharacters(in: .whitespaces)
             let valueStr = parts[1].replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces)
-            // ✅ 修复：第三列是数字（参考值）时忽略，改用默认单位
             let rawUnit = parts.count >= 3 ? parts[2] : ""
             let unit = (Double(rawUnit) != nil || rawUnit.isEmpty) ? guessUnit(for: name) : rawUnit
             guard isValidNutrient(name), Double(valueStr) != nil else { continue }
@@ -115,37 +126,256 @@ struct BeautifulNutritionView: View {
     }
 }
 
+// MARK: - Range Popup
+
+struct NutrientRangePopup: View {
+    let item: NutritionItem
+    let onDismiss: () -> Void
+
+    var displayUnit: String {
+        if Double(item.unit) != nil || item.unit.isEmpty {
+            let n = item.name.lowercased()
+            if n.contains("calorie") || n.contains("energy") { return "kcal" }
+            if n.contains("sodium") { return "mg" }
+            return "g"
+        }
+        return item.unit
+    }
+
+    var label: String {
+        let n = item.name.lowercased()
+        if n.contains("calorie")  { return "Calories" }
+        if n.contains("protein")  { return "Protein" }
+        if n.contains("fat")      { return "Fat" }
+        if n.contains("carb")     { return "Carbohydrates" }
+        if n.contains("fiber")    { return "Fiber" }
+        if n.contains("sugar")    { return "Sugar" }
+        if n.contains("sodium")   { return "Sodium" }
+        return item.name
+    }
+
+    var accentColor: Color {
+        let n = item.name.lowercased()
+        if n.contains("calorie")  { return .orange }
+        if n.contains("protein")  { return Color(red: 0.3, green: 0.7, blue: 1.0) }
+        if n.contains("fat")      { return Color(red: 1.0, green: 0.75, blue: 0.3) }
+        if n.contains("carb")     { return Color(red: 0.4, green: 0.9, blue: 0.5) }
+        if n.contains("fiber")    { return Color(red: 0.6, green: 0.4, blue: 0.9) }
+        if n.contains("sugar")    { return Color(red: 1.0, green: 0.4, blue: 0.6) }
+        if n.contains("sodium")   { return Color(red: 1.0, green: 0.5, blue: 0.4) }
+        return .gray
+    }
+
+    // ±5% for calories/sodium, ±5g/mg for others
+    var rangeValues: (low: String, mid: String, high: String) {
+        guard let val = Double(item.value) else { return ("—", item.value, "—") }
+        let delta: Double = item.name.lowercased().contains("calorie") ? val * 0.05
+                          : item.name.lowercased().contains("sodium")  ? val * 0.05
+                          : 5.0
+        let low  = max(0, val - delta)
+        let high = val + delta
+        // Format: no decimals for calories/sodium, 1 decimal for others
+        let fmt: (Double) -> String = { v in
+            if item.name.lowercased().contains("calorie") || item.name.lowercased().contains("sodium") {
+                return String(Int(v.rounded()))
+            }
+            return String(format: "%.1f", v)
+        }
+        return (fmt(low), fmt(val), fmt(high))
+    }
+
+    // Simple health score: how "good" is this nutrient
+    var healthNote: String {
+        guard let val = Double(item.value) else { return "" }
+        let n = item.name.lowercased()
+        if n.contains("protein") {
+            return val >= 20 ? "✦ Good protein source" : "Low protein"
+        }
+        if n.contains("sodium") {
+            return val > 1500 ? "⚠ High sodium" : val < 600 ? "✦ Low sodium" : "Moderate sodium"
+        }
+        if n.contains("fiber") {
+            return val >= 5 ? "✦ Good fiber content" : "Low fiber"
+        }
+        if n.contains("sugar") {
+            return val > 20 ? "⚠ High sugar" : "✦ Low sugar"
+        }
+        if n.contains("fat") {
+            return val > 30 ? "⚠ High fat" : "✦ Moderate fat"
+        }
+        if n.contains("calorie") {
+            return val > 800 ? "⚠ High calorie meal" : val < 300 ? "✦ Light meal" : "Balanced meal"
+        }
+        return ""
+    }
+
+    var body: some View {
+        ZStack {
+            // Dim background
+            Color.black.opacity(0.6)
+                .ignoresSafeArea()
+                .onTapGesture { onDismiss() }
+
+            // Popup card
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(label.uppercased())
+                            .font(.system(size: 10, weight: .heavy, design: .monospaced))
+                            .foregroundColor(accentColor).kerning(2)
+                        Text("Estimated Range")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+                    Spacer()
+                    Button(action: onDismiss) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(.white.opacity(0.3))
+                    }
+                }
+                .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 16)
+
+                Divider().background(Color.white.opacity(0.08))
+
+                // Range display
+                HStack(alignment: .bottom, spacing: 0) {
+                    // Low
+                    VStack(spacing: 4) {
+                        Text("MIN")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.3)).kerning(1)
+                        Text(rangeValues.low)
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(.white.opacity(0.5))
+                        Text(displayUnit)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    // Center value
+                    VStack(spacing: 4) {
+                        Text("EST.")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(accentColor).kerning(1)
+                        Text(rangeValues.mid)
+                            .font(.system(size: 32, weight: .black, design: .rounded))
+                            .minimumScaleFactor(0.6)
+                            .lineLimit(1)
+                            .foregroundColor(.white)
+                        Text(displayUnit)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(accentColor)
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    // High
+                    VStack(spacing: 4) {
+                        Text("MAX")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.3)).kerning(1)
+                        Text(rangeValues.high)
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(.white.opacity(0.5))
+                        Text(displayUnit)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal, 20).padding(.vertical, 20)
+
+                // Range bar
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.white.opacity(0.08))
+                            .frame(height: 6)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(LinearGradient(colors: [accentColor.opacity(0.4), accentColor], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: geo.size.width * 0.6, height: 6)
+                            .offset(x: geo.size.width * 0.2)
+                        // Center dot
+                        Circle()
+                            .fill(accentColor)
+                            .frame(width: 12, height: 12)
+                            .offset(x: geo.size.width * 0.5 - 6)
+                    }
+                }
+                .frame(height: 12)
+                .padding(.horizontal, 20)
+
+                // Health note
+                if !healthNote.isEmpty {
+                    HStack(spacing: 6) {
+                        Text(healthNote)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(healthNote.contains("⚠") ? .orange : accentColor)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20).padding(.top, 12)
+                }
+
+                // Disclaimer
+                Text("Range is ±5% estimate based on typical preparation variation")
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.2))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20).padding(.top, 10).padding(.bottom, 20)
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(Color(red: 0.12, green: 0.12, blue: 0.16))
+                    .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.08), lineWidth: 1))
+            )
+            .padding(.horizontal, 24)
+            .shadow(color: .black.opacity(0.5), radius: 30)
+            .transition(.scale(scale: 0.9).combined(with: .opacity))
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: true)
+    }
+}
+
 // MARK: - 卡路里大数字
 
 struct CaloriesBigRow: View {
     let item: NutritionItem
+    var onTap: (() -> Void)? = nil
 
     var displayUnit: String {
         Double(item.unit) != nil || item.unit.isEmpty ? "kcal" : item.unit
     }
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(item.value)
-                    .font(.system(size: 52, weight: .black, design: .rounded))
-                    .foregroundColor(.white)
-                HStack(spacing: 4) {
-                    Text(displayUnit.uppercased())
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(.orange).kerning(2)
-                    Text("·").foregroundColor(.white.opacity(0.2))
-                    Text("CALORIES")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.4)).kerning(1)
+        Button(action: { onTap?() }) {
+            HStack(alignment: .bottom, spacing: 0) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.value)
+                        .font(.system(size: 52, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
+                    HStack(spacing: 4) {
+                        Text(displayUnit.uppercased())
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(.orange).kerning(2)
+                        Text("·").foregroundColor(.white.opacity(0.2))
+                        Text("CALORIES")
+                            .font(.system(size: 11, weight: .medium, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.4)).kerning(1)
+                        Image(systemName: "chevron.down.circle.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.orange.opacity(0.5))
+                    }
                 }
+                Spacer()
+                Image(systemName: "flame.fill").font(.system(size: 36))
+                    .foregroundStyle(LinearGradient(colors: [.orange, .yellow], startPoint: .bottom, endPoint: .top))
+                    .opacity(0.6)
             }
-            Spacer()
-            Image(systemName: "flame.fill").font(.system(size: 36))
-                .foregroundStyle(LinearGradient(colors: [.orange, .yellow], startPoint: .bottom, endPoint: .top))
-                .opacity(0.6)
+            .padding(.horizontal, 4)
         }
-        .padding(.horizontal, 4)
+        .buttonStyle(.plain)
     }
 }
 
@@ -153,6 +383,7 @@ struct CaloriesBigRow: View {
 
 struct NutrientFlatCell: View {
     let item: NutritionItem
+    var onTap: (() -> Void)? = nil
 
     var label: String {
         let n = item.name.lowercased()
@@ -187,24 +418,32 @@ struct NutrientFlatCell: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label.uppercased())
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundColor(accentColor)
-                .kerning(0.5)
-            HStack(alignment: .bottom, spacing: 2) {
-                Text(item.value)
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundColor(.white)
-                    .minimumScaleFactor(0.7)
-                    .lineLimit(1)
-                Text(displayUnit)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.white.opacity(0.5))
-                    .padding(.bottom, 2)
+        Button(action: { onTap?() }) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 3) {
+                    Text(label.uppercased())
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundColor(accentColor)
+                        .kerning(0.5)
+                    Image(systemName: "chevron.down.circle.fill")
+                        .font(.system(size: 7))
+                        .foregroundColor(accentColor.opacity(0.5))
+                }
+                HStack(alignment: .bottom, spacing: 2) {
+                    Text(item.value)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                    Text(displayUnit)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.white.opacity(0.5))
+                        .padding(.bottom, 2)
+                }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .buttonStyle(.plain)
     }
 }
 
