@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MealHistoryView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var meals: [Meal] = []
     @State private var totalCalories: Int = 0
     @State private var isLoading = false
@@ -20,7 +21,6 @@ struct MealHistoryView: View {
         }
     }
     
-    // ✅ 修复1: 按真实日期排序，不用字符串比较
     var groupedMeals: [(String, [Meal])] {
         let grouped = Dictionary(grouping: filteredMeals) { meal -> String in
             if let savedAt = meal.saved_at, let date = ISO8601DateFormatter().date(from: savedAt) {
@@ -28,8 +28,6 @@ struct MealHistoryView: View {
             }
             return "Unknown Date"
         }
-        
-        // 每组取第一条meal的真实日期来排序
         return grouped.sorted { a, b in
             let dateA = a.value.compactMap { ISO8601DateFormatter().date(from: $0.saved_at ?? "") }.max() ?? .distantPast
             let dateB = b.value.compactMap { ISO8601DateFormatter().date(from: $0.saved_at ?? "") }.max() ?? .distantPast
@@ -41,39 +39,44 @@ struct MealHistoryView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.black, Color.black.opacity(0.95), Color(red: 0.1, green: 0.1, blue: 0.15)]),
-                    startPoint: .top, endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                themeManager.current.background
+                    .ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // 标题栏
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Meal History").font(.largeTitle.bold()).foregroundColor(.white)
-                            Text("\(meals.count) meals tracked").font(.caption).foregroundColor(.gray)
+                            Text("Meal History").font(.largeTitle.bold())
+                                .foregroundColor(themeManager.current.primaryText)
+                            Text("\(meals.count) meals tracked").font(.caption)
+                                .foregroundColor(themeManager.current.secondaryText)
                         }
                         Spacer()
                         VStack(spacing: 4) {
                             Text("\(totalCalories)").font(.title2.bold()).foregroundColor(.orange)
-                            Text("Total kcal").font(.caption2).foregroundColor(.gray)
+                            Text("Total kcal").font(.caption2)
+                                .foregroundColor(themeManager.current.secondaryText)
                         }
                         .padding(.horizontal, 16).padding(.vertical, 8)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.orange.opacity(0.15)).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange.opacity(0.3), lineWidth: 1)))
+                        .background(RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.orange.opacity(0.15))
+                            .overlay(RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)))
                     }
                     .padding(.horizontal).padding(.top, 10).padding(.bottom, 20)
 
-                    // 搜索栏
                     HStack {
-                        Image(systemName: "magnifyingglass").foregroundColor(.gray)
-                        TextField("Search meals...", text: $searchText).foregroundColor(.white)
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(themeManager.current.secondaryText)
+                        TextField("Search meals...", text: $searchText)
+                            .foregroundColor(themeManager.current.primaryText)
                     }
                     .padding()
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.08)).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.1), lineWidth: 1)))
+                    .background(RoundedRectangle(cornerRadius: 12)
+                        .fill(themeManager.current.inputBackground)
+                        .overlay(RoundedRectangle(cornerRadius: 12)
+                            .stroke(themeManager.current.cardBorder, lineWidth: 1)))
                     .padding(.horizontal).padding(.bottom, 16)
 
-                    // 筛选标签
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(filters, id: \.self) { filter in
@@ -84,10 +87,11 @@ struct MealHistoryView: View {
                     }
                     .padding(.bottom, 20)
 
-                    // 内容区
                     if isLoading {
                         Spacer()
-                        ProgressView("Loading meals...").progressViewStyle(CircularProgressViewStyle(tint: .orange)).foregroundColor(.white)
+                        ProgressView("Loading meals...")
+                            .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                            .foregroundColor(themeManager.current.primaryText)
                         Spacer()
                     } else if !errorMessage.isEmpty {
                         Spacer()
@@ -108,7 +112,6 @@ struct MealHistoryView: View {
                                     let (date, groupMeals) = group
                                     Section {
                                         ForEach(groupMeals) { meal in
-                                            // ✅ 修复2: 用 Button 替代 onTapGesture，点击更可靠
                                             Button(action: { selectedMeal = meal }) {
                                                 MealHistoryCard(meal: meal)
                                             }
@@ -125,7 +128,7 @@ struct MealHistoryView: View {
                     }
                 }
             }
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(themeManager.current.colorScheme)
             .onAppear { fetchMeals() }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { fetchMeals() }
@@ -139,6 +142,7 @@ struct MealHistoryView: View {
             .refreshable { await fetchMealsAsync() }
             .sheet(item: $selectedMeal) { meal in
                 MealDetailView(meal: meal)
+                    .environmentObject(themeManager)
                     .onDisappear { fetchMeals() }
             }
         }
@@ -182,7 +186,7 @@ struct MealHistoryView: View {
                     case -1009: self.errorMessage = "No internet connection"
                     case -1001: self.errorMessage = "Request timed out"
                     case -1005: self.errorMessage = "Network connection lost"
-                    default:    self.errorMessage = "Failed to load meal history"
+                    default: self.errorMessage = "Failed to load meal history"
                     }
                 }
             }
@@ -200,32 +204,37 @@ struct MealHistoryView: View {
 // MARK: - Supporting Views
 
 struct FilterPill: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let title: String; let isSelected: Bool; let action: () -> Void
     var body: some View {
         Button(action: action) {
             Text(title).font(.subheadline).fontWeight(isSelected ? .semibold : .regular)
-                .foregroundColor(isSelected ? .black : .white)
+                .foregroundColor(isSelected ? .black : themeManager.current.primaryText)
                 .padding(.horizontal, 16).padding(.vertical, 8)
-                .background(RoundedRectangle(cornerRadius: 20).fill(isSelected ? Color.orange : Color.white.opacity(0.1)))
-                .overlay(RoundedRectangle(cornerRadius: 20).stroke(isSelected ? Color.clear : Color.white.opacity(0.2), lineWidth: 1))
+                .background(RoundedRectangle(cornerRadius: 20)
+                    .fill(isSelected ? Color.orange : themeManager.current.inputBackground))
+                .overlay(RoundedRectangle(cornerRadius: 20)
+                    .stroke(isSelected ? Color.clear : themeManager.current.cardBorder, lineWidth: 1))
         }
     }
 }
 
 struct DateHeader: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let date: String; let count: Int
     var body: some View {
         HStack {
-            Text(date).font(.headline).foregroundColor(.white)
+            Text(date).font(.headline).foregroundColor(themeManager.current.primaryText)
             Spacer()
-            Text("\(count) meals").font(.caption).foregroundColor(.gray)
+            Text("\(count) meals").font(.caption).foregroundColor(themeManager.current.secondaryText)
         }
         .padding(.vertical, 8)
-        .background(LinearGradient(gradient: Gradient(colors: [Color.black, Color.black.opacity(0.95)]), startPoint: .top, endPoint: .bottom))
+        .background(themeManager.current.background)
     }
 }
 
 struct MealHistoryCard: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let meal: Meal
     var body: some View {
         HStack(spacing: 16) {
@@ -237,31 +246,40 @@ struct MealHistoryCard: View {
                     .frame(width: 100, height: 100).clipped().cornerRadius(16)
             } else {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(LinearGradient(gradient: Gradient(colors: [.orange.opacity(0.3), .orange.opacity(0.1)]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .fill(LinearGradient(gradient: Gradient(colors: [.orange.opacity(0.3), .orange.opacity(0.1)]),
+                                        startPoint: .topLeading, endPoint: .bottomTrailing))
                     .frame(width: 100, height: 100)
                     .overlay(Image(systemName: "photo").foregroundColor(.white.opacity(0.5)).font(.title2))
             }
             VStack(alignment: .leading, spacing: 8) {
-                Text(meal.dish_prediction).font(.headline).foregroundColor(.white).lineLimit(1)
+                Text(meal.dish_prediction).font(.headline)
+                    .foregroundColor(themeManager.current.primaryText).lineLimit(1)
                 HStack(spacing: 16) {
                     if let cal = extractCalories(from: meal.nutrition_info) {
-                        Label("\(cal) kcal", systemImage: "flame.fill").font(.subheadline).foregroundColor(.orange)
+                        Label("\(cal) kcal", systemImage: "flame.fill")
+                            .font(.subheadline).foregroundColor(.orange)
                     }
                     if let mealType = meal.meal_type {
-                        Text(mealType.capitalized).font(.caption).padding(.horizontal, 8).padding(.vertical, 4)
-                            .background(RoundedRectangle(cornerRadius: 6).fill(Color.blue.opacity(0.2)))
-                            .foregroundColor(.blue)
+                        Text(mealType.capitalized).font(.caption)
+                            .padding(.horizontal, 8).padding(.vertical, 4)
+                            .background(RoundedRectangle(cornerRadius: 6).fill(Color.orange.opacity(0.15)))
+                            .foregroundColor(.orange.opacity(0.9))
                     }
                 }
                 if let savedAt = meal.saved_at, let date = ISO8601DateFormatter().date(from: savedAt) {
-                    Text(formattedTime(date)).font(.caption).foregroundColor(.gray)
+                    Text(formattedTime(date)).font(.caption)
+                        .foregroundColor(themeManager.current.secondaryText)
                 }
             }
             Spacer()
-            Image(systemName: "chevron.right").foregroundColor(.gray).font(.caption)
+            Image(systemName: "chevron.right")
+                .foregroundColor(themeManager.current.secondaryText).font(.caption)
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.05)).overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.1), lineWidth: 1)))
+        .background(RoundedRectangle(cornerRadius: 16)
+            .fill(themeManager.current.cardBackground)
+            .overlay(RoundedRectangle(cornerRadius: 16)
+                .stroke(themeManager.current.cardBorder, lineWidth: 1)))
     }
     func formattedTime(_ date: Date) -> String {
         let f = DateFormatter(); f.dateFormat = "h:mm a"; return f.string(from: date)
@@ -269,23 +287,31 @@ struct MealHistoryCard: View {
 }
 
 struct EmptyHistoryState: View {
+    @EnvironmentObject var themeManager: ThemeManager
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "tray").font(.system(size: 60)).foregroundColor(.gray)
+            Image(systemName: "tray").font(.system(size: 60))
+                .foregroundColor(themeManager.current.secondaryText)
             VStack(spacing: 8) {
-                Text("No meals yet").font(.title3.bold()).foregroundColor(.white)
-                Text("Start tracking your nutrition journey").font(.subheadline).foregroundColor(.gray)
+                Text("No meals yet").font(.title3.bold())
+                    .foregroundColor(themeManager.current.primaryText)
+                Text("Start tracking your nutrition journey").font(.subheadline)
+                    .foregroundColor(themeManager.current.secondaryText)
             }
         }
     }
 }
 
 struct NoResultsView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "magnifyingglass").font(.system(size: 40)).foregroundColor(.gray)
-            Text("No meals found").font(.headline).foregroundColor(.white)
-            Text("Try adjusting your search or filters").font(.subheadline).foregroundColor(.gray)
+            Image(systemName: "magnifyingglass").font(.system(size: 40))
+                .foregroundColor(themeManager.current.secondaryText)
+            Text("No meals found").font(.headline)
+                .foregroundColor(themeManager.current.primaryText)
+            Text("Try adjusting your search or filters").font(.subheadline)
+                .foregroundColor(themeManager.current.secondaryText)
         }
     }
 }
@@ -294,13 +320,17 @@ struct ErrorStateView: View {
     let message: String; let retry: () -> Void
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 50)).foregroundColor(.orange)
-            Text(message).font(.subheadline).foregroundColor(.white).multilineTextAlignment(.center).padding(.horizontal)
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 50)).foregroundColor(.orange)
+            Text(message).font(.subheadline).foregroundColor(.white)
+                .multilineTextAlignment(.center).padding(.horizontal)
             if !message.contains("Session expired") {
                 Button(action: retry) {
-                    Label("Try Again", systemImage: "arrow.clockwise").fontWeight(.semibold).foregroundColor(.white)
+                    Label("Try Again", systemImage: "arrow.clockwise")
+                        .fontWeight(.semibold).foregroundColor(.white)
                         .padding(.horizontal, 24).padding(.vertical, 12)
-                        .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
+                                                   startPoint: .topLeading, endPoint: .bottomTrailing))
                         .cornerRadius(12)
                 }
             }

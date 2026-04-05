@@ -10,6 +10,7 @@ import Charts
 
 // MARK: - Exercise Entry Model
 struct ExerciseEntry: Identifiable, Codable {
+    
     let _id: String
     let user_id: String
     let exercise_type: String
@@ -31,6 +32,7 @@ struct ExerciseChartData: Identifiable {
 }
 
 struct ExerciseTrackingView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.dismiss) var dismiss
     @State private var exerciseEntries: [ExerciseEntry] = []
     @State private var selectedExerciseType = "Walking"
@@ -93,16 +95,10 @@ struct ExerciseTrackingView: View {
         NavigationView {
             ZStack {
                 // Gradient background
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.black,
-                        Color.black.opacity(0.95),
-                        Color(red: 0.05, green: 0.2, blue: 0.05)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                // ✅ 改成
+                themeManager.current.background
+                    .ignoresSafeArea()
+                
                 
                 ScrollView {
                     VStack(spacing: 32) {
@@ -497,7 +493,7 @@ struct ExerciseTrackingView: View {
                     .animation(.spring(), value: showSuccess)
                 }
             }
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(themeManager.current.colorScheme)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -777,6 +773,7 @@ struct ExerciseHistoryRowView: View {
 }
 
 struct ExerciseDatePickerSheet: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedDate: Date
     @Environment(\.dismiss) var dismiss
     

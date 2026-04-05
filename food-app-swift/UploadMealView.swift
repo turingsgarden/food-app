@@ -3,6 +3,7 @@ import PhotosUI
 import AVFoundation
 
 struct UploadMealView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @State private var selectedImage: UIImage?
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var isLoading = false
@@ -17,166 +18,91 @@ struct UploadMealView: View {
     @State private var showToast = false
     @State private var errorMessage = ""
     @State private var retryCount = 0
-    
     @State private var selectedDate = Date()
     @State private var selectedMealType = "Lunch"
     @State private var isEditingIngredients = false
     @State private var isEditingHidden = false
     @State private var showDatePicker = false
     @State private var showCamera = false
-    @State private var analysisStep = 0 // 0: select, 1: analyzing, 2: results
+    @State private var analysisStep = 0
     @State private var isRecalculatingNutrition = false
-    
-    // Camera permission states
     @State private var showCameraPermissionAlert = false
     @State private var cameraPermissionStatus: AVAuthorizationStatus = .notDetermined
-    
-    // Cold start handling
     @State private var showColdStartLoading = false
     @State private var currentError: AppError?
-    
+
     let mealTypes = ["Breakfast", "Lunch", "Evening Snacks", "Dinner"]
-    
     @Environment(\.dismiss) var dismiss
 
     var body: some View {
         NavigationStack {
             ZStack {
-                // Gradient background
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.black,
-                        Color.black.opacity(0.95),
-                        Color(red: 0.1, green: 0.1, blue: 0.15)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                themeManager.current.background.ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 24) {
-                        // Header
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Add Meal")
-                                    .font(.largeTitle.bold())
-                                    .foregroundColor(.white)
-                                
-                                Text("Snap and track your nutrition")
-                                    .font(.caption)
-                                    .foregroundColor(.gray)
+                                Text("Add Meal").font(.largeTitle.bold())
+                                    .foregroundColor(themeManager.current.primaryText)
+                                Text("Snap and track your nutrition").font(.caption)
+                                    .foregroundColor(themeManager.current.secondaryText)
                             }
-                            
                             Spacer()
-                            
                             Button(action: { dismiss() }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.title2)
-                                    .foregroundColor(.gray)
+                                Image(systemName: "xmark.circle.fill").font(.title2)
+                                    .foregroundColor(themeManager.current.secondaryText)
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 20)
-                        
+                        .padding(.horizontal).padding(.top, 20)
                         .overlay(
                             ZStack {
-                                if showColdStartLoading {
-                                    ServerWarmupView()
-                                }
-                                
-                                if let error = currentError {
-                                    ErrorToast(error: error, isShowing: .constant(true))
-                                }
+                                if showColdStartLoading { ServerWarmupView() }
+                                if let error = currentError { ErrorToast(error: error, isShowing: .constant(true)) }
                             }
                         )
 
                         if selectedImage == nil {
-                            // Image Selection
                             VStack(spacing: 20) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 20)
-                                        .fill(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [
-                                                    Color.orange.opacity(0.2),
-                                                    Color.orange.opacity(0.1)
-                                                ]),
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
+                                        .fill(LinearGradient(gradient: Gradient(colors: [Color.orange.opacity(0.2), Color.orange.opacity(0.1)]),
+                                                             startPoint: .topLeading, endPoint: .bottomTrailing))
                                         .frame(height: 250)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 20)
-                                                .stroke(style: StrokeStyle(lineWidth: 2, dash: [10]))
-                                                .foregroundColor(.orange.opacity(0.5))
-                                        )
-                                    
+                                        .overlay(RoundedRectangle(cornerRadius: 20)
+                                            .stroke(style: StrokeStyle(lineWidth: 2, dash: [10]))
+                                            .foregroundColor(.orange.opacity(0.5)))
                                     VStack(spacing: 16) {
-                                        Image(systemName: "camera.fill")
-                                            .font(.system(size: 50))
-                                            .foregroundColor(.orange)
-                                        
-                                        Text("Add a photo of your meal")
-                                            .font(.headline)
-                                            .foregroundColor(.white)
-                                        
-                                        Text("Take a photo or choose from library")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
+                                        Image(systemName: "camera.fill").font(.system(size: 50)).foregroundColor(.orange)
+                                        Text("Add a photo of your meal").font(.headline)
+                                            .foregroundColor(themeManager.current.primaryText)
+                                        Text("Take a photo or choose from library").font(.caption)
+                                            .foregroundColor(themeManager.current.secondaryText)
                                     }
                                 }
-                                
                                 HStack(spacing: 16) {
-                                    // Camera Button with Permission Check
-                                    Button(action: {
-                                        checkCameraPermissionAndOpen()
-                                    }) {
-                                        HStack {
-                                            Image(systemName: "camera.fill")
-                                            Text("Camera")
-                                        }
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 16)
-                                        .background(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .cornerRadius(12)
+                                    Button(action: { checkCameraPermissionAndOpen() }) {
+                                        HStack { Image(systemName: "camera.fill"); Text("Camera") }
+                                            .fontWeight(.semibold).foregroundColor(.white)
+                                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                                            .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
+                                                                       startPoint: .topLeading, endPoint: .bottomTrailing))
+                                            .cornerRadius(12)
                                     }
-                                    
-                                    // Gallery Button
                                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                                        HStack {
-                                            Image(systemName: "photo.fill")
-                                            Text("Gallery")
-                                        }
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 16)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color.white.opacity(0.1))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 12)
-                                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                                                )
-                                        )
+                                        HStack { Image(systemName: "photo.fill"); Text("Gallery") }
+                                            .fontWeight(.semibold).foregroundColor(themeManager.current.primaryText)
+                                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                                            .background(RoundedRectangle(cornerRadius: 12)
+                                                .fill(themeManager.current.inputBackground)
+                                                .overlay(RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(themeManager.current.cardBorder, lineWidth: 1)))
                                     }
                                     .onChange(of: selectedPhoto, initial: false) { _, newItem in
                                         Task {
                                             if let data = try? await newItem?.loadTransferable(type: Data.self),
                                                let uiImage = UIImage(data: data) {
-                                                self.selectedImage = uiImage
-                                                self.errorMessage = ""
-                                                self.retryCount = 0
+                                                self.selectedImage = uiImage; self.errorMessage = ""; self.retryCount = 0
                                                 analyzeImage()
                                             }
                                         }
@@ -185,52 +111,25 @@ struct UploadMealView: View {
                             }
                             .padding(.horizontal)
                         } else {
-                            // Image Preview
                             ZStack {
-                                Image(uiImage: selectedImage!)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(height: 250)
-                                    .clipped()
-                                    .cornerRadius(20)
-                                    .overlay(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [
-                                                Color.clear,
-                                                Color.black.opacity(0.3)
-                                            ]),
-                                            startPoint: .center,
-                                            endPoint: .bottom
-                                        )
-                                        .cornerRadius(20)
-                                    )
-                                
-                                // Change Photo Button
+                                Image(uiImage: selectedImage!).resizable().scaledToFill()
+                                    .frame(height: 250).clipped().cornerRadius(20)
+                                    .overlay(LinearGradient(gradient: Gradient(colors: [Color.clear, Color.black.opacity(0.3)]),
+                                                            startPoint: .center, endPoint: .bottom).cornerRadius(20))
                                 VStack {
                                     HStack {
                                         Spacer()
                                         Button(action: {
-                                            selectedImage = nil
-                                            detectedDish = ""
-                                            visibleIngredients = []
-                                            hiddenIngredients = []
-                                            nutritionLines = []
-                                            rawNutritionInfo = ""
+                                            selectedImage = nil; detectedDish = ""
+                                            visibleIngredients = []; hiddenIngredients = []
+                                            nutritionLines = []; rawNutritionInfo = ""
                                         }) {
                                             HStack(spacing: 4) {
-                                                Image(systemName: "arrow.triangle.2.circlepath")
-                                                Text("Change")
+                                                Image(systemName: "arrow.triangle.2.circlepath"); Text("Change")
                                             }
-                                            .font(.caption)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(.white)
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 6)
-                                            .background(
-                                                Capsule()
-                                                    .fill(Color.black.opacity(0.6))
-                                                    .blur(radius: 10)
-                                            )
+                                            .font(.caption).fontWeight(.semibold).foregroundColor(.white)
+                                            .padding(.horizontal, 12).padding(.vertical, 6)
+                                            .background(Capsule().fill(Color.black.opacity(0.6)).blur(radius: 10))
                                         }
                                         .padding()
                                     }
@@ -243,316 +142,194 @@ struct UploadMealView: View {
                                 AnalyzingView()
                             } else if !errorMessage.isEmpty {
                                 ErrorView(message: errorMessage, retry: analyzeImage)
-                                    .padding(.horizontal)
+                                    .environmentObject(themeManager).padding(.horizontal)
                             } else if !detectedDish.isEmpty {
-                                // Analysis Results
                                 VStack(spacing: 20) {
-                                    // Dish Name
                                     VStack(alignment: .leading, spacing: 12) {
-                                        Text("DISH NAME")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                            .tracking(1)
-                                        
+                                        Text("DISH NAME").font(.caption)
+                                            .foregroundColor(themeManager.current.secondaryText).tracking(1)
                                         TextField("Dish name", text: $editableDishName)
-                                            .font(.title3.bold())
-                                            .foregroundColor(.white)
+                                            .font(.title3.bold()).foregroundColor(themeManager.current.primaryText)
                                             .padding()
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .fill(Color.white.opacity(0.08))
-                                                    .overlay(
-                                                        RoundedRectangle(cornerRadius: 12)
-                                                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)
-                                                    )
-                                            )
+                                            .background(RoundedRectangle(cornerRadius: 12)
+                                                .fill(themeManager.current.inputBackground)
+                                                .overlay(RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)))
                                     }
                                     .padding(.horizontal)
-                                    
-                                    // Meal Type and Date
+
                                     HStack(spacing: 16) {
                                         MealTypeSelector(selectedType: $selectedMealType)
+                                            .environmentObject(themeManager)
                                         DateSelector(selectedDate: $selectedDate, showPicker: $showDatePicker)
+                                            .environmentObject(themeManager)
                                     }
                                     .padding(.horizontal)
-                                    
-                                    // Visible Ingredients Section
+
                                     VStack(alignment: .leading, spacing: 16) {
-                                        SectionHeader(
-                                            title: "Visible Ingredients",
-                                            icon: "leaf.fill",
-                                            color: Color.green,
-                                            action: { isEditingIngredients.toggle() },
-                                            actionIcon: isEditingIngredients ? "checkmark" : "pencil"
-                                        )
-                                        
+                                        SectionHeader(title: "Visible Ingredients", icon: "leaf.fill", color: Color.green,
+                                                      action: { isEditingIngredients.toggle() },
+                                                      actionIcon: isEditingIngredients ? "checkmark" : "pencil")
+                                            .environmentObject(themeManager)
                                         VStack(spacing: 12) {
                                             ForEach($visibleIngredients) { $ingredient in
                                                 if isEditingIngredients {
-                                                    EditableIngredientRow(
-                                                        ingredient: $ingredient,
-                                                        onDelete: { removeVisibleIngredient(id: ingredient.id) }
-                                                    )
+                                                    EditableIngredientRow(ingredient: $ingredient,
+                                                                          onDelete: { removeVisibleIngredient(id: ingredient.id) })
+                                                        .environmentObject(themeManager)
                                                 } else {
-                                                    IngredientDisplay(
-                                                        text: "\(ingredient.name) – \(ingredient.quantity) \(ingredient.unit)"
-                                                    )
+                                                    IngredientDisplay(text: "\(ingredient.name) – \(ingredient.quantity) \(ingredient.unit)")
+                                                        .environmentObject(themeManager)
                                                 }
                                             }
-                                            
                                             if isEditingIngredients {
                                                 Button(action: addNewVisibleIngredient) {
-                                                    HStack {
-                                                        Image(systemName: "plus.circle.fill")
-                                                        Text("Add Ingredient")
-                                                    }
-                                                    .font(.subheadline)
-                                                    .foregroundColor(Color.green)
+                                                    HStack { Image(systemName: "plus.circle.fill"); Text("Add Ingredient") }
+                                                        .font(.subheadline).foregroundColor(Color.green)
                                                 }
                                             }
                                         }
                                     }
                                     .padding(.horizontal)
-                                    
-                                    // Hidden Ingredients Section
+
                                     if !hiddenIngredients.isEmpty {
                                         VStack(alignment: .leading, spacing: 16) {
-                                            SectionHeader(
-                                                title: "Hidden Ingredients",
-                                                icon: "eye.slash.fill",
-                                                color: Color.pink,
-                                                action: { isEditingHidden.toggle() },
-                                                actionIcon: isEditingHidden ? "checkmark" : "pencil"
-                                            )
-                                            
+                                            SectionHeader(title: "Hidden Ingredients", icon: "eye.slash.fill", color: Color.pink,
+                                                          action: { isEditingHidden.toggle() },
+                                                          actionIcon: isEditingHidden ? "checkmark" : "pencil")
+                                                .environmentObject(themeManager)
                                             VStack(spacing: 12) {
                                                 ForEach($hiddenIngredients) { $ingredient in
                                                     if isEditingHidden {
-                                                        EditableIngredientRow(
-                                                            ingredient: $ingredient,
-                                                            onDelete: { removeHiddenIngredient(id: ingredient.id) }
-                                                        )
+                                                        EditableIngredientRow(ingredient: $ingredient,
+                                                                              onDelete: { removeHiddenIngredient(id: ingredient.id) })
+                                                            .environmentObject(themeManager)
                                                     } else {
-                                                        IngredientDisplay(
-                                                            text: "\(ingredient.name) – \(ingredient.quantity) \(ingredient.unit)",
-                                                            isHidden: true
-                                                        )
+                                                        IngredientDisplay(text: "\(ingredient.name) – \(ingredient.quantity) \(ingredient.unit)", isHidden: true)
+                                                            .environmentObject(themeManager)
                                                     }
                                                 }
-                                                
                                                 if isEditingHidden {
                                                     Button(action: addNewHiddenIngredient) {
-                                                        HStack {
-                                                            Image(systemName: "plus.circle.fill")
-                                                            Text("Add Hidden Ingredient")
-                                                        }
-                                                        .font(.subheadline)
-                                                        .foregroundColor(Color.pink)
+                                                        HStack { Image(systemName: "plus.circle.fill"); Text("Add Hidden Ingredient") }
+                                                            .font(.subheadline).foregroundColor(Color.pink)
                                                     }
                                                 }
                                             }
                                         }
                                         .padding(.horizontal)
                                     }
-                                    
-                                    // Beautiful Nutrition Display with Recalculate Option
+
                                     VStack(spacing: 16) {
                                         BeautifulNutritionView(nutritionText: rawNutritionInfo)
-                                        
-                    
-                                        
-                                        // Recalculate button (if editing)
-                                        if (isEditingIngredients || isEditingHidden) {
+                                            .environmentObject(themeManager)
+                                        if isEditingIngredients || isEditingHidden {
                                             Button(action: recalculateNutrition) {
                                                 HStack {
                                                     if isRecalculatingNutrition {
-                                                        ProgressView()
-                                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                                            .scaleEffect(0.8)
+                                                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)).scaleEffect(0.8)
                                                     } else {
-                                                        Image(systemName: "arrow.clockwise")
-                                                        Text("Recalculate Nutrition")
+                                                        Image(systemName: "arrow.clockwise"); Text("Recalculate Nutrition")
                                                     }
                                                 }
-                                                .fontWeight(.semibold)
-                                                .foregroundColor(.white)
-                                                .frame(maxWidth: .infinity)
-                                                .padding(.vertical, 12)
-                                                .background(
-                                                    LinearGradient(
-                                                        gradient: Gradient(colors: [.purple, .purple.opacity(0.8)]),
-                                                        startPoint: .topLeading,
-                                                        endPoint: .bottomTrailing
-                                                    )
-                                                )
+                                                .fontWeight(.semibold).foregroundColor(.white)
+                                                .frame(maxWidth: .infinity).padding(.vertical, 12)
+                                                .background(LinearGradient(gradient: Gradient(colors: [.purple, .purple.opacity(0.8)]),
+                                                                           startPoint: .topLeading, endPoint: .bottomTrailing))
                                                 .cornerRadius(12)
                                             }
                                             .disabled(isRecalculatingNutrition)
                                         }
                                     }
                                     .padding(.horizontal)
-                                    
-                                    // Save Button
+
                                     Button(action: saveMealToBackend) {
-                                        HStack {
-                                            Image(systemName: "checkmark.circle.fill")
-                                            Text("Save to Diary")
-                                        }
-                                        .fontWeight(.semibold)
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 16)
-                                        .background(
-                                            LinearGradient(
-                                                gradient: Gradient(colors: [Color.green, Color.green.opacity(0.8)]),
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .cornerRadius(12)
-                                        .shadow(color: Color.green.opacity(0.3), radius: 8, x: 0, y: 4)
+                                        HStack { Image(systemName: "checkmark.circle.fill"); Text("Save to Diary") }
+                                            .fontWeight(.semibold).foregroundColor(.white)
+                                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                                            .background(LinearGradient(gradient: Gradient(colors: [Color.green, Color.green.opacity(0.8)]),
+                                                                       startPoint: .topLeading, endPoint: .bottomTrailing))
+                                            .cornerRadius(12).shadow(color: Color.green.opacity(0.3), radius: 8, x: 0, y: 4)
                                     }
-                                    .padding(.horizontal)
-                                    .padding(.bottom, 40)
+                                    .padding(.horizontal).padding(.bottom, 40)
                                 }
                             }
                         }
                     }
                 }
 
-                // Success Toast
                 if showToast {
                     VStack {
                         Spacer()
                         HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text("Meal saved successfully!")
+                            Image(systemName: "checkmark.circle.fill"); Text("Meal saved successfully!")
                         }
-                        .font(.subheadline.bold())
-                        .foregroundColor(.white)
-                        .padding()
-                        .background(
-                            Capsule()
-                                .fill(Color.green)
-                                .shadow(color: Color.green.opacity(0.3), radius: 10)
-                        )
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .padding(.bottom, 50)
+                        .font(.subheadline.bold()).foregroundColor(.white).padding()
+                        .background(Capsule().fill(Color.green).shadow(color: Color.green.opacity(0.3), radius: 10))
+                        .transition(.move(edge: .bottom).combined(with: .opacity)).padding(.bottom, 50)
                     }
                     .animation(.spring(), value: showToast)
                 }
             }
-            .preferredColorScheme(.dark)
-            .onAppear {
-                checkInitialCameraPermission()
-            }
-            .sheet(isPresented: $showDatePicker) {
-                DatePickerSheet(selectedDate: $selectedDate)
-            }
+            .preferredColorScheme(themeManager.current.colorScheme)
+            .onAppear { checkInitialCameraPermission() }
+            .sheet(isPresented: $showDatePicker) { DatePickerSheet(selectedDate: $selectedDate) }
             .sheet(isPresented: $showCamera) {
                 SimpleCameraView(selectedImage: $selectedImage)
-                    .onDisappear {
-                        if selectedImage != nil {
-                            analyzeImage()
-                        }
-                    }
+                    .onDisappear { if selectedImage != nil { analyzeImage() } }
             }
             .alert("Camera Access Required", isPresented: $showCameraPermissionAlert) {
                 Button("Cancel", role: .cancel) { }
-                Button("Settings") {
-                    openAppSettings()
-                }
+                Button("Settings") { openAppSettings() }
             } message: {
                 Text("Please allow camera access in Settings to take photos of your meals.")
             }
         }
     }
-    
-    // MARK: - Camera Permission Functions
-    
+
     func checkInitialCameraPermission() {
         cameraPermissionStatus = AVCaptureDevice.authorizationStatus(for: .video)
     }
-    
+
     func checkCameraPermissionAndOpen() {
         switch cameraPermissionStatus {
-        case .authorized:
-            showCamera = true
-            
+        case .authorized: showCamera = true
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { granted in
                 DispatchQueue.main.async {
-                    if granted {
-                        self.cameraPermissionStatus = .authorized
-                        self.showCamera = true
-                    } else {
-                        self.cameraPermissionStatus = .denied
-                        self.showCameraPermissionAlert = true
-                    }
+                    if granted { self.cameraPermissionStatus = .authorized; self.showCamera = true }
+                    else { self.cameraPermissionStatus = .denied; self.showCameraPermissionAlert = true }
                 }
             }
-            
-        case .denied, .restricted:
-            showCameraPermissionAlert = true
-            
-        @unknown default:
-            showCameraPermissionAlert = true
+        default: showCameraPermissionAlert = true
         }
     }
-    
+
     func openAppSettings() {
-        if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(settingsUrl)
-        }
+        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
     }
-    
-    // MARK: - Helper functions
-    
-    func removeVisibleIngredient(id: String) {
-        visibleIngredients.removeAll { $0.id == id }
-    }
-    
-    func removeHiddenIngredient(id: String) {
-        hiddenIngredients.removeAll { $0.id == id }
-    }
-    
+
+    func removeVisibleIngredient(id: String) { visibleIngredients.removeAll { $0.id == id } }
+    func removeHiddenIngredient(id: String) { hiddenIngredients.removeAll { $0.id == id } }
+
     func addNewVisibleIngredient() {
-        visibleIngredients.append(EditableIngredient(
-            id: UUID().uuidString,
-            name: "New Ingredient",
-            quantity: "1",
-            unit: "piece"
-        ))
+        visibleIngredients.append(EditableIngredient(id: UUID().uuidString, name: "New Ingredient", quantity: "1", unit: "piece"))
     }
-    
     func addNewHiddenIngredient() {
-        hiddenIngredients.append(EditableIngredient(
-            id: UUID().uuidString,
-            name: "New Hidden Ingredient",
-            quantity: "1",
-            unit: "tsp"
-        ))
+        hiddenIngredients.append(EditableIngredient(id: UUID().uuidString, name: "New Hidden Ingredient", quantity: "1", unit: "tsp"))
     }
-    
+
     func recalculateNutrition() {
         isRecalculatingNutrition = true
-        
-        // Combine visible and hidden ingredients for recalculation
         let allIngredients = visibleIngredients + hiddenIngredients
         let ingredientsList = allIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit)" }.joined(separator: "\n")
-        
         NetworkManager.shared.recalculateNutrition(ingredients: ingredientsList) { result in
             self.isRecalculatingNutrition = false
-            
             switch result {
             case .success(let nutritionData):
-                // Update the raw nutrition info for the Beautiful Nutrition View
                 self.rawNutritionInfo = nutritionData.nutrition_info
-                
-                // Also update the legacy arrays for compatibility
                 self.nutritionLines = self.parseNutritionLines(from: nutritionData.nutrition_info)
                 self.calories = self.extractCalories(from: nutritionData.nutrition_info)
-                
             case .failure(let error):
                 print("❌ Nutrition recalculation failed: \(error)")
                 self.errorMessage = "Failed to recalculate nutrition"
@@ -562,217 +339,112 @@ struct UploadMealView: View {
 
     func resizeImage(_ image: UIImage, maxDimension: CGFloat = 800) -> UIImage? {
         let size = image.size
-        
         var newSize: CGSize
         if size.width > size.height {
-            if size.width > maxDimension {
-                newSize = CGSize(width: maxDimension, height: size.height * maxDimension / size.width)
-            } else {
-                return image
-            }
+            if size.width > maxDimension { newSize = CGSize(width: maxDimension, height: size.height * maxDimension / size.width) }
+            else { return image }
         } else {
-            if size.height > maxDimension {
-                newSize = CGSize(width: size.width * maxDimension / size.height, height: maxDimension)
-            } else {
-                return image
-            }
+            if size.height > maxDimension { newSize = CGSize(width: size.width * maxDimension / size.height, height: maxDimension) }
+            else { return image }
         }
-        
         UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
         image.draw(in: CGRect(origin: .zero, size: newSize))
         let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
-        
         return resizedImage
     }
-    
+
     func compressImage(_ image: UIImage, maxSizeKB: Int = 500) -> Data? {
-        // First resize if image is too large
-        let maxDimension: CGFloat = 1024  // Reduced from default
-        let resized = resizeImage(image, maxDimension: maxDimension) ?? image
-        
-        var compression: CGFloat = 0.8  // Start with higher quality
+        let resized = resizeImage(image, maxDimension: 1024) ?? image
+        var compression: CGFloat = 0.8
         var imageData = resized.jpegData(compressionQuality: compression)
-        
-        // Progressively compress until under size limit
-        while let data = imageData,
-              data.count > maxSizeKB * 1024 && compression > 0.1 {
-            compression -= 0.1
-            imageData = resized.jpegData(compressionQuality: compression)
+        while let data = imageData, data.count > maxSizeKB * 1024 && compression > 0.1 {
+            compression -= 0.1; imageData = resized.jpegData(compressionQuality: compression)
         }
-        
-        // If still too large, resize more aggressively
         if let data = imageData, data.count > maxSizeKB * 1024 {
             let smallerImage = resizeImage(resized, maxDimension: 600) ?? resized
             imageData = smallerImage.jpegData(compressionQuality: 0.5)
         }
-        
-        print("🎨 Final compression: \(compression), size: \((imageData?.count ?? 0) / 1024) KB")
-        
         return imageData
     }
 
     func analyzeImage() {
         guard let image = selectedImage else { return }
-        isLoading = true
-        errorMessage = ""
-        currentError = nil
-        
+        isLoading = true; errorMessage = ""; currentError = nil
         let resizedImage = resizeImage(image, maxDimension: 800) ?? image
         guard let imageData = compressImage(resizedImage, maxSizeKB: 500) else {
-            isLoading = false
-            currentError = .validation("Failed to process image")
-            return
+            isLoading = false; currentError = .validation("Failed to process image"); return
         }
-        
-        NetworkManager.shared.uploadImageWithColdStartHandling(
-            imageData: imageData,
-            onColdStart: {
-                self.showColdStartLoading = true
-            }
-        ) { result in
-            self.isLoading = false
-            self.showColdStartLoading = false
-            
+        NetworkManager.shared.uploadImageWithColdStartHandling(imageData: imageData, onColdStart: {
+            self.showColdStartLoading = true
+        }) { result in
+            self.isLoading = false; self.showColdStartLoading = false
             switch result {
             case .success(let geminiResult):
                 withAnimation(.spring()) {
                     self.detectedDish = geminiResult.dish_prediction
                     self.editableDishName = geminiResult.dish_prediction
                     self.visibleIngredients = self.parseIngredientsToEditable(from: geminiResult.image_description)
-                    
-                    // Parse hidden ingredients
                     if let hiddenText = geminiResult.hidden_ingredients, !hiddenText.isEmpty {
                         self.hiddenIngredients = self.parseIngredientsToEditable(from: hiddenText)
                         self.rawHiddenIngredients = hiddenText
-                        print("🔍 Hidden ingredients parsed: \(self.hiddenIngredients.count) items")
-                    } else {
-                        print("⚠️ No hidden ingredients received")
-                        self.hiddenIngredients = []
-                        self.rawHiddenIngredients = ""
-                    }
-                    
-                    // Set raw nutrition info for Beautiful Nutrition View
+                    } else { self.hiddenIngredients = []; self.rawHiddenIngredients = "" }
                     self.rawNutritionInfo = geminiResult.nutrition_info
-                    
-                    // DEBUG: Log the nutrition info
-                    print("📊 FRONTEND - Received nutrition info:")
-                    print("📊 Length: \(geminiResult.nutrition_info.count)")
-                    print("📊 Content: \(geminiResult.nutrition_info)")
-                    
-                    // Force a refresh of the nutrition view
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        self.rawNutritionInfo = geminiResult.nutrition_info
-                    }
-                    
-                    // Also maintain legacy arrays for compatibility
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.rawNutritionInfo = geminiResult.nutrition_info }
                     self.nutritionLines = self.parseNutritionLines(from: geminiResult.nutrition_info)
                     self.calories = self.extractCalories(from: geminiResult.nutrition_info)
-                    
-                    print("📊 Parsed nutrition lines: \(self.nutritionLines)")
-                    print("📊 Extracted calories: \(String(describing: self.calories))")
                 }
-                
             case .failure(let error):
-                if (error as NSError).code == NSURLErrorTimedOut {
-                    self.currentError = .network(.timeout)
-                } else if (error as NSError).code == NSURLErrorNotConnectedToInternet {
-                    self.currentError = .network(.noInternet)
-                } else {
-                    self.currentError = .unknown(error.localizedDescription)
-                }
+                if (error as NSError).code == NSURLErrorTimedOut { self.currentError = .network(.timeout) }
+                else if (error as NSError).code == NSURLErrorNotConnectedToInternet { self.currentError = .network(.noInternet) }
+                else { self.currentError = .unknown(error.localizedDescription) }
             }
         }
     }
 
     func saveMealToBackend() {
-        guard !editableDishName.isEmpty else {
-            errorMessage = "Please enter a dish name"
-            return
-        }
-        
+        guard !editableDishName.isEmpty else { errorMessage = "Please enter a dish name"; return }
         let userId = UserDefaults.standard.string(forKey: "user_id") ?? ""
-        if userId.isEmpty {
-            errorMessage = "Login session missing."
-            return
-        }
-
-        // Show loading state
-        isLoading = true
-        errorMessage = ""
-        
-        // More aggressive image compression
-        let fullImageData = compressImage(selectedImage!, maxSizeKB: 500)  // Reduced from 1000
-        let thumbnailData = compressImage(selectedImage!, maxSizeKB: 50)   // Reduced from 100
-        
+        if userId.isEmpty { errorMessage = "Login session missing."; return }
+        isLoading = true; errorMessage = ""
+        let fullImageData = compressImage(selectedImage!, maxSizeKB: 500)
+        let thumbnailData = compressImage(selectedImage!, maxSizeKB: 50)
         let fullImageBase64 = fullImageData?.base64EncodedString() ?? ""
         let thumbnailBase64 = thumbnailData?.base64EncodedString() ?? ""
-        
-        // Log sizes for debugging
-        print("📸 Full image size: \((fullImageBase64.count / 1024)) KB")
-        print("📸 Thumbnail size: \((thumbnailBase64.count / 1024)) KB")
-        
-        let visibleIngredientsString = visibleIngredients.map {
-            "\($0.name) | \($0.quantity) | \($0.unit) | User edited"
-        }.joined(separator: "\n")
-        
-        let hiddenIngredientsString = hiddenIngredients.map {
-            "\($0.name) | \($0.quantity) | \($0.unit) | User edited"
-        }.joined(separator: "\n")
-
+        let visibleIngredientsString = visibleIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit) | User edited" }.joined(separator: "\n")
+        let hiddenIngredientsString = hiddenIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit) | User edited" }.joined(separator: "\n")
         let payload: [String: Any] = [
-            "user_id": userId,
-            "dish_prediction": editableDishName,
-            "image_description": visibleIngredientsString,
-            "hidden_ingredients": hiddenIngredientsString,
-            "nutrition_info": rawNutritionInfo,
-            "image_full": fullImageBase64,
-            "image_thumb": thumbnailBase64,
-            "meal_type": selectedMealType,
+            "user_id": userId, "dish_prediction": editableDishName,
+            "image_description": visibleIngredientsString, "hidden_ingredients": hiddenIngredientsString,
+            "nutrition_info": rawNutritionInfo, "image_full": fullImageBase64,
+            "image_thumb": thumbnailBase64, "meal_type": selectedMealType,
             "saved_at": ISO8601DateFormatter().string(from: selectedDate)
         ]
-
-        // Use NetworkManager instead of direct URLSession
         NetworkManager.shared.saveMeal(payload) { success, error in
             DispatchQueue.main.async {
                 self.isLoading = false
-                
                 if success {
                     NotificationCenter.default.post(name: Notification.Name("MealSaved"), object: nil)
-                    withAnimation(.spring()) {
-                        self.showToast = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        self.dismiss()
-                    }
+                    withAnimation(.spring()) { self.showToast = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { self.dismiss() }
                 } else {
-                    // Better error handling
                     if let errorMsg = error {
                         if errorMsg.contains("network connection was lost") || errorMsg.contains("-1005") {
-                            self.errorMessage = "Connection lost. The image might be too large. Try taking a lower resolution photo."
+                            self.errorMessage = "Connection lost. The image might be too large."
                         } else if errorMsg.contains("timed out") {
-                            self.errorMessage = "Server timeout. Please check your internet connection and try again."
-                        } else {
-                            self.errorMessage = "Failed to save meal: \(errorMsg)"
-                        }
-                    } else {
-                        self.errorMessage = "Failed to save meal. Please try again."
-                    }
+                            self.errorMessage = "Server timeout. Please try again."
+                        } else { self.errorMessage = "Failed to save meal: \(errorMsg)" }
+                    } else { self.errorMessage = "Failed to save meal. Please try again." }
                 }
             }
         }
     }
-    
+
     func parseIngredientsToEditable(from text: String) -> [EditableIngredient] {
         text.split(separator: "\n").compactMap { line in
             let parts = line.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
             guard parts.count >= 3 else { return nil }
-            return EditableIngredient(
-                id: UUID().uuidString,
-                name: parts[0],
-                quantity: parts[1],
-                unit: parts[2]
-            )
+            return EditableIngredient(id: UUID().uuidString, name: parts[0], quantity: parts[1], unit: parts[2])
         }
     }
 
@@ -798,181 +470,119 @@ struct UploadMealView: View {
     }
 }
 
-// MARK: - Simple Camera View (Clean & No Deprecation Warnings)
+// MARK: - Simple Camera View
 
 struct SimpleCameraView: UIViewControllerRepresentable {
     @Binding var selectedImage: UIImage?
     @Environment(\.dismiss) var dismiss
-    
+
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.sourceType = .camera
-        picker.allowsEditing = false
-        picker.delegate = context.coordinator
+        picker.sourceType = .camera; picker.allowsEditing = false; picker.delegate = context.coordinator
         return picker
     }
-    
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: SimpleCameraView
-        
-        init(_ parent: SimpleCameraView) {
-            self.parent = parent
-        }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.selectedImage = image
-            }
+        init(_ parent: SimpleCameraView) { self.parent = parent }
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage { parent.selectedImage = image }
             parent.dismiss()
         }
-        
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            parent.dismiss()
-        }
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) { parent.dismiss() }
     }
 }
 
 // MARK: - Supporting Views
 
 struct MealTypeSelector: View {
+    @EnvironmentObject var themeManager: ThemeManager  // ✅
     @Binding var selectedType: String
     let types = ["Breakfast", "Lunch", "Evening Snacks", "Dinner"]
     let icons = ["sun.max.fill", "sun.min.fill", "cup.and.saucer.fill", "moon.fill"]
-    
+
     var body: some View {
         Menu {
             ForEach(Array(zip(types, icons)), id: \.0) { type, icon in
-                Button(action: { selectedType = type }) {
-                    Label(type, systemImage: icon)
-                }
+                Button(action: { selectedType = type }) { Label(type, systemImage: icon) }
             }
         } label: {
             VStack(alignment: .leading, spacing: 4) {
-                Text("MEAL TYPE")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-                    .tracking(1)
-                
+                Text("MEAL TYPE").font(.caption2)
+                    .foregroundColor(themeManager.current.secondaryText).tracking(1)  // ✅
                 HStack {
-                    Image(systemName: icons[types.firstIndex(of: selectedType) ?? 1])
-                        .foregroundColor(.orange)
-                    Text(selectedType)
-                        .fontWeight(.medium)
+                    Image(systemName: icons[types.firstIndex(of: selectedType) ?? 1]).foregroundColor(.orange)
+                    Text(selectedType).fontWeight(.medium)
                     Spacer()
-                    Image(systemName: "chevron.down")
-                        .font(.caption)
+                    Image(systemName: "chevron.down").font(.caption)
                 }
-                .foregroundColor(.white)
+                .foregroundColor(themeManager.current.primaryText)  // ✅
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                    )
-            )
+            .padding().frame(maxWidth: .infinity)
+            .background(RoundedRectangle(cornerRadius: 12)
+                .fill(themeManager.current.inputBackground)  // ✅
+                .overlay(RoundedRectangle(cornerRadius: 12)
+                    .stroke(themeManager.current.cardBorder, lineWidth: 1)))  // ✅
         }
     }
 }
 
 struct DateSelector: View {
+    @EnvironmentObject var themeManager: ThemeManager  // ✅
     @Binding var selectedDate: Date
     @Binding var showPicker: Bool
-    
+
     var dateText: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
+        let formatter = DateFormatter(); formatter.dateStyle = .medium
         return formatter.string(from: selectedDate)
     }
-    
+
     var body: some View {
         Button(action: { showPicker = true }) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("DATE")
-                    .font(.caption2)
-                    .foregroundColor(.gray)
-                    .tracking(1)
-                
+                Text("DATE").font(.caption2)
+                    .foregroundColor(themeManager.current.secondaryText).tracking(1)  // ✅
                 HStack {
-                    Image(systemName: "calendar")
-                        .foregroundColor(Color.blue)
-                    Text(dateText)
-                        .fontWeight(.medium)
+                    Image(systemName: "calendar").foregroundColor(Color.blue)
+                    Text(dateText).fontWeight(.medium)
                     Spacer()
                 }
-                .foregroundColor(.white)
+                .foregroundColor(themeManager.current.primaryText)  // ✅
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                    )
-            )
+            .padding().frame(maxWidth: .infinity)
+            .background(RoundedRectangle(cornerRadius: 12)
+                .fill(themeManager.current.inputBackground)  // ✅
+                .overlay(RoundedRectangle(cornerRadius: 12)
+                    .stroke(themeManager.current.cardBorder, lineWidth: 1)))  // ✅
         }
     }
 }
 
 struct AnalyzingView: View {
     @State private var dots = 0
-    
+
     var body: some View {
         VStack(spacing: 20) {
             ZStack {
-                Circle()
-                    .stroke(Color.orange.opacity(0.2), lineWidth: 4)
-                    .frame(width: 80, height: 80)
-                
-                Circle()
-                    .trim(from: 0, to: 0.7)
-                    .stroke(
-                        LinearGradient(
-                            gradient: Gradient(colors: [.orange, .orange.opacity(0.5)]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                    )
-                    .frame(width: 80, height: 80)
-                    .rotationEffect(.degrees(-90))
+                Circle().stroke(Color.orange.opacity(0.2), lineWidth: 4).frame(width: 80, height: 80)
+                Circle().trim(from: 0, to: 0.7)
+                    .stroke(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.5)]),
+                                           startPoint: .topLeading, endPoint: .bottomTrailing),
+                            style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .frame(width: 80, height: 80).rotationEffect(.degrees(-90))
                     .rotationEffect(.degrees(Double(dots) * 120))
-                    .animation(
-                        Animation.linear(duration: 1)
-                            .repeatForever(autoreverses: false),
-                        value: dots
-                    )
-                
-                Image(systemName: "sparkles")
-                    .font(.title)
-                    .foregroundColor(.orange)
+                    .animation(Animation.linear(duration: 1).repeatForever(autoreverses: false), value: dots)
+                Image(systemName: "sparkles").font(.title).foregroundColor(.orange)
             }
-            
             VStack(spacing: 8) {
-                Text("Analyzing your meal")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                
+                Text("Analyzing your meal").font(.headline).foregroundColor(.white)
                 Text("Identifying ingredients and hidden components")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
+                    .font(.caption).foregroundColor(.gray).multilineTextAlignment(.center)
             }
         }
         .padding()
-        .onAppear {
-            dots = 3
-        }
+        .onAppear { dots = 3 }
     }
 }

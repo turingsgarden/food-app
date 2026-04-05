@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MealDetailView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @State var meal: Meal
     @State private var isEditing = false
     @State private var editedDishName: String = ""
@@ -29,11 +30,8 @@ struct MealDetailView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black, Color.black.opacity(0.95), Color(red: 0.1, green: 0.1, blue: 0.15)]),
-                startPoint: .top, endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            themeManager.current.background
+                .ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -41,6 +39,7 @@ struct MealDetailView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         titleAndMeta
                         BeautifulNutritionView(nutritionText: updatedNutritionInfo.isEmpty ? meal.nutrition_info : updatedNutritionInfo)
+                            .environmentObject(themeManager)
                         ingredientsSection
                         actionButtons
                     }
@@ -48,8 +47,10 @@ struct MealDetailView: View {
                     .padding(.vertical, 20)
                     .padding(.bottom, 40)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(themeManager.current.background)  // ✅ 覆盖 heroImage 渐变
                 }
                 .frame(maxWidth: .infinity)
+                .background(themeManager.current.background)
             }
             .ignoresSafeArea(edges: .top)
 
@@ -67,7 +68,7 @@ struct MealDetailView: View {
                 .animation(.spring(), value: showSuccessToast)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(themeManager.current.colorScheme)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
@@ -100,11 +101,13 @@ struct MealDetailView: View {
                         .frame(width: width, height: 350).clipped()
                 } else {
                     Rectangle()
-                        .fill(LinearGradient(gradient: Gradient(colors: [.orange.opacity(0.4), .orange.opacity(0.2)]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .fill(LinearGradient(gradient: Gradient(colors: [.orange.opacity(0.4), .orange.opacity(0.2)]),
+                                             startPoint: .topLeading, endPoint: .bottomTrailing))
                         .frame(width: width, height: 350)
                         .overlay(Image(systemName: "photo").font(.system(size: 60)).foregroundColor(.white.opacity(0.5)))
                 }
-                LinearGradient(gradient: Gradient(colors: [.clear, .black.opacity(0.7), .black.opacity(0.9)]), startPoint: .top, endPoint: .bottom)
+                LinearGradient(gradient: Gradient(colors: [.clear, .black.opacity(0.7), .black.opacity(0.9)]),
+                               startPoint: .top, endPoint: .bottom)
                     .frame(width: width, height: 150)
             }
             .frame(width: width, height: 350)
@@ -125,17 +128,23 @@ struct MealDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             if isEditing {
                 TextField("Dish name", text: $editedDishName)
-                    .font(.title2.bold()).foregroundColor(.white).padding()
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.08)).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange.opacity(0.3), lineWidth: 1)))
+                    .font(.title2.bold())
+                    .foregroundColor(themeManager.current.primaryText)
+                    .padding()
+                    .background(RoundedRectangle(cornerRadius: 12)
+                        .fill(themeManager.current.inputBackground)
+                        .overlay(RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.orange.opacity(0.3), lineWidth: 1)))
             } else {
-                Text(meal.dish_prediction).font(.title2.bold()).foregroundColor(.white)
+                Text(meal.dish_prediction).font(.title2.bold())
+                    .foregroundColor(themeManager.current.primaryText)
             }
             HStack(spacing: 12) {
                 if let savedAt = meal.saved_at, let date = ISO8601DateFormatter().date(from: savedAt) {
-                    InfoPill(icon: "calendar", text: formatDate(date), color: .blue)
+                    InfoPill(icon: "calendar", text: formatDate(date), color: .white.opacity(0.6))
                 }
                 if let mealType = meal.meal_type {
-                    InfoPill(icon: "fork.knife", text: mealType, color: .purple)
+                    InfoPill(icon: "fork.knife", text: mealType, color: .white.opacity(0.6))
                 }
                 if let calories = extractCalories(from: updatedNutritionInfo.isEmpty ? meal.nutrition_info : updatedNutritionInfo) {
                     InfoPill(icon: "flame.fill", text: "\(calories) kcal", color: .orange)
@@ -153,12 +162,10 @@ struct MealDetailView: View {
         } else {
             if !allDisplayIngredients.isEmpty {
                 IngredientTableView(ingredients: allDisplayIngredients)
+                    .environmentObject(themeManager)
             }
         }
     }
-
-    // MARK: - Editing Ingredients View
-    // ✅ TextField 直接绑定 quantityInputs 字典，完全绕开子 view binding 问题
 
     var editingIngredientsView: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -166,7 +173,7 @@ struct MealDetailView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("VISIBLE")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(.green.opacity(0.7)).kerning(2)
+                        .foregroundColor(.orange.opacity(0.7)).kerning(2)
                     ForEach(editedVisibleIngredients, id: \.id) { ing in
                         ingredientInputRow(ing: ing)
                     }
@@ -176,7 +183,7 @@ struct MealDetailView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("HIDDEN")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(.pink.opacity(0.7)).kerning(2)
+                        .foregroundColor(.orange.opacity(0.5)).kerning(2)
                     ForEach(editedHiddenIngredients, id: \.id) { ing in
                         ingredientInputRow(ing: ing)
                     }
@@ -184,61 +191,56 @@ struct MealDetailView: View {
             }
             HStack(spacing: 6) {
                 Image(systemName: "info.circle.fill").font(.caption).foregroundColor(.orange.opacity(0.8))
-                Text("Only quantities can be edited").font(.caption).foregroundColor(.gray)
+                Text("Only quantities can be edited").font(.caption)
+                    .foregroundColor(themeManager.current.secondaryText)
                 Spacer()
             }
             .padding(.horizontal, 4)
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.04)).overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.07), lineWidth: 1)))
+        .background(RoundedRectangle(cornerRadius: 14)
+            .fill(themeManager.current.cardBackground)
+            .overlay(RoundedRectangle(cornerRadius: 14)
+                .stroke(themeManager.current.cardBorder, lineWidth: 1)))
     }
 
-    // ✅ 每行的 UI，TextField 直接读写 quantityInputs[ing.id]
     func ingredientInputRow(ing: EditableIngredient) -> some View {
         HStack(spacing: 12) {
-            // Name (read-only)
             HStack {
-                Text(ing.name)
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.9))
+                Text(ing.name).font(.subheadline)
+                    .foregroundColor(themeManager.current.primaryText)
                 Spacer()
             }
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 12).padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.white.opacity(0.04))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.1), lineWidth: 0.5))
-            )
+            .background(RoundedRectangle(cornerRadius: 8)
+                .fill(themeManager.current.inputBackground)
+                .overlay(RoundedRectangle(cornerRadius: 8)
+                    .stroke(themeManager.current.cardBorder, lineWidth: 0.5)))
 
-            // ✅ 直接绑定 quantityInputs 字典，没有任何子 view 传递
             TextField("0", text: Binding(
                 get: { quantityInputs[ing.id] ?? ing.quantity },
                 set: { quantityInputs[ing.id] = $0 }
             ))
             .font(.subheadline)
-            .foregroundColor(.white)
+            .foregroundColor(themeManager.current.primaryText)
             .multilineTextAlignment(.center)
             .frame(width: 70)
             .padding(.horizontal, 8).padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color.orange.opacity(0.1))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.orange.opacity(0.3), lineWidth: 1))
-            )
+            .background(RoundedRectangle(cornerRadius: 8)
+                .fill(Color.orange.opacity(0.1))
+                .overlay(RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)))
             .keyboardType(.decimalPad)
 
-            // Unit (read-only)
-            Text(displayUnit(for: ing))
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.7))
+            Text(displayUnit(for: ing)).font(.subheadline)
+                .foregroundColor(themeManager.current.secondaryText)
                 .frame(width: 60)
                 .padding(.horizontal, 8).padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white.opacity(0.04))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.1), lineWidth: 0.5))
-                )
+                .background(RoundedRectangle(cornerRadius: 8)
+                    .fill(themeManager.current.inputBackground)
+                    .overlay(RoundedRectangle(cornerRadius: 8)
+                        .stroke(themeManager.current.cardBorder, lineWidth: 0.5)))
         }
     }
 
@@ -263,9 +265,13 @@ struct MealDetailView: View {
         if isEditing {
             HStack(spacing: 12) {
                 Button(action: cancelEditing) {
-                    Text("Cancel").fontWeight(.semibold).foregroundColor(.white)
+                    Text("Cancel").fontWeight(.semibold)
+                        .foregroundColor(themeManager.current.primaryText)
                         .frame(maxWidth: .infinity).padding(.vertical, 16)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.1)).overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.2), lineWidth: 1)))
+                        .background(RoundedRectangle(cornerRadius: 12)
+                            .fill(themeManager.current.inputBackground)
+                            .overlay(RoundedRectangle(cornerRadius: 12)
+                                .stroke(themeManager.current.cardBorder, lineWidth: 1)))
                 }
                 .disabled(isSaving || isRecalculatingNutrition)
 
@@ -281,7 +287,8 @@ struct MealDetailView: View {
                     }
                     .fontWeight(.semibold).foregroundColor(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
-                    .background(LinearGradient(gradient: Gradient(colors: [.green, .green.opacity(0.8)]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .background(LinearGradient(gradient: Gradient(colors: [.green, .green.opacity(0.8)]),
+                                               startPoint: .topLeading, endPoint: .bottomTrailing))
                     .cornerRadius(12)
                 }
                 .disabled(isSaving || isRecalculatingNutrition)
@@ -295,7 +302,8 @@ struct MealDetailView: View {
                     }
                     .fontWeight(.semibold).foregroundColor(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
-                    .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
+                                               startPoint: .topLeading, endPoint: .bottomTrailing))
                     .cornerRadius(12)
                 }
                 Button(action: { showDeleteAlert = true }) {
@@ -309,7 +317,8 @@ struct MealDetailView: View {
                     }
                     .fontWeight(.semibold).foregroundColor(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
-                    .background(LinearGradient(gradient: Gradient(colors: [.red, .red.opacity(0.8)]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .background(LinearGradient(gradient: Gradient(colors: [.red, .red.opacity(0.8)]),
+                                               startPoint: .topLeading, endPoint: .bottomTrailing))
                     .cornerRadius(12)
                 }
                 .disabled(isDeleting)
@@ -324,14 +333,11 @@ struct MealDetailView: View {
     }
 
     func startEditing() {
-        print("🔍 RAW image_description:\n\(meal.image_description)")
-        print("🔍 RAW hidden:\n\(meal.hidden_ingredients ?? "nil")")
         isEditing = true
         editedDishName = meal.dish_prediction
         editedVisibleIngredients = parseIngredientsToEditableFiltered(from: meal.image_description)
         editedHiddenIngredients = parseIngredientsToEditableFiltered(from: meal.hidden_ingredients ?? "")
         updatedNutritionInfo = meal.nutrition_info
-        // ✅ 初始化 quantityInputs
         quantityInputs = [:]
         for ing in editedVisibleIngredients + editedHiddenIngredients {
             quantityInputs[ing.id] = ing.quantity
@@ -356,21 +362,16 @@ struct MealDetailView: View {
         let ingredientsList = (editedVisibleIngredients + editedHiddenIngredients)
             .map { ing in
                 let qty = quantityInputs[ing.id] ?? ing.quantity
-                let unit = displayUnit(for: ing)  // ✅
+                let unit = displayUnit(for: ing)
                 return "\(ing.name) | \(qty) | \(unit)"
             }
             .joined(separator: "\n")
 
-        print("💾 saveChanges called")
-        print("📝 ingredientsList: \(ingredientsList)")
-        print("🥘 mealId: \(meal._id)")
-
         meal.dish_prediction = editedDishName
-        // visible — 用 displayUnit 函数确保存的是真实单位
         meal.image_description = editedVisibleIngredients
             .map { ing in
                 let qty = quantityInputs[ing.id] ?? ing.quantity
-                let unit = displayUnit(for: ing)  // ✅ 用已有的 displayUnit 函数
+                let unit = displayUnit(for: ing)
                 return "\(ing.name) | \(qty) | \(unit) | User edited"
             }
             .joined(separator: "\n")
@@ -378,10 +379,12 @@ struct MealDetailView: View {
         let hiddenStr = editedHiddenIngredients
             .map { ing in
                 let qty = quantityInputs[ing.id] ?? ing.quantity
-                let unit = displayUnit(for: ing)  // ✅ 同上
+                let unit = displayUnit(for: ing)
                 return "\(ing.name) | \(qty) | \(unit) | User edited"
             }
             .joined(separator: "\n")
+        meal.hidden_ingredients = hiddenStr
+
         let mealDataForUpdate: [String: Any] = [
             "meal_id": meal._id,
             "dish_prediction": meal.dish_prediction,
@@ -435,20 +438,16 @@ struct MealDetailView: View {
             let clean = line.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "*", with: "")
             let parts = clean.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
             guard parts.count >= 2 else { return nil }
-
             let name = parts[0]
             let quantity = parts[1]
-
-            // ✅ 找第一个不是数字、不是"User edited"的部分作为unit
             var unit = ""
             for i in 2..<parts.count {
                 let p = parts[i]
                 if p.lowercased() == "user edited" { continue }
-                if Double(p) != nil { continue }  // 跳过纯数字
+                if Double(p) != nil { continue }
                 unit = p
                 break
             }
-
             guard !name.isEmpty else { return nil }
             return EditableIngredient(id: name, name: name, quantity: quantity, unit: unit)
         }
@@ -498,7 +497,8 @@ struct InfoPill: View {
         }
         .foregroundColor(color)
         .padding(.horizontal, 12).padding(.vertical, 6)
-        .background(Capsule().fill(color.opacity(0.2)).overlay(Capsule().stroke(color.opacity(0.3), lineWidth: 1)))
+        .background(Capsule().fill(color.opacity(0.2))
+            .overlay(Capsule().stroke(color.opacity(0.3), lineWidth: 1)))
     }
 }
 

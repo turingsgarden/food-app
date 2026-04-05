@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct BeautifulNutritionView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let nutritionText: String
     @State private var nutritionItems: [NutritionItem] = []
     @State private var hasInitialized = false
@@ -31,7 +32,7 @@ struct BeautifulNutritionView: View {
                 Spacer()
                 Text("tap for range")
                     .font(.system(size: 9, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.2))
+                    .foregroundColor(themeManager.current.secondaryText)
                     .kerning(1)
             }
             .padding(.bottom, 16)
@@ -39,6 +40,7 @@ struct BeautifulNutritionView: View {
             if hasValidNutrition {
                 if let cal = caloriesItem {
                     CaloriesBigRow(item: cal, onTap: { selectedItem = cal })
+                        .environmentObject(themeManager)
                         .padding(.bottom, 20)
                 }
                 if !gridItems.isEmpty {
@@ -49,6 +51,7 @@ struct BeautifulNutritionView: View {
                     ], spacing: 16) {
                         ForEach(gridItems) { item in
                             NutrientFlatCell(item: item, onTap: { selectedItem = item })
+                                .environmentObject(themeManager)
                         }
                     }
                 }
@@ -56,25 +59,29 @@ struct BeautifulNutritionView: View {
                 emptyState
             }
         }
-        .padding(.vertical, 16).padding(.horizontal, 4)
+        .padding(.vertical, 16)
+        .padding(.horizontal, 4)
+        .background(Color.clear)
         .onAppear {
             if !hasInitialized { hasInitialized = true; parseNutrition() }
         }
         .onChange(of: nutritionText) { _, _ in parseNutrition() }
-        // Range popup
         .overlay {
             if let item = selectedItem {
                 NutrientRangePopup(item: item, onDismiss: { selectedItem = nil })
+                    .environmentObject(themeManager)
             }
-        }
+        }  // ✅ 这个 } 是关闭 .overlay 的
     }
 
     var emptyState: some View {
         HStack {
             Spacer()
             VStack(spacing: 8) {
-                Image(systemName: "chart.bar").font(.system(size: 32)).foregroundColor(.white.opacity(0.15))
-                Text("No nutrition data").font(.caption).foregroundColor(.white.opacity(0.3))
+                Image(systemName: "chart.bar").font(.system(size: 32))
+                    .foregroundColor(themeManager.current.secondaryText)
+                Text("No nutrition data").font(.caption)
+                    .foregroundColor(themeManager.current.secondaryText)
             }
             Spacer()
         }
@@ -129,6 +136,7 @@ struct BeautifulNutritionView: View {
 // MARK: - Range Popup
 
 struct NutrientRangePopup: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let item: NutritionItem
     let onDismiss: () -> Void
 
@@ -166,7 +174,6 @@ struct NutrientRangePopup: View {
         return .gray
     }
 
-    // ±5% for calories/sodium, ±5g/mg for others
     var rangeValues: (low: String, mid: String, high: String) {
         guard let val = Double(item.value) else { return ("—", item.value, "—") }
         let delta: Double = item.name.lowercased().contains("calorie") ? val * 0.05
@@ -174,7 +181,6 @@ struct NutrientRangePopup: View {
                           : 5.0
         let low  = max(0, val - delta)
         let high = val + delta
-        // Format: no decimals for calories/sodium, 1 decimal for others
         let fmt: (Double) -> String = { v in
             if item.name.lowercased().contains("calorie") || item.name.lowercased().contains("sodium") {
                 return String(Int(v.rounded()))
@@ -184,41 +190,23 @@ struct NutrientRangePopup: View {
         return (fmt(low), fmt(val), fmt(high))
     }
 
-    // Simple health score: how "good" is this nutrient
     var healthNote: String {
         guard let val = Double(item.value) else { return "" }
         let n = item.name.lowercased()
-        if n.contains("protein") {
-            return val >= 20 ? "✦ Good protein source" : "Low protein"
-        }
-        if n.contains("sodium") {
-            return val > 1500 ? "⚠ High sodium" : val < 600 ? "✦ Low sodium" : "Moderate sodium"
-        }
-        if n.contains("fiber") {
-            return val >= 5 ? "✦ Good fiber content" : "Low fiber"
-        }
-        if n.contains("sugar") {
-            return val > 20 ? "⚠ High sugar" : "✦ Low sugar"
-        }
-        if n.contains("fat") {
-            return val > 30 ? "⚠ High fat" : "✦ Moderate fat"
-        }
-        if n.contains("calorie") {
-            return val > 800 ? "⚠ High calorie meal" : val < 300 ? "✦ Light meal" : "Balanced meal"
-        }
+        if n.contains("protein") { return val >= 20 ? "✦ Good protein source" : "Low protein" }
+        if n.contains("sodium") { return val > 1500 ? "⚠ High sodium" : val < 600 ? "✦ Low sodium" : "Moderate sodium" }
+        if n.contains("fiber") { return val >= 5 ? "✦ Good fiber content" : "Low fiber" }
+        if n.contains("sugar") { return val > 20 ? "⚠ High sugar" : "✦ Low sugar" }
+        if n.contains("fat") { return val > 30 ? "⚠ High fat" : "✦ Moderate fat" }
+        if n.contains("calorie") { return val > 800 ? "⚠ High calorie meal" : val < 300 ? "✦ Light meal" : "Balanced meal" }
         return ""
     }
 
     var body: some View {
         ZStack {
-            // Dim background
-            Color.black.opacity(0.6)
-                .ignoresSafeArea()
-                .onTapGesture { onDismiss() }
+            Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { onDismiss() }
 
-            // Popup card
             VStack(spacing: 0) {
-                // Header
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(label.uppercased())
@@ -226,121 +214,93 @@ struct NutrientRangePopup: View {
                             .foregroundColor(accentColor).kerning(2)
                         Text("Estimated Range")
                             .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(themeManager.current.secondaryText)
                     }
                     Spacer()
                     Button(action: onDismiss) {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.title3)
-                            .foregroundColor(.white.opacity(0.3))
+                        Image(systemName: "xmark.circle.fill").font(.title3)
+                            .foregroundColor(themeManager.current.secondaryText)
                     }
                 }
                 .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 16)
 
-                Divider().background(Color.white.opacity(0.08))
+                Divider().background(themeManager.current.cardBorder)
 
-                // Range display
                 HStack(alignment: .bottom, spacing: 0) {
-                    // Low
                     VStack(spacing: 4) {
-                        Text("MIN")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.3)).kerning(1)
-                        Text(rangeValues.low)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(.white.opacity(0.5))
-                        Text(displayUnit)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.white.opacity(0.3))
-                    }
-                    .frame(maxWidth: .infinity)
+                        Text("MIN").font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(themeManager.current.secondaryText).kerning(1)
+                        Text(rangeValues.low).font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(themeManager.current.secondaryText)
+                        Text(displayUnit).font(.system(size: 10, weight: .medium))
+                            .foregroundColor(themeManager.current.secondaryText)
+                    }.frame(maxWidth: .infinity)
 
-                    // Center value
                     VStack(spacing: 4) {
-                        Text("EST.")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        Text("EST.").font(.system(size: 9, weight: .bold, design: .monospaced))
                             .foregroundColor(accentColor).kerning(1)
-                        Text(rangeValues.mid)
-                            .font(.system(size: 32, weight: .black, design: .rounded))
-                            .minimumScaleFactor(0.6)
-                            .lineLimit(1)
-                            .foregroundColor(.white)
-                        Text(displayUnit)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(accentColor)
-                    }
-                    .frame(maxWidth: .infinity)
+                        Text(rangeValues.mid).font(.system(size: 32, weight: .black, design: .rounded))
+                            .minimumScaleFactor(0.6).lineLimit(1)
+                            .foregroundColor(themeManager.current.primaryText)
+                        Text(displayUnit).font(.system(size: 11, weight: .semibold)).foregroundColor(accentColor)
+                    }.frame(maxWidth: .infinity)
 
-                    // High
                     VStack(spacing: 4) {
-                        Text("MAX")
-                            .font(.system(size: 9, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.3)).kerning(1)
-                        Text(rangeValues.high)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(.white.opacity(0.5))
-                        Text(displayUnit)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.white.opacity(0.3))
-                    }
-                    .frame(maxWidth: .infinity)
+                        Text("MAX").font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(themeManager.current.secondaryText).kerning(1)
+                        Text(rangeValues.high).font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(themeManager.current.secondaryText)
+                        Text(displayUnit).font(.system(size: 10, weight: .medium))
+                            .foregroundColor(themeManager.current.secondaryText)
+                    }.frame(maxWidth: .infinity)
                 }
                 .padding(.horizontal, 20).padding(.vertical, 20)
 
-                // Range bar
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 4).fill(themeManager.current.inputBackground).frame(height: 6)
                         RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.white.opacity(0.08))
-                            .frame(height: 6)
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(LinearGradient(colors: [accentColor.opacity(0.4), accentColor], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: geo.size.width * 0.6, height: 6)
-                            .offset(x: geo.size.width * 0.2)
-                        // Center dot
-                        Circle()
-                            .fill(accentColor)
-                            .frame(width: 12, height: 12)
-                            .offset(x: geo.size.width * 0.5 - 6)
+                            .fill(LinearGradient(colors: [accentColor.opacity(0.4), accentColor],
+                                                 startPoint: .leading, endPoint: .trailing))
+                            .frame(width: geo.size.width * 0.6, height: 6).offset(x: geo.size.width * 0.2)
+                        Circle().fill(accentColor).frame(width: 12, height: 12).offset(x: geo.size.width * 0.5 - 6)
                     }
                 }
-                .frame(height: 12)
-                .padding(.horizontal, 20)
+                .frame(height: 12).padding(.horizontal, 20)
 
-                // Health note
                 if !healthNote.isEmpty {
                     HStack(spacing: 6) {
-                        Text(healthNote)
-                            .font(.system(size: 11, weight: .medium))
+                        Text(healthNote).font(.system(size: 11, weight: .medium))
                             .foregroundColor(healthNote.contains("⚠") ? .orange : accentColor)
                         Spacer()
                     }
                     .padding(.horizontal, 20).padding(.top, 12)
                 }
 
-                // Disclaimer
                 Text("Range is ±5% estimate based on typical preparation variation")
                     .font(.system(size: 10))
-                    .foregroundColor(.white.opacity(0.2))
+                    .foregroundColor(themeManager.current.secondaryText)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 20).padding(.top, 10).padding(.bottom, 20)
             }
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(Color(red: 0.12, green: 0.12, blue: 0.16))
-                    .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.08), lineWidth: 1))
+                    .fill(themeManager.current.cardBackground)
+                    .overlay(RoundedRectangle(cornerRadius: 24)
+                        .stroke(themeManager.current.cardBorder, lineWidth: 1))
             )
             .padding(.horizontal, 24)
-            .shadow(color: .black.opacity(0.5), radius: 30)
+            .shadow(color: .black.opacity(0.3), radius: 30)
             .transition(.scale(scale: 0.9).combined(with: .opacity))
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: true)
     }
 }
 
-// MARK: - 卡路里大数字
+// MARK: - 卡로里大数字
 
 struct CaloriesBigRow: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let item: NutritionItem
     var onTap: (() -> Void)? = nil
 
@@ -354,18 +314,17 @@ struct CaloriesBigRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.value)
                         .font(.system(size: 52, weight: .black, design: .rounded))
-                        .foregroundColor(.white)
+                        .foregroundColor(themeManager.current.primaryText)
                     HStack(spacing: 4) {
                         Text(displayUnit.uppercased())
                             .font(.system(size: 11, weight: .bold, design: .monospaced))
                             .foregroundColor(.orange).kerning(2)
-                        Text("·").foregroundColor(.white.opacity(0.2))
+                        Text("·").foregroundColor(themeManager.current.secondaryText)
                         Text("CALORIES")
                             .font(.system(size: 11, weight: .medium, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.4)).kerning(1)
+                            .foregroundColor(themeManager.current.secondaryText).kerning(1)
                         Image(systemName: "chevron.down.circle.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(.orange.opacity(0.5))
+                            .font(.system(size: 10)).foregroundColor(.orange.opacity(0.5))
                     }
                 }
                 Spacer()
@@ -379,9 +338,10 @@ struct CaloriesBigRow: View {
     }
 }
 
-// MARK: - 无框营养素格子
+// MARK: - 营养素格子
 
 struct NutrientFlatCell: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let item: NutritionItem
     var onTap: (() -> Void)? = nil
 
@@ -423,21 +383,18 @@ struct NutrientFlatCell: View {
                 HStack(spacing: 3) {
                     Text(label.uppercased())
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
-                        .foregroundColor(accentColor)
-                        .kerning(0.5)
+                        .foregroundColor(accentColor).kerning(0.5)
                     Image(systemName: "chevron.down.circle.fill")
-                        .font(.system(size: 7))
-                        .foregroundColor(accentColor.opacity(0.5))
+                        .font(.system(size: 7)).foregroundColor(accentColor.opacity(0.5))
                 }
                 HStack(alignment: .bottom, spacing: 2) {
                     Text(item.value)
                         .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
+                        .foregroundColor(themeManager.current.primaryText)
+                        .minimumScaleFactor(0.7).lineLimit(1)
                     Text(displayUnit)
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(themeManager.current.secondaryText)
                         .padding(.bottom, 2)
                 }
             }
@@ -454,7 +411,8 @@ struct CaloriesHighlightCard: View {
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
-                Circle().fill(LinearGradient(colors: [.red.opacity(0.3), .orange.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 60, height: 60)
+                Circle().fill(LinearGradient(colors: [.red.opacity(0.3), .orange.opacity(0.3)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 60, height: 60)
                 Image(systemName: "flame.fill").font(.title2).foregroundColor(.orange)
             }
             VStack(alignment: .leading, spacing: 4) {
@@ -467,7 +425,10 @@ struct CaloriesHighlightCard: View {
             Spacer()
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 16).fill(LinearGradient(colors: [.red.opacity(0.1), .orange.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing)).overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.orange.opacity(0.2), lineWidth: 1)))
+        .background(RoundedRectangle(cornerRadius: 16)
+            .fill(LinearGradient(colors: [.red.opacity(0.1), .orange.opacity(0.05)],
+                                 startPoint: .topLeading, endPoint: .bottomTrailing))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.orange.opacity(0.2), lineWidth: 1)))
     }
 }
 
@@ -485,7 +446,8 @@ struct NutrientCard: View {
             }
         }
         .frame(maxWidth: .infinity).padding(.vertical, 16)
-        .background(RoundedRectangle(cornerRadius: 12).fill(item.color.opacity(0.1)).overlay(RoundedRectangle(cornerRadius: 12).stroke(item.color.opacity(0.2), lineWidth: 1)))
+        .background(RoundedRectangle(cornerRadius: 12).fill(item.color.opacity(0.1))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(item.color.opacity(0.2), lineWidth: 1)))
     }
 }
 

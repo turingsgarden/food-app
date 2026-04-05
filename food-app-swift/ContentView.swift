@@ -4,50 +4,48 @@
 //
 //  Created by Utsav Doshi on 6/17/25.
 //
-
 import SwiftUI
 
 struct ContentView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var session = SessionManager.shared
     @ObservedObject var profileManager = ProfileManager.shared
     @StateObject private var networkMonitor = NetworkMonitor()
-    @State private var checkingProfile = false  // Changed from true to false
+    @State private var checkingProfile = false
     @State private var needsProfileSetup = false
     @State private var showProfileSetupPrompt = false
-    
+
     var body: some View {
         NavigationStack {
             ZStack {
                 Group {
                     if session.isLoggedIn {
-                        // Always show dashboard after login
                         DashboardView()
                             .navigationBarHidden(true)
                             .environmentObject(networkMonitor)
-                            .onAppear {
-                                checkProfileStatusInBackground()
-                            }
+                            .environmentObject(themeManager)
+                            .onAppear { checkProfileStatusInBackground() }
                             .sheet(isPresented: $showProfileSetupPrompt) {
                                 ProfileSetupPromptView {
                                     needsProfileSetup = false
                                     showProfileSetupPrompt = false
                                     profileManager.fetchProfile(force: true)
                                 }
+                                .environmentObject(themeManager)  // ✅
                             }
                     } else {
                         OnboardingView()
                             .navigationBarHidden(true)
+                            .environmentObject(themeManager)  // ✅
                     }
                 }
                 .navigationDestination(isPresented: $session.shouldNavigateToLogin) {
                     OnboardingView()
                         .navigationBarBackButtonHidden(true)
-                        .onAppear {
-                            SessionManager.shared.resetNavigationFlag()
-                        }
+                        .environmentObject(themeManager)  // ✅
+                        .onAppear { SessionManager.shared.resetNavigationFlag() }
                 }
-                
-                // Offline Banner Overlay
+
                 VStack {
                     OfflineBanner(networkMonitor: networkMonitor)
                     Spacer()
@@ -56,13 +54,9 @@ struct ContentView: View {
             }
         }
     }
-    
+
     func checkProfileStatusInBackground() {
-        guard SessionManager.shared.isLoggedIn else {
-            return
-        }
-        
-        // Check if this is a new registration
+        guard SessionManager.shared.isLoggedIn else { return }
         if SessionManager.shared.isNewRegistration {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 showProfileSetupPrompt = true
@@ -70,16 +64,10 @@ struct ContentView: View {
             }
             return
         }
-        
-        // Check profile status without blocking UI
         if profileManager.userProfile == nil && !profileManager.isLoading {
             profileManager.fetchProfile(force: false)
-            
-            // Show prompt after a delay if still no profile
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                if profileManager.userProfile == nil &&
-                   !profileManager.isLoading &&
-                   profileManager.errorMessage == nil {
+                if profileManager.userProfile == nil && !profileManager.isLoading && profileManager.errorMessage == nil {
                     showProfileSetupPrompt = true
                 }
             }
@@ -87,126 +75,75 @@ struct ContentView: View {
     }
 }
 
-// New prompt view for profile setup
+// MARK: - Profile Setup Prompt
+
 struct ProfileSetupPromptView: View {
+    @EnvironmentObject var themeManager: ThemeManager
     let onComplete: () -> Void
     @Environment(\.dismiss) var dismiss
     @State private var navigateToSetup = false
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
                 Spacer()
-                
-                // Icon
                 Image(systemName: "person.crop.circle.badge.plus")
                     .font(.system(size: 80))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.orange, .orange.opacity(0.7)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                
-                // Title
-                Text("Complete Your Profile")
-                    .font(.title.bold())
-                    .foregroundColor(.white)
-                
-                // Description
+                    .foregroundStyle(LinearGradient(colors: [.orange, .orange.opacity(0.7)],
+                                                   startPoint: .topLeading, endPoint: .bottomTrailing))
+                Text("Complete Your Profile").font(.title.bold())
+                    .foregroundColor(themeManager.current.primaryText)
                 Text("Set up your profile to get personalized nutrition recommendations based on your age, gender, and activity level")
-                    .font(.body)
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-                
-                // Benefits list
+                    .font(.body).foregroundColor(themeManager.current.secondaryText)
+                    .multilineTextAlignment(.center).padding(.horizontal)
+
                 VStack(alignment: .leading, spacing: 16) {
                     BenefitRow(icon: "target", text: "Personalized calorie goals")
                     BenefitRow(icon: "chart.line.uptrend.xyaxis", text: "Accurate progress tracking")
                     BenefitRow(icon: "person.fill", text: "Customized recommendations")
                 }
                 .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.white.opacity(0.05))
-                )
+                .background(RoundedRectangle(cornerRadius: 16).fill(themeManager.current.cardBackground))
                 .padding(.horizontal)
-                
+
                 Spacer()
-                
-                // Buttons
+
                 VStack(spacing: 12) {
-                    Button(action: {
-                        navigateToSetup = true
-                    }) {
-                        Text("Set Up Profile")
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .cornerRadius(12)
-                            .shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
+                    Button(action: { navigateToSetup = true }) {
+                        Text("Set Up Profile").fontWeight(.semibold).foregroundColor(.white)
+                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                            .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
+                                                       startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .cornerRadius(12).shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
                     }
-                    
-                    Button(action: {
-                        onComplete()
-                        dismiss()
-                    }) {
-                        Text("Skip for now")
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
+                    Button(action: { onComplete(); dismiss() }) {
+                        Text("Skip for now").font(.subheadline)
+                            .foregroundColor(themeManager.current.secondaryText)
                     }
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 40)
+                .padding(.horizontal).padding(.bottom, 40)
             }
-            .background(
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.black,
-                        Color.black.opacity(0.95),
-                        Color(red: 0.1, green: 0.1, blue: 0.15)
-                    ]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-            )
+            .background(themeManager.current.background.ignoresSafeArea())
             .navigationDestination(isPresented: $navigateToSetup) {
                 ProfileSetupView()
                     .navigationBarBackButtonHidden(true)
-                    .onDisappear {
-                        onComplete()
-                        dismiss()
-                    }
+                    .environmentObject(themeManager)  // ✅
+                    .onDisappear { onComplete(); dismiss() }
             }
         }
+        .preferredColorScheme(themeManager.current.colorScheme)
     }
 }
 
 struct BenefitRow: View {
     let icon: String
     let text: String
-    
+    @EnvironmentObject var themeManager: ThemeManager
+
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
-                .foregroundColor(.orange)
-                .frame(width: 24)
-            
-            Text(text)
-                .font(.subheadline)
-                .foregroundColor(.white)
-            
+            Image(systemName: icon).foregroundColor(.orange).frame(width: 24)
+            Text(text).font(.subheadline).foregroundColor(themeManager.current.primaryText)
             Spacer()
         }
     }

@@ -2,26 +2,85 @@
 //  AppTheme.swift
 //  food-app-swift
 //
-//  Created by Utsav Doshi on 6/17/25.
+//  Created by Helen Tu on 2/4/26.
 //
 
 // AppTheme.swift
+
+
 import SwiftUI
 
 enum AppTheme: String, CaseIterable {
     case light, dark
-
+    
     var icon: String {
         switch self {
         case .light: return "sun.max.fill"
         case .dark: return "moon.fill"
         }
     }
-
+    
     var colorScheme: ColorScheme {
         switch self {
         case .light: return .light
         case .dark: return .dark
         }
+    }
+    
+    var background: Color {
+        switch self {
+        case .dark: return Color.black
+        case .light: return Color(UIColor.systemBackground)  // 系统白色，自动适配
+        }
+    }
+    
+    var cardBackground: Color {
+        switch self {
+        case .dark: return Color.white.opacity(0.06)
+        case .light: return Color(UIColor.secondarySystemBackground)
+        }
+    }
+    
+    var primaryText: Color {
+        switch self {
+        case .dark: return .white
+        case .light: return Color(UIColor.label)  // 系统黑色文字
+        }
+    }
+    
+    var secondaryText: Color {
+        switch self {
+        case .dark: return .gray
+        case .light: return Color(UIColor.secondaryLabel)
+        }
+    }
+    
+    var cardBorder: Color {
+        switch self {
+        case .dark: return Color.white.opacity(0.10)
+        case .light: return Color(UIColor.separator)
+        }
+    }
+    
+    var inputBackground: Color {
+        switch self {
+        case .dark: return Color.white.opacity(0.08)
+        case .light: return Color(UIColor.tertiarySystemBackground)
+        }
+    }
+}
+
+class ThemeManager: ObservableObject {
+    static let shared = ThemeManager()
+    
+    @Published var current: AppTheme {
+        didSet {
+            UserDefaults.standard.set(current.rawValue, forKey: "app_theme")
+        }
+    }
+    
+    private init() {
+        let saved = UserDefaults.standard.string(forKey: "app_theme") ?? "dark"
+        self.current = AppTheme(rawValue: saved) ?? .dark
     }
 }

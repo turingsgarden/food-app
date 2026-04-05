@@ -1,7 +1,15 @@
+//
+//  ForgotPasswordView.swift
+//  food-app-swift
+//
+//  Created by Helen Tu on 3/27/26.
+//
+
 import SwiftUI
 
 struct ForgotPasswordView: View {
-    @Environment(\.dismiss) private var dismiss   // ← allows going back
+    @EnvironmentObject var themeManager: ThemeManager
+    @Environment(\.dismiss) private var dismiss
     
     @State private var email: String = ""
     @State private var code: String = ""
@@ -10,40 +18,33 @@ struct ForgotPasswordView: View {
     @State private var isVerifying = false
     @State private var showResetPassword = false
 
-    
     var body: some View {
         VStack(spacing: 24) {
             
-            // -------------------------------
-            // Back Button
-            // -------------------------------
             HStack {
                 Button(action: { dismiss() }) {
                     Image(systemName: "chevron.left")
-                        .foregroundColor(.white)
+                        .foregroundColor(themeManager.current.primaryText)
                         .font(.title2)
                         .padding(10)
                 }
                 Spacer()
             }
             
-            // Title
             Text("Reset Password")
                 .font(.largeTitle)
                 .bold()
-                .foregroundColor(.white)
+                .foregroundColor(themeManager.current.primaryText)
                 .padding(.top, 10)
             
-            // Email Field
             TextField("Enter your email", text: $email)
                 .keyboardType(.emailAddress)
                 .autocapitalization(.none)
                 .padding()
-                .background(Color.white.opacity(0.1))
+                .background(themeManager.current.inputBackground)
                 .cornerRadius(10)
-                .foregroundColor(.white)
+                .foregroundColor(themeManager.current.primaryText)
             
-            // Send Code Button
             Button(action: sendResetCode) {
                 if isSending {
                     ProgressView().tint(.white)
@@ -59,15 +60,13 @@ struct ForgotPasswordView: View {
             .cornerRadius(12)
             .disabled(isSending)
             
-            // Code Field
             TextField("Enter verification code", text: $code)
                 .keyboardType(.numberPad)
                 .padding()
-                .background(Color.white.opacity(0.1))
+                .background(themeManager.current.inputBackground)
                 .cornerRadius(10)
-                .foregroundColor(.white)
+                .foregroundColor(themeManager.current.primaryText)
             
-            // Verify Button
             Button(action: verifyCode) {
                 if isVerifying {
                     ProgressView().tint(.white)
@@ -79,11 +78,10 @@ struct ForgotPasswordView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 50)
-            .background(Color.green)
+            .background(Color.orange.opacity(0.8))
             .cornerRadius(12)
             .disabled(isVerifying)
             
-            // Message
             if !message.isEmpty {
                 Text(message)
                     .foregroundColor(.red)
@@ -93,17 +91,16 @@ struct ForgotPasswordView: View {
             Spacer()
         }
         .padding()
-        .background(Color.black.ignoresSafeArea())
-        .preferredColorScheme(.dark)
+        .background(themeManager.current.background.ignoresSafeArea())
+        .preferredColorScheme(themeManager.current.colorScheme)
         .navigationBarBackButtonHidden(true)
         .navigationDestination(isPresented: $showResetPassword) {
-            ResetPasswordView(email: email){
-                dismiss()   // go back to LoginView
+            ResetPasswordView(email: email) {
+                dismiss()
             }
         }
     }
     
-    // MARK: - Send Reset Code
     private func sendResetCode() {
         guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/send_password_reset_code") else { return }
         
@@ -133,7 +130,6 @@ struct ForgotPasswordView: View {
         }.resume()
     }
     
-    // MARK: - Verify Code
     private func verifyCode() {
         guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/verify_code") else { return }
         
