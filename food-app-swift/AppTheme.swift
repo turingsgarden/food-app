@@ -4,83 +4,88 @@
 //
 //  Created by Helen Tu on 2/4/26.
 //
-
-// AppTheme.swift
-
-
 import SwiftUI
 
 enum AppTheme: String, CaseIterable {
     case light, dark
-    
+
     var icon: String {
         switch self {
         case .light: return "sun.max.fill"
         case .dark: return "moon.fill"
         }
     }
-    
+
     var colorScheme: ColorScheme {
         switch self {
         case .light: return .light
         case .dark: return .dark
         }
     }
-    
+
+    // ✅ 新增：方便 DashboardView / MealDetailView 判断当前是否 dark
+    var isDark: Bool { self == .dark }
+
     var background: Color {
         switch self {
         case .dark: return Color.black
-        case .light: return Color(UIColor.systemBackground)  // 系统白色，自动适配
+        case .light: return Color(UIColor.systemBackground)
         }
     }
-    
+
     var cardBackground: Color {
         switch self {
         case .dark: return Color.white.opacity(0.06)
-        case .light: return Color(UIColor.secondarySystemBackground)
+        // ✅ light 改为纯白卡片（Cal AI 风格），而不是 secondarySystemBackground（略灰）
+        case .light: return Color(UIColor.systemBackground)
         }
     }
-    
+
     var primaryText: Color {
         switch self {
         case .dark: return .white
-        case .light: return Color(UIColor.label)  // 系统黑色文字
+        case .light: return Color(UIColor.label)
         }
     }
-    
+
     var secondaryText: Color {
         switch self {
         case .dark: return .gray
         case .light: return Color(UIColor.secondaryLabel)
         }
     }
-    
+
     var cardBorder: Color {
         switch self {
         case .dark: return Color.white.opacity(0.10)
-        case .light: return Color(UIColor.separator)
+        // ✅ light 边框稍微清晰一点，Cal AI 卡片有明显细边线
+        case .light: return Color(UIColor.separator).opacity(0.5)
         }
     }
-    
+
     var inputBackground: Color {
         switch self {
         case .dark: return Color.white.opacity(0.08)
-        case .light: return Color(UIColor.tertiarySystemBackground)
+        // ✅ light 输入框用 secondarySystemBackground（浅灰），与纯白卡片区分
+        case .light: return Color(UIColor.secondarySystemBackground)
         }
     }
 }
 
 class ThemeManager: ObservableObject {
     static let shared = ThemeManager()
-    
+
     @Published var current: AppTheme {
         didSet {
             UserDefaults.standard.set(current.rawValue, forKey: "app_theme")
         }
     }
-    
+
     private init() {
-        let saved = UserDefaults.standard.string(forKey: "app_theme") ?? "dark"
-        self.current = AppTheme(rawValue: saved) ?? .dark
+        // ✅ 关键修复：fallback 从 "dark" 改为 "light"
+        // 新用户第一次打开 → light mode（白色）
+        // 已有用户保留上次选择
+        let saved = UserDefaults.standard.string(forKey: "app_theme") ?? "light"
+        self.current = AppTheme(rawValue: saved) ?? .light
     }
 }

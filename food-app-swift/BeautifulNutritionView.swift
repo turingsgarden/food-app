@@ -285,9 +285,13 @@ struct NutrientRangePopup: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 24)
-                    .fill(themeManager.current.cardBackground)
+                    .fill(themeManager.current == .dark ?
+                          Color(red: 0.12, green: 0.12, blue: 0.16) :  // dark mode 用深色
+                          themeManager.current.cardBackground)           // light mode 用 cardBackground
                     .overlay(RoundedRectangle(cornerRadius: 24)
-                        .stroke(themeManager.current.cardBorder, lineWidth: 1))
+                        .stroke(themeManager.current == .dark ?
+                                Color.white.opacity(0.08) :
+                                themeManager.current.cardBorder, lineWidth: 1))
             )
             .padding(.horizontal, 24)
             .shadow(color: .black.opacity(0.3), radius: 30)

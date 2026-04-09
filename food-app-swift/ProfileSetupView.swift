@@ -1,3 +1,14 @@
+//
+//  ProfileSetupView.swift
+//  food-app-swift
+//
+// 微调：
+// 1. 顶部 Header 更简洁大气（大标题 + 副标题，去掉 step indicator 改为更简洁的进度点）
+// 2. Section 改为白底卡片（参考图3风格），去掉 SectionHeader 橙色条，改为大字标题
+// 3. Gender 按钮更大、更现代
+// 4. Activity Level 卡片更简洁（参考图3的行列风格）
+// 5. 保留所有原有逻辑、验证、保存函数
+
 import SwiftUI
 
 struct ProfileSetupView: View {
@@ -30,10 +41,10 @@ struct ProfileSetupView: View {
 
     let genderOptions = ["Male", "Female", "Other"]
     let activityOptions = [
-        ("1", "Sedentary", "Little to no exercise"),
-        ("2", "Lightly Active", "Exercise 1-3 days/week"),
-        ("3", "Active", "Exercise 3-5 days/week"),
-        ("4", "Very Active", "Exercise 6-7 days/week")
+        ("1", "Sedentary", "Little to no exercise", "figure.stand"),
+        ("2", "Lightly Active", "Exercise 1–3 days/week", "figure.walk"),
+        ("3", "Active", "Exercise 3–5 days/week", "figure.run"),
+        ("4", "Very Active", "Exercise 6–7 days/week", "bolt.fill")
     ]
 
     init(existingProfile: UserProfile? = nil) {
@@ -57,179 +68,70 @@ struct ProfileSetupView: View {
             ZStack {
                 themeManager.current.background.ignoresSafeArea()
 
-                ScrollView {
-                    VStack(spacing: 24) {
-                        VStack(spacing: 16) {
-                            if !isEditMode {
-                                HStack(spacing: 8) {
-                                    ForEach(1...3, id: \.self) { step in
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .fill(step <= 2 ? Color.orange : themeManager.current.cardBorder)
-                                            .frame(height: 6)
-                                    }
-                                }
-                                .padding(.horizontal, 80)
-                            }
-                            VStack(spacing: 8) {
-                                Text(isEditMode ? "Edit Your Profile" : "Complete Your Profile")
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundColor(themeManager.current.primaryText)
-                                Text(isEditMode ? "Update your nutrition preferences" : "Help us personalize your nutrition journey")
-                                    .font(.subheadline).foregroundColor(themeManager.current.secondaryText)
-                                    .multilineTextAlignment(.center)
-                            }
-                        }
-                        .padding(.top, 20)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 28) {
 
+                        // ── 顶部 Header ──
+                        topHeader
+
+                        // ── 验证错误提示 ──
                         if showValidationErrors && !validationMessages.isEmpty {
-                            VStack(alignment: .leading, spacing: 8) {
-                                ForEach(validationMessages, id: \.self) { message in
-                                    HStack {
-                                        Image(systemName: "exclamationmark.circle.fill").foregroundColor(.yellow).font(.caption)
-                                        Text(message).font(.caption).foregroundColor(.yellow)
-                                    }
-                                }
-                            }
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.yellow.opacity(0.15))
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.yellow.opacity(0.3), lineWidth: 1)))
-                            .padding(.horizontal).transition(.opacity)
+                            validationErrorCard
                         }
 
-                        // Personal Info
-                        VStack(alignment: .leading, spacing: 20) {
-                            SectionHeader(title: "Personal Information", icon: "person.fill", color: .orange)
-                                .environmentObject(themeManager)
+                        // ── Personal Info 卡片 ──
+                        profileCard {
+                            VStack(spacing: 20) {
+                                cardHeader(icon: "person.fill", title: "Personal Info")
 
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Text("Age").font(.subheadline).foregroundColor(themeManager.current.primaryText)
-                                    Spacer()
-                                    Text("\(Int(age)) years").font(.headline).foregroundColor(ageError ? .red : .orange)
-                                }
-                                Slider(value: $age, in: 10...120, step: 1).accentColor(ageError ? .red : .orange)
-                                    .onChange(of: age) { _, _ in ageError = age < 10 || age > 120; updateValidationState() }
-                            }
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 12).fill(themeManager.current.cardBackground)
-                                .overlay(RoundedRectangle(cornerRadius: 12)
-                                    .stroke(ageError ? Color.red.opacity(0.5) : themeManager.current.cardBorder, lineWidth: 1)))
+                                // Age slider
+                                ageSliderRow
 
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Text("Gender").font(.subheadline).foregroundColor(themeManager.current.primaryText)
-                                    if genderError { Text("(Required)").font(.caption).foregroundColor(.red) }
-                                }
-                                HStack(spacing: 12) {
-                                    ForEach(genderOptions, id: \.self) { option in
-                                        GenderButton(title: option, isSelected: gender == option,
-                                                     hasError: genderError && gender.isEmpty,
-                                                     action: { gender = option; genderError = false; updateValidationState() })
-                                            .environmentObject(themeManager)
-                                    }
-                                }
+                                Divider().background(themeManager.current.cardBorder)
+
+                                // Gender selector
+                                genderSelectorRow
                             }
                         }
-                        .padding(.horizontal)
 
-                        // Activity Level
-                        VStack(alignment: .leading, spacing: 20) {
-                            SectionHeader(title: "Activity Level", icon: "figure.run", color: .orange)
-                                .environmentObject(themeManager)
-                            VStack(spacing: 12) {
-                                ForEach(activityOptions, id: \.0) { option in
-                                    ActivityLevelCard(level: option.0, title: option.1, description: option.2,
-                                                      isSelected: activityLevel == option.0,
-                                                      action: { activityLevel = option.0 })
-                                        .environmentObject(themeManager)
-                                }
+                        // ── Activity Level 卡片 ──
+                        profileCard {
+                            VStack(spacing: 16) {
+                                cardHeader(icon: "figure.run", title: "Activity Level")
+                                activityGrid
                             }
                         }
-                        .padding(.horizontal)
 
-                        // Nutrition Goals
-                        VStack(alignment: .leading, spacing: 20) {
-                            SectionHeader(title: "Nutrition Goals", icon: "target", color: .orange)
-                                .environmentObject(themeManager)
+                        // ── Nutrition Goal 卡片 ──
+                        profileCard {
+                            VStack(spacing: 20) {
+                                cardHeader(icon: "flame.fill", title: "Calorie Goal")
+                                calorieSliderRow
 
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    Text("Daily Calorie Target").font(.subheadline)
-                                        .foregroundColor(themeManager.current.primaryText)
-                                    Spacer()
-                                    Text("\(Int(calorieTarget)) kcal").font(.headline)
-                                        .foregroundColor(calorieError ? .red : .orange)
-                                }
-                                Slider(value: $calorieTarget, in: 1000...5000, step: 50)
-                                    .accentColor(calorieError ? .red : .orange)
-                                    .onChange(of: calorieTarget) { _, _ in
-                                        calorieError = calorieTarget < 1000 || calorieTarget > 5000
-                                        updateValidationState()
-                                    }
-                                HStack {
-                                    Text("1000").font(.caption).foregroundColor(themeManager.current.secondaryText)
-                                    Spacer()
-                                    Text("5000").font(.caption).foregroundColor(themeManager.current.secondaryText)
-                                }
-                            }
-                            .padding()
-                            .background(RoundedRectangle(cornerRadius: 12).fill(themeManager.current.cardBackground)
-                                .overlay(RoundedRectangle(cornerRadius: 12)
-                                    .stroke(calorieError ? Color.red.opacity(0.5) : themeManager.current.cardBorder, lineWidth: 1)))
+                                Divider().background(themeManager.current.cardBorder)
 
-                            VStack(alignment: .leading, spacing: 16) {
-                                Text("Dietary Preferences (Optional)").font(.subheadline)
-                                    .foregroundColor(themeManager.current.primaryText)
-                                VStack(spacing: 12) {
-                                    DietaryToggle(title: "Vegetarian", description: "No meat or fish", icon: "leaf.fill", isOn: $isVegetarian)
-                                        .environmentObject(themeManager)
-                                    DietaryToggle(title: "Keto", description: "Low carb, high fat", icon: "drop.fill", isOn: $isKeto)
-                                        .environmentObject(themeManager)
-                                    DietaryToggle(title: "Gluten-Free", description: "No gluten products", icon: "exclamationmark.triangle.fill", isOn: $isGlutenFree)
-                                        .environmentObject(themeManager)
-                                }
+                                // Dietary preferences
+                                dietarySection
                             }
                         }
-                        .padding(.horizontal)
 
-                        // Save Button
-                        VStack(spacing: 8) {
-                            Button(action: {
-                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-                                if validateForm() { saveProfile() }
-                            }) {
-                                HStack {
-                                    if isSaving {
-                                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    } else {
-                                        Text(isEditMode ? "Save Changes" : "Complete Setup").fontWeight(.semibold)
-                                        Image(systemName: isEditMode ? "checkmark" : "arrow.right")
-                                    }
-                                }
-                                .foregroundColor(isFormValid ? .white : .white.opacity(0.6))
-                                .frame(maxWidth: .infinity).padding(.vertical, 16)
-                                .background(LinearGradient(
-                                    gradient: Gradient(colors: isFormValid ? [.orange, .orange.opacity(0.8)] : [.gray, .gray.opacity(0.8)]),
-                                    startPoint: .topLeading, endPoint: .bottomTrailing))
-                                .cornerRadius(12)
-                                .shadow(color: isFormValid ? .orange.opacity(0.3) : .clear, radius: 8, x: 0, y: 4)
-                            }
-                            .disabled(isSaving)
-
-                            if !isFormValid && !showValidationErrors {
-                                Text("Complete all required fields to continue")
-                                    .font(.caption).foregroundColor(themeManager.current.secondaryText)
-                            }
-                        }
-                        .padding(.horizontal)
+                        // ── Save Button ──
+                        saveButton
 
                         if !isEditMode {
-                            Button(action: { SessionManager.shared.clearNewRegistrationFlag(); dismiss() }) {
-                                Text("Skip for now").font(.caption).foregroundColor(themeManager.current.secondaryText)
+                            Button(action: {
+                                SessionManager.shared.clearNewRegistrationFlag()
+                                dismiss()
+                            }) {
+                                Text("Skip for now")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(themeManager.current.secondaryText)
                             }
+                            .padding(.bottom, 8)
                         }
                     }
-                    .padding(.bottom, 40)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 50)
                 }
             }
             .preferredColorScheme(themeManager.current.colorScheme)
@@ -237,7 +139,8 @@ struct ProfileSetupView: View {
             .toolbar {
                 if isEditMode {
                     ToolbarItem(placement: .navigationBarLeading) {
-                        Button("Cancel") { dismiss() }.foregroundColor(themeManager.current.secondaryText)
+                        Button("Cancel") { dismiss() }
+                            .foregroundColor(themeManager.current.secondaryText)
                     }
                 }
             }
@@ -245,24 +148,336 @@ struct ProfileSetupView: View {
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) { }
             } message: { Text(errorMessage) }
-            .overlay(
-                ZStack {
-                    if showLoadingOverlay {
-                        Color.black.opacity(0.6).ignoresSafeArea()
-                        VStack(spacing: 20) {
-                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)).scaleEffect(1.5)
-                            Text(loadingMessage).font(.headline).foregroundColor(.white)
-                            Text("Syncing with server...").font(.caption).foregroundColor(.gray)
-                        }
-                        .padding(40)
-                        .background(RoundedRectangle(cornerRadius: 20).fill(Color.black.opacity(0.8))
-                            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.1), lineWidth: 1)))
-                    }
-                }
-                .animation(.easeInOut, value: showLoadingOverlay)
-            )
+            .overlay(loadingOverlay)
         }
     }
+
+    // MARK: - Top Header
+
+    var topHeader: some View {
+        VStack(spacing: 10) {
+            // 进度点（新用户）
+            if !isEditMode {
+                HStack(spacing: 6) {
+                    ForEach(0..<3) { i in
+                        Capsule()
+                            .fill(i <= 1 ? Color.orange : themeManager.current.cardBorder)
+                            .frame(width: i == 1 ? 20 : 8, height: 6)
+                    }
+                }
+                .padding(.top, 16)
+            }
+
+            // 图标
+            ZStack {
+                Circle()
+                    .fill(Color.orange.opacity(0.12))
+                    .frame(width: 72, height: 72)
+                Image(systemName: isEditMode ? "person.crop.circle.badge.checkmark" : "person.crop.circle.badge.plus")
+                    .font(.system(size: 32))
+                    .foregroundColor(.orange)
+            }
+            .padding(.top, isEditMode ? 20 : 8)
+
+            VStack(spacing: 6) {
+                Text(isEditMode ? "Edit Profile" : "Set Up Profile")
+                    .font(.system(size: 26, weight: .black, design: .rounded))
+                    .foregroundColor(themeManager.current.primaryText)
+                Text(isEditMode ? "Update your nutrition preferences" : "Help us personalize your nutrition journey")
+                    .font(.system(size: 14))
+                    .foregroundColor(themeManager.current.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(.top, 8)
+    }
+
+    // MARK: - Validation Error Card
+
+    var validationErrorCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(validationMessages, id: \.self) { message in
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.orange)
+                    Text(message)
+                        .font(.system(size: 13))
+                        .foregroundColor(themeManager.current.primaryText)
+                }
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(themeManager.current.cardBackground)
+        .cornerRadius(14)
+        .overlay(RoundedRectangle(cornerRadius: 14)
+            .stroke(Color.orange.opacity(0.4), lineWidth: 1))
+        .transition(.opacity)
+    }
+
+    // MARK: - Card Container
+
+    @ViewBuilder
+    func profileCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(spacing: 0) {
+            content()
+        }
+        .padding(18)
+        .background(themeManager.current.cardBackground)
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20)
+            .stroke(themeManager.current.cardBorder, lineWidth: 1))
+    }
+
+    func cardHeader(icon: String, title: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.orange)
+                .frame(width: 28, height: 28)
+                .background(Color.orange.opacity(0.12))
+                .cornerRadius(8)
+            Text(title)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(themeManager.current.primaryText)
+            Spacer()
+        }
+    }
+
+    // MARK: - Age Slider
+
+    var ageSliderRow: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text("Age")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText)
+                Spacer()
+                Text("\(Int(age)) yrs")
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundColor(ageError ? .red : .orange)
+            }
+            Slider(value: $age, in: 10...120, step: 1)
+                .accentColor(ageError ? .red : .orange)
+                .onChange(of: age) { _, _ in
+                    ageError = age < 10 || age > 120
+                    updateValidationState()
+                }
+            HStack {
+                Text("10").font(.caption2).foregroundColor(themeManager.current.secondaryText)
+                Spacer()
+                Text("120").font(.caption2).foregroundColor(themeManager.current.secondaryText)
+            }
+        }
+    }
+
+    // MARK: - Gender Selector
+
+    var genderSelectorRow: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Gender")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText)
+                if genderError {
+                    Text("· Required")
+                        .font(.system(size: 12))
+                        .foregroundColor(.red)
+                }
+                Spacer()
+            }
+            HStack(spacing: 10) {
+                ForEach(genderOptions, id: \.self) { option in
+                    Button(action: {
+                        gender = option
+                        genderError = false
+                        updateValidationState()
+                    }) {
+                        Text(option)
+                            .font(.system(size: 14, weight: gender == option ? .semibold : .regular))
+                            .foregroundColor(gender == option
+                                ? (themeManager.current == .dark ? .black : .white)
+                                : themeManager.current.primaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(gender == option
+                                          ? (themeManager.current == .dark ? Color.white : Color.black)
+                                          : themeManager.current.inputBackground)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(genderError && gender.isEmpty
+                                            ? Color.red.opacity(0.4)
+                                            : (gender == option ? Color.clear : themeManager.current.cardBorder),
+                                            lineWidth: 1)
+                            )
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Activity Grid（参考图3列表行风格）
+
+    var activityGrid: some View {
+        VStack(spacing: 10) {
+            ForEach(activityOptions, id: \.0) { level, title, desc, icon in
+                Button(action: { activityLevel = level }) {
+                    HStack(spacing: 14) {
+                        // 圆形图标
+                        ZStack {
+                            Circle()
+                                .fill(activityLevel == level
+                                      ? (themeManager.current == .dark ? Color.white : Color.black)
+                                      : themeManager.current.inputBackground)
+                                .frame(width: 40, height: 40)
+                            Image(systemName: icon)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(activityLevel == level
+                                    ? (themeManager.current == .dark ? .black : .white)
+                                    : themeManager.current.secondaryText)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(title)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(themeManager.current.primaryText)
+                            Text(desc)
+                                .font(.system(size: 12))
+                                .foregroundColor(themeManager.current.secondaryText)
+                        }
+
+                        Spacer()
+
+                        // 右侧勾选
+                        ZStack {
+                            Circle()
+                                .stroke(activityLevel == level ? Color.orange : themeManager.current.cardBorder, lineWidth: 1.5)
+                                .frame(width: 20, height: 20)
+                            if activityLevel == level {
+                                Circle().fill(Color.orange).frame(width: 12, height: 12)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(themeManager.current.inputBackground)
+                    .cornerRadius(14)
+                    .overlay(RoundedRectangle(cornerRadius: 14)
+                        .stroke(activityLevel == level ? Color.orange.opacity(0.4) : Color.clear, lineWidth: 1.5))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    // MARK: - Calorie Slider
+
+    var calorieSliderRow: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text("Daily Calorie Target")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText)
+                Spacer()
+                Text("\(Int(calorieTarget)) kcal")
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundColor(calorieError ? .red : .orange)
+            }
+            Slider(value: $calorieTarget, in: 1000...5000, step: 50)
+                .accentColor(calorieError ? .red : .orange)
+                .onChange(of: calorieTarget) { _, _ in
+                    calorieError = calorieTarget < 1000 || calorieTarget > 5000
+                    updateValidationState()
+                }
+            HStack {
+                Text("1,000").font(.caption2).foregroundColor(themeManager.current.secondaryText)
+                Spacer()
+                Text("5,000").font(.caption2).foregroundColor(themeManager.current.secondaryText)
+            }
+        }
+    }
+
+    // MARK: - Dietary Preferences
+
+    var dietarySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Dietary Preferences")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(themeManager.current.secondaryText)
+            VStack(spacing: 10) {
+                DietaryToggleRow(title: "Vegetarian", subtitle: "No meat or fish",
+                                 icon: "leaf.fill", isOn: $isVegetarian)
+                DietaryToggleRow(title: "Keto", subtitle: "Low carb, high fat",
+                                 icon: "drop.fill", isOn: $isKeto)
+                DietaryToggleRow(title: "Gluten-Free", subtitle: "No gluten products",
+                                 icon: "exclamationmark.triangle.fill", isOn: $isGlutenFree)
+            }
+        }
+    }
+
+    // MARK: - Save Button
+
+    var saveButton: some View {
+        VStack(spacing: 8) {
+            Button(action: {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                if validateForm() { saveProfile() }
+            }) {
+                HStack(spacing: 8) {
+                    if isSaving {
+                        ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white))
+                    } else {
+                        Image(systemName: isEditMode ? "checkmark" : "arrow.right")
+                        Text(isEditMode ? "Save Changes" : "Complete Setup")
+                    }
+                }
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 17)
+                .background(isFormValid ? Color.orange : Color.gray.opacity(0.4))
+                .cornerRadius(16)
+                .shadow(color: isFormValid ? .orange.opacity(0.25) : .clear, radius: 8, y: 4)
+            }
+            .disabled(isSaving)
+
+            if !isFormValid && !showValidationErrors {
+                Text("Complete all required fields to continue")
+                    .font(.system(size: 12))
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+        }
+    }
+
+    // MARK: - Loading Overlay
+
+    var loadingOverlay: some View {
+        ZStack {
+            if showLoadingOverlay {
+                Color.black.opacity(0.5).ignoresSafeArea()
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.3)
+                    Text(loadingMessage)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.white)
+                }
+                .padding(36)
+                .background(RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.black.opacity(0.75))
+                    .overlay(RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.white.opacity(0.08), lineWidth: 1)))
+            }
+        }
+        .animation(.easeInOut, value: showLoadingOverlay)
+    }
+
+    // MARK: - Logic（完整保留）
 
     func updateValidationState() {
         if showValidationErrors { showValidationErrors = !isFormValid }
@@ -292,9 +507,11 @@ struct ProfileSetupView: View {
         isSaving = true; showLoadingOverlay = true
         loadingMessage = isEditMode ? "Updating your profile..." : "Setting up your profile..."
         let userId = session.userID.isEmpty ? UserDefaults.standard.string(forKey: "user_id") ?? "" : session.userID
-        let profile = UserProfile(_id: existingProfile?._id, user_id: userId, age: Int(age), gender: gender,
-                                   activity_level: activityLevel, calorie_target: Int(calorieTarget),
-                                   is_vegetarian: isVegetarian, is_keto: isKeto, is_gluten_free: isGlutenFree, updated_at: nil)
+        let profile = UserProfile(
+            _id: existingProfile?._id, user_id: userId, age: Int(age), gender: gender,
+            activity_level: activityLevel, calorie_target: Int(calorieTarget),
+            is_vegetarian: isVegetarian, is_keto: isKeto, is_gluten_free: isGlutenFree, updated_at: nil
+        )
         profileManager.saveProfile(profile) { success, error in
             self.isSaving = false; self.showLoadingOverlay = false
             if success {
@@ -308,7 +525,49 @@ struct ProfileSetupView: View {
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - DietaryToggleRow（替代原 DietaryToggle，风格更简洁）
+
+struct DietaryToggleRow: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    let title: String
+    let subtitle: String
+    let icon: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(isOn ? Color.orange.opacity(0.12) : themeManager.current.inputBackground)
+                    .frame(width: 36, height: 36)
+                Image(systemName: icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(isOn ? .orange : themeManager.current.secondaryText)
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(themeManager.current.primaryText)
+                Text(subtitle)
+                    .font(.system(size: 12))
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+
+            Spacer()
+
+            Toggle("", isOn: $isOn)
+                .toggleStyle(SwitchToggleStyle(tint: .orange))
+                .labelsHidden()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(themeManager.current.inputBackground)
+        .cornerRadius(14)
+    }
+}
+
+// MARK: - 保留原有 Supporting Views（兼容其他地方引用）
 
 struct GenderButton: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -319,12 +578,17 @@ struct GenderButton: View {
     var body: some View {
         Button(action: action) {
             Text(title).font(.subheadline).fontWeight(isSelected ? .semibold : .regular)
-                .foregroundColor(isSelected ? .black : themeManager.current.primaryText)
+                .foregroundColor(isSelected
+                    ? (themeManager.current == .dark ? .black : .white)
+                    : themeManager.current.primaryText)
                 .frame(maxWidth: .infinity).padding(.vertical, 12)
                 .background(RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.orange : themeManager.current.inputBackground)
+                    .fill(isSelected
+                          ? (themeManager.current == .dark ? Color.white : Color.black)
+                          : themeManager.current.inputBackground)
                     .overlay(RoundedRectangle(cornerRadius: 12)
-                        .stroke(hasError ? Color.red.opacity(0.5) : (isSelected ? Color.clear : themeManager.current.cardBorder), lineWidth: 1)))
+                        .stroke(hasError ? Color.red.opacity(0.5)
+                                : (isSelected ? Color.clear : themeManager.current.cardBorder), lineWidth: 1)))
         }
     }
 }
@@ -339,10 +603,14 @@ struct ActivityLevelCard: View {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.orange : themeManager.current.inputBackground)
+                        .fill(isSelected
+                              ? (themeManager.current == .dark ? Color.white : Color.black)
+                              : themeManager.current.inputBackground)
                         .frame(width: 40, height: 40)
                     Text(level).font(.headline)
-                        .foregroundColor(isSelected ? .black : themeManager.current.primaryText)
+                        .foregroundColor(isSelected
+                            ? (themeManager.current == .dark ? .black : .white)
+                            : themeManager.current.primaryText)
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title).font(.subheadline).fontWeight(.semibold)
@@ -351,11 +619,13 @@ struct ActivityLevelCard: View {
                         .foregroundColor(themeManager.current.secondaryText)
                 }
                 Spacer()
-                if isSelected { Image(systemName: "checkmark.circle.fill").foregroundColor(.orange) }
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill").foregroundColor(.orange)
+                }
             }
             .padding()
             .background(RoundedRectangle(cornerRadius: 12)
-                .fill(isSelected ? themeManager.current.cardBackground : themeManager.current.cardBackground)
+                .fill(themeManager.current.cardBackground)
                 .overlay(RoundedRectangle(cornerRadius: 12)
                     .stroke(isSelected ? Color.orange.opacity(0.5) : themeManager.current.cardBorder, lineWidth: 1)))
         }

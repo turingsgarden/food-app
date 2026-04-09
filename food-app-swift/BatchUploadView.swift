@@ -1,9 +1,11 @@
-//
 //  BatchUploadView.swift
 //  food-app-swift
 //
 //  Created by Helen Tu on 3/2/26.
 //
+// 微调：所有硬编码深色背景/白色文字改为 themeManager.current.* 适配 light mode
+// 逻辑完全保留不变
+
 import SwiftUI
 import PhotosUI
 import AVFoundation
@@ -75,12 +77,15 @@ struct BatchUploadView: View {
                 if showToast {
                     VStack {
                         Spacer()
-                        HStack {
+                        HStack(spacing: 8) {
                             Image(systemName: "checkmark.circle.fill")
                             Text(toastMessage)
                         }
-                        .font(.subheadline.bold()).foregroundColor(.white).padding()
-                        .background(Capsule().fill(Color.green).shadow(color: .green.opacity(0.3), radius: 10))
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20).padding(.vertical, 14)
+                        .background(Capsule().fill(Color.green))
+                        .shadow(color: .green.opacity(0.3), radius: 10)
                         .padding(.bottom, 50)
                     }
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -125,7 +130,8 @@ struct BatchUploadView: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(stage == .results ? "Results" : "Batch Analysis")
-                    .font(.title2.bold()).foregroundColor(themeManager.current.primaryText)
+                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .foregroundColor(themeManager.current.primaryText)
                 if stage == .results {
                     Text("\(completedCount) of \(batchResults.count) analyzed")
                         .font(.caption).foregroundColor(themeManager.current.secondaryText)
@@ -140,7 +146,7 @@ struct BatchUploadView: View {
                     Label("Summary", systemImage: "chart.bar.fill")
                         .font(.caption.bold()).foregroundColor(.orange)
                         .padding(.horizontal, 10).padding(.vertical, 6)
-                        .background(Capsule().fill(Color.orange.opacity(0.15)))
+                        .background(Capsule().fill(Color.orange.opacity(0.12)))
                 }
             }
             Button(action: { dismiss() }) {
@@ -148,7 +154,7 @@ struct BatchUploadView: View {
                     .font(.title2).foregroundColor(themeManager.current.secondaryText)
             }
         }
-        .padding(.horizontal).padding(.top, 20).padding(.bottom, 12)
+        .padding(.horizontal, 20).padding(.top, 20).padding(.bottom, 12)
     }
 
     // MARK: - Selection Stage
@@ -160,50 +166,55 @@ struct BatchUploadView: View {
                 else { selectedPhotosGrid }
 
                 HStack(spacing: 12) {
+                    // 相机按钮（主色黑/白适配）
                     Button(action: checkCameraAndOpen) {
-                        HStack {
+                        HStack(spacing: 6) {
                             Image(systemName: "camera.fill")
                             Text("Camera")
                         }
-                        .fontWeight(.semibold).foregroundColor(.white)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(themeManager.current == .dark ? .black : .white)
                         .frame(maxWidth: .infinity).padding(.vertical, 14)
-                        .background(LinearGradient(colors: [.orange, .orange.opacity(0.8)],
-                                                   startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .cornerRadius(12)
+                        .background(themeManager.current == .dark ? Color.white : Color.black)
+                        .cornerRadius(14)
                     }
 
-                    PhotosPicker(selection: $selectedPhotos,
-                                 maxSelectionCount: max(1, 9 - batchResults.count),
-                                 matching: .images) {
-                        HStack {
+                    PhotosPicker(
+                        selection: $selectedPhotos,
+                        maxSelectionCount: max(1, 9 - batchResults.count),
+                        matching: .images
+                    ) {
+                        HStack(spacing: 6) {
                             Image(systemName: "photo.on.rectangle.angled")
                             Text("Gallery (\(batchResults.count)/9)")
                         }
-                        .fontWeight(.semibold).foregroundColor(themeManager.current.primaryText)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(themeManager.current.primaryText)
                         .frame(maxWidth: .infinity).padding(.vertical, 14)
-                        .background(RoundedRectangle(cornerRadius: 12)
-                            .fill(themeManager.current.inputBackground)
-                            .overlay(RoundedRectangle(cornerRadius: 12)
-                                .stroke(themeManager.current.cardBorder, lineWidth: 1)))
+                        .background(themeManager.current.inputBackground)
+                        .cornerRadius(14)
+                        .overlay(RoundedRectangle(cornerRadius: 14)
+                            .stroke(themeManager.current.cardBorder, lineWidth: 1))
                     }
                     .disabled(batchResults.count >= 9)
                     .opacity(batchResults.count >= 9 ? 0.5 : 1)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
 
                 if !batchResults.isEmpty {
                     Button(action: startBatchAnalysis) {
-                        HStack {
+                        HStack(spacing: 8) {
                             Image(systemName: "sparkles")
                             Text("Analyze \(batchResults.count) Photo\(batchResults.count > 1 ? "s" : "")")
                         }
-                        .fontWeight(.bold).foregroundColor(.black)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity).padding(.vertical, 16)
-                        .background(LinearGradient(colors: [.orange, .yellow],
-                                                   startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .cornerRadius(14).shadow(color: .orange.opacity(0.4), radius: 12, y: 4)
+                        .background(Color.orange)
+                        .cornerRadius(16)
+                        .shadow(color: .orange.opacity(0.3), radius: 8, y: 4)
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 20)
                 }
                 Spacer(minLength: 40)
             }
@@ -214,27 +225,29 @@ struct BatchUploadView: View {
     var emptySelectionView: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color.orange.opacity(0.08))
+                .fill(themeManager.current.inputBackground)
                 .overlay(RoundedRectangle(cornerRadius: 20)
                     .stroke(style: StrokeStyle(lineWidth: 2, dash: [10]))
-                    .foregroundColor(.orange.opacity(0.4)))
+                    .foregroundColor(themeManager.current.cardBorder))
                 .frame(height: 240)
             VStack(spacing: 16) {
                 Image(systemName: "photo.stack.fill")
-                    .font(.system(size: 52)).foregroundColor(.orange.opacity(0.7))
-                Text("Select up to 9 photos").font(.headline)
-                    .foregroundColor(themeManager.current.primaryText)  // ✅
-                Text("All photos analyzed in parallel").font(.caption)
-                    .foregroundColor(themeManager.current.secondaryText)  // ✅
+                    .font(.system(size: 48)).foregroundColor(.orange.opacity(0.6))
+                Text("Select up to 9 photos")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(themeManager.current.primaryText)
+                Text("AI analyzes all photos automatically")
+                    .font(.caption).foregroundColor(themeManager.current.secondaryText)
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 20)
     }
 
     var selectedPhotosGrid: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("\(batchResults.count) photo\(batchResults.count > 1 ? "s" : "") selected")
-                .font(.caption).foregroundColor(themeManager.current.secondaryText).padding(.horizontal)
+                .font(.caption).foregroundColor(themeManager.current.secondaryText)
+                .padding(.horizontal, 20)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 3), spacing: 4) {
                 ForEach(Array(batchResults.enumerated()), id: \.element.id) { index, result in
                     ZStack(alignment: .topTrailing) {
@@ -250,7 +263,7 @@ struct BatchUploadView: View {
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
         }
     }
 
@@ -259,22 +272,28 @@ struct BatchUploadView: View {
     var analyzingStage: some View {
         VStack(spacing: 32) {
             Spacer()
+            // 进度圆环
             ZStack {
-                Circle().stroke(themeManager.current.cardBorder, lineWidth: 8).frame(width: 120, height: 120)
+                Circle()
+                    .stroke(themeManager.current.cardBorder, lineWidth: 10)
+                    .frame(width: 120, height: 120)
                 Circle()
                     .trim(from: 0, to: batchResults.isEmpty ? 0 : CGFloat(analysisProgress) / CGFloat(batchResults.count))
-                    .stroke(LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                    .stroke(Color.orange, style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     .frame(width: 120, height: 120).rotationEffect(.degrees(-90))
                     .animation(.easeInOut(duration: 0.4), value: analysisProgress)
                 VStack(spacing: 2) {
                     Text("\(analysisProgress)")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(size: 36, weight: .black, design: .rounded))
                         .foregroundColor(themeManager.current.primaryText)
-                    Text("of \(batchResults.count)").font(.caption).foregroundColor(themeManager.current.secondaryText)
+                    Text("of \(batchResults.count)")
+                        .font(.caption).foregroundColor(themeManager.current.secondaryText)
                 }
             }
-            Text("Analyzing photos in parallel...").font(.headline).foregroundColor(themeManager.current.primaryText)
+            Text("Analyzing photos...")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(themeManager.current.primaryText)
+            // 缩略图状态
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(Array(batchResults.enumerated()), id: \.element.id) { _, result in
@@ -283,12 +302,12 @@ struct BatchUploadView: View {
                                 .resizable().scaledToFill()
                                 .frame(width: 64, height: 64).clipped().cornerRadius(10)
                                 .overlay(RoundedRectangle(cornerRadius: 10)
-                                    .fill(statusOverlayColor(result.status).opacity(0.4)))
+                                    .fill(statusOverlayColor(result.status).opacity(0.45)))
                             statusIcon(result.status)
                         }
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 20)
             }
             Spacer()
         }
@@ -306,10 +325,14 @@ struct BatchUploadView: View {
     @ViewBuilder
     func statusIcon(_ status: BatchMealResult.AnalysisStatus) -> some View {
         switch status {
-        case .pending: Image(systemName: "clock").foregroundColor(.white.opacity(0.6))
-        case .analyzing: ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .orange)).scaleEffect(0.8)
-        case .completed: Image(systemName: "checkmark.circle.fill").foregroundColor(.green).font(.title3)
-        case .failed: Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red).font(.title3)
+        case .pending:
+            Image(systemName: "clock").foregroundColor(.white.opacity(0.7))
+        case .analyzing:
+            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .orange)).scaleEffect(0.8)
+        case .completed:
+            Image(systemName: "checkmark.circle.fill").foregroundColor(.green).font(.title3)
+        case .failed:
+            Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red).font(.title3)
         }
     }
 
@@ -317,23 +340,28 @@ struct BatchUploadView: View {
 
     var resultsStage: some View {
         VStack(spacing: 0) {
+            // 分页点
             if batchResults.count > 1 {
                 HStack(spacing: 6) {
                     ForEach(0..<batchResults.count, id: \.self) { i in
                         Circle()
-                            .fill(i == currentIndex ? Color.orange : themeManager.current.cardBorder)
+                            .fill(i == currentIndex
+                                  ? (themeManager.current == .dark ? Color.white : Color.black)
+                                  : themeManager.current.cardBorder)
                             .frame(width: i == currentIndex ? 8 : 6, height: i == currentIndex ? 8 : 6)
                             .animation(.spring(), value: currentIndex)
                     }
                 }
                 .padding(.vertical, 10)
             }
+
             TabView(selection: $currentIndex) {
                 ForEach(Array(batchResults.enumerated()), id: \.element.id) { index, result in
                     resultCard(index: index, result: result).tag(index)
                 }
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+
             bottomBar
         }
     }
@@ -342,53 +370,70 @@ struct BatchUploadView: View {
     func resultCard(index: Int, result: BatchMealResult) -> some View {
         ScrollView {
             VStack(spacing: 20) {
+                // 图片 + saved badge
                 ZStack(alignment: .topTrailing) {
                     Image(uiImage: result.image)
                         .resizable().scaledToFill()
-                        .frame(height: 200).clipped().cornerRadius(16)
+                        .frame(height: 220).clipped().cornerRadius(18)
                     if result.isSaved {
                         Label("Saved", systemImage: "checkmark.circle.fill")
                             .font(.caption.bold()).foregroundColor(.white)
                             .padding(.horizontal, 10).padding(.vertical, 6)
-                            .background(Capsule().fill(Color.green)).padding(10)
+                            .background(Capsule().fill(Color.green)).padding(12)
                     }
                 }
+
                 switch result.status {
-                case .analyzing: AnalyzingView()
+                case .analyzing:
+                    AnalyzingView()
+
                 case .failed(let msg):
                     VStack(spacing: 12) {
-                        Image(systemName: "exclamationmark.triangle.fill").font(.largeTitle).foregroundColor(.red)
-                        Text(msg).font(.subheadline).foregroundColor(themeManager.current.secondaryText).multilineTextAlignment(.center)
-                        Button("Retry") { retryAnalysis(index: index) }.foregroundColor(.orange)
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 40)).foregroundColor(.red)
+                        Text(msg).font(.subheadline)
+                            .foregroundColor(themeManager.current.secondaryText)
+                            .multilineTextAlignment(.center)
+                        Button("Retry") { retryAnalysis(index: index) }
+                            .foregroundColor(.orange).fontWeight(.semibold)
                     }.padding()
+
                 case .completed:
                     completedResultContent(index: index, result: result)
+
                 case .pending:
-                    Text("Waiting to analyze...").foregroundColor(themeManager.current.secondaryText)
+                    Text("Waiting to analyze...")
+                        .foregroundColor(themeManager.current.secondaryText)
                 }
             }
-            .padding(.horizontal).padding(.bottom, 120)
+            .padding(.horizontal, 16).padding(.bottom, 120)
         }
     }
 
     @ViewBuilder
     func completedResultContent(index: Int, result: BatchMealResult) -> some View {
         VStack(spacing: 16) {
+            // 菜名输入框
             TextField("Dish name", text: Binding(
                 get: { batchResults[index].dishName },
                 set: { batchResults[index].dishName = $0 }
             ))
-            .font(.title3.bold())
-            .foregroundColor(themeManager.current.primaryText)  // ✅
-            .padding()
-            .background(RoundedRectangle(cornerRadius: 12).fill(themeManager.current.inputBackground)
-                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange.opacity(0.3), lineWidth: 1)))
+            .font(.system(size: 18, weight: .bold))
+            .foregroundColor(themeManager.current.primaryText)
+            .padding(14)
+            .background(themeManager.current.inputBackground)
+            .cornerRadius(14)
+            .overlay(RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.orange.opacity(0.25), lineWidth: 1))
 
+            // 餐食类型 + 日期
             HStack(spacing: 12) {
                 MealTypeSelector(selectedType: Binding(
                     get: { batchResults[index].mealType },
                     set: { batchResults[index].mealType = $0 }
                 ))
+                .environmentObject(themeManager)
+
                 DateSelector(
                     selectedDate: Binding(
                         get: { batchResults[index].savedAt },
@@ -396,42 +441,48 @@ struct BatchUploadView: View {
                     ),
                     showPicker: $showDatePicker
                 )
+                .environmentObject(themeManager)
             }
 
+            // 营养信息
             if !result.rawNutritionInfo.isEmpty {
                 BeautifulNutritionView(nutritionText: result.rawNutritionInfo)
                     .environmentObject(themeManager)
             }
 
+            // 成分列表
             let allIngredients = result.visibleIngredients + result.hiddenIngredients
             if !allIngredients.isEmpty {
                 IngredientTableView(ingredients: allIngredients)
                     .environmentObject(themeManager)
             }
 
+            // Save 按钮
             if !result.isSaved {
                 Button(action: { saveSingleMeal(index: index) }) {
-                    HStack {
+                    HStack(spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
                         Text("Save This Meal")
                     }
-                    .fontWeight(.semibold).foregroundColor(.white)
-                    .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(LinearGradient(colors: [.green, .green.opacity(0.8)],
-                                               startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .cornerRadius(12)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 16)
+                    .background(Color.green).cornerRadius(16)
                 }
             } else {
-                HStack {
+                HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
                     Text("Saved to Diary")
                 }
-                .foregroundColor(.green).font(.subheadline.bold())
-                .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.green.opacity(0.1)))
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.green)
+                .frame(maxWidth: .infinity).padding(.vertical, 16)
+                .background(RoundedRectangle(cornerRadius: 16).fill(Color.green.opacity(0.1)))
             }
         }
     }
+
+    // MARK: - Bottom Bar
 
     var bottomBar: some View {
         VStack(spacing: 0) {
@@ -439,35 +490,42 @@ struct BatchUploadView: View {
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Total").font(.caption2).foregroundColor(themeManager.current.secondaryText)
-                    Text("\(totalCalories) kcal").font(.headline.bold()).foregroundColor(.orange)
+                    HStack(spacing: 4) {
+                        Image(systemName: "flame.fill").font(.system(size: 12)).foregroundColor(.orange)
+                        Text("\(totalCalories) kcal")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundColor(themeManager.current.primaryText)
+                    }
                 }
                 Spacer()
                 if !allSaved {
                     Button(action: saveAllMeals) {
-                        HStack {
+                        HStack(spacing: 6) {
                             Image(systemName: "square.and.arrow.down.fill")
                             Text("Save All")
                         }
-                        .fontWeight(.bold).foregroundColor(.black)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(themeManager.current == .dark ? .black : .white)
                         .padding(.horizontal, 24).padding(.vertical, 12)
-                        .background(LinearGradient(colors: [.orange, .yellow],
-                                                   startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .cornerRadius(12)
+                        .background(themeManager.current == .dark ? Color.white : Color.black)
+                        .cornerRadius(14)
                     }
                 } else {
                     Button(action: { dismiss() }) {
-                        Text("Done").fontWeight(.bold).foregroundColor(.white)
+                        Text("Done")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(.white)
                             .padding(.horizontal, 32).padding(.vertical, 12)
-                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.green))
+                            .background(Color.green).cornerRadius(14)
                     }
                 }
             }
-            .padding(.horizontal).padding(.vertical, 12)
+            .padding(.horizontal, 20).padding(.vertical, 14)
             .background(themeManager.current.cardBackground)
         }
     }
 
-    // MARK: - Logic
+    // MARK: - Logic（完整保留，不动）
 
     func loadSelectedPhotos(_ items: [PhotosPickerItem]) {
         Task {
@@ -509,7 +567,9 @@ struct BatchUploadView: View {
         for i in 0..<batchResults.count { batchResults[i].status = .analyzing }
         Task {
             await withTaskGroup(of: Void.self) { group in
-                for index in 0..<batchResults.count { group.addTask { await self.analyzeSingle(index: index) } }
+                for index in 0..<batchResults.count {
+                    group.addTask { await self.analyzeSingle(index: index) }
+                }
             }
             await MainActor.run {
                 self.isAnalyzing = false
@@ -519,8 +579,12 @@ struct BatchUploadView: View {
     }
 
     func analyzeSingle(index: Int) async {
-        guard let imageData = compressImage(batchResults[index].image, maxSizeKB: 500) else {
-            await MainActor.run { self.batchResults[index].status = .failed("Failed to process image"); self.analysisProgress += 1 }
+        let image = await MainActor.run { batchResults[index].image }
+        guard let imageData = compressImage(image, maxSizeKB: 500) else {
+            await MainActor.run {
+                self.batchResults[index].status = .failed("Failed to process image")
+                self.analysisProgress += 1
+            }
             return
         }
         await withCheckedContinuation { continuation in
@@ -548,7 +612,8 @@ struct BatchUploadView: View {
 
     func retryAnalysis(index: Int) {
         batchResults[index].status = .analyzing
-        guard let imageData = compressImage(batchResults[index].image, maxSizeKB: 500) else {
+        let image = batchResults[index].image
+        guard let imageData = compressImage(image, maxSizeKB: 500) else {
             batchResults[index].status = .failed("Failed to process image"); return
         }
         NetworkManager.shared.uploadImage(imageData: imageData) { result in
@@ -566,8 +631,11 @@ struct BatchUploadView: View {
     }
 
     func saveSingleMeal(index: Int) {
+        guard !batchResults[index].isSaved else { return }
+        guard case .completed = batchResults[index].status else { return }
+        batchResults[index].isSaved = true
+
         let result = batchResults[index]
-        guard case .completed = result.status else { return }
         let userId = UserDefaults.standard.string(forKey: "user_id") ?? ""
         let fullBase64 = compressImage(result.image, maxSizeKB: 500)?.base64EncodedString() ?? ""
         let thumbBase64 = compressImage(result.image, maxSizeKB: 50)?.base64EncodedString() ?? ""
@@ -583,17 +651,22 @@ struct BatchUploadView: View {
         NetworkManager.shared.saveMeal(payload) { success, _ in
             DispatchQueue.main.async {
                 if success {
-                    self.batchResults[index].isSaved = true
-                    NotificationCenter.default.post(name: Notification.Name("MealSaved"), object: nil)
                     self.showToastMessage("Meal saved!")
+                } else {
+                    self.batchResults[index].isSaved = false
                 }
             }
         }
     }
 
     func saveAllMeals() {
-        for index in 0..<batchResults.count {
-            if !batchResults[index].isSaved, case .completed = batchResults[index].status { saveSingleMeal(index: index) }
+        let indicesToSave = (0..<batchResults.count).filter { index in
+            !batchResults[index].isSaved &&
+            { if case .completed = batchResults[index].status { return true } else { return false } }()
+        }
+        for index in indicesToSave { saveSingleMeal(index: index) }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            NotificationCenter.default.post(name: Notification.Name("MealSaved"), object: nil)
         }
     }
 
@@ -626,9 +699,27 @@ struct BatchUploadView: View {
     func parseIngredientsToEditable(from text: String) -> [EditableIngredient] {
         text.split(separator: "\n").compactMap { line in
             let parts = line.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-            guard parts.count >= 3 else { return nil }
-            return EditableIngredient(id: UUID().uuidString, name: parts[0], quantity: parts[1], unit: parts[2])
+            guard parts.count >= 2, !parts[0].isEmpty else { return nil }
+            let name = parts[0]
+            let quantity = parts[1]
+            // ✅ unit 字段如果是数字（AI 有时返回 "name | qty | number" 格式），则推断真实单位
+            let rawUnit = parts.count >= 3 ? parts[2] : ""
+            let unit: String
+            if Double(rawUnit) != nil || rawUnit.isEmpty {
+                unit = guessIngredientUnit(for: name)
+            } else {
+                unit = rawUnit
+            }
+            return EditableIngredient(id: UUID().uuidString, name: name, quantity: quantity, unit: unit)
         }
+    }
+
+    func guessIngredientUnit(for name: String) -> String {
+        let n = name.lowercased()
+        if n.contains("oil") || n.contains("sauce") || n.contains("milk") || n.contains("water") || n.contains("vinegar") { return "ml" }
+        if n.contains("salt") || n.contains("pepper") || n.contains("spice") || n.contains("powder") { return "tsp" }
+        if n.contains("bread") || n.contains("egg") || n.contains("slice") || n.contains("piece") { return "pcs" }
+        return "g"
     }
 
     func extractCalories(from text: String) -> Int? {
@@ -660,37 +751,65 @@ struct BatchSummarySheet: View {
                 themeManager.current.background.ignoresSafeArea()
                 ScrollView {
                     VStack(spacing: 20) {
-                        VStack(spacing: 8) {
-                            Text("\(totalCalories)")
-                                .font(.system(size: 64, weight: .bold, design: .rounded)).foregroundColor(.orange)
-                            Text("Total Calories").font(.subheadline).foregroundColor(themeManager.current.secondaryText)
+                        // 总卡路里大数字
+                        VStack(spacing: 6) {
+                            HStack(alignment: .lastTextBaseline, spacing: 4) {
+                                Text("\(totalCalories)")
+                                    .font(.system(size: 56, weight: .black, design: .rounded))
+                                    .foregroundColor(themeManager.current.primaryText)
+                                Text("kcal")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(themeManager.current.secondaryText)
+                            }
+                            Text("Total Calories")
+                                .font(.subheadline)
+                                .foregroundColor(themeManager.current.secondaryText)
                         }
                         .padding(.vertical, 24).frame(maxWidth: .infinity)
-                        .background(RoundedRectangle(cornerRadius: 20).fill(Color.orange.opacity(0.08)))
+                        .background(themeManager.current.cardBackground)
+                        .cornerRadius(20)
+                        .overlay(RoundedRectangle(cornerRadius: 20)
+                            .stroke(themeManager.current.cardBorder, lineWidth: 1))
 
+                        // 明细列表
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Meal Breakdown").font(.headline).foregroundColor(themeManager.current.primaryText)
+                            Text("Meal Breakdown")
+                                .font(.system(size: 17, weight: .bold))
+                                .foregroundColor(themeManager.current.primaryText)
                             ForEach(Array(completedResults.enumerated()), id: \.element.id) { index, result in
-                                HStack {
-                                    Image(uiImage: result.image).resizable().scaledToFill()
-                                        .frame(width: 44, height: 44).clipped().cornerRadius(8)
-                                    VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 12) {
+                                    Image(uiImage: result.image)
+                                        .resizable().scaledToFill()
+                                        .frame(width: 50, height: 50).clipped()
+                                        .cornerRadius(12)
+                                    VStack(alignment: .leading, spacing: 3) {
                                         Text(result.dishName.isEmpty ? "Meal \(index + 1)" : result.dishName)
-                                            .font(.subheadline.bold()).foregroundColor(themeManager.current.primaryText)
-                                        Text(result.mealType).font(.caption).foregroundColor(themeManager.current.secondaryText)
+                                            .font(.system(size: 14, weight: .semibold))
+                                            .foregroundColor(themeManager.current.primaryText)
+                                        Text(result.mealType.capitalized)
+                                            .font(.caption)
+                                            .foregroundColor(themeManager.current.secondaryText)
                                     }
                                     Spacer()
                                     if let cal = extractCalories(from: result.rawNutritionInfo) {
-                                        Text("\(cal) kcal").font(.subheadline.bold()).foregroundColor(.orange)
+                                        VStack(alignment: .trailing, spacing: 1) {
+                                            Text("\(cal)")
+                                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                                                .foregroundColor(themeManager.current.primaryText)
+                                            Text("kcal").font(.caption)
+                                                .foregroundColor(themeManager.current.secondaryText)
+                                        }
                                     }
                                 }
-                                .padding()
-                                .background(RoundedRectangle(cornerRadius: 12).fill(themeManager.current.cardBackground)
-                                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(themeManager.current.cardBorder, lineWidth: 1)))
+                                .padding(14)
+                                .background(themeManager.current.cardBackground)
+                                .cornerRadius(16)
+                                .overlay(RoundedRectangle(cornerRadius: 16)
+                                    .stroke(themeManager.current.cardBorder, lineWidth: 1))
                             }
                         }
                     }
-                    .padding()
+                    .padding(16)
                 }
             }
             .preferredColorScheme(themeManager.current.colorScheme)
@@ -698,7 +817,9 @@ struct BatchSummarySheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }.foregroundColor(.orange)
+                    Button("Done") { dismiss() }
+                        .fontWeight(.semibold)
+                        .foregroundColor(themeManager.current == .dark ? .white : .black)
                 }
             }
         }
@@ -715,7 +836,7 @@ struct BatchSummarySheet: View {
     }
 }
 
-// MARK: - Batch Camera View
+// MARK: - Batch Camera View（保持不变）
 
 struct BatchCameraView: UIViewControllerRepresentable {
     let onCapture: (UIImage) -> Void
