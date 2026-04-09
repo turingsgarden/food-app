@@ -85,7 +85,7 @@ struct MealDetailView: View {
         .sheet(isPresented: $showShareSheet) { ShareSheet(items: [generateShareText()]) }
     }
 
-    // MARK: - Hero Image（改：渐变底部改为 theme.background）
+    
 
     var heroImage: some View {
         GeometryReader { geo in
@@ -103,7 +103,7 @@ struct MealDetailView: View {
                             .font(.system(size: 48))
                             .foregroundColor(themeManager.current.secondaryText.opacity(0.3)))
                 }
-                // 底部渐变：黑→theme背景色（避免 dark/light 不匹配）
+                
                 LinearGradient(
                     gradient: Gradient(colors: [.clear, themeManager.current.background.opacity(0.6), themeManager.current.background]),
                     startPoint: .top,
@@ -128,7 +128,7 @@ struct MealDetailView: View {
         .frame(height: 300)
     }
 
-    // MARK: - Title & Meta（Cal AI 风格）
+
 
     var titleAndMeta: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -147,7 +147,7 @@ struct MealDetailView: View {
                     .foregroundColor(themeManager.current.primaryText)
             }
 
-            // Meta 胶囊行
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     if let savedAt = meal.saved_at, let date = ISO8601DateFormatter().date(from: savedAt) {
@@ -170,7 +170,7 @@ struct MealDetailView: View {
         }
     }
 
-    // MARK: - Ingredients Section（保持原逻辑，改样式）
+   
 
     @ViewBuilder
     var ingredientsSection: some View {
@@ -265,7 +265,7 @@ struct MealDetailView: View {
         }
     }
 
-    // MARK: - Action Buttons（Cal AI 风格：Fix Issue + Done）
+
 
     @ViewBuilder
     var actionButtons: some View {
@@ -300,10 +300,10 @@ struct MealDetailView: View {
                 .disabled(isSaving || isRecalculatingNutrition)
             }
         } else {
-            // Cal AI 风格：Fix Issue（左，outlined）+ Done / Delete（右，filled）
+
             VStack(spacing: 10) {
                 HStack(spacing: 12) {
-                    // Fix Issue = Edit 功能
+
                     Button(action: startEditing) {
                         HStack(spacing: 6) {
                             Image(systemName: "sparkles")
@@ -318,7 +318,7 @@ struct MealDetailView: View {
                             .stroke(themeManager.current.cardBorder, lineWidth: 1.5))
                     }
 
-                    // Done 按钮
+                  
                     Button(action: { dismiss() }) {
                         Text("Done")
                             .font(.system(size: 15, weight: .bold))
@@ -329,7 +329,7 @@ struct MealDetailView: View {
                     }
                 }
 
-                // 删除按钮（单独一行，弱化）
+               
                 Button(action: { showDeleteAlert = true }) {
                     HStack(spacing: 6) {
                         if isDeleting {
@@ -348,7 +348,7 @@ struct MealDetailView: View {
         }
     }
 
-    // MARK: - 原有逻辑（完整保留）
+   
 
     func formatDate(_ date: Date) -> String {
         let f = DateFormatter(); f.dateFormat = "MMM d, yyyy"; return f.string(from: date)
@@ -450,10 +450,10 @@ struct MealDetailView: View {
             for i in 2..<parts.count {
                 let p = parts[i]
                 if p.lowercased() == "user edited" { continue }
-                if Double(p) != nil { continue }  // ✅ 跳过数字字段
+                if Double(p) != nil { continue }
                 unit = p; break
             }
-            // ✅ 如果 unit 仍然为空，推断单位
+           
             if unit.isEmpty { unit = guessIngredientUnit(for: name) }
             guard !name.isEmpty else { return nil }
             return EditableIngredient(id: name, name: name, quantity: quantity, unit: unit)
@@ -499,9 +499,9 @@ struct MealDetailView: View {
     }
 }
 
-// MARK: - 新组件
 
-// Meta 胶囊（新版 InfoPill）
+
+
 struct MetaPill: View {
     let icon: String; let text: String; let bg: Color; let fg: Color
     var body: some View {
@@ -515,7 +515,7 @@ struct MetaPill: View {
     }
 }
 
-// 保留原有 ActionButton / InfoPill / ShareSheet
+
 struct ActionButton: View {
     let icon: String; let action: () -> Void
     var body: some View {

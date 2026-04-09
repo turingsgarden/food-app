@@ -2,12 +2,6 @@
 //  ProfileSetupView.swift
 //  food-app-swift
 //
-// 微调：
-// 1. 顶部 Header 更简洁大气（大标题 + 副标题，去掉 step indicator 改为更简洁的进度点）
-// 2. Section 改为白底卡片（参考图3风格），去掉 SectionHeader 橙色条，改为大字标题
-// 3. Gender 按钮更大、更现代
-// 4. Activity Level 卡片更简洁（参考图3的行列风格）
-// 5. 保留所有原有逻辑、验证、保存函数
 
 import SwiftUI
 
@@ -74,12 +68,12 @@ struct ProfileSetupView: View {
                         // ── 顶部 Header ──
                         topHeader
 
-                        // ── 验证错误提示 ──
+                       
                         if showValidationErrors && !validationMessages.isEmpty {
                             validationErrorCard
                         }
 
-                        // ── Personal Info 卡片 ──
+                       
                         profileCard {
                             VStack(spacing: 20) {
                                 cardHeader(icon: "person.fill", title: "Personal Info")
@@ -94,7 +88,7 @@ struct ProfileSetupView: View {
                             }
                         }
 
-                        // ── Activity Level 卡片 ──
+
                         profileCard {
                             VStack(spacing: 16) {
                                 cardHeader(icon: "figure.run", title: "Activity Level")
@@ -102,7 +96,7 @@ struct ProfileSetupView: View {
                             }
                         }
 
-                        // ── Nutrition Goal 卡片 ──
+
                         profileCard {
                             VStack(spacing: 20) {
                                 cardHeader(icon: "flame.fill", title: "Calorie Goal")
@@ -156,7 +150,7 @@ struct ProfileSetupView: View {
 
     var topHeader: some View {
         VStack(spacing: 10) {
-            // 进度点（新用户）
+
             if !isEditMode {
                 HStack(spacing: 6) {
                     ForEach(0..<3) { i in
@@ -168,7 +162,7 @@ struct ProfileSetupView: View {
                 .padding(.top, 16)
             }
 
-            // 图标
+
             ZStack {
                 Circle()
                     .fill(Color.orange.opacity(0.12))
@@ -320,14 +314,14 @@ struct ProfileSetupView: View {
         }
     }
 
-    // MARK: - Activity Grid（参考图3列表行风格）
+
 
     var activityGrid: some View {
         VStack(spacing: 10) {
             ForEach(activityOptions, id: \.0) { level, title, desc, icon in
                 Button(action: { activityLevel = level }) {
                     HStack(spacing: 14) {
-                        // 圆形图标
+
                         ZStack {
                             Circle()
                                 .fill(activityLevel == level
@@ -352,7 +346,7 @@ struct ProfileSetupView: View {
 
                         Spacer()
 
-                        // 右侧勾选
+
                         ZStack {
                             Circle()
                                 .stroke(activityLevel == level ? Color.orange : themeManager.current.cardBorder, lineWidth: 1.5)
@@ -477,7 +471,7 @@ struct ProfileSetupView: View {
         .animation(.easeInOut, value: showLoadingOverlay)
     }
 
-    // MARK: - Logic（完整保留）
+
 
     func updateValidationState() {
         if showValidationErrors { showValidationErrors = !isFormValid }
@@ -525,7 +519,7 @@ struct ProfileSetupView: View {
     }
 }
 
-// MARK: - DietaryToggleRow（替代原 DietaryToggle，风格更简洁）
+
 
 struct DietaryToggleRow: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -567,7 +561,7 @@ struct DietaryToggleRow: View {
     }
 }
 
-// MARK: - 保留原有 Supporting Views（兼容其他地方引用）
+
 
 struct GenderButton: View {
     @EnvironmentObject var themeManager: ThemeManager

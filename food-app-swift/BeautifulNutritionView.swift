@@ -71,7 +71,7 @@ struct BeautifulNutritionView: View {
                 NutrientRangePopup(item: item, onDismiss: { selectedItem = nil })
                     .environmentObject(themeManager)
             }
-        }  // ✅ 这个 } 是关闭 .overlay 的
+        }
     }
 
     var emptyState: some View {
@@ -286,8 +286,8 @@ struct NutrientRangePopup: View {
             .background(
                 RoundedRectangle(cornerRadius: 24)
                     .fill(themeManager.current == .dark ?
-                          Color(red: 0.12, green: 0.12, blue: 0.16) :  // dark mode 用深色
-                          themeManager.current.cardBackground)           // light mode 用 cardBackground
+                          Color(red: 0.12, green: 0.12, blue: 0.16) :  // dark mode
+                          themeManager.current.cardBackground)           // light mode
                     .overlay(RoundedRectangle(cornerRadius: 24)
                         .stroke(themeManager.current == .dark ?
                                 Color.white.opacity(0.08) :
@@ -301,7 +301,7 @@ struct NutrientRangePopup: View {
     }
 }
 
-// MARK: - 卡로里大数字
+
 
 struct CaloriesBigRow: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -342,7 +342,7 @@ struct CaloriesBigRow: View {
     }
 }
 
-// MARK: - 营养素格子
+
 
 struct NutrientFlatCell: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -408,7 +408,7 @@ struct NutrientFlatCell: View {
     }
 }
 
-// MARK: - 旧版组件保留（兼容）
+
 
 struct CaloriesHighlightCard: View {
     let item: NutritionItem

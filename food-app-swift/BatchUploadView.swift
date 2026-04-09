@@ -2,9 +2,7 @@
 //  food-app-swift
 //
 //  Created by Helen Tu on 3/2/26.
-//
-// 微调：所有硬编码深色背景/白色文字改为 themeManager.current.* 适配 light mode
-// 逻辑完全保留不变
+
 
 import SwiftUI
 import PhotosUI
@@ -166,7 +164,7 @@ struct BatchUploadView: View {
                 else { selectedPhotosGrid }
 
                 HStack(spacing: 12) {
-                    // 相机按钮（主色黑/白适配）
+                    
                     Button(action: checkCameraAndOpen) {
                         HStack(spacing: 6) {
                             Image(systemName: "camera.fill")
@@ -272,7 +270,7 @@ struct BatchUploadView: View {
     var analyzingStage: some View {
         VStack(spacing: 32) {
             Spacer()
-            // 进度圆环
+            
             ZStack {
                 Circle()
                     .stroke(themeManager.current.cardBorder, lineWidth: 10)
@@ -293,7 +291,7 @@ struct BatchUploadView: View {
             Text("Analyzing photos...")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(themeManager.current.primaryText)
-            // 缩略图状态
+            
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(Array(batchResults.enumerated()), id: \.element.id) { _, result in
@@ -340,7 +338,7 @@ struct BatchUploadView: View {
 
     var resultsStage: some View {
         VStack(spacing: 0) {
-            // 分页点
+            
             if batchResults.count > 1 {
                 HStack(spacing: 6) {
                     ForEach(0..<batchResults.count, id: \.self) { i in
@@ -370,7 +368,7 @@ struct BatchUploadView: View {
     func resultCard(index: Int, result: BatchMealResult) -> some View {
         ScrollView {
             VStack(spacing: 20) {
-                // 图片 + saved badge
+                
                 ZStack(alignment: .topTrailing) {
                     Image(uiImage: result.image)
                         .resizable().scaledToFill()
@@ -413,7 +411,7 @@ struct BatchUploadView: View {
     @ViewBuilder
     func completedResultContent(index: Int, result: BatchMealResult) -> some View {
         VStack(spacing: 16) {
-            // 菜名输入框
+            
             TextField("Dish name", text: Binding(
                 get: { batchResults[index].dishName },
                 set: { batchResults[index].dishName = $0 }
@@ -426,7 +424,7 @@ struct BatchUploadView: View {
             .overlay(RoundedRectangle(cornerRadius: 14)
                 .stroke(Color.orange.opacity(0.25), lineWidth: 1))
 
-            // 餐食类型 + 日期
+      
             HStack(spacing: 12) {
                 MealTypeSelector(selectedType: Binding(
                     get: { batchResults[index].mealType },
@@ -444,20 +442,20 @@ struct BatchUploadView: View {
                 .environmentObject(themeManager)
             }
 
-            // 营养信息
+           
             if !result.rawNutritionInfo.isEmpty {
                 BeautifulNutritionView(nutritionText: result.rawNutritionInfo)
                     .environmentObject(themeManager)
             }
 
-            // 成分列表
+          
             let allIngredients = result.visibleIngredients + result.hiddenIngredients
             if !allIngredients.isEmpty {
                 IngredientTableView(ingredients: allIngredients)
                     .environmentObject(themeManager)
             }
 
-            // Save 按钮
+   
             if !result.isSaved {
                 Button(action: { saveSingleMeal(index: index) }) {
                     HStack(spacing: 8) {
@@ -482,7 +480,7 @@ struct BatchUploadView: View {
         }
     }
 
-    // MARK: - Bottom Bar
+
 
     var bottomBar: some View {
         VStack(spacing: 0) {
@@ -525,7 +523,7 @@ struct BatchUploadView: View {
         }
     }
 
-    // MARK: - Logic（完整保留，不动）
+
 
     func loadSelectedPhotos(_ items: [PhotosPickerItem]) {
         Task {
@@ -702,7 +700,7 @@ struct BatchUploadView: View {
             guard parts.count >= 2, !parts[0].isEmpty else { return nil }
             let name = parts[0]
             let quantity = parts[1]
-            // ✅ unit 字段如果是数字（AI 有时返回 "name | qty | number" 格式），则推断真实单位
+            
             let rawUnit = parts.count >= 3 ? parts[2] : ""
             let unit: String
             if Double(rawUnit) != nil || rawUnit.isEmpty {
@@ -751,7 +749,7 @@ struct BatchSummarySheet: View {
                 themeManager.current.background.ignoresSafeArea()
                 ScrollView {
                     VStack(spacing: 20) {
-                        // 总卡路里大数字
+                       
                         VStack(spacing: 6) {
                             HStack(alignment: .lastTextBaseline, spacing: 4) {
                                 Text("\(totalCalories)")
@@ -771,7 +769,7 @@ struct BatchSummarySheet: View {
                         .overlay(RoundedRectangle(cornerRadius: 20)
                             .stroke(themeManager.current.cardBorder, lineWidth: 1))
 
-                        // 明细列表
+                       
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Meal Breakdown")
                                 .font(.system(size: 17, weight: .bold))
@@ -836,7 +834,7 @@ struct BatchSummarySheet: View {
     }
 }
 
-// MARK: - Batch Camera View（保持不变）
+// MARK: - Batch Camera View
 
 struct BatchCameraView: UIViewControllerRepresentable {
     let onCapture: (UIImage) -> Void

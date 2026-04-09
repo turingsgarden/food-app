@@ -1,21 +1,3 @@
-// DashboardView.swift — 微调版
-// 改动：
-// 1. 顶部 Header 保持，增加星期横向选择器（参考 Cal AI）
-// 2. 主卡路里卡片重构为 Cal AI 圆环 + 大数字左对齐风格
-// 3. Nutrition Overview 三格替换为更大的 macros 卡片
-// 4. 餐食改为列表（竖排），取代横向滚动
-// 5. 浮动按钮简化为黑色圆形 + 号（Cal AI 风格）
-// 6. 保留所有原有数据逻辑、网络请求、State 变量不变
-
-// DashboardView.swift — 微调版
-// 改动：
-// 1. 顶部 Header 保持，增加星期横向选择器（参考 Cal AI）
-// 2. 主卡路里卡片重构为 Cal AI 圆环 + 大数字左对齐风格
-// 3. Nutrition Overview 三格替换为更大的 macros 卡片
-// 4. 餐食改为列表（竖排），取代横向滚动
-// 5. 浮动按钮简化为黑色圆形 + 号（Cal AI 风格）
-// 6. 保留所有原有数据逻辑、网络请求、State 变量不变
-
 import SwiftUI
 import Charts
 import Foundation
@@ -64,21 +46,21 @@ struct DashboardView: View {
     @State private var totalSodium: Int = 0
     @State private var currentStreak: Int = 0
     @State private var weeklyGoalProgress: Double = 0.0
-    // ── 时间选择系统 ──
-    @State private var selectedDate: Date = Date()           // Daily 模式选中的某天
-    @State private var selectedWeekStart: Date = {           // Weekly 模式选中的周起始
+
+    @State private var selectedDate: Date = Date()
+    @State private var selectedWeekStart: Date = {
         Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
     }()
-    @State private var selectedMonth: Date = Date()          // Monthly 模式选中的月
-    @State private var selectedTimeFilter: String = "Daily"  // "Daily" / "Weekly" / "Monthly"
+    @State private var selectedMonth: Date = Date()
+    @State private var selectedTimeFilter: String = "Daily"
     let timeFilters = ["Daily", "Weekly", "Monthly"]
-    // ── 动态统计（随选中时间段变化）──
+
     @State private var weeklyCalories: Int = 0
     @State private var weeklyProtein: Int = 0
     @State private var weeklyCarbs: Int = 0
     @State private var weeklyFat: Int = 0
 
-    // ── NetworkError enum（保持原样）──
+
     enum NetworkError: Identifiable {
         case noInternet, serverError, profileSyncFailed, dataLoadFailed, sessionExpired
         var id: String {
@@ -122,7 +104,7 @@ struct DashboardView: View {
     var userName: String { session.userName.isEmpty ? "Friend" : session.userName }
     var dynamicCalorieGoal: Int { profileManager.userProfile?.calorieTarget ?? calorieGoal }
 
-    // 选中时间段内的卡路里（动态计算）
+    
     var displayedCalories: Int {
         let isoF = ISO8601DateFormatter(); isoF.timeZone = TimeZone.current
         let cal = Calendar.current
@@ -187,16 +169,16 @@ struct DashboardView: View {
                             .padding(.top, 16)
                             .padding(.bottom, 12)
 
-                        // ── Daily / Weekly / Monthly 三个 Tab ──
+
                         timeFilterSection
                             .padding(.bottom, 12)
 
-                        // ── 日期选择器（根据 Tab 变化）──
+
                         periodSelectorSection
                             .padding(.bottom, 16)
 
                         VStack(spacing: 16) {
-                            // ── 错误 / 加载状态 ──
+                            
                             if profileManager.isNewUser {
                                 WelcomeNewUserCard { showProfile = true }
                             } else if profileManager.userProfile == nil && !profileManager.isLoading && profileManager.errorMessage != nil {
@@ -207,16 +189,16 @@ struct DashboardView: View {
                                 profileLoadingSection
                             }
 
-                            // ── 主卡路里卡 ──
+                            
                             calorieMainCard
 
-                            // ── Macros 三格 ──
+                           
                             macrosGrid
 
-                            // ── 餐食列表（跟随筛选）──
+                            
                             todayMealsSection
 
-                            // ── Nutrition 圆环（保留原有 Today/Week Tab）──
+                            
                             if !meals.isEmpty { comprehensiveNutritionSection }
 
                             Spacer(minLength: 100)
@@ -226,7 +208,7 @@ struct DashboardView: View {
                 }
                 .refreshable { await refreshDashboard() }
 
-                // ── 浮动 + 按钮（Cal AI 黑色圆形）──
+                
                 calStyleFloatingButton
             }
             .preferredColorScheme(themeManager.current.colorScheme)
@@ -275,7 +257,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Header（微调：更简洁）
+    
 
     var headerSection: some View {
         HStack(alignment: .center) {
@@ -289,7 +271,7 @@ struct DashboardView: View {
             }
             Spacer()
             HStack(spacing: 10) {
-                // Streak 胶囊
+                
                 if currentStreak > 0 {
                     HStack(spacing: 4) {
                         Text("🔥")
@@ -303,7 +285,7 @@ struct DashboardView: View {
                     .overlay(RoundedRectangle(cornerRadius: 20)
                         .stroke(themeManager.current.cardBorder, lineWidth: 1))
                 }
-                // 头像
+                
                 Button(action: { showProfile = true }) {
                     ZStack(alignment: .topTrailing) {
                         Circle()
@@ -326,7 +308,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - 时间模式 Tab（Daily / Weekly / Monthly）
+    
 
     var timeFilterSection: some View {
         HStack(spacing: 0) {
@@ -359,7 +341,7 @@ struct DashboardView: View {
         .padding(.horizontal, 20)
     }
 
-    // MARK: - 日期选择器（Daily=滑动日历 / Weekly=周列表 / Monthly=月份网格）
+    
 
     @ViewBuilder
     var periodSelectorSection: some View {
@@ -378,11 +360,11 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - 主卡路里卡片（Cal AI 风格）
+    
 
     var calorieMainCard: some View {
         HStack(spacing: 20) {
-            // 左：文字区
+            
             VStack(alignment: .leading, spacing: 8) {
                 Text(selectedTimeFilter == "Daily" ? "Daily Calories" : selectedTimeFilter == "Weekly" ? "Weekly Calories" : "Monthly Calories")
                     .font(.system(size: 12, weight: .semibold))
@@ -392,7 +374,9 @@ struct DashboardView: View {
 
                 HStack(alignment: .lastTextBaseline, spacing: 4) {
                     Text("\(animateCalories ? displayedCalories : 0)")
-                        .font(.system(size: 38, weight: .black, design: .rounded))
+                        .font(.system(size: 28, weight: .black, design: .rounded))
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
                         .foregroundColor(themeManager.current.primaryText)
                         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: displayedCalories)
                     Text("/ \(displayedGoal) kcal")
@@ -405,7 +389,7 @@ struct DashboardView: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(calorieProgressColor)
 
-                // 进度条
+                
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 4)
@@ -422,7 +406,7 @@ struct DashboardView: View {
 
             Spacer()
 
-            // 右：圆环（Cal AI 大圆环）
+            
             ZStack {
                 Circle()
                     .stroke(Color.gray.opacity(0.12), lineWidth: 10)
@@ -462,7 +446,7 @@ struct DashboardView: View {
         else { return .red }
     }
 
-    // MARK: - Macros 三格（Cal AI 营养素卡）
+    
 
     var macrosGrid: some View {
         HStack(spacing: 12) {
@@ -493,9 +477,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - 今日餐食（竖排列表）
 
-    // 根据选中的时间段过滤餐食
     var filteredMealsForDisplay: [Meal] {
         let cal = Calendar.current
         let isoF = ISO8601DateFormatter(); isoF.timeZone = TimeZone.current
@@ -559,7 +541,7 @@ struct DashboardView: View {
             if filteredMealsForDisplay.isEmpty {
                 EmptyMealsStateCard()
             } else {
-                // Week/Month 显示最新5条；Today 显示当天全部
+                
                 let displayMeals = selectedTimeFilter == "Daily"
                     ? Array(filteredMealsForDisplay.prefix(10))
                     : Array(filteredMealsForDisplay.prefix(5))
@@ -573,7 +555,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Nutrition Overview（保留原有逻辑，改样式）
+    
 
     var comprehensiveNutritionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -582,7 +564,7 @@ struct DashboardView: View {
                     .font(.system(size: 17, weight: .bold))
                     .foregroundColor(themeManager.current.primaryText)
                 Spacer()
-                // ✅ 跟随 selectedTimeFilter 的标签（只读显示，不再独立切换）
+
                 Text(selectedTimeFilter == "Daily" ? "Daily" : selectedTimeFilter == "Weekly" ? "Weekly" : "Monthly")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(themeManager.current == .dark ? .black : .white)
@@ -591,7 +573,7 @@ struct DashboardView: View {
                         .fill(themeManager.current == .dark ? Color.white : Color.black))
             }
 
-            // ✅ 内容区跟随 selectedTimeFilter
+
             ZStack {
                 if selectedTimeFilter == "Daily" {
                     todaysCircularNutritionView
@@ -599,7 +581,7 @@ struct DashboardView: View {
                             insertion: .move(edge: .leading).combined(with: .opacity),
                             removal: .move(edge: .trailing).combined(with: .opacity)))
                 } else {
-                    // Week / Month 都显示 Weekly 概览（Monthly 时数据来自 monthlyCalories）
+                    
                     WeeklyNutritionOverview(
                         avgCalories: selectedTimeFilter == "Weekly"
                             ? (filteredMealsForDisplay.count > 0 ? displayedCalories / max(1, filteredMealsForDisplay.count) : 0)
@@ -617,7 +599,7 @@ struct DashboardView: View {
         }
     }
 
-    // 保留原有 todaysCircularNutritionView
+
     var todaysCircularNutritionView: some View {
         let todaysNutritionText = createTodaysNutritionText()
         return Group {
@@ -667,7 +649,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - 浮动按钮（Cal AI 黑色圆形）
+
 
     var calStyleFloatingButton: some View {
         Button(action: { withAnimation(.spring()) { showUploadMeal = true } }) {
@@ -685,7 +667,7 @@ struct DashboardView: View {
         .padding(.bottom, 28)
     }
 
-    // MARK: - 错误状态（保留原有）
+
 
     func networkErrorSection(_ error: NetworkError) -> some View {
         HStack {
@@ -734,7 +716,7 @@ struct DashboardView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red.opacity(0.2), lineWidth: 1)))
     }
 
-    // MARK: - 原有 helper functions（完整保留）
+
 
     func getCalorieStatusMessage() -> String {
         if profileManager.isNewUser { return "Set up profile for personalized goals" }
@@ -877,7 +859,7 @@ struct DashboardView: View {
                 todayCal += n.calories; todayProt += n.protein; todayCarb += n.carbs; todayFt += n.fat
                 todayFib += n.fiber; todaySug += n.sugar; todaySod += n.sodium
             }
-            // ✅ 真实本周统计
+  
             if validDate >= startOfWeek {
                 weeklyCal += n.calories; weeklyProt += n.protein; weeklyCarb += n.carbs; weeklyFt += n.fat
             }
@@ -915,7 +897,7 @@ struct DashboardView: View {
     }
 
     func createTodaysNutritionText() -> String {
-        // Daily 模式显示选中日期的营养数据
+       
         let todaysMeals = filteredMealsForDisplay
         if todaysMeals.isEmpty { return "" }
         var totalCal = 0, totalProt = 0, totalCarb = 0, totalFt = 0, totalFib = 0, totalSug = 0, totalSod = 0
@@ -1008,14 +990,12 @@ struct DashboardView: View {
     func calculateFatGoal() -> Int { Int(Double(dynamicCalorieGoal) * 0.3 / 9) }
 }
 
-// MARK: - 新组件
 
-// MARK: - Daily Selector（可横向滚动的日历，支持翻到过去的周）
 
 struct DailyScrollSelector: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedDate: Date
-    // 当前显示的周起点（可向过去滚动）
+
     @State private var displayWeekStart: Date = {
         Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
     }()
@@ -1026,7 +1006,7 @@ struct DailyScrollSelector: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            // 周导航
+
             HStack {
                 Button(action: { shiftWeek(by: -1) }) {
                     Image(systemName: "chevron.left")
@@ -1052,7 +1032,7 @@ struct DailyScrollSelector: View {
                 .disabled(isCurrentWeek)
             }
 
-            // 7天格子
+
             HStack(spacing: 6) {
                 ForEach(daysInWeek, id: \.self) { day in
                     let isSelected = Calendar.current.isDate(day, inSameDayAs: selectedDate)
@@ -1120,14 +1100,14 @@ struct DailyScrollSelector: View {
     }
 }
 
-// MARK: - Weekly Selector（最近12周横向列表）
+
 
 struct WeeklyScrollSelector: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedWeekStart: Date
 
     var recentWeeks: [Date] {
-        // 最近12周，从最近到过去
+        
         (0..<12).compactMap {
             Calendar.current.date(byAdding: .weekOfYear, value: -$0, to:
                 Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date())
@@ -1183,21 +1163,18 @@ struct WeeklyScrollSelector: View {
     }
 }
 
-// MARK: - Monthly Selector（月份网格，最近2年）
 
-// Monthly 选择器 — 左右箭头翻年，年内12个月横向滑动
 struct MonthlyGridSelector: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedMonth: Date
 
-    // 当前展示的年份
+
     @State private var displayYear: Int = Calendar.current.component(.year, from: Date())
 
     var currentYear: Int { Calendar.current.component(.year, from: Date()) }
     var currentMonth: Int { Calendar.current.component(.month, from: Date()) }
-    var minYear: Int { currentYear - 2 }   // 最多回溯2年
+    var minYear: Int { currentYear - 2 }
 
-    // 展示年的12个月
     var monthsInYear: [Date] {
         let cal = Calendar.current
         return (1...12).compactMap { month in
@@ -1208,7 +1185,7 @@ struct MonthlyGridSelector: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            // ── 年份导航 ──
+            
             HStack {
                 Button(action: { if displayYear > minYear { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { displayYear -= 1 } } }) {
                     Image(systemName: "chevron.left")
@@ -1240,7 +1217,7 @@ struct MonthlyGridSelector: View {
                 .disabled(displayYear >= currentYear)
             }
 
-            // ── 12个月横向滚动 ──
+            
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(monthsInYear, id: \.self) { month in
@@ -1258,7 +1235,7 @@ struct MonthlyGridSelector: View {
                                         ? (themeManager.current == .dark ? .black : .white)
                                         : isFuture ? themeManager.current.primaryText.opacity(0.25)
                                         : themeManager.current.primaryText)
-                                // 小点：当月 or 有数据提示
+                               
                                 if isCurrentMonth && !isSelected {
                                     Circle()
                                         .fill(Color.orange)
@@ -1292,7 +1269,7 @@ struct MonthlyGridSelector: View {
     }
 }
 
-// Macro 小卡（三格）
+
 struct MacroCell: View {
     @EnvironmentObject var themeManager: ThemeManager
     let icon: String
@@ -1307,7 +1284,7 @@ struct MacroCell: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 小圆环
+
             ZStack {
                 Circle()
                     .stroke(color.opacity(0.15), lineWidth: 5)
@@ -1347,7 +1324,6 @@ struct MacroCell: View {
     }
 }
 
-// 餐食列表行（替代 FixedSizeMealCard 横向卡）
 struct MealListRow: View {
     @EnvironmentObject var themeManager: ThemeManager
     let meal: Meal
@@ -1380,7 +1356,7 @@ struct MealListRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            // 图片缩略图
+            
             Group {
                 if let base64 = meal.image_thumb ?? meal.image_full, !base64.isEmpty,
                    let data = Data(base64Encoded: base64), let image = UIImage(data: data) {
@@ -1394,7 +1370,7 @@ struct MealListRow: View {
             .frame(width: 54, height: 54)
             .clipShape(RoundedRectangle(cornerRadius: 14))
 
-            // 食物信息
+      
             VStack(alignment: .leading, spacing: 4) {
                 Text(meal.dish_prediction)
                     .font(.system(size: 15, weight: .semibold))
@@ -1416,7 +1392,7 @@ struct MealListRow: View {
 
             Spacer()
 
-            // 卡路里
+  
             if let cal = calories {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(cal)")
@@ -1440,7 +1416,7 @@ struct MealListRow: View {
     }
 }
 
-// MARK: - 保留原有 Supporting Views（不变）
+
 
 struct WelcomeNewUserCard: View {
     let action: () -> Void

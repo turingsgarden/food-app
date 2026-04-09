@@ -1,12 +1,3 @@
-// MealHistoryView.swift — 微调版
-// 改动：
-// 1. Header 更简洁，总卡路里改为右上角小胶囊
-// 2. 搜索栏更现代（圆角更大）
-// 3. Filter 胶囊颜色改为黑色系（light mode）
-// 4. MealHistoryCard 改为 Cal AI 列表行风格
-// 5. DateHeader 简化
-// 所有数据逻辑保持不变
-
 import SwiftUI
 
 struct MealHistoryView: View {
@@ -61,7 +52,7 @@ struct MealHistoryView: View {
                                 .foregroundColor(themeManager.current.secondaryText)
                         }
                         Spacer()
-                        // 总卡路里胶囊
+                        
                         HStack(spacing: 4) {
                             Image(systemName: "flame.fill")
                                 .font(.system(size: 11))
@@ -81,7 +72,7 @@ struct MealHistoryView: View {
                     }
                     .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 16)
 
-                    // ── 搜索栏 ──
+                
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 14, weight: .medium))
@@ -103,7 +94,7 @@ struct MealHistoryView: View {
                         .stroke(themeManager.current.cardBorder, lineWidth: 1))
                     .padding(.horizontal, 20).padding(.bottom, 14)
 
-                    // ── Filter 胶囊 ──
+
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(filters, id: \.self) { filter in
@@ -129,7 +120,7 @@ struct MealHistoryView: View {
                     }
                     .padding(.bottom, 16)
 
-                    // ── 内容区 ──
+              
                     if isLoading {
                         Spacer()
                         VStack(spacing: 12) {
@@ -212,7 +203,7 @@ struct MealHistoryView: View {
         return formatter.string(from: date)
     }
 
-    // 保留原有 fetchMeals 逻辑不变
+
     func fetchMeals() {
         isLoading = true; errorMessage = ""; lastRefreshTime = Date()
         guard SessionManager.shared.isLoggedIn else {
@@ -265,7 +256,7 @@ struct MealHistoryView: View {
     }
 }
 
-// MARK: - 新餐食行（Cal AI 风格）
+
 
 struct HistoryMealRow: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -286,7 +277,7 @@ struct HistoryMealRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            // 图片
+
             Group {
                 if let base64 = meal.image_thumb ?? meal.image_full, !base64.isEmpty,
                    let data = Data(base64Encoded: base64), let image = UIImage(data: data) {
@@ -301,7 +292,7 @@ struct HistoryMealRow: View {
             .frame(width: 60, height: 60)
             .clipShape(RoundedRectangle(cornerRadius: 14))
 
-            // 信息
+
             VStack(alignment: .leading, spacing: 5) {
                 Text(meal.dish_prediction)
                     .font(.system(size: 15, weight: .semibold))
@@ -324,7 +315,7 @@ struct HistoryMealRow: View {
 
             Spacer()
 
-            // 卡路里 + 箭头
+
             HStack(spacing: 6) {
                 if let cal = calories {
                     VStack(alignment: .trailing, spacing: 1) {
@@ -349,7 +340,7 @@ struct HistoryMealRow: View {
     }
 }
 
-// MARK: - 辅助 Supporting Views（主题化）
+
 
 struct FilterPill: View {
     @EnvironmentObject var themeManager: ThemeManager
