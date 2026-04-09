@@ -27,8 +27,13 @@ from jwt import PyJWKClient
 import json
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
+from health_pipeline import (
+       generate_nutrition_targets,
+       generate_weekly_meal_plan,
+       analyze_meal_photo,
+   )
 
-# Load environment variables
+#Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
@@ -1827,7 +1832,174 @@ def link_email_password():
         print(f"❌ Error in link_email_password: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
+# ── Health Profile ──────────────────────────────────────────────
+ 
+@app.route("/save-health-profile", methods=["POST"])
+@token_required
+@db_required
+def save_health_profile():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+        data["user_id"] = request.user_id
+        data["updated_at"] = datetime.now().isoformat()
+        db["health_profiles"].update_one(
+            {"user_id": request.user_id},
+            {"$set": data},
+            upsert=True
+        )
+        print(f"✅ Health profile saved for {request.user_id}")
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        print(f"❌ save_health_profile: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+@app.route("/get-health-profile", methods=["GET"])
+@token_required
+@db_required
+def get_health_profile():
+    try:
+        profile = db["health_profiles"].find_one({"user_id": request.user_id})
+        if not profile:
+            return jsonify({"error": "not found"}), 404
+        profile["_id"] = str(profile["_id"])
+        return jsonify(profile), 200
+    except Exception as e:
+        print(f"❌ get_health_profile: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+# ── Nutrition Targets ───────────────────────────────────────────
+ 
+@app.route("/generate-targets", methods=["POST"])
+@token_required
+@db_required
+def generate_targets():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+ 
+        result = generate_nutrition_targets(
+            profile=data.get("profile", {}),
+            goals=data.get("goals", []),
+            gemini_model=gemini_model       # 传入 app.py 已有的 gemini_model
+        )
+        result["user_id"] = request.user_id
+        result["goals"] = data.get("goals", [])
+        result["created_at"] = datetime.now().isoformat()
+ 
+        db["nutrition_plans"].update_one(
+            {"user_id": request.user_id},
+            {"$set": result},
+            upsert=True
+        )
+        return jsonify(result), 200
+ 
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format, please try again"}), 500
+    except Exception as e:
+        print(f"❌ generate_targets: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+# ── Weekly Meal Plan ────────────────────────────────────────────
+ 
+@app.route("/generate-meal-plan", methods=["POST"])
+@token_required
+@db_required
+def generate_meal_plan():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+ 
+        result = generate_weekly_meal_plan(
+            nutrition_plan=data.get("nutrition_plan", {}),
+            health_profile=data.get("health_profile", {}),
+            gemini_model=gemini_model
+        )
+        result["user_id"] = request.user_id
+        result["created_at"] = datetime.now().isoformat()
+ 
+        db["meal_plans"].update_one(
+            {"user_id": request.user_id},
+            {"$set": result},
+            upsert=True
+        )
+        return jsonify(result), 200
+ 
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format, please try again"}), 500
+    except Exception as e:
+        print(f"❌ generate_meal_plan: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+@app.route("/get-meal-plan", methods=["GET"])
+@token_required
+@db_required
+def get_meal_plan():
+    try:
+        plan = db["meal_plans"].find_one(
+            {"user_id": request.user_id},
+            sort=[("created_at", -1)]
+        )
+        if not plan:
+            return jsonify({"error": "not found"}), 404
+        plan["_id"] = str(plan["_id"])
+        return jsonify(plan), 200
+    except Exception as e:
+        print(f"❌ get_meal_plan: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+# ── Photo Compliance ────────────────────────────────────────────
+ 
+@app.route("/analyze-meal-photo", methods=["POST"])
+@token_required
+@db_required
+def analyze_meal_photo_route():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+ 
+        image_b64 = data.get("image_base64", "")
+        if not image_b64:
+            return jsonify({"error": "No image provided"}), 400
+ 
+        result = analyze_meal_photo(
+            image_b64=image_b64,
+            meal_type=data.get("meal_type", "lunch"),
+            planned_meal=data.get("planned_meal", {}),
+            remaining_plan=data.get("remaining_plan", []),
+            gemini_model=gemini_model
+        )
+ 
+        # 存日志（不存原图）
+        log_doc = {
+            "user_id": request.user_id,
+            "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
+            "meal_type": data.get("meal_type", "lunch"),
+            "planned_meal": data.get("planned_meal", {}),
+            **result,
+            "saved_at": datetime.now().isoformat()
+        }
+        db["meal_logs"].insert_one(log_doc)
+ 
+        return jsonify(result), 200
+ 
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format"}), 500
+    except Exception as e:
+        print(f"❌ analyze_meal_photo_route: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
