@@ -2,153 +2,144 @@
 //  ContentView.swift
 //  food-app-swift
 //
-//  Created by Utsav Doshi on 6/17/25.
-//
+//  Health Agent 版本
+//  路由逻辑：
+//  未登录 → OnboardingView
+//  已登录 + 无健康档案 → HealthProfileView（4步 onboarding）
+//  已登录 + 有档案 + 无营养计划 → GoalSelectionView
+//  已登录 + 两者都有 → HealthDashboardView（主 Tab）
+
 import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var session = SessionManager.shared
-    @ObservedObject var profileManager = ProfileManager.shared
     @StateObject private var networkMonitor = NetworkMonitor()
-    @State private var checkingProfile = false
-    @State private var needsProfileSetup = false
-    @State private var showProfileSetupPrompt = false
+
+    // Health Agent 状态
+    @State private var healthProfile: HealthProfile?
+    @State private var nutritionPlan: NutritionPlan?
+    @State private var isCheckingSetup = true
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Group {
-                    if session.isLoggedIn {
-                        DashboardView()
-                            .navigationBarHidden(true)
-                            .environmentObject(networkMonitor)
-                            .environmentObject(themeManager)
-                            .onAppear { checkProfileStatusInBackground() }
-                            .sheet(isPresented: $showProfileSetupPrompt) {
-                                ProfileSetupPromptView {
-                                    needsProfileSetup = false
-                                    showProfileSetupPrompt = false
-                                    profileManager.fetchProfile(force: true)
-                                }
-                                .environmentObject(themeManager)  // ✅
-                            }
-                    } else {
-                        OnboardingView()
-                            .navigationBarHidden(true)
-                            .environmentObject(themeManager)  // ✅
-                    }
-                }
-                .navigationDestination(isPresented: $session.shouldNavigateToLogin) {
+        ZStack {
+            if !session.isLoggedIn {
+                // ── 未登录：原有登录/注册流程 ──
+                NavigationStack {
                     OnboardingView()
-                        .navigationBarBackButtonHidden(true)
-                        .environmentObject(themeManager)  // ✅
-                        .onAppear { SessionManager.shared.resetNavigationFlag() }
+                        .navigationBarHidden(true)
+                        .environmentObject(themeManager)
                 }
 
-                VStack {
-                    OfflineBanner(networkMonitor: networkMonitor)
-                    Spacer()
-                }
-                .ignoresSafeArea(.all, edges: .horizontal)
-            }
-        }
-    }
-
-    func checkProfileStatusInBackground() {
-        guard SessionManager.shared.isLoggedIn else { return }
-        if SessionManager.shared.isNewRegistration {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                showProfileSetupPrompt = true
-                SessionManager.shared.clearNewRegistrationFlag()
-            }
-            return
-        }
-        if profileManager.userProfile == nil && !profileManager.isLoading {
-            profileManager.fetchProfile(force: false)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                if profileManager.userProfile == nil && !profileManager.isLoading && profileManager.errorMessage == nil {
-                    showProfileSetupPrompt = true
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Profile Setup Prompt
-
-struct ProfileSetupPromptView: View {
-    @EnvironmentObject var themeManager: ThemeManager
-    let onComplete: () -> Void
-    @Environment(\.dismiss) var dismiss
-    @State private var navigateToSetup = false
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                Spacer()
-                Image(systemName: "person.crop.circle.badge.plus")
-                    .font(.system(size: 80))
-                    .foregroundStyle(LinearGradient(colors: [.orange, .orange.opacity(0.7)],
-                                                   startPoint: .topLeading, endPoint: .bottomTrailing))
-                Text("Complete Your Profile").font(.title.bold())
-                    .foregroundColor(themeManager.current.primaryText)
-                Text("Set up your profile to get personalized nutrition recommendations based on your age, gender, and activity level")
-                    .font(.body).foregroundColor(themeManager.current.secondaryText)
-                    .multilineTextAlignment(.center).padding(.horizontal)
-
-                VStack(alignment: .leading, spacing: 16) {
-                    BenefitRow(icon: "target", text: "Personalized calorie goals")
-                    BenefitRow(icon: "chart.line.uptrend.xyaxis", text: "Accurate progress tracking")
-                    BenefitRow(icon: "person.fill", text: "Customized recommendations")
-                }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 16).fill(themeManager.current.cardBackground))
-                .padding(.horizontal)
-
-                Spacer()
-
-                VStack(spacing: 12) {
-                    Button(action: { navigateToSetup = true }) {
-                        Text("Set Up Profile").fontWeight(.semibold).foregroundColor(.white)
-                            .frame(maxWidth: .infinity).padding(.vertical, 16)
-                            .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
-                                                       startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .cornerRadius(12).shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
-                    }
-                    Button(action: { onComplete(); dismiss() }) {
-                        Text("Skip for now").font(.subheadline)
+            } else if isCheckingSetup {
+                // ── 检查中：Loading ──
+                ZStack {
+                    themeManager.current.background.ignoresSafeArea()
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(
+                                tint: themeManager.current.primaryText))
+                            .scaleEffect(1.2)
+                        Text("Loading your profile…")
+                            .font(.system(size: 14))
                             .foregroundColor(themeManager.current.secondaryText)
                     }
                 }
-                .padding(.horizontal).padding(.bottom, 40)
-            }
-            .background(themeManager.current.background.ignoresSafeArea())
-            .navigationDestination(isPresented: $navigateToSetup) {
-                ProfileSetupView()
-                    .navigationBarBackButtonHidden(true)
-                    .environmentObject(themeManager)  // ✅
-                    .onDisappear { onComplete(); dismiss() }
+
+            } else if healthProfile == nil {
+                // ── 无健康档案：4步 Onboarding ──
+                NavigationStack {
+                    HealthProfileView { profile in
+                        self.healthProfile = profile
+                        // 档案保存后，去选目标
+                    }
+                    .environmentObject(themeManager)
+                }
+
+            } else if nutritionPlan == nil {
+                // ── 有档案，无营养计划：选健康目标 ──
+                NavigationStack {
+                    GoalSelectionView(healthProfile: healthProfile!) { plan in
+                        self.nutritionPlan = plan
+                        // 保存到 UserDefaults 供下次启动用
+                        saveNutritionPlanLocally(plan)
+                    }
+                    .environmentObject(themeManager)
+                }
+
+            } else {
+                // ── 主 App：Health Dashboard ──
+                HealthDashboardView(
+                    nutritionPlan: nutritionPlan!,
+                    healthProfile: healthProfile!
+                )
+                .environmentObject(themeManager)
+                .overlay(alignment: .top) {
+                    OfflineBanner(networkMonitor: networkMonitor)
+                }
             }
         }
         .preferredColorScheme(themeManager.current.colorScheme)
-    }
-}
-
-struct BenefitRow: View {
-    let icon: String
-    let text: String
-    @EnvironmentObject var themeManager: ThemeManager
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon).foregroundColor(.orange).frame(width: 24)
-            Text(text).font(.subheadline).foregroundColor(themeManager.current.primaryText)
-            Spacer()
+        .onAppear { checkSetup() }
+        .onChange(of: session.isLoggedIn) { _, isLoggedIn in
+            if isLoggedIn {
+                checkSetup()
+            } else {
+                // 登出：清空本地状态
+                healthProfile = nil
+                nutritionPlan = nil
+                isCheckingSetup = false
+            }
         }
     }
-}
 
-#Preview {
-    ContentView()
+    // MARK: - 启动时检查是否已完成 onboarding
+
+    func checkSetup() {
+        guard session.isLoggedIn else {
+            isCheckingSetup = false
+            return
+        }
+
+        isCheckingSetup = true
+
+        let userId = session.userID.isEmpty
+            ? UserDefaults.standard.string(forKey: "user_id") ?? ""
+            : session.userID
+
+        // 1. 先尝试读取本地缓存（快速显示）
+        if let cachedPlan = loadNutritionPlanLocally(userId: userId) {
+            nutritionPlan = cachedPlan
+        }
+
+        // 2. 从服务器获取健康档案
+        HealthAPIManager.shared.fetchHealthProfile(userId: userId) { profile in
+            self.healthProfile = profile
+
+            if profile != nil {
+                // 有档案了，如果还没有营养计划就保持 GoalSelectionView
+                // 如果本地已有计划则直接进主界面（上面已经 set 了）
+            }
+
+            self.isCheckingSetup = false
+        }
+    }
+
+    // MARK: - 本地缓存 NutritionPlan
+
+    func saveNutritionPlanLocally(_ plan: NutritionPlan) {
+        let userId = session.userID.isEmpty
+            ? UserDefaults.standard.string(forKey: "user_id") ?? ""
+            : session.userID
+        if let data = try? JSONEncoder().encode(plan) {
+            UserDefaults.standard.set(data, forKey: "nutrition_plan_\(userId)")
+        }
+    }
+
+    func loadNutritionPlanLocally(userId: String) -> NutritionPlan? {
+        guard let data = UserDefaults.standard.data(forKey: "nutrition_plan_\(userId)"),
+              let plan = try? JSONDecoder().decode(NutritionPlan.self, from: data)
+        else { return nil }
+        return plan
+    }
 }
