@@ -20,192 +20,152 @@ import smtplib
 import ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import time
 import requests
-import jwt as pyjwt  # 注意避免和 flask-jwt 冲突
-from jwt import PyJWKClient
 import json
+import threading
+from jwt import PyJWKClient
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
 from health_pipeline import (
-       generate_nutrition_targets,
-       generate_weekly_meal_plan,
-       analyze_meal_photo,
-   )
-import threading
-from health_pipeline import (
-       generate_nutrition_targets,
-       generate_weekly_meal_plan,
-       analyze_meal_photo,
-   )
+    generate_nutrition_targets,
+    generate_weekly_meal_plan,
+    analyze_meal_photo,
+)
 
-
-
-#Load environment variables
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 verification_store = {}
+meal_plan_jobs = {}  # async job storage
 
 APPLE_KEYS = None
 APPLE_KEYS_LAST_FETCH = 0
 
 # JWT Configuration
 app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
-app.config['JWT_EXPIRATION_HOURS'] = 24 * 7  # 7 days
+app.config['JWT_EXPIRATION_HOURS'] = 24 * 7
 
-# Configure MongoDB with error handling and retry logic
+# ── Keep-Alive（防止 Render Free 实例冷启动）
+def _keep_alive_loop():
+    time.sleep(60)
+    while True:
+        try:
+            requests.get("https://food-app-swift-qb4k.onrender.com/ping", timeout=10)
+            print("🔄 Keep-alive ping sent")
+        except Exception as e:
+            print(f"⚠️ Keep-alive ping failed: {e}")
+        time.sleep(25 * 60)
+
+threading.Thread(target=_keep_alive_loop, daemon=True).start()
+print("✅ Keep-alive thread started")
+
+# ── MongoDB
 def init_mongodb():
-    """Initialize MongoDB connection with comprehensive error handling"""
     try:
         mongo_uri = os.getenv("MONGO_URI")
         if not mongo_uri:
-            print("❌ MONGO_URI environment variable not set!")
-            return None, None, None, None, None
-        
-        print(f"🔍 Attempting MongoDB connection...")
-        print(f"🔍 URI format check: {mongo_uri.startswith('mongodb')}")
-        
+            print("❌ MONGO_URI not set!")
+            return None, None, None, None, None, None
         client = MongoClient(
             mongo_uri,
-            maxPoolSize=10,
-            minPoolSize=1,
-            maxIdleTimeMS=45000,
-            serverSelectionTimeoutMS=15000,  # Increased timeout
-            connectTimeoutMS=15000,
-            socketTimeoutMS=15000,
-            retryWrites=True,
-            w='majority'
+            maxPoolSize=10, minPoolSize=1, maxIdleTimeMS=45000,
+            serverSelectionTimeoutMS=15000, connectTimeoutMS=15000,
+            socketTimeoutMS=15000, retryWrites=True, w='majority'
         )
-        
-        # Test connection with explicit timeout
         client.admin.command('ping')
-        print("✅ MongoDB connected successfully")
-        
+        print("✅ MongoDB connected")
         db = client[os.getenv("MONGO_DB", "food-app-swift")]
-        
-        # Initialize collections
-        users_collection = db["users"]
-        profiles_collection = db["profiles"] 
-        meals_collection = db["meals"]
-        analysis_collection = db["analysis_record"]
-        
-        return client, db, users_collection, profiles_collection, meals_collection, analysis_collection
-        
+        return client, db, db["users"], db["profiles"], db["meals"], db["analysis_record"]
     except Exception as e:
-        print(f"❌ MongoDB connection failed: {str(e)}")
-        print(f"❌ Error type: {type(e).__name__}")
-        # Return dummy objects to prevent app crash
-        return None, None, None, None, None
+        print(f"❌ MongoDB failed: {e}")
+        return None, None, None, None, None, None
 
-# Initialize MongoDB
 client, db, users_collection, profiles_collection, meals_collection, analysis_collection = init_mongodb()
 
-# Only create indexes if connection successful
 if client is not None and users_collection is not None:
     try:
         users_collection.create_index("email", unique=True)
         profiles_collection.create_index("user_id")
         meals_collection.create_index([("user_id", 1), ("saved_at", -1)])
         analysis_collection.create_index([("user_id", 1), ("analyzed_at", -1)])
-        print("✅ Database indexes created successfully")
+        print("✅ Indexes created")
     except Exception as e:
-        print(f"⚠️ Index creation failed (may already exist): {str(e)}")
+        print(f"⚠️ Index creation: {e}")
 else:
-    print("⚠️ MongoDB not available - app will run but database operations will fail")
-    # Create dummy collections to prevent import errors
-    users_collection = None
-    profiles_collection = None
-    meals_collection = None
-    analysis_collection = None
+    print("⚠️ MongoDB not available")
+    users_collection = profiles_collection = meals_collection = analysis_collection = None
 
-# Configure Gemini for nutrition recalculation
+# ── Gemini
 try:
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key:
         genai.configure(api_key=gemini_api_key)
         gemini_model = genai.GenerativeModel('gemini-2.5-pro')
-        print("✅ Gemini AI configured successfully")
+        print("✅ Gemini configured")
     else:
-        print("⚠️ GEMINI_API_KEY not found - AI features will be disabled")
+        print("⚠️ GEMINI_API_KEY not found")
         gemini_model = None
 except Exception as e:
-    print(f"❌ Gemini configuration failed: {str(e)}")
+    print(f"❌ Gemini failed: {e}")
     gemini_model = None
 
-# Database connection checker decorator
+# ── Decorators
 def db_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if client is None or db is None:  # Changed from 'if not client or not db:'
-            return jsonify({'error': 'Database connection not available'}), 503
+        if client is None or db is None:
+            return jsonify({'error': 'Database not available'}), 503
         return f(*args, **kwargs)
     return decorated
 
-# HTTPS Enforcement Middleware
 @app.before_request
 def force_https():
-    # Skip HTTPS enforcement for local development
     if os.getenv('ENVIRONMENT', 'development') == 'production':
         if not request.is_secure and request.headers.get('X-Forwarded-Proto') != 'https':
             return redirect(request.url.replace('http://', 'https://'))
 
-# JWT Token Required Decorator
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        
-        # Get token from header
         if 'Authorization' in request.headers:
-            auth_header = request.headers['Authorization']
             try:
-                token = auth_header.split(' ')[1]  # Bearer <token>
+                token = request.headers['Authorization'].split(' ')[1]
             except IndexError:
                 return jsonify({'error': 'Invalid token format'}), 401
-        
         if not token:
             return jsonify({'error': 'Token is missing'}), 401
-        
         try:
-            # Decode token
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
-            current_user_id = data['user_id']
-            
-            # Add user_id to request context
-            request.user_id = current_user_id
-            
+            request.user_id = data['user_id']
         except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Token has expired'}), 401
         except jwt.InvalidTokenError:
             return jsonify({'error': 'Invalid token'}), 401
-        
         return f(*args, **kwargs)
-    
     return decorated
 
-# Helper function to generate JWT token
 def generate_token(user_id):
     payload = {
         'user_id': str(user_id),
         'exp': datetime.utcnow() + timedelta(hours=app.config['JWT_EXPIRATION_HOURS'])
     }
-    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
-    return token
+    return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
+# ── Basic Routes
 @app.route("/ping", methods=["GET"])
 def ping():
     return jsonify({"status": "ok", "timestamp": datetime.now().isoformat()}), 200
 
 @app.route("/")
 def home():
-    return {"message": "Food Analyzer Backend is Running", "version": "3.0", "security": "enhanced"}, 200
+    return {"message": "Food Analyzer Backend is Running", "version": "3.0"}, 200
 
 @app.route("/health", methods=["GET"])
 def health():
     try:
-        # Check MongoDB connection
         mongodb_status = "disconnected"
         if client:
             try:
@@ -213,38 +173,27 @@ def health():
                 mongodb_status = "connected"
             except:
                 mongodb_status = "connection_failed"
-        
-        # Check Gemini API key
         gemini_ok = bool(os.getenv("GEMINI_API_KEY"))
-        
         return jsonify({
             "status": "healthy" if mongodb_status == "connected" else "degraded",
             "mongodb": mongodb_status,
-            "gemini": "configured" if gemini_ok else "missing API key",
-            "security": "jwt+bcrypt",
-            "https": "enforced" if os.getenv('ENVIRONMENT') == 'production' else "development",
+            "gemini": "configured" if gemini_ok else "missing",
             "timestamp": datetime.now().isoformat()
         }), 200 if mongodb_status == "connected" else 503
-        
     except Exception as e:
-        return jsonify({
-            "status": "unhealthy",
-            "error": str(e),
-            "timestamp": datetime.now().isoformat()
-        }), 503
+        return jsonify({"status": "unhealthy", "error": str(e)}), 503
 
 @app.route("/debug-env", methods=["GET"])
 def debug_env():
-    """Debug endpoint to check environment variables"""
     return jsonify({
         "has_mongo_uri": bool(os.getenv("MONGO_URI")),
-        "mongo_uri_prefix": os.getenv("MONGO_URI", "")[:50] if os.getenv("MONGO_URI") else "None",
         "has_gemini_key": bool(os.getenv("GEMINI_API_KEY")),
         "environment": os.getenv("ENVIRONMENT", "not-set"),
         "mongo_db": os.getenv("MONGO_DB", "not-set"),
         "jwt_secret_set": bool(os.getenv("JWT_SECRET_KEY"))
     }), 200
 
+# ── Auth
 @app.route("/register", methods=["POST"])
 @db_required
 def register():
@@ -252,44 +201,20 @@ def register():
         data = request.get_json()
         if not data:
             return jsonify({"error": "Empty request"}), 400
-        
-        # Validate required fields
-        required_fields = ["name", "email", "password"]
-        missing_fields = [field for field in required_fields if field not in data or not data[field]]
-        if missing_fields:
-            return jsonify({"error": f"Missing fields: {', '.join(missing_fields)}"}), 400
-            
-        # Check if email already exists
-        existing_user = users_collection.find_one({"email": data["email"]})
-        if existing_user:
+        missing = [f for f in ["name", "email", "password"] if not data.get(f)]
+        if missing:
+            return jsonify({"error": f"Missing: {', '.join(missing)}"}), 400
+        if users_collection.find_one({"email": data["email"]}):
             return jsonify({"error": "Email already registered"}), 409
-
-        # Hash password with bcrypt
         hashed_pw = bcrypt.hashpw(data["password"].encode('utf-8'), bcrypt.gensalt())
-        
-        user = {
-            "name": data["name"],
-            "email": data["email"],
-            "password": hashed_pw,
-            "login_methods": ["email"],  # ← 新增这一行
-            "created_at": datetime.now().isoformat()
-        }
-        
+        user = {"name": data["name"], "email": data["email"], "password": hashed_pw,
+                "login_methods": ["email"], "created_at": datetime.now().isoformat()}
         result = users_collection.insert_one(user)
-        
-        # Generate JWT token
         token = generate_token(result.inserted_id)
-        
-        return jsonify({
-            "user_id": str(result.inserted_id), 
-            "name": data["name"],
-            "email": data["email"],
-            "token": token,
-            "login_methods": ["email"]  # ← 新增这一行
-        }), 200
-        
+        return jsonify({"user_id": str(result.inserted_id), "name": data["name"],
+                        "email": data["email"], "token": token, "login_methods": ["email"]}), 200
     except Exception as e:
-        print(f"❌ Register error: {str(e)}")
+        print(f"❌ Register: {e}")
         return jsonify({"error": "Registration failed"}), 500
 
 @app.route("/login", methods=["POST"])
@@ -297,56 +222,28 @@ def register():
 def login():
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        
-        # Validate required fields
-        if not data.get("email") or not data.get("password"):
+        if not data or not data.get("email") or not data.get("password"):
             return jsonify({"error": "Email and password required"}), 400
-            
         user = users_collection.find_one({"email": data["email"]})
         if not user:
             return jsonify({"error": "Invalid email or password"}), 401
-
-        # Check if user has password (email-registered users)
         if "password" not in user or not user["password"]:
-            # User registered with Google/Apple, no password set
-            login_methods = user.get("login_methods", [])
-            return jsonify({
-                "error": f"This email is registered with {', '.join(login_methods)}. Please use that method to login, or set a password first."
-            }), 401
-
-        # Check password with bcrypt
+            methods = user.get("login_methods", [])
+            return jsonify({"error": f"Registered with {', '.join(methods)}"}), 401
         if not bcrypt.checkpw(data["password"].encode('utf-8'), user["password"]):
             return jsonify({"error": "Invalid email or password"}), 401
-
-        # Update login_methods (add 'email' if not present)
         login_methods = user.get("login_methods", [])
         if "email" not in login_methods:
             login_methods.append("email")
-            users_collection.update_one(
-                {"_id": user["_id"]},
-                {"$set": {"login_methods": login_methods}}
-            )
-
-        # Generate JWT token (7 days)
+            users_collection.update_one({"_id": user["_id"]}, {"$set": {"login_methods": login_methods}})
         token = generate_token(user["_id"])
-
-        return jsonify({
-            "user_id": str(user["_id"]), 
-            "name": user["name"],
-            "email": user["email"],
-            "token": token,
-            "login_methods": login_methods
-        }), 200
-        
+        return jsonify({"user_id": str(user["_id"]), "name": user["name"],
+                        "email": user["email"], "token": token, "login_methods": login_methods}), 200
     except Exception as e:
-        print(f"❌ Login error: {str(e)}")
+        print(f"❌ Login: {e}")
         return jsonify({"error": "Login failed"}), 500
 
-
-
-
+# ── Profile (original nutrition app)
 @app.route("/save-profile", methods=["POST"])
 @token_required
 @db_required
@@ -354,24 +251,12 @@ def save_profile():
     try:
         data = request.get_json()
         if not data:
-            return jsonify({"error": "Empty or invalid JSON"}), 400
-
-        # Use user_id from JWT token
-        user_id = request.user_id
-        
-        # Remove user_id from data if present
+            return jsonify({"error": "Empty request"}), 400
         profile_data = {k: v for k, v in data.items() if k != "user_id"}
         profile_data["updated_at"] = datetime.now().isoformat()
-        
-        profiles_collection.update_one(
-            {"user_id": user_id},
-            {"$set": profile_data},
-            upsert=True
-        )
-        
+        profiles_collection.update_one({"user_id": request.user_id}, {"$set": profile_data}, upsert=True)
         return jsonify({"message": "Profile saved"}), 200
     except Exception as e:
-        print(f"❌ Save profile error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/get-profile", methods=["GET"])
@@ -379,186 +264,87 @@ def save_profile():
 @db_required
 def get_profile():
     try:
-        # Use user_id from JWT token
-        user_id = request.user_id
-
-        profile = profiles_collection.find_one({"user_id": user_id})
+        profile = profiles_collection.find_one({"user_id": request.user_id})
         if not profile:
             return jsonify({"error": "Profile not found"}), 404
-
         profile["_id"] = str(profile["_id"])
         return jsonify(profile), 200
     except Exception as e:
-        print(f"❌ Get profile error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+# ── Analyze (original food photo)
 @app.route("/analyze", methods=["POST"])
 @token_required
 def analyze():
-    """Image analysis endpoint - enhanced with JWT auth"""
     try:
         if not gemini_model:
             return jsonify({"error": "AI service unavailable"}), 503
-            
         if "image" not in request.files:
-            return jsonify({"error": "No image part in the request"}), 400
-
+            return jsonify({"error": "No image in request"}), 400
         image_file = request.files["image"]
-        user_id = request.user_id  # From JWT token
-
-        # Validate file size (limit to 10MB)
-        image_file.seek(0, 2)  # Seek to end
+        user_id = request.user_id
+        image_file.seek(0, 2)
         file_size = image_file.tell()
-        image_file.seek(0)  # Reset to beginning
-        
-        if file_size > 10 * 1024 * 1024:  # 10MB limit
-            return jsonify({"error": "Image too large. Please use an image under 10MB"}), 413
-
-        if file_size < 1024:  # Too small
-            return jsonify({"error": "Image too small. Please use a clearer image"}), 400
-
+        image_file.seek(0)
+        if file_size > 10 * 1024 * 1024:
+            return jsonify({"error": "Image too large (max 10MB)"}), 413
+        if file_size < 1024:
+            return jsonify({"error": "Image too small"}), 400
         filename = f"image_{int(time.time() * 1000)}.png"
         image_path = os.path.join("/tmp", filename)
         image_file.save(image_path)
-
-        print(f"📸 Saved image to: {image_path} (size: {file_size / 1024 / 1024:.2f}MB)")
-
-        # Validate image before analysis
-        is_valid, validation_msg = validate_image_for_analysis(image_path)
+        is_valid, msg = validate_image_for_analysis(image_path)
         if not is_valid:
-            try:
-                os.remove(image_path)
-            except:
-                pass
-            return jsonify({"error": f"Invalid image: {validation_msg}"}), 400
-
-        # Perform analysis with timeout handling
-        from concurrent.futures import ThreadPoolExecutor, TimeoutError
+            try: os.remove(image_path)
+            except: pass
+            return jsonify({"error": f"Invalid image: {msg}"}), 400
+        from concurrent.futures import ThreadPoolExecutor
         import concurrent.futures
-        
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(full_image_analysis, image_path, user_id)
             try:
-                # Give it 90 seconds to complete
                 result = future.result(timeout=90)
-                
-                # Check if analysis actually succeeded
                 if "error" in result:
-                    print(f"⚠️ Analysis contained errors: {result.get('error', 'Unknown error')}")
-                    # Clean up and return error
-                    try:
-                        os.remove(image_path)
-                    except:
-                        pass
-                    return jsonify({
-                        "error": f"Analysis failed: {result.get('error', 'Unknown error')}",
-                        "suggestion": "Please try with a clearer image of food"
-                    }), 500
-                
-                # Validate that we got meaningful results
-                if (result.get("dish_prediction", "").lower().startswith("analysis failed") or
-                    result.get("dish_prediction", "").lower().startswith("could not identify") or
-                    result.get("dish_prediction", "").lower().startswith("unable to analyze")):
-                    try:
-                        os.remove(image_path)
-                    except:
-                        pass
-                    return jsonify({
-                        "error": "Unable to analyze this image",
-                        "suggestion": "Please ensure the image clearly shows food items"
-                    }), 422
-                
+                    try: os.remove(image_path)
+                    except: pass
+                    return jsonify({"error": f"Analysis failed: {result.get('error')}"}), 500
+                if result.get("dish_prediction", "").lower().startswith(("analysis failed", "could not identify", "unable to analyze")):
+                    try: os.remove(image_path)
+                    except: pass
+                    return jsonify({"error": "Unable to analyze image"}), 422
             except concurrent.futures.TimeoutError:
-                print("⏱️ Analysis timeout")
-                try:
-                    os.remove(image_path)
-                except:
-                    pass
-                return jsonify({
-                    "error": "Analysis timeout",
-                    "suggestion": "Please try with a simpler or clearer image"
-                }), 408
-        
+                try: os.remove(image_path)
+                except: pass
+                return jsonify({"error": "Analysis timeout"}), 408
         result["user_id"] = user_id
-        print(f"✅ Analysis completed for {filename}")
-        print(f"📊 Dish: {result.get('dish_prediction', 'Unknown')}")
-        print(f"📊 Hidden ingredients: {result.get('hidden_ingredients', 'None')[:100]}...")
-        print(f"⏱️ Analysis time: {result.get('analysis_time', 0):.2f}s")
-        
-        # Debug: Check if hidden ingredients exist
-        if result.get('hidden_ingredients'):
-            print(f"🔍 Hidden ingredients length: {len(result['hidden_ingredients'])}")
-            print(f"🔍 Hidden ingredients preview: {result['hidden_ingredients'][:200]}...")
-        else:
-            print("⚠️ No hidden ingredients in result")
-        
-        # ADD THIS NEW DEBUG SECTION
-        print(f"📊 NUTRITION INFO DEBUG:")
         nutrition_info = result.get('nutrition_info', '')
-        print(f"📊 Nutrition info exists: {bool(nutrition_info)}")
-        print(f"📊 Nutrition info length: {len(nutrition_info)}")
-        print(f"📊 Nutrition info content:\n{nutrition_info}")
-        image_base64 = None
-        image_thumb = None
-        
+        image_base64 = image_thumb = None
         try:
             image_base64 = image_file_to_base64(image_path)
             image_thumb = compress_base64_image(image_base64)
-        except Exception as e:
-            print("⚠️ Failed to generate base64 images:", str(e))
-
+        except: pass
         try:
             if analysis_collection is not None:
-                analysis_doc = {
-                    "user_id": user_id,
-                    "dish_prediction": result.get("dish_prediction", ""),
+                analysis_collection.insert_one({
+                    "user_id": user_id, "dish_prediction": result.get("dish_prediction", ""),
                     "image_description": result.get("image_description", ""),
-                    "nutrition_info": nutrition_info,
-                    "hidden_ingredients": result.get("hidden_ingredients", ""),
-                    "image_full": image_base64,
-                    "image_thumb": image_thumb,
+                    "nutrition_info": nutrition_info, "hidden_ingredients": result.get("hidden_ingredients", ""),
+                    "image_full": image_base64, "image_thumb": image_thumb,
                     "meal_type": result.get("meal_type", "Unknown"),
-                    "analysis_method": "dynamic_ai",
-                    "contains_hardcoded_values": False,
-                    "analysis_time": result.get("analysis_time"),
-                    "analyzed_at": datetime.now().isoformat()
-                }
-        
-                analysis_collection.insert_one(analysis_doc)
-                print("📝 Analysis auto-saved to analysis_record")
-        
-        except Exception as e:
-            # Do NOT break analyze response if logging fails
-            print("⚠️ Analysis auto-save failed:", str(e))
-                
-        # Also check if it's properly formatted
-        if nutrition_info:
-            lines = nutrition_info.split('\n')
-            print(f"📊 Nutrition lines count: {len(lines)}")
-            for i, line in enumerate(lines[:3]):  # Show first 3 lines
-                print(f"📊 Line {i}: '{line}'")
-        
-        # Clean up
-        try:
-            os.remove(image_path)
-        except:
-            pass
-            
+                    "analysis_method": "dynamic_ai", "contains_hardcoded_values": False,
+                    "analysis_time": result.get("analysis_time"), "analyzed_at": datetime.now().isoformat()
+                })
+        except: pass
+        try: os.remove(image_path)
+        except: pass
         return jsonify(result), 200
-
     except Exception as e:
-        print("❌ analyze Exception:", str(e))
+        print(f"❌ analyze: {e}")
         traceback.print_exc()
-        # Clean up on error
         try:
-            if 'image_path' in locals():
-                os.remove(image_path)
-        except:
-            pass
-        return jsonify({
-            "error": "Analysis failed",
-            "details": str(e)
-        }), 500
+            if 'image_path' in locals(): os.remove(image_path)
+        except: pass
+        return jsonify({"error": "Analysis failed", "details": str(e)}), 500
 
 def compress_base64_image(base64_str, quality=5):
     try:
@@ -566,17 +352,16 @@ def compress_base64_image(base64_str, quality=5):
         image = Image.open(BytesIO(image_data)).convert("RGB")
         buffer = BytesIO()
         image.save(buffer, format="JPEG", quality=quality)
-        compressed_data = buffer.getvalue()
-        return base64.b64encode(compressed_data).decode("utf-8")
+        return base64.b64encode(buffer.getvalue()).decode("utf-8")
     except Exception as e:
-        print("❌ Compression Error:", str(e))
+        print(f"❌ Compress: {e}")
         return None
-        
+
 def image_file_to_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-
+# ── Meals
 @app.route("/save-meal", methods=["POST"])
 @token_required
 @db_required
@@ -585,51 +370,23 @@ def save_meal():
         data = request.get_json()
         if not data:
             return jsonify({"error": "Empty request"}), 400
-            
-        required = ["dish_prediction", "image_description", "nutrition_info"]
-        missing = [k for k in required if k not in data]
+        missing = [k for k in ["dish_prediction", "image_description", "nutrition_info"] if k not in data]
         if missing:
-            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-
-        # Use user_id from JWT token
+            return jsonify({"error": f"Missing: {', '.join(missing)}"}), 400
         user_id = request.user_id
-
-        # Process images
-        image = data.get("image", None)
+        image = data.get("image")
         image_full = data.get("image_full") or image
         image_thumb = data.get("image_thumb") or (compress_base64_image(image) if image else None)
-
-        # Log the nutrition info being saved
-        print(f"📊 Saving meal with nutrition info: {data['nutrition_info'][:200]}...")
-        print(f"📊 Nutrition info length: {len(data['nutrition_info'])}")
-
-        # Build meal document
-        meal = {
-            "user_id": user_id,
-            "dish_prediction": data["dish_prediction"],
-            "image_description": data["image_description"],
-            "nutrition_info": data["nutrition_info"],  # Make sure this has the recalculated values
-            "hidden_ingredients": data.get("hidden_ingredients", ""),
-            "image_full": image_full,
-            "image_thumb": image_thumb,
-            "meal_type": data.get("meal_type", "Lunch"),
-            "saved_at": data.get("saved_at", datetime.now().isoformat()),
-            "analysis_method": "dynamic_ai",
-            "contains_hardcoded_values": False
-        }
-
+        meal = {"user_id": user_id, "dish_prediction": data["dish_prediction"],
+                "image_description": data["image_description"], "nutrition_info": data["nutrition_info"],
+                "hidden_ingredients": data.get("hidden_ingredients", ""),
+                "image_full": image_full, "image_thumb": image_thumb,
+                "meal_type": data.get("meal_type", "Lunch"),
+                "saved_at": data.get("saved_at", datetime.now().isoformat()),
+                "analysis_method": "dynamic_ai", "contains_hardcoded_values": False}
         result = meals_collection.insert_one(meal)
-        
-        print(f"✅ Meal saved successfully with ID: {result.inserted_id}")
-        print(f"📊 Saved nutrition: {meal['nutrition_info'][:100]}...")
-        
-        return jsonify({
-            "message": "Meal saved successfully",
-            "meal_id": str(result.inserted_id)
-        }), 200
-        
+        return jsonify({"message": "Meal saved", "meal_id": str(result.inserted_id)}), 200
     except Exception as e:
-        print(f"❌ Error in save_meal: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/user-meals", methods=["GET"])
@@ -637,69 +394,33 @@ def save_meal():
 @db_required
 def get_user_meals():
     try:
-        # Use user_id from JWT token
         user_id = request.user_id
-        print(f"📊 Fetching meals for user: {user_id}")
-
-        # Query meals for the user, sorted by date
-        meals = list(meals_collection.find(
-            {"user_id": user_id}
-        ).sort("saved_at", -1))
-        
-        print(f"📊 Found {len(meals)} meals")
-        
-        # Process each meal to ensure compatibility
-        processed_meals = []
+        meals = list(meals_collection.find({"user_id": user_id}).sort("saved_at", -1))
+        processed = []
         for meal in meals:
-            # Convert ObjectId to string
             meal["_id"] = str(meal["_id"])
-            
-            # Log nutrition info for debugging
-            if "nutrition_info" in meal:
-                print(f"📊 Meal {meal['dish_prediction'][:30]} nutrition: {meal['nutrition_info'][:100]}...")
-            
-            # Handle different image storage formats
             if "image" in meal and isinstance(meal["image"], bytes):
                 meal["image_thumb"] = base64.b64encode(meal["image"]).decode('utf-8')
                 meal["image_full"] = meal["image_thumb"]
                 del meal["image"]
-            
-            # Ensure all required fields exist
             meal.setdefault("dish_prediction", meal.get("dish", "Unknown Dish"))
             meal.setdefault("image_description", meal.get("visible_ingredients", ""))
             meal.setdefault("hidden_ingredients", "")
             meal.setdefault("nutrition_info", "")
             meal.setdefault("meal_type", "Lunch")
-            
-            # Handle timestamp/saved_at field
             if "timestamp" in meal:
-                if hasattr(meal["timestamp"], 'isoformat'):
-                    meal["saved_at"] = meal["timestamp"].isoformat()
-                else:
-                    meal["saved_at"] = str(meal["timestamp"])
+                meal["saved_at"] = meal["timestamp"].isoformat() if hasattr(meal["timestamp"], 'isoformat') else str(meal["timestamp"])
             else:
                 meal.setdefault("saved_at", "")
-            
-            # Remove fields that iOS doesn't expect
-            fields_to_remove = ["timestamp", "visible_ingredients", "image_filename", "dish"]
-            for field in fields_to_remove:
-                meal.pop(field, None)
-            
-            # Ensure image fields exist
+            for f in ["timestamp", "visible_ingredients", "image_filename", "dish"]:
+                meal.pop(f, None)
             meal.setdefault("image_full", "")
             meal.setdefault("image_thumb", "")
-            
-            processed_meals.append(meal)
-
-        print(f"✅ Returning {len(processed_meals)} processed meals")
-        
-        return jsonify(processed_meals), 200
-        
+            processed.append(meal)
+        return jsonify(processed), 200
     except Exception as e:
-        print(f"❌ Error in get_user_meals: {str(e)}")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/update-meal", methods=["PUT"])
 @token_required
@@ -707,55 +428,22 @@ def get_user_meals():
 def update_meal():
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        
         meal_id = data.get("meal_id")
         if not meal_id:
             return jsonify({"error": "Missing meal_id"}), 400
-        
-        print(f"📊 Updating meal {meal_id}")
-        print(f"📊 Nutrition info received: {data.get('nutrition_info', '')[:200]}...")
-        
-        # Verify meal belongs to user
         meal = meals_collection.find_one({"_id": ObjectId(meal_id)})
         if not meal or meal["user_id"] != request.user_id:
-            return jsonify({"error": "Meal not found or unauthorized"}), 404
-        
-        # Prepare update data - include ALL fields that can be updated
+            return jsonify({"error": "Not found or unauthorized"}), 404
         update_data = {}
-        if "dish_prediction" in data:
-            update_data["dish_prediction"] = data["dish_prediction"]
-        if "image_description" in data:
-            update_data["image_description"] = data["image_description"]
-        if "hidden_ingredients" in data:
-            update_data["hidden_ingredients"] = data["hidden_ingredients"]
-        if "nutrition_info" in data:
-            update_data["nutrition_info"] = data["nutrition_info"]
-            print(f"📊 Updating nutrition to: {data['nutrition_info'][:100]}...")
-        if "meal_type" in data:
-            update_data["meal_type"] = data["meal_type"]
-            
+        for field in ["dish_prediction", "image_description", "hidden_ingredients", "nutrition_info", "meal_type"]:
+            if field in data:
+                update_data[field] = data[field]
         update_data["updated_at"] = datetime.now().isoformat()
-        update_data["last_modified_method"] = "user_edit"
-        
-        # Update meal in database
-        result = meals_collection.update_one(
-            {"_id": ObjectId(meal_id)},
-            {"$set": update_data}
-        )
-        
+        result = meals_collection.update_one({"_id": ObjectId(meal_id)}, {"$set": update_data})
         if result.modified_count > 0:
-            print(f"✅ Meal {meal_id} updated successfully")
-            print(f"📊 Updated fields: {list(update_data.keys())}")
-            return jsonify({"message": "Meal updated successfully"}), 200
-        else:
-            print(f"⚠️ No changes made to meal {meal_id}")
-            return jsonify({"error": "Meal not found or no changes made"}), 404
-            
+            return jsonify({"message": "Meal updated"}), 200
+        return jsonify({"error": "No changes made"}), 404
     except Exception as e:
-        print(f"❌ Error in update_meal: {str(e)}")
-        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @app.route("/delete-meal", methods=["DELETE"])
@@ -764,120 +452,54 @@ def update_meal():
 def delete_meal():
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        
         meal_id = data.get("meal_id")
         if not meal_id:
             return jsonify({"error": "Missing meal_id"}), 400
-        
-        # Verify meal belongs to user
         meal = meals_collection.find_one({"_id": ObjectId(meal_id)})
         if not meal or meal["user_id"] != request.user_id:
-            return jsonify({"error": "Meal not found or unauthorized"}), 404
-        
-        # Delete meal from database
+            return jsonify({"error": "Not found or unauthorized"}), 404
         result = meals_collection.delete_one({"_id": ObjectId(meal_id)})
-        
         if result.deleted_count > 0:
-            return jsonify({"message": "Meal deleted successfully"}), 200
-        else:
-            return jsonify({"error": "Meal not found"}), 404
-            
+            return jsonify({"message": "Meal deleted"}), 200
+        return jsonify({"error": "Not found"}), 404
     except Exception as e:
-        print(f"❌ Error in delete_meal: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/recalculate-nutrition", methods=["POST"])
 @token_required
 def recalculate_nutrition():
-    """Fully dynamic nutrition recalculation endpoint"""
     try:
         if not gemini_model:
-            return jsonify({"error": "AI service unavailable"}), 503
-            
+            return jsonify({"error": "AI unavailable"}), 503
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        
         ingredients = data.get("ingredients", "")
-        
         if not ingredients:
-            return jsonify({"error": "No ingredients provided"}), 400
-        
-        print(f"🔄 Recalculating nutrition for user {request.user_id}")
-        print(f"📋 Ingredients received:\n{ingredients}")
-        
-        # Use enhanced recalculation from model_pipeline
+            return jsonify({"error": "No ingredients"}), 400
         from model_pipeline import recalculate_nutrition_enhanced
-        
-        try:
-            nutrition_info = recalculate_nutrition_enhanced(ingredients)
-            
-            print(f"✅ Recalculated nutrition: {nutrition_info[:200]}...")
-            
-            # Check if recalculation failed
-            if "Recalculation failed" in nutrition_info:
-                return jsonify({
-                    "error": "Nutrition recalculation failed",
-                    "details": "Unable to calculate nutrition from provided ingredients"
-                }), 500
-            
-            return jsonify({
-                "nutrition_info": nutrition_info,
-                "calculation_method": "dynamic_ai",
-                "contains_hardcoded_values": False
-            }), 200
-            
-        except Exception as e:
-            print(f"❌ Recalculation error: {str(e)}")
-            return jsonify({
-                "error": "Nutrition recalculation failed",
-                "details": str(e)
-            }), 500
-            
+        nutrition_info = recalculate_nutrition_enhanced(ingredients)
+        return jsonify({"nutrition_info": nutrition_info, "calculation_method": "dynamic_ai",
+                        "contains_hardcoded_values": False}), 200
     except Exception as e:
-        print(f"❌ Error in recalculate_nutrition: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-# Add these endpoints to your app.py file
-
+# ── Exercise / Water / Weight
 @app.route("/add-exercise", methods=["POST"])
 @token_required
 @db_required
 def add_exercise():
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        
-        required = ["exercise_type", "duration"]
-        missing = [k for k in required if k not in data]
+        missing = [k for k in ["exercise_type", "duration"] if k not in data]
         if missing:
-            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-        
-        exercise = {
-            "user_id": request.user_id,
-            "exercise_type": data["exercise_type"],
-            "duration": data["duration"],
-            "intensity": data.get("intensity", "Moderate"),
-            "calories_burned": data.get("calories_burned", 0),
-            "notes": data.get("notes", ""),
-            "recorded_at": data.get("recorded_at", datetime.now().isoformat())
-        }
-        
-        # Create exercise collection if it doesn't exist
-        exercises_collection = db["exercise"]
-        exercises_collection.create_index([("user_id", 1), ("recorded_at", -1)])
-        
-        result = exercises_collection.insert_one(exercise)
-        return jsonify({
-            "message": "Exercise added successfully",
-            "exercise_id": str(result.inserted_id)
-        }), 200
-        
+            return jsonify({"error": f"Missing: {', '.join(missing)}"}), 400
+        col = db["exercise"]
+        col.create_index([("user_id", 1), ("recorded_at", -1)])
+        result = col.insert_one({"user_id": request.user_id, "exercise_type": data["exercise_type"],
+            "duration": data["duration"], "intensity": data.get("intensity", "Moderate"),
+            "calories_burned": data.get("calories_burned", 0), "notes": data.get("notes", ""),
+            "recorded_at": data.get("recorded_at", datetime.now().isoformat())})
+        return jsonify({"message": "Exercise added", "exercise_id": str(result.inserted_id)}), 200
     except Exception as e:
-        print(f"❌ Error in add_exercise: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/user-exercise", methods=["GET"])
@@ -885,18 +507,10 @@ def add_exercise():
 @db_required
 def get_user_exercise():
     try:
-        exercises_collection = db["exercise"]
-        exercises = list(exercises_collection.find(
-            {"user_id": request.user_id}
-        ).sort("recorded_at", -1))
-        
-        for exercise in exercises:
-            exercise["_id"] = str(exercise["_id"])
-        
-        return jsonify(exercises), 200
-        
+        entries = list(db["exercise"].find({"user_id": request.user_id}).sort("recorded_at", -1))
+        for e in entries: e["_id"] = str(e["_id"])
+        return jsonify(entries), 200
     except Exception as e:
-        print(f"❌ Error in get_user_exercise: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/add-water", methods=["POST"])
@@ -905,32 +519,14 @@ def get_user_exercise():
 def add_water():
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        
-        required = ["amount"]
-        missing = [k for k in required if k not in data]
-        if missing:
-            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-        
-        water_entry = {
-            "user_id": request.user_id,
-            "amount": data["amount"],
-            "recorded_at": data.get("recorded_at", datetime.now().isoformat())
-        }
-        
-        # Create water collection if it doesn't exist
-        water_collection = db["water"]
-        water_collection.create_index([("user_id", 1), ("recorded_at", -1)])
-        
-        result = water_collection.insert_one(water_entry)
-        return jsonify({
-            "message": "Water intake added successfully",
-            "water_id": str(result.inserted_id)
-        }), 200
-        
+        if not data.get("amount"):
+            return jsonify({"error": "Missing amount"}), 400
+        col = db["water"]
+        col.create_index([("user_id", 1), ("recorded_at", -1)])
+        result = col.insert_one({"user_id": request.user_id, "amount": data["amount"],
+            "recorded_at": data.get("recorded_at", datetime.now().isoformat())})
+        return jsonify({"message": "Water added", "water_id": str(result.inserted_id)}), 200
     except Exception as e:
-        print(f"❌ Error in add_water: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/user-water", methods=["GET"])
@@ -938,18 +534,10 @@ def add_water():
 @db_required
 def get_user_water():
     try:
-        water_collection = db["water"]
-        water_entries = list(water_collection.find(
-            {"user_id": request.user_id}
-        ).sort("recorded_at", -1))
-        
-        for entry in water_entries:
-            entry["_id"] = str(entry["_id"])
-        
-        return jsonify(water_entries), 200
-        
+        entries = list(db["water"].find({"user_id": request.user_id}).sort("recorded_at", -1))
+        for e in entries: e["_id"] = str(e["_id"])
+        return jsonify(entries), 200
     except Exception as e:
-        print(f"❌ Error in get_user_water: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/add-weight", methods=["POST"])
@@ -958,32 +546,14 @@ def get_user_water():
 def add_weight():
     try:
         data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        
-        required = ["weight"]
-        missing = [k for k in required if k not in data]
-        if missing:
-            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-        
-        weight_entry = {
-            "user_id": request.user_id,
-            "weight": data["weight"],
-            "recorded_at": data.get("recorded_at", datetime.now().isoformat())
-        }
-        
-        # Create weight collection if it doesn't exist
-        weight_collection = db["weight"]
-        weight_collection.create_index([("user_id", 1), ("recorded_at", -1)])
-        
-        result = weight_collection.insert_one(weight_entry)
-        return jsonify({
-            "message": "Weight entry added successfully",
-            "weight_id": str(result.inserted_id)
-        }), 200
-        
+        if not data.get("weight"):
+            return jsonify({"error": "Missing weight"}), 400
+        col = db["weight"]
+        col.create_index([("user_id", 1), ("recorded_at", -1)])
+        result = col.insert_one({"user_id": request.user_id, "weight": data["weight"],
+            "recorded_at": data.get("recorded_at", datetime.now().isoformat())})
+        return jsonify({"message": "Weight added", "weight_id": str(result.inserted_id)}), 200
     except Exception as e:
-        print(f"❌ Error in add_weight: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/user-weight", methods=["GET"])
@@ -991,472 +561,196 @@ def add_weight():
 @db_required
 def get_user_weight():
     try:
-        weight_collection = db["weight"]
-        weight_entries = list(weight_collection.find(
-            {"user_id": request.user_id}
-        ).sort("recorded_at", -1))
-        
-        for entry in weight_entries:
-            entry["_id"] = str(entry["_id"])
-        
-        return jsonify(weight_entries), 200
-        
+        entries = list(db["weight"].find({"user_id": request.user_id}).sort("recorded_at", -1))
+        for e in entries: e["_id"] = str(e["_id"])
+        return jsonify(entries), 200
     except Exception as e:
-        print(f"❌ Error in get_user_weight: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+# ── Dashboard Stats & Insights
 @app.route("/dashboard-stats", methods=["GET"])
 @token_required
 @db_required
 def get_dashboard_stats():
-    """Get comprehensive dashboard statistics"""
     try:
-        # Get current date info
         now = datetime.now()
         today = now.replace(hour=0, minute=0, second=0, microsecond=0)
         week_start = today - timedelta(days=today.weekday())
         month_start = today.replace(day=1)
-        
-        # Initialize collections
-        water_collection = db["water"]
-        exercise_collection = db["exercise"]
-        weight_collection = db["weight"]
-        
-        # Get meal stats
         meals = list(meals_collection.find({"user_id": request.user_id}))
-        today_meals = [m for m in meals if datetime.fromisoformat(m.get("saved_at", "").replace('Z', '+00:00')).date() == today.date()]
-        week_meals = [m for m in meals if datetime.fromisoformat(m.get("saved_at", "").replace('Z', '+00:00')) >= week_start]
-        month_meals = [m for m in meals if datetime.fromisoformat(m.get("saved_at", "").replace('Z', '+00:00')) >= month_start]
-        
-        # Get water stats
-        water_entries = list(water_collection.find({"user_id": request.user_id}))
-        today_water = sum(w["amount"] for w in water_entries if datetime.fromisoformat(w.get("recorded_at", "").replace('Z', '+00:00')).date() == today.date())
-        week_water = sum(w["amount"] for w in water_entries if datetime.fromisoformat(w.get("recorded_at", "").replace('Z', '+00:00')) >= week_start)
-        
-        # Get exercise stats
-        exercise_entries = list(exercise_collection.find({"user_id": request.user_id}))
-        today_exercise = sum(e["duration"] for e in exercise_entries if datetime.fromisoformat(e.get("recorded_at", "").replace('Z', '+00:00')).date() == today.date())
-        week_exercise = sum(e["duration"] for e in exercise_entries if datetime.fromisoformat(e.get("recorded_at", "").replace('Z', '+00:00')) >= week_start)
-        
-        # Get weight stats
-        weight_entries = list(weight_collection.find({"user_id": request.user_id}).sort("recorded_at", -1))
+        def parse_dt(s):
+            try: return datetime.fromisoformat(s.replace('Z', '+00:00'))
+            except: return datetime.min
+        today_meals = [m for m in meals if parse_dt(m.get("saved_at","")).date() == today.date()]
+        week_meals  = [m for m in meals if parse_dt(m.get("saved_at","")) >= week_start]
+        month_meals = [m for m in meals if parse_dt(m.get("saved_at","")) >= month_start]
+        water_entries = list(db["water"].find({"user_id": request.user_id}))
+        today_water = sum(w["amount"] for w in water_entries if parse_dt(w.get("recorded_at","")).date() == today.date())
+        week_water  = sum(w["amount"] for w in water_entries if parse_dt(w.get("recorded_at","")) >= week_start)
+        exercise_entries = list(db["exercise"].find({"user_id": request.user_id}))
+        today_exercise = sum(e["duration"] for e in exercise_entries if parse_dt(e.get("recorded_at","")).date() == today.date())
+        week_exercise  = sum(e["duration"] for e in exercise_entries if parse_dt(e.get("recorded_at","")) >= week_start)
+        weight_entries = list(db["weight"].find({"user_id": request.user_id}).sort("recorded_at", -1))
         current_weight = weight_entries[0]["weight"] if weight_entries else 0
-        
-        # Calculate streak (simplified)
         streak = 0
         check_date = today
-        for i in range(30):  # Check last 30 days
-            day_meals = [m for m in meals if datetime.fromisoformat(m.get("saved_at", "").replace('Z', '+00:00')).date() == check_date.date()]
-            if day_meals:
-                streak += 1
-                check_date -= timedelta(days=1)
-            else:
-                break
-        
-        return jsonify({
-            "today": {
-                "meals": len(today_meals),
-                "water": today_water,
-                "exercise": today_exercise
-            },
-            "week": {
-                "meals": len(week_meals),
-                "water": week_water,
-                "exercise": week_exercise
-            },
-            "month": {
-                "meals": len(month_meals)
-            },
-            "current_weight": current_weight,
-            "streak": streak,
-            "timestamp": now.isoformat()
-        }), 200
-        
+        for _ in range(30):
+            if any(parse_dt(m.get("saved_at","")).date() == check_date.date() for m in meals):
+                streak += 1; check_date -= timedelta(days=1)
+            else: break
+        return jsonify({"today": {"meals": len(today_meals), "water": today_water, "exercise": today_exercise},
+                        "week": {"meals": len(week_meals), "water": week_water, "exercise": week_exercise},
+                        "month": {"meals": len(month_meals)},
+                        "current_weight": current_weight, "streak": streak,
+                        "timestamp": now.isoformat()}), 200
     except Exception as e:
-        print(f"❌ Error in get_dashboard_stats: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route("/user-insights", methods=["GET"])
 @token_required
 @db_required
 def get_user_insights():
-    """Get personalized health insights"""
     try:
-        # Get user profile for goals
         profile = profiles_collection.find_one({"user_id": request.user_id})
         if not profile:
             return jsonify({"error": "Profile not found"}), 404
-        
         calorie_target = profile.get("calorie_target", 2000)
-        
-        # Get today's data
         today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        # Get today's meals
-        today_meals = list(meals_collection.find({
-            "user_id": request.user_id,
-            "saved_at": {"$gte": today.isoformat()}
-        }))
-        
-        # Calculate today's calories
+        today_meals = list(meals_collection.find({"user_id": request.user_id, "saved_at": {"$gte": today.isoformat()}}))
         today_calories = 0
         for meal in today_meals:
-            nutrition = meal.get("nutrition_info", "")
-            for line in nutrition.split('\n'):
+            for line in meal.get("nutrition_info", "").split('\n'):
                 if 'calories' in line.lower():
                     parts = line.split('|')
                     if len(parts) >= 2:
-                        try:
-                            today_calories += int(parts[1].strip())
-                        except:
-                            pass
-        
-        # Get today's water
-        today_water = sum(
-            w["amount"] for w in db["water"].find({
-                "user_id": request.user_id,
-                "recorded_at": {"$gte": today.isoformat()}
-            })
-        )
-        
-        # Get today's exercise
-        today_exercise = sum(
-            e["duration"] for e in db["exercise"].find({
-                "user_id": request.user_id,
-                "recorded_at": {"$gte": today.isoformat()}
-            })
-        )
-        
-        # Generate insights
+                        try: today_calories += int(parts[1].strip())
+                        except: pass
+        today_water = sum(w["amount"] for w in db["water"].find({"user_id": request.user_id, "recorded_at": {"$gte": today.isoformat()}}))
+        today_exercise = sum(e["duration"] for e in db["exercise"].find({"user_id": request.user_id, "recorded_at": {"$gte": today.isoformat()}}))
         insights = []
-        
-        # Calorie insights
         if today_calories > calorie_target * 1.2:
-            insights.append({
-                "type": "warning",
-                "title": "High Calorie Intake",
-                "message": f"You've consumed {today_calories} calories, which is above your {calorie_target} goal.",
-                "icon": "exclamationmark.triangle.fill",
-                "color": "red"
-            })
+            insights.append({"type": "warning", "title": "High Calorie Intake",
+                "message": f"You've consumed {today_calories} kcal, above your {calorie_target} goal.",
+                "icon": "exclamationmark.triangle.fill", "color": "red"})
         elif today_calories < calorie_target * 0.8:
-            insights.append({
-                "type": "info",
-                "title": "Low Calorie Intake",
-                "message": f"You've only consumed {today_calories} calories today. Make sure you're eating enough!",
-                "icon": "info.circle.fill",
-                "color": "blue"
-            })
-        
-        # Water insights
+            insights.append({"type": "info", "title": "Low Calorie Intake",
+                "message": f"Only {today_calories} kcal today. Make sure you're eating enough!",
+                "icon": "info.circle.fill", "color": "blue"})
         if today_water < 1000:
-            insights.append({
-                "type": "reminder",
-                "title": "Stay Hydrated",
-                "message": f"You've only had {int(today_water)}ml of water today. Try to drink more!",
-                "icon": "drop.fill",
-                "color": "blue"
-            })
-        
-        # Exercise insights
+            insights.append({"type": "reminder", "title": "Stay Hydrated",
+                "message": f"Only {int(today_water)}ml today. Try to drink more!",
+                "icon": "drop.fill", "color": "blue"})
         if today_exercise == 0:
-            insights.append({
-                "type": "motivation",
-                "title": "Get Moving",
-                "message": "You haven't logged any exercise today. Even a short walk counts!",
-                "icon": "figure.walk",
-                "color": "green"
-            })
-        
-        return jsonify({
-            "insights": insights,
-            "today_stats": {
-                "calories": today_calories,
-                "water": today_water,
-                "exercise": today_exercise
-            },
-            "goals": {
-                "calories": calorie_target,
-                "water": 2000,
-                "exercise": 30
-            }
-        }), 200
-        
+            insights.append({"type": "motivation", "title": "Get Moving",
+                "message": "No exercise logged today. Even a short walk counts!",
+                "icon": "figure.walk", "color": "green"})
+        return jsonify({"insights": insights,
+                        "today_stats": {"calories": today_calories, "water": today_water, "exercise": today_exercise},
+                        "goals": {"calories": calorie_target, "water": 2000, "exercise": 30}}), 200
     except Exception as e:
-        print(f"❌ Error in get_user_insights: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-
+# ── Email / Verification
 from gmail_sender import gmail_send_email
 
 @app.route("/reset_password", methods=["POST"])
 def reset_password():
     data = request.get_json()
-
-    # ------------------------------
-    # Validate request body
-    # ------------------------------
     if not data:
         return jsonify({"error": "Empty request"}), 400
-
-    required_fields = ["email", "new_password"]
-    missing = [f for f in required_fields if f not in data or not data[f]]
-
-    if missing:
-        return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
-
-    email = data["email"]
-    new_password = data["new_password"]
-
+    email = data.get("email"); new_password = data.get("new_password")
+    if not email or not new_password:
+        return jsonify({"error": "Missing fields"}), 400
     if len(new_password) < 6:
-        return jsonify({"error": "Password must be at least 6 characters"}), 400
-
-    # ------------------------------
-    # Check email exists
-    # ------------------------------
+        return jsonify({"error": "Password min 6 chars"}), 400
     user = users_collection.find_one({"email": email})
     if not user:
         return jsonify({"error": "Email not registered"}), 404
-
-    # ------------------------------
-    # Create bcrypt hash (same as register)
-    # ------------------------------
     hashed_pw = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt())
-
-    # ------------------------------
-    # Update in MongoDB
-    # ------------------------------
-    users_collection.update_one(
-        {"email": email},
-        {"$set": {"password": hashed_pw}}
-    )
-
+    users_collection.update_one({"email": email}, {"$set": {"password": hashed_pw}})
     return jsonify({"status": "password_reset_success"}), 200
-
-
-from gmail_sender import gmail_send_email
 
 @app.route("/send_password_reset_code", methods=["POST"])
 def send_password_reset_code():
     data = request.get_json()
     email = data.get("email")
-
     if not email:
-        return jsonify({"error": "Email is required"}), 400
-
-    # Check user exists
+        return jsonify({"error": "Email required"}), 400
     user = users_collection.find_one({"email": email})
     if not user:
         return jsonify({"error": "Email not registered"}), 404
-
-    # Create code
     code = str(random.randint(100000, 999999))
-    expires = int(time.time()) + 300  # 5 minutes
-
-    verification_store[email] = {"code": code, "expires": expires}
-
-    # Email body
-    text_body = f"Your NutriCam password reset code is: {code}\nValid for 5 minutes."
-    html_body = f"""
-        <p>Your NutriCam password reset code:</p>
-        <h2 style="color:#28a745;">{code}</h2>
-        <p>This code expires in <b>5 minutes</b>.</p>
-    """
-
-    # Send email using Gmail API
+    verification_store[email] = {"code": code, "expires": int(time.time()) + 300}
     success = gmail_send_email(
-        to_email=email,
-        subject="NutriCam Password Reset Code",
-        html_body=html_body,
-        text_body=text_body
-    )
-
-    if success:
-        return jsonify({"status": "ok"}), 200
-    else:
-        return jsonify({"error": "Failed to send email"}), 500
-
+        to_email=email, subject="NutriCam Password Reset Code",
+        html_body=f"<p>Your reset code:</p><h2 style='color:#28a745;'>{code}</h2><p>Expires in 5 min.</p>",
+        text_body=f"Your NutriCam reset code: {code}. Valid 5 minutes.")
+    return jsonify({"status": "ok"} if success else {"error": "Failed to send email"}), 200 if success else 500
 
 @app.route("/send_verification", methods=["POST"])
 def send_verification():
-    print("send_verification is called")
     data = request.get_json()
     email = data.get("email")
-
     if not email:
-        return jsonify({"error": "Email is required"}), 400
-
+        return jsonify({"error": "Email required"}), 400
     user = users_collection.find_one({"email": email})
     if not user:
         return jsonify({"error": "Email not registered"}), 404
-
-    # 生成6位数字验证码
     code = str(random.randint(100000, 999999))
-    expires = int(time.time()) + 300  # 5分钟有效
-
-    # 存储验证码
-    verification_store[email] = {"code": code, "expires": expires}
-
-    # 发送邮件
+    verification_store[email] = {"code": code, "expires": int(time.time()) + 300}
     try:
-        sender_email = os.getenv("SENDER_EMAIL")   # 在环境变量中配置
-        password = os.getenv("EMAIL_PASSWORD")  
-
+        sender_email = os.getenv("SENDER_EMAIL")
+        password = os.getenv("EMAIL_PASSWORD")
         message = MIMEMultipart("alternative")
         message["Subject"] = "Your Verification Code"
         message["From"] = sender_email
         message["To"] = email
-
-        text = f"""\
-Welcome to NutriCam - AI Food Tracker! 🎉
-
-Your verification code is: {code}
-
-This code will expire in 5 minutes. Please enter it soon to complete your registration.
-
-We’re excited to have you join NutriCam — helping you track your meals, understand nutrition, 
-and enjoy a smarter journey towards healthy eating.
-
-— The NutriCam Team
-"""
-
-        html = f"""\
-<html>
-  <body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
-    <div style="max-width: 600px; margin: auto; background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
-      <h2 style="color: #2c7be5; text-align: center;">Welcome to <span style="color:#28a745;">NutriCam</span> 🎉</h2>
-      <p style="font-size: 16px; color: #333;">
-        Thank you for signing up for <b>NutriCam - AI Food Tracker</b>!  
-      </p>
-      <p style="font-size: 16px; color: #333;">Your verification code is:</p>
-      <div style="text-align: center; margin: 20px 0;">
-        <span style="font-size: 28px; font-weight: bold; color: #28a745; letter-spacing: 3px;">{code}</span>
-      </div>
-      <p style="font-size: 14px; color: #666; text-align: center;">
-        (This code will expire in <b>5 minutes</b>.)
-      </p>
-      <hr style="margin: 30px 0;">
-      <p style="font-size: 16px; color: #333;">
-        We’re excited to have you join the NutriCam community.  
-        Get ready to track your meals, analyze nutrition, and enjoy a smarter journey towards healthy eating.  
-      </p>
-      <p style="font-size: 16px; color: #333;">
-        See you inside the app! 🍎  
-        <br><br>
-        — The <b>NutriCam Team</b>
-      </p>
-    </div>
-  </body>
-</html>
-"""
-
-        message.attach(MIMEText(text, "plain"))
-        message.attach(MIMEText(html, "html"))
-
+        message.attach(MIMEText(f"Your NutriCam code: {code}. Expires in 5 minutes.", "plain"))
+        message.attach(MIMEText(f"<h2 style='color:#28a745;'>{code}</h2><p>Expires in 5 min.</p>", "html"))
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
             server.login(sender_email, password)
             server.sendmail(sender_email, email, message.as_string())
-
         return jsonify({"status": "ok"}), 200
     except Exception as e:
-        print("Error sending email:", e)
+        print(f"❌ send_verification: {e}")
         return jsonify({"error": "Failed to send email"}), 500
 
-
-# 验证验证码
 @app.route("/verify_code", methods=["POST"])
 def verify_code():
     data = request.get_json()
-    email = data.get("email")
-    code = data.get("code")
-
+    email = data.get("email"); code = data.get("code")
     if not email or not code:
-        return jsonify({"error": "Email and code are required"}), 400
-
+        return jsonify({"error": "Email and code required"}), 400
     record = verification_store.get(email)
     if not record:
         return jsonify({"error": "No code sent"}), 400
-
     if int(time.time()) > record["expires"]:
         return jsonify({"error": "Code expired"}), 400
-
     if record["code"] != code:
         return jsonify({"error": "Invalid code"}), 400
-
-    # 验证通过后，可以删除或保留
     del verification_store[email]
     return jsonify({"status": "verified"}), 200
 
-from flask import request, jsonify
-from werkzeug.security import generate_password_hash
-
-
-
-def get_apple_public_keys():
-    """Fetch and cache Apple's public keys"""
-    global APPLE_KEYS, APPLE_KEYS_LAST_FETCH
-    now = time.time()
-    if APPLE_KEYS and now - APPLE_KEYS_LAST_FETCH < 60 * 60:  # 1小时缓存
-        print("🔍 Using cached Apple public keys")
-        return APPLE_KEYS
-    print("🔍 Fetching Apple public keys from Apple...")
-    resp = requests.get("https://appleid.apple.com/auth/keys")
-    if resp.status_code == 200:
-        APPLE_KEYS = resp.json()["keys"]
-        APPLE_KEYS_LAST_FETCH = now
-        print("✅ Apple public keys fetched successfully")
-        return APPLE_KEYS
-    print("❌ Failed to fetch Apple public keys:", resp.text)
-    raise Exception("Failed to fetch Apple public keys")
-
+# ── Apple / Google Login
+APPLE_KEYS = None
+APPLE_KEYS_LAST_FETCH = 0
 
 def verify_apple_identity_token(identity_token):
-    """Verify Apple identity token and return decoded payload"""
-    print("🔍 Verifying Apple identity token...")
-
-    # Apple 提供的 JWKS endpoint
-    jwks_url = "https://appleid.apple.com/auth/keys"
-    jwks_client = PyJWKClient(jwks_url)
-
-    # 获取 token header（debug）
+    jwks_client = PyJWKClient("https://appleid.apple.com/auth/keys")
     header = jwt.get_unverified_header(identity_token)
-    print("🔍 Token header:", header)
+    signing_key = jwks_client.get_signing_key_from_jwt(identity_token)
+    return jwt.decode(identity_token, signing_key.key, algorithms=["RS256"],
+                      audience=os.getenv("APPLE_CLIENT_ID"), issuer="https://appleid.apple.com")
 
+def print_identity_token_payload(identity_token):
     try:
-        # 根据 token 找到对应的公钥
-        signing_key = jwks_client.get_signing_key_from_jwt(identity_token)
-        print("🔍 Matching Apple key found for kid:", header.get("kid"))
-
-        # 验证并解码 token
-        payload = jwt.decode(
-            identity_token,
-            signing_key.key,
-            algorithms=["RS256"],
-            audience=os.getenv("APPLE_CLIENT_ID"),
-            issuer="https://appleid.apple.com"
-        )
-        print("✅ Token verified successfully. Payload:", payload)
-
-    except Exception as e:
-        print("❌ Token verification failed:", str(e))
-        raise
-
-    return payload
-
-
-def print_identity_token_payload(identity_token: str):
-    """Decode Apple identity token payload without verifying signature"""
-    try:
-        # 只解码，不验证
         payload = jwt.decode(identity_token, options={"verify_signature": False})
-        print("🔍 Decoded Apple identity token payload:")
-        print(json.dumps(payload, indent=4))
+        print("🔍 Apple token payload:", json.dumps(payload, indent=2))
         return payload
     except Exception as e:
-        print("❌ Failed to decode identity token:", str(e))
+        print(f"❌ Decode token: {e}")
         return None
-    
 
 @app.route("/apple_login", methods=["POST"])
 @db_required
@@ -1465,87 +759,35 @@ def apple_login():
         data = request.get_json()
         identity_token = data.get("identityToken")
         email = data.get("email")
-
-        print("🔍 Incoming /apple_login request:", data)
-        print("🔍 Identity token present?", bool(identity_token))
-        print("🔍 Email provided:", email)
-
         print_identity_token_payload(identity_token)
-
         if not identity_token:
             return jsonify({"error": "Missing identityToken"}), 400
-
-        # 验证 identityToken
         try:
             payload = verify_apple_identity_token(identity_token)
             apple_sub = payload["sub"]
-            print("✅ Apple token verified. sub =", apple_sub)
         except Exception as e:
-            print("❌ Apple token verification failed:", str(e))
             return jsonify({"error": "Invalid Apple identityToken"}), 401
-
-        # 如果 email 为空，生成 fallback
         if not email:
             email = f"{apple_sub}@apple.local"
-            print("🔍 No email provided, using fallback:", email)
-
-        # 🔑 关键：查找是否已存在该 email 的账号
-        print("🔍 Looking up user by email:", email)
         user = users_collection.find_one({"email": email})
-
         if user:
-            # 账号已存在，添加 Apple 登录方式
-            login_methods = user.get("login_methods", [])
-            
-            if "apple" not in login_methods:
-                login_methods.append("apple")
-                users_collection.update_one(
-                    {"_id": user["_id"]},
-                    {
-                        "$set": {
-                            "login_methods": login_methods,
-                            "apple_sub": apple_sub  # 保存 Apple ID
-                        }
-                    }
-                )
-                print(f"✅ Added Apple login to existing account: {email}")
-            
-            user_id = user["_id"]
-            user_name = user.get("name", "Apple User")
-            
+            methods = user.get("login_methods", [])
+            if "apple" not in methods:
+                methods.append("apple")
+                users_collection.update_one({"_id": user["_id"]}, {"$set": {"login_methods": methods, "apple_sub": apple_sub}})
+            user_id = user["_id"]; user_name = user.get("name", "Apple User")
+            login_methods = user.get("login_methods", ["apple"])
         else:
-            # 新用户
-            print("🔍 No user found, creating new account")
-            user_doc = {
-                "name": data.get("name", "Apple User"),
-                "email": email,
-                "apple_sub": apple_sub,
-                "login_methods": ["apple"],  # ← 新增
-                "created_at": datetime.now().isoformat()
-            }
-            result = users_collection.insert_one(user_doc)
-            user_id = result.inserted_id
-            user_name = user_doc["name"]
-            login_methods = ["apple"]
-            print(f"✅ New user created with _id={user_id}, email={email}")
-
-        # 生成 JWT (7天)
+            doc = {"name": data.get("name", "Apple User"), "email": email, "apple_sub": apple_sub,
+                   "login_methods": ["apple"], "created_at": datetime.now().isoformat()}
+            result = users_collection.insert_one(doc)
+            user_id = result.inserted_id; user_name = doc["name"]; login_methods = ["apple"]
         token = generate_token(user_id)
-        print("✅ Generated JWT for user:", token[:30], "...")
-
-        return jsonify({
-            "user_id": str(user_id),
-            "name": user_name,
-            "email": email,
-            "token": token,
-            "login_methods": user.get("login_methods", ["apple"]) if user else ["apple"]
-        }), 200
-
+        return jsonify({"user_id": str(user_id), "name": user_name, "email": email,
+                        "token": token, "login_methods": login_methods}), 200
     except Exception as e:
-        print("❌ Apple login error:", str(e))
+        print(f"❌ Apple login: {e}")
         return jsonify({"error": "Apple login failed"}), 500
-
-
 
 @app.route("/google_login", methods=["POST"])
 @db_required
@@ -1553,205 +795,273 @@ def google_login():
     try:
         data = request.get_json()
         google_token = data.get("idToken")
-
-        print("🔍 Incoming /google_login request:", data)
-        print("🔍 Google token present?", bool(google_token))
-
         if not google_token:
             return jsonify({"error": "Missing idToken"}), 400
-
         try:
-            print("🔍 Verifying Google idToken...")
-            idinfo = id_token.verify_oauth2_token(
-                google_token,
-                grequests.Request(),
-                os.getenv("GOOGLE_CLIENT_ID")
-            )
-            print("✅ Google token verified successfully")
-            print("📝 Full payload:", idinfo)
-
+            idinfo = id_token.verify_oauth2_token(google_token, grequests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
             google_sub = idinfo["sub"]
             email = idinfo.get("email", f"{google_sub}@google.local")
             name = data.get("name", idinfo.get("name", "Google User"))
-            print("👤 UserID (sub):", google_sub)
-            print("📧 Email:", email)
-
         except Exception as e:
-            print("❌ Google token verification failed:", str(e))
             return jsonify({"error": "Invalid Google identityToken"}), 401
-
-        # 🔑 关键：查找是否已存在该 email 的账号
-        print("🔍 Looking up user by email:", email)
         user = users_collection.find_one({"email": email})
-
         if user:
-            # 账号已存在，添加 Google 登录方式
-            login_methods = user.get("login_methods", [])
-            
-            if "google" not in login_methods:
-                login_methods.append("google")
-                users_collection.update_one(
-                    {"_id": user["_id"]},
-                    {
-                        "$set": {
-                            "login_methods": login_methods,
-                            "google_sub": google_sub  # 保存 Google ID
-                        }
-                    }
-                )
-                print(f"✅ Added Google login to existing account: {email}")
-            
-            user_id = user["_id"]
-            user_name = user.get("name", name)
-            
+            methods = user.get("login_methods", [])
+            if "google" not in methods:
+                methods.append("google")
+                users_collection.update_one({"_id": user["_id"]}, {"$set": {"login_methods": methods, "google_sub": google_sub}})
+            user_id = user["_id"]; user_name = user.get("name", name); login_methods = user.get("login_methods", ["google"])
         else:
-            # 新用户，创建账号
-            print("🔍 No user found, creating new account")
-            user_doc = {
-                "name": name,
-                "email": email,
-                "google_sub": google_sub,
-                "login_methods": ["google"],  # ← 新增
-                "created_at": datetime.now().isoformat()
-            }
-            result = users_collection.insert_one(user_doc)
-            user_id = result.inserted_id
-            user_name = name
-            login_methods = ["google"]
-            print(f"✅ New user created with _id={user_id}, email={email}")
-
-        # 生成 JWT (7天)
+            doc = {"name": name, "email": email, "google_sub": google_sub,
+                   "login_methods": ["google"], "created_at": datetime.now().isoformat()}
+            result = users_collection.insert_one(doc)
+            user_id = result.inserted_id; user_name = name; login_methods = ["google"]
         token = generate_token(user_id)
-        print("✅ Generated JWT for user:", token[:30], "...")
-
-        return jsonify({
-            "user_id": str(user_id),
-            "name": user_name,
-            "email": email,
-            "token": token,
-            "login_methods": user.get("login_methods", ["google"]) if user else ["google"]
-        }), 200
-
+        return jsonify({"user_id": str(user_id), "name": user_name, "email": email,
+                        "token": token, "login_methods": login_methods}), 200
     except Exception as e:
-        print("❌ Google login error:", str(e))
+        print(f"❌ Google login: {e}")
         return jsonify({"error": "Google login failed"}), 500
-    
-    
+
+# ── Account Management
 @app.route("/delete_account", methods=["DELETE"])
 @token_required
 @db_required
 def delete_account():
-    """
-    Permanently delete user account and all associated data.
-    This complies with App Store guidelines 5.1.1(v) for account deletion.
-    """
     try:
         user_id = request.user_id
-        
-        print(f"🗑️ Account deletion request for user_id: {user_id}")
-        
-        # Verify user exists
         user = users_collection.find_one({"_id": ObjectId(user_id)})
         if not user:
-            print(f"❌ User not found: {user_id}")
             return jsonify({"error": "User not found"}), 404
-        
-        print(f"👤 Deleting account for user: {user.get('name', 'Unknown')} ({user.get('email', 'Unknown')})")
-        
-        # Delete all user data from all collections
-        deletion_results = {}
-        
-        # 1. Delete user profile
-        profile_result = profiles_collection.delete_many({"user_id": user_id})
-        deletion_results["profiles"] = profile_result.deleted_count
-        print(f"✅ Deleted {profile_result.deleted_count} profile(s)")
-        
-        # 2. Delete all meals
-        meals_result = meals_collection.delete_many({"user_id": user_id})
-        deletion_results["meals"] = meals_result.deleted_count
-        print(f"✅ Deleted {meals_result.deleted_count} meal(s)")
-        
-        # 3. Delete exercise records
-        if "exercise" in db.list_collection_names():
-            exercise_result = db["exercise"].delete_many({"user_id": user_id})
-            deletion_results["exercise"] = exercise_result.deleted_count
-            print(f"✅ Deleted {exercise_result.deleted_count} exercise record(s)")
-        
-        # 4. Delete water intake records
-        if "water" in db.list_collection_names():
-            water_result = db["water"].delete_many({"user_id": user_id})
-            deletion_results["water"] = water_result.deleted_count
-            print(f"✅ Deleted {water_result.deleted_count} water record(s)")
-        
-        # 5. Delete weight records
-        if "weight" in db.list_collection_names():
-            weight_result = db["weight"].delete_many({"user_id": user_id})
-            deletion_results["weight"] = weight_result.deleted_count
-            print(f"✅ Deleted {weight_result.deleted_count} weight record(s)")
-        
-        # 6. Finally, delete the user account itself
-        user_result = users_collection.delete_one({"_id": ObjectId(user_id)})
-        deletion_results["user"] = user_result.deleted_count
-        print(f"✅ Deleted user account")
-        
-        if user_result.deleted_count == 0:
-            print(f"❌ Failed to delete user account")
-            return jsonify({"error": "Failed to delete user account"}), 500
-        
-        print(f"🎉 Account deletion completed successfully")
-        print(f"📊 Deletion summary: {deletion_results}")
-        
-        return jsonify({
-            "message": "Account deleted successfully",
-            "deleted_data": deletion_results,
-            "timestamp": datetime.now().isoformat()
-        }), 200
-        
+        results = {}
+        results["profiles"] = profiles_collection.delete_many({"user_id": user_id}).deleted_count
+        results["meals"] = meals_collection.delete_many({"user_id": user_id}).deleted_count
+        for col_name in ["exercise", "water", "weight"]:
+            if col_name in db.list_collection_names():
+                results[col_name] = db[col_name].delete_many({"user_id": user_id}).deleted_count
+        result = users_collection.delete_one({"_id": ObjectId(user_id)})
+        if result.deleted_count == 0:
+            return jsonify({"error": "Failed to delete account"}), 500
+        return jsonify({"message": "Account deleted", "deleted_data": results, "timestamp": datetime.now().isoformat()}), 200
     except Exception as e:
-        print(f"❌ Error in delete_account: {str(e)}")
         traceback.print_exc()
-        return jsonify({
-            "error": "Account deletion failed",
-            "details": str(e)
-        }), 500
+        return jsonify({"error": "Deletion failed", "details": str(e)}), 500
 
 @app.route("/update_name", methods=["POST"])
 @token_required
 def update_name():
     try:
         data = request.get_json()
-        if not data or "name" not in data:
-            return jsonify({"error": "Name is required"}), 400
-        
-        new_name = data["name"].strip()
+        new_name = (data.get("name") or "").strip()
         if len(new_name) < 2:
-            return jsonify({"error": "Name must be at least 2 characters"}), 400
-        
-        user_id = request.user_id   # From JWT middleware
-
-        # Update the 'name' field in users_collection
-        result = users_collection.update_one(
-            {"_id": ObjectId(user_id)},
-            {"$set": {
-                "name": new_name,
-            }}
-        )
-
+            return jsonify({"error": "Name min 2 chars"}), 400
+        result = users_collection.update_one({"_id": ObjectId(request.user_id)}, {"$set": {"name": new_name}})
         if result.matched_count == 0:
             return jsonify({"error": "User not found"}), 404
-
-        return jsonify({
-            "message": "Name updated successfully",
-            "name": new_name
-        }), 200
-    
+        return jsonify({"message": "Name updated", "name": new_name}), 200
     except Exception as e:
-        print(f"❌ Update name error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+@app.route("/get-login-methods", methods=["GET"])
+@token_required
+@db_required
+def get_login_methods():
+    try:
+        user = users_collection.find_one({"_id": ObjectId(request.user_id)})
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        return jsonify({"email": user.get("email", ""), "login_methods": user.get("login_methods", []),
+                        "has_password": "password" in user and user["password"] is not None}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+@app.route("/link-email-password", methods=["POST"])
+@token_required
+@db_required
+def link_email_password():
+    try:
+        data = request.get_json()
+        password = data.get("password")
+        if not password or len(password) < 6:
+            return jsonify({"error": "Password min 6 chars"}), 400
+        user = users_collection.find_one({"_id": ObjectId(request.user_id)})
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        if user.get("password"):
+            return jsonify({"error": "Email/password already linked"}), 400
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        methods = user.get("login_methods", [])
+        if "email" not in methods: methods.append("email")
+        users_collection.update_one({"_id": ObjectId(request.user_id)},
+                                     {"$set": {"password": hashed, "login_methods": methods}})
+        return jsonify({"success": True, "login_methods": methods}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-# Error handlers
+# ── Health Agent Endpoints
+
+@app.route("/save-health-profile", methods=["POST"])
+@token_required
+@db_required
+def save_health_profile():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+        data["user_id"] = request.user_id
+        data["updated_at"] = datetime.now().isoformat()
+        db["health_profiles"].update_one({"user_id": request.user_id}, {"$set": data}, upsert=True)
+        print(f"✅ Health profile saved for {request.user_id}")
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        print(f"❌ save_health_profile: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/get-health-profile", methods=["GET"])
+@token_required
+@db_required
+def get_health_profile():
+    try:
+        profile = db["health_profiles"].find_one({"user_id": request.user_id})
+        if not profile:
+            return jsonify({"error": "not found"}), 404
+        profile["_id"] = str(profile["_id"])
+        return jsonify(profile), 200
+    except Exception as e:
+        print(f"❌ get_health_profile: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/generate-targets", methods=["POST"])
+@token_required
+@db_required
+def generate_targets():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+        result = generate_nutrition_targets(profile=data.get("profile", {}),
+                                            goals=data.get("goals", []),
+                                            gemini_model=gemini_model)
+        result["user_id"] = request.user_id
+        result["goals"] = data.get("goals", [])
+        result["created_at"] = datetime.now().isoformat()
+        db["nutrition_plans"].update_one({"user_id": request.user_id}, {"$set": result}, upsert=True)
+        return jsonify(result), 200
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format, please try again"}), 500
+    except Exception as e:
+        print(f"❌ generate_targets: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/generate-meal-plan", methods=["POST"])
+@token_required
+@db_required
+def generate_meal_plan():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+        result = generate_weekly_meal_plan(nutrition_plan=data.get("nutrition_plan", {}),
+                                           health_profile=data.get("health_profile", {}),
+                                           gemini_model=gemini_model)
+        result["user_id"] = request.user_id
+        result["created_at"] = datetime.now().isoformat()
+        db["meal_plans"].update_one({"user_id": request.user_id}, {"$set": result}, upsert=True)
+        return jsonify(result), 200
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format, please try again"}), 500
+    except Exception as e:
+        print(f"❌ generate_meal_plan: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/generate-meal-plan-async", methods=["POST"])
+@token_required
+@db_required
+def generate_meal_plan_async():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+        job_id = f"{request.user_id}_{int(datetime.now().timestamp() * 1000)}"
+        meal_plan_jobs[job_id] = {"status": "generating", "result": None, "error": None}
+        user_id = request.user_id
+
+        def run_generation():
+            try:
+                print(f"🍽️ Background job {job_id} started")
+                result = generate_weekly_meal_plan(nutrition_plan=data.get("nutrition_plan", {}),
+                                                   health_profile=data.get("health_profile", {}),
+                                                   gemini_model=gemini_model)
+                result["user_id"] = user_id
+                result["created_at"] = datetime.now().isoformat()
+                db["meal_plans"].update_one({"user_id": user_id}, {"$set": result}, upsert=True)
+                meal_plan_jobs[job_id] = {"status": "done", "result": result, "error": None}
+                print(f"✅ Background job {job_id} complete")
+            except Exception as e:
+                print(f"❌ Background job {job_id} failed: {e}")
+                traceback.print_exc()
+                meal_plan_jobs[job_id] = {"status": "error", "result": None, "error": str(e)}
+
+        threading.Thread(target=run_generation, daemon=True).start()
+        return jsonify({"job_id": job_id, "status": "generating"}), 202
+    except Exception as e:
+        print(f"❌ generate_meal_plan_async: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/meal-plan-status/<job_id>", methods=["GET"])
+@token_required
+def meal_plan_status(job_id):
+    job = meal_plan_jobs.get(job_id)
+    if not job:
+        return jsonify({"status": "error", "error": "Job not found, please generate again"}), 404
+    return jsonify(job), 200
+
+@app.route("/get-meal-plan", methods=["GET"])
+@token_required
+@db_required
+def get_meal_plan():
+    try:
+        plan = db["meal_plans"].find_one({"user_id": request.user_id}, sort=[("created_at", -1)])
+        if not plan:
+            return jsonify({"error": "not found"}), 404
+        plan["_id"] = str(plan["_id"])
+        return jsonify(plan), 200
+    except Exception as e:
+        print(f"❌ get_meal_plan: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/analyze-meal-photo", methods=["POST"])
+@token_required
+@db_required
+def analyze_meal_photo_route():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+        image_b64 = data.get("image_base64", "")
+        if not image_b64:
+            return jsonify({"error": "No image provided"}), 400
+        result = analyze_meal_photo(image_b64=image_b64, meal_type=data.get("meal_type", "lunch"),
+                                    planned_meal=data.get("planned_meal", {}),
+                                    remaining_plan=data.get("remaining_plan", []),
+                                    gemini_model=gemini_model)
+        log_doc = {"user_id": request.user_id,
+                   "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
+                   "meal_type": data.get("meal_type", "lunch"),
+                   "planned_meal": data.get("planned_meal", {}),
+                   **result, "saved_at": datetime.now().isoformat()}
+        db["meal_logs"].insert_one(log_doc)
+        return jsonify(result), 200
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format"}), 500
+    except Exception as e:
+        print(f"❌ analyze_meal_photo_route: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+# ── Error Handlers
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Endpoint not found"}), 404
@@ -1764,510 +1074,9 @@ def internal_error(error):
 def payload_too_large(error):
     return jsonify({"error": "Request payload too large"}), 413
 
-
-
-@app.route("/get-login-methods", methods=["GET"])
-@token_required
-@db_required
-def get_login_methods():
-    """Get user's connected login methods"""
-    try:
-        user_id = request.user_id
-        
-        user = users_collection.find_one({"_id": ObjectId(user_id)})
-        
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-        
-        return jsonify({
-            "email": user.get("email", ""),
-            "login_methods": user.get("login_methods", []),
-            "has_password": "password" in user and user["password"] is not None
-        }), 200
-        
-    except Exception as e:
-        print(f"❌ Error in get_login_methods: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/link-email-password", methods=["POST"])
-@token_required
-@db_required  
-def link_email_password():
-    """Link email/password to existing account"""
-    try:
-        user_id = request.user_id
-        data = request.get_json()
-        password = data.get("password")
-        
-        if not password or len(password) < 6:
-            return jsonify({"error": "Password must be at least 6 characters"}), 400
-        
-        user = users_collection.find_one({"_id": ObjectId(user_id)})
-        
-        if not user:
-            return jsonify({"error": "User not found"}), 404
-        
-        # Check if password already exists
-        if "password" in user and user["password"]:
-            return jsonify({"error": "Email/password already linked"}), 400
-        
-        # Add password
-        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-        login_methods = user.get("login_methods", [])
-        
-        if "email" not in login_methods:
-            login_methods.append("email")
-        
-        users_collection.update_one(
-            {"_id": ObjectId(user_id)},
-            {
-                "$set": {
-                    "password": hashed_password,
-                    "login_methods": login_methods
-                }
-            }
-        )
-        
-        print(f"✅ Email/password linked for user {user_id}")
-        
-        return jsonify({
-            "success": True,
-            "login_methods": login_methods
-        }), 200
-        
-    except Exception as e:
-        print(f"❌ Error in link_email_password: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-# ── Health Profile ──────────────────────────────────────────────
- 
-@app.route("/save-health-profile", methods=["POST"])
-@token_required
-@db_required
-def save_health_profile():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        data["user_id"] = request.user_id
-        data["updated_at"] = datetime.now().isoformat()
-        db["health_profiles"].update_one(
-            {"user_id": request.user_id},
-            {"$set": data},
-            upsert=True
-        )
-        print(f"✅ Health profile saved for {request.user_id}")
-        return jsonify({"success": True}), 200
-    except Exception as e:
-        print(f"❌ save_health_profile: {e}")
-        return jsonify({"error": str(e)}), 500
- 
- 
-@app.route("/get-health-profile", methods=["GET"])
-@token_required
-@db_required
-def get_health_profile():
-    try:
-        profile = db["health_profiles"].find_one({"user_id": request.user_id})
-        if not profile:
-            return jsonify({"error": "not found"}), 404
-        profile["_id"] = str(profile["_id"])
-        return jsonify(profile), 200
-    except Exception as e:
-        print(f"❌ get_health_profile: {e}")
-        return jsonify({"error": str(e)}), 500
- 
- 
-# ── Nutrition Targets ───────────────────────────────────────────
- 
-@app.route("/generate-targets", methods=["POST"])
-@token_required
-@db_required
-def generate_targets():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
- 
-        result = generate_nutrition_targets(
-            profile=data.get("profile", {}),
-            goals=data.get("goals", []),
-            gemini_model=gemini_model       # 传入 app.py 已有的 gemini_model
-        )
-        result["user_id"] = request.user_id
-        result["goals"] = data.get("goals", [])
-        result["created_at"] = datetime.now().isoformat()
- 
-        db["nutrition_plans"].update_one(
-            {"user_id": request.user_id},
-            {"$set": result},
-            upsert=True
-        )
-        return jsonify(result), 200
- 
-    except json.JSONDecodeError:
-        return jsonify({"error": "AI returned invalid format, please try again"}), 500
-    except Exception as e:
-        print(f"❌ generate_targets: {e}")
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
- 
- 
-# ── Weekly Meal Plan ────────────────────────────────────────────
- 
-@app.route("/generate-meal-plan", methods=["POST"])
-@token_required
-@db_required
-def generate_meal_plan():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
- 
-        result = generate_weekly_meal_plan(
-            nutrition_plan=data.get("nutrition_plan", {}),
-            health_profile=data.get("health_profile", {}),
-            gemini_model=gemini_model
-        )
-        result["user_id"] = request.user_id
-        result["created_at"] = datetime.now().isoformat()
- 
-        db["meal_plans"].update_one(
-            {"user_id": request.user_id},
-            {"$set": result},
-            upsert=True
-        )
-        return jsonify(result), 200
- 
-    except json.JSONDecodeError:
-        return jsonify({"error": "AI returned invalid format, please try again"}), 500
-    except Exception as e:
-        print(f"❌ generate_meal_plan: {e}")
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
- 
- 
-@app.route("/get-meal-plan", methods=["GET"])
-@token_required
-@db_required
-def get_meal_plan():
-    try:
-        plan = db["meal_plans"].find_one(
-            {"user_id": request.user_id},
-            sort=[("created_at", -1)]
-        )
-        if not plan:
-            return jsonify({"error": "not found"}), 404
-        plan["_id"] = str(plan["_id"])
-        return jsonify(plan), 200
-    except Exception as e:
-        print(f"❌ get_meal_plan: {e}")
-        return jsonify({"error": str(e)}), 500
- 
- 
-# ── Photo Compliance ────────────────────────────────────────────
- 
-@app.route("/analyze-meal-photo", methods=["POST"])
-@token_required
-@db_required
-def analyze_meal_photo_route():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
- 
-        image_b64 = data.get("image_base64", "")
-        if not image_b64:
-            return jsonify({"error": "No image provided"}), 400
- 
-        result = analyze_meal_photo(
-            image_b64=image_b64,
-            meal_type=data.get("meal_type", "lunch"),
-            planned_meal=data.get("planned_meal", {}),
-            remaining_plan=data.get("remaining_plan", []),
-            gemini_model=gemini_model
-        )
- 
-        # 存日志（不存原图）
-        log_doc = {
-            "user_id": request.user_id,
-            "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
-            "meal_type": data.get("meal_type", "lunch"),
-            "planned_meal": data.get("planned_meal", {}),
-            **result,
-            "saved_at": datetime.now().isoformat()
-        }
-        db["meal_logs"].insert_one(log_doc)
- 
-        return jsonify(result), 200
- 
-    except json.JSONDecodeError:
-        return jsonify({"error": "AI returned invalid format"}), 500
-    except Exception as e:
-        print(f"❌ analyze_meal_photo_route: {e}")
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-meal_plan_jobs = {}
- 
-# ── Keep-Alive（防止 Render Free 实例冷启动）───────────────────
-def _keep_alive_loop():
-    import time as _time
-    _time.sleep(60)  # 启动后等1分钟再开始
-    while True:
-        try:
-            requests.get("https://food-app-swift-qb4k.onrender.com/ping", timeout=10)
-            print("🔄 Keep-alive ping sent")
-        except Exception as e:
-            print(f"⚠️ Keep-alive ping failed: {e}")
-        _time.sleep(25 * 60)  # 每25分钟
- 
-threading.Thread(target=_keep_alive_loop, daemon=True).start()
-print("✅ Keep-alive thread started")
- 
-# ── Health Profile ──────────────────────────────────────────────
- 
-@app.route("/save-health-profile", methods=["POST"])
-@token_required
-@db_required
-def save_health_profile():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
-        data["user_id"] = request.user_id
-        data["updated_at"] = datetime.now().isoformat()
-        db["health_profiles"].update_one(
-            {"user_id": request.user_id},
-            {"$set": data},
-            upsert=True
-        )
-        print(f"✅ Health profile saved for {request.user_id}")
-        return jsonify({"success": True}), 200
-    except Exception as e:
-        print(f"❌ save_health_profile: {e}")
-        return jsonify({"error": str(e)}), 500
- 
- 
-@app.route("/get-health-profile", methods=["GET"])
-@token_required
-@db_required
-def get_health_profile():
-    try:
-        profile = db["health_profiles"].find_one({"user_id": request.user_id})
-        if not profile:
-            return jsonify({"error": "not found"}), 404
-        profile["_id"] = str(profile["_id"])
-        return jsonify(profile), 200
-    except Exception as e:
-        print(f"❌ get_health_profile: {e}")
-        return jsonify({"error": str(e)}), 500
- 
- 
-# ── Nutrition Targets ───────────────────────────────────────────
- 
-@app.route("/generate-targets", methods=["POST"])
-@token_required
-@db_required
-def generate_targets():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
- 
-        result = generate_nutrition_targets(
-            profile=data.get("profile", {}),
-            goals=data.get("goals", []),
-            gemini_model=gemini_model
-        )
-        result["user_id"] = request.user_id
-        result["goals"] = data.get("goals", [])
-        result["created_at"] = datetime.now().isoformat()
- 
-        db["nutrition_plans"].update_one(
-            {"user_id": request.user_id},
-            {"$set": result},
-            upsert=True
-        )
-        return jsonify(result), 200
- 
-    except json.JSONDecodeError:
-        return jsonify({"error": "AI returned invalid format, please try again"}), 500
-    except Exception as e:
-        print(f"❌ generate_targets: {e}")
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
- 
- 
-# ── Weekly Meal Plan（同步，备用）──────────────────────────────
- 
-@app.route("/generate-meal-plan", methods=["POST"])
-@token_required
-@db_required
-def generate_meal_plan():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
- 
-        result = generate_weekly_meal_plan(
-            nutrition_plan=data.get("nutrition_plan", {}),
-            health_profile=data.get("health_profile", {}),
-            gemini_model=gemini_model
-        )
-        result["user_id"] = request.user_id
-        result["created_at"] = datetime.now().isoformat()
- 
-        db["meal_plans"].update_one(
-            {"user_id": request.user_id},
-            {"$set": result},
-            upsert=True
-        )
-        return jsonify(result), 200
- 
-    except json.JSONDecodeError:
-        return jsonify({"error": "AI returned invalid format, please try again"}), 500
-    except Exception as e:
-        print(f"❌ generate_meal_plan: {e}")
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
- 
- 
-# ── Weekly Meal Plan 异步版（推荐使用）─────────────────────────
- 
-@app.route("/generate-meal-plan-async", methods=["POST"])
-@token_required
-@db_required
-def generate_meal_plan_async():
-    """
-    立即返回 job_id（202），后台线程继续生成。
-    Swift 端轮询 /meal-plan-status/<job_id> 获取结果。
-    """
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
- 
-        # 生成唯一 job_id
-        job_id = f"{request.user_id}_{int(datetime.now().timestamp() * 1000)}"
-        meal_plan_jobs[job_id] = {"status": "generating", "result": None, "error": None}
- 
-        user_id = request.user_id  # 提前捕获，避免线程内 request context 失效
- 
-        def run_generation():
-            try:
-                print(f"🍽️ Background job {job_id} started")
-                result = generate_weekly_meal_plan(
-                    nutrition_plan=data.get("nutrition_plan", {}),
-                    health_profile=data.get("health_profile", {}),
-                    gemini_model=gemini_model
-                )
-                result["user_id"] = user_id
-                result["created_at"] = datetime.now().isoformat()
- 
-                # 存入数据库
-                db["meal_plans"].update_one(
-                    {"user_id": user_id},
-                    {"$set": result},
-                    upsert=True
-                )
-                meal_plan_jobs[job_id] = {"status": "done", "result": result, "error": None}
-                print(f"✅ Background job {job_id} complete")
- 
-            except Exception as e:
-                print(f"❌ Background job {job_id} failed: {e}")
-                traceback.print_exc()
-                meal_plan_jobs[job_id] = {"status": "error", "result": None, "error": str(e)}
- 
-        threading.Thread(target=run_generation, daemon=True).start()
- 
-        # 立即返回 202，不等待生成
-        return jsonify({"job_id": job_id, "status": "generating"}), 202
- 
-    except Exception as e:
-        print(f"❌ generate_meal_plan_async: {e}")
-        return jsonify({"error": str(e)}), 500
- 
- 
-@app.route("/meal-plan-status/<job_id>", methods=["GET"])
-@token_required
-def meal_plan_status(job_id):
-    """Swift 轮询这个 endpoint 来查询生成进度"""
-    job = meal_plan_jobs.get(job_id)
-    if not job:
-        # job_id 不存在（可能服务重启了）
-        return jsonify({"status": "error", "error": "Job not found, please generate again"}), 404
-    return jsonify(job), 200
- 
- 
-@app.route("/get-meal-plan", methods=["GET"])
-@token_required
-@db_required
-def get_meal_plan():
-    try:
-        plan = db["meal_plans"].find_one(
-            {"user_id": request.user_id},
-            sort=[("created_at", -1)]
-        )
-        if not plan:
-            return jsonify({"error": "not found"}), 404
-        plan["_id"] = str(plan["_id"])
-        return jsonify(plan), 200
-    except Exception as e:
-        print(f"❌ get_meal_plan: {e}")
-        return jsonify({"error": str(e)}), 500
- 
- 
-# ── Photo Compliance ────────────────────────────────────────────
- 
-@app.route("/analyze-meal-photo", methods=["POST"])
-@token_required
-@db_required
-def analyze_meal_photo_route():
-    try:
-        data = request.get_json()
-        if not data:
-            return jsonify({"error": "Empty request"}), 400
- 
-        image_b64 = data.get("image_base64", "")
-        if not image_b64:
-            return jsonify({"error": "No image provided"}), 400
- 
-        result = analyze_meal_photo(
-            image_b64=image_b64,
-            meal_type=data.get("meal_type", "lunch"),
-            planned_meal=data.get("planned_meal", {}),
-            remaining_plan=data.get("remaining_plan", []),
-            gemini_model=gemini_model
-        )
- 
-        log_doc = {
-            "user_id": request.user_id,
-            "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
-            "meal_type": data.get("meal_type", "lunch"),
-            "planned_meal": data.get("planned_meal", {}),
-            **result,
-            "saved_at": datetime.now().isoformat()
-        }
-        db["meal_logs"].insert_one(log_doc)
- 
-        return jsonify(result), 200
- 
-    except json.JSONDecodeError:
-        return jsonify({"error": "AI returned invalid format"}), 500
-    except Exception as e:
-        print(f"❌ analyze_meal_photo_route: {e}")
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-        
-        
-        
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"🚀 Starting Food Analyzer Backend on port {port}")
-    print(f"✅ Enhanced with JWT authentication and bcrypt")
-    print(f"🔐 Security: JWT tokens + bcrypt passwords")
-    print(f"📱 Compatible with Swift frontend")
+    print(f"🚀 Starting on port {port}")
     print(f"🗄️ MongoDB: {'✅ Connected' if client else '❌ Not connected'}")
     print(f"🤖 Gemini AI: {'✅ Ready' if gemini_model else '❌ Not configured'}")
     app.run(host="0.0.0.0", port=port, threaded=True)
