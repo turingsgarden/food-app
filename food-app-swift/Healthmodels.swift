@@ -4,9 +4,6 @@
 //
 //  Created by Helen Tu on 4/9/26.
 //
-
-// HealthModels.swift
-// Health Agent — 所有数据模型
 // HealthModels.swift
 // Health Agent — 所有数据模型
 
@@ -208,9 +205,9 @@ struct MealItem: Codable, Identifiable {
 
 struct MealLog: Codable, Identifiable {
     var id: String?
-    var userId: String
-    var date: String
-    var mealType: String
+    var userId: String?
+    var date: String?
+    var mealType: String?
     var imageBase64: String?
     var plannedMeal: PlannedMeal?
     // AI 分析结果
@@ -219,7 +216,7 @@ struct MealLog: Codable, Identifiable {
     var estimatedProtein: Int
     var estimatedCarbs: Int
     var estimatedFat: Int
-    var complianceScore: Int       // 0-100
+    var complianceScore: Int
     var complianceFeedback: String
     var planAdjustmentNote: String?
     var savedAt: String?

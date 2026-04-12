@@ -1046,17 +1046,59 @@ def analyze_meal_photo_route():
         image_b64 = data.get("image_base64", "")
         if not image_b64:
             return jsonify({"error": "No image provided"}), 400
-        result = analyze_meal_photo(image_b64=image_b64, meal_type=data.get("meal_type", "lunch"),
-                                    planned_meal=data.get("planned_meal", {}),
-                                    remaining_plan=data.get("remaining_plan", []),
-                                    gemini_model=gemini_model)
-        log_doc = {"user_id": request.user_id,
-                   "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
-                   "meal_type": data.get("meal_type", "lunch"),
-                   "planned_meal": data.get("planned_meal", {}),
-                   **result, "saved_at": datetime.now().isoformat()}
+
+        user_id   = request.user_id
+        meal_type = data.get("meal_type", "lunch")
+        date_str  = data.get("date", datetime.now().strftime("%Y-%m-%d"))
+
+        result = analyze_meal_photo(
+            image_b64=image_b64,
+            meal_type=meal_type,
+            planned_meal=data.get("planned_meal", {}),
+            remaining_plan=data.get("remaining_plan", []),
+            gemini_model=gemini_model,
+            user_id=user_id
+        )
+
+        # ── 1. 保存到 meal_logs（合规记录）──
+        log_doc = {
+            "user_id": user_id,
+            "date": date_str,
+            "meal_type": meal_type,
+            "planned_meal": data.get("planned_meal", {}),
+            "detected_foods": result.get("detected_foods", []),
+            "estimated_calories": result.get("estimated_calories", 0),
+            "estimated_protein": result.get("estimated_protein", 0),
+            "estimated_carbs": result.get("estimated_carbs", 0),
+            "estimated_fat": result.get("estimated_fat", 0),
+            "compliance_score": result.get("compliance_score", 0),
+            "compliance_feedback": result.get("compliance_feedback", ""),
+            "plan_adjustment_note": result.get("plan_adjustment_note"),
+            "saved_at": datetime.now().isoformat()
+        }
         db["meal_logs"].insert_one(log_doc)
+
+        # ── 2. 同时保存到 meals（出现在 Meal History / Dashboard）──
+        if result.get("dish_prediction") and result.get("nutrition_info"):
+            meal_doc = {
+                "user_id": user_id,
+                "dish_prediction": result.get("dish_prediction", "Diet Plan Meal"),
+                "image_description": result.get("image_description", ""),
+                "nutrition_info": result.get("nutrition_info", ""),
+                "hidden_ingredients": result.get("hidden_ingredients", ""),
+                "image_full": None,
+                "image_thumb": None,
+                "meal_type": meal_type.capitalize(),
+                "saved_at": datetime.now().isoformat(),
+                "analysis_method": "health_agent",
+                "from_diet_plan": True,
+                "compliance_score": result.get("compliance_score", 0)
+            }
+            meals_collection.insert_one(meal_doc)
+            print(f"✅ Meal saved to history: {meal_doc['dish_prediction']}")
+
         return jsonify(result), 200
+
     except json.JSONDecodeError:
         return jsonify({"error": "AI returned invalid format"}), 500
     except Exception as e:

@@ -24,6 +24,8 @@ struct MealPlanView: View {
     @State private var complianceResult: MealLog?
     @State private var errorMsg = ""
     @State private var showError = false
+    @State private var showPlanGenerator = false
+    @State private var isAnalyzing = false
 
     let nutritionPlan: NutritionPlan
     let healthProfile: HealthProfile
@@ -50,18 +52,30 @@ struct MealPlanView: View {
                 } else {
                     emptyView
                 }
+
+                // ── Analyzing overlay（跟 batch upload 一样的全屏加载）
+                if isAnalyzing {
+                    Color.black.opacity(0.4).ignoresSafeArea()
+                    VStack(spacing: 16) {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(1.5)
+                        Text("Analysing your meal…")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(.white)
+                        Text("This usually takes 15–30 seconds")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.7))
+                    }
+                    .padding(32)
+                    .background(Color.black.opacity(0.6))
+                    .cornerRadius(20)
+                }
             }
             .preferredColorScheme(themeManager.current.colorScheme)
             .navigationBarHidden(true)
             .onAppear { loadOrGeneratePlan() }
-            .sheet(isPresented: $showCamera) {
-                CameraPickerView { image in
-                    guard let img = image,
-                          let data = HealthAPIManager.shared.compressImage(img)
-                    else { return }
-                    analyzePhoto(imageData: data)
-                }
-            }
+            // Camera handled by ExpandableMealCard
             .sheet(isPresented: $showCompliance) {
                 if let result = complianceResult {
                     PhotoComplianceView(mealLog: result, weeklyPlan: weeklyPlan)
@@ -72,24 +86,52 @@ struct MealPlanView: View {
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
             } message: { Text(errorMsg) }
+            .sheet(isPresented: $showPlanGenerator) {
+                PlanGeneratorView(nutritionPlan: nutritionPlan, healthProfile: healthProfile) { newPlan in
+                    weeklyPlan = newPlan
+                    selectedDayIndex = 0
+                }
+                .environmentObject(themeManager)
+            }
         }
     }
 
     // MARK: - Plan View
+
+    // Dynamic title based on number of days
+    func dietPlanTitle(_ plan: WeeklyMealPlan) -> String {
+        let count = plan.days.count
+        switch count {
+        case 1: return "Daily Diet Plan"
+        case 3: return "3-Day Diet Plan"
+        case 5: return "5-Day Diet Plan"
+        case 7: return "Weekly Diet Plan"
+        default: return "\(count)-Day Diet Plan"
+        }
+    }
 
     func planView(plan: WeeklyMealPlan) -> some View {
         VStack(spacing: 0) {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Meal Plan")
+                    Text(dietPlanTitle(plan))
                         .font(.system(size: 24, weight: .black, design: .rounded))
                         .foregroundColor(themeManager.current.primaryText)
-                    Text("Week of \(weekStartLabel(plan))")
+                    Text("From \(weekStartLabel(plan))")
                         .font(.system(size: 13))
                         .foregroundColor(themeManager.current.secondaryText)
                 }
                 Spacer()
+                // New plan button
+                Button(action: { showPlanGenerator = true }) {
+                    Image(systemName: "plus.circle")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(themeManager.current.primaryText)
+                        .frame(width: 36, height: 36)
+                        .background(themeManager.current.inputBackground)
+                        .cornerRadius(10)
+                }
                 Button(action: { isGenerating = true; generatePlan() }) {
                     Image(systemName: "arrow.clockwise")
                         .font(.system(size: 14, weight: .semibold))
@@ -181,6 +223,15 @@ struct MealPlanView: View {
     }
 
     func plannedMealCard(meal: PlannedMeal, day: DayMealPlan, plan: WeeklyMealPlan) -> some View {
+        ExpandableMealCard(meal: meal, day: day, plan: plan,
+                           today: today, onPhotoSelected: { imageData in
+            selectedMealForPhoto = meal
+            analyzePhoto(imageData: imageData)
+        })
+        .environmentObject(themeManager)
+    }
+
+    func plannedMealCard_OLD(meal: PlannedMeal, day: DayMealPlan, plan: WeeklyMealPlan) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
                 // Meal type badge
@@ -352,6 +403,8 @@ struct MealPlanView: View {
               let plan = weeklyPlan
         else { return }
 
+        isAnalyzing = true  // 显示加载遮罩
+
         let userId = session.userID.isEmpty
             ? UserDefaults.standard.string(forKey: "user_id") ?? ""
             : session.userID
@@ -367,9 +420,12 @@ struct MealPlanView: View {
             plannedMeal: meal,
             remainingPlan: remaining
         ) { log, err in
+            isAnalyzing = false  // 隐藏加载遮罩
             if let log = log {
                 complianceResult = log
                 showCompliance = true
+                // 通知 Dashboard 刷新（meal 已保存到 history）
+                NotificationCenter.default.post(name: Notification.Name("MealSaved"), object: nil)
             } else {
                 errorMsg = err ?? "Failed to analyse photo"
                 showError = true
@@ -608,7 +664,7 @@ struct HealthDashboardView: View {
                 .environmentObject(themeManager)
                 .tabItem {
                     Image(systemName: selectedTab == 1 ? "calendar.badge.checkmark" : "calendar")
-                    Text("Plan")
+                    Text("Diet Plan")
                 }
                 .tag(1)
 
@@ -625,107 +681,16 @@ struct HealthDashboardView: View {
     }
 }
 
-// MARK: - Today View (Daily summary)
+// MARK: - Today View — 直接复用原有 DashboardView（食物记录 + 营养统计）
 
 struct TodayView: View {
     @EnvironmentObject var themeManager: ThemeManager
-    @ObservedObject var session = SessionManager.shared
-
     let nutritionPlan: NutritionPlan
     let healthProfile: HealthProfile
 
-    @State private var mealLogs: [MealLog] = []
-
-    var totalConsumed: Int { mealLogs.reduce(0) { $0 + $1.estimatedCalories } }
-    var progress: Double {
-        guard nutritionPlan.dailyCalories > 0 else { return 0 }
-        return min(Double(totalConsumed) / Double(nutritionPlan.dailyCalories), 1.0)
-    }
-
     var body: some View {
-        NavigationStack {
-            ZStack { themeManager.current.background.ignoresSafeArea()
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 16) {
-                        // Calorie ring card
-                        HStack(spacing: 20) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Today's Calories")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(themeManager.current.secondaryText)
-                                    .textCase(.uppercase).tracking(0.5)
-                                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                                    Text("\(totalConsumed)")
-                                        .font(.system(size: 38, weight: .black, design: .rounded))
-                                        .foregroundColor(themeManager.current.primaryText)
-                                    Text("/ \(nutritionPlan.dailyCalories) kcal")
-                                        .font(.system(size: 13))
-                                        .foregroundColor(themeManager.current.secondaryText)
-                                }
-                                let remaining = max(0, nutritionPlan.dailyCalories - totalConsumed)
-                                Text("\(remaining) kcal remaining")
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundColor(progress < 1 ? .green : .red)
-                                GeometryReader { geo in
-                                    ZStack(alignment: .leading) {
-                                        RoundedRectangle(cornerRadius: 4).fill(Color.gray.opacity(0.1)).frame(height: 6)
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .fill(progress < 1 ? Color.green : Color.red)
-                                            .frame(width: geo.size.width * progress, height: 6)
-                                    }
-                                }.frame(height: 6)
-                            }
-                            Spacer()
-                            ZStack {
-                                Circle().stroke(Color.gray.opacity(0.1), lineWidth: 10).frame(width: 88, height: 88)
-                                Circle().trim(from: 0, to: progress)
-                                    .stroke(progress < 1 ? Color.green : Color.red,
-                                            style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                                    .frame(width: 88, height: 88).rotationEffect(.degrees(-90))
-                                Text("\(Int(progress * 100))%")
-                                    .font(.system(size: 16, weight: .black, design: .rounded))
-                                    .foregroundColor(themeManager.current.primaryText)
-                            }
-                        }
-                        .padding(18)
-                        .background(themeManager.current.cardBackground)
-                        .cornerRadius(20)
-                        .overlay(RoundedRectangle(cornerRadius: 20).stroke(themeManager.current.cardBorder, lineWidth: 1))
-
-                        // BMI card
-                        HStack(spacing: 16) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("BMI").font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(themeManager.current.secondaryText).textCase(.uppercase).tracking(0.5)
-                                Text(String(format: "%.1f", healthProfile.bmi))
-                                    .font(.system(size: 28, weight: .black, design: .rounded))
-                                    .foregroundColor(themeManager.current.primaryText)
-                                Text(healthProfile.bmiCategory)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(healthProfile.bmi < 18.5 ? .blue : healthProfile.bmi < 25 ? .green : healthProfile.bmi < 30 ? .orange : .red)
-                            }
-                            Spacer()
-                            VStack(alignment: .trailing, spacing: 4) {
-                                Text("\(String(format: "%.1f", healthProfile.weightKg)) kg")
-                                    .font(.system(size: 18, weight: .bold)).foregroundColor(themeManager.current.primaryText)
-                                Text("\(Int(healthProfile.heightCm)) cm")
-                                    .font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
-                            }
-                        }
-                        .padding(16)
-                        .background(themeManager.current.cardBackground)
-                        .cornerRadius(18)
-                        .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
-
-                        Spacer(minLength: 40)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                }
-            }
-            .navigationTitle("Health Dashboard")
-            .navigationBarTitleDisplayMode(.inline)
-            .preferredColorScheme(themeManager.current.colorScheme)
-        }
+        // 直接用原有的 DashboardView，完整功能：拍照记录、营养统计、每日/周/月切换
+        DashboardView()
+            .environmentObject(themeManager)
     }
 }
