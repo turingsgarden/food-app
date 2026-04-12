@@ -7,6 +7,8 @@
 
 // HealthModels.swift
 // Health Agent — 所有数据模型
+// HealthModels.swift
+// Health Agent — 所有数据模型
 
 import Foundation
 
@@ -131,8 +133,8 @@ struct NutritionPlan: Codable {
 
 struct WeeklyMealPlan: Codable, Identifiable {
     var id: String?
-    var userId: String
-    var weekStartDate: String      // "2026-04-07"
+    var userId: String?
+    var weekStartDate: String
     var days: [DayMealPlan]
     var createdAt: String?
 
@@ -147,14 +149,21 @@ struct WeeklyMealPlan: Codable, Identifiable {
 
 struct DayMealPlan: Codable, Identifiable {
     var id: String { date }
-    var date: String               // "2026-04-07"
-    var dayName: String            // "Monday"
+    var date: String
+    var dayName: String
     var breakfast: PlannedMeal
     var lunch: PlannedMeal
     var dinner: PlannedMeal
     var totalCalories: Int
 
     var meals: [PlannedMeal] { [breakfast, lunch, dinner] }
+
+    enum CodingKeys: String, CodingKey {
+        case date
+        case dayName = "day_name"
+        case breakfast, lunch, dinner
+        case totalCalories = "total_calories"
+    }
 }
 
 struct PlannedMeal: Codable, Identifiable {

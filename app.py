@@ -991,8 +991,11 @@ def generate_meal_plan_async():
         def run_generation():
             try:
                 print(f"🍽️ Background job {job_id} started")
-                result = generate_weekly_meal_plan(nutrition_plan=data.get("nutrition_plan", {}),
+                result = generate_weekly_meal_plan(
+                                                   nutrition_plan=data.get("nutrition_plan", {}),
                                                    health_profile=data.get("health_profile", {}),
+                                                   days=data.get("days", 7),
+                                                   meals_per_day=data.get("meals_per_day", 3),
                                                    gemini_model=gemini_model)
                 result["user_id"] = user_id
                 result["created_at"] = datetime.now().isoformat()

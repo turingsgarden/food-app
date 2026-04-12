@@ -114,6 +114,8 @@ class HealthAPIManager {
         userId: String,
         nutritionPlan: NutritionPlan,
         healthProfile: HealthProfile,
+        days: Int = 7,
+        mealsPerDay: Int = 3,
         onProgress: ((String) -> Void)? = nil,
         completion: @escaping (WeeklyMealPlan?, String?) -> Void
     ) {
@@ -128,7 +130,9 @@ class HealthAPIManager {
 
         let payload: [String: Any] = [
             "nutrition_plan": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(nutritionPlan))) ?? [:],
-            "health_profile": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(healthProfile))) ?? [:]
+            "health_profile": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(healthProfile))) ?? [:],
+            "days": days,
+            "meals_per_day": mealsPerDay
         ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
 
