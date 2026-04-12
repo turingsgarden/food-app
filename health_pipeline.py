@@ -1,3 +1,8 @@
+# health_pipeline.py
+# Health Agent — AI 逻辑层
+# app.py 通过 import 调用这里的函数
+# 跟 model_pipeline.py 的架构完全一致
+
 import google.generativeai as genai
 import os
 import json
@@ -7,7 +12,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
+# ── Gemini 初始化（复用 app.py 已有的，这里做备用）──────────────
 GEN_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEN_API_KEY:
     genai.configure(api_key=GEN_API_KEY)
@@ -18,12 +23,12 @@ else:
 
 
 def _get_model(gemini_model=None):
-   
+    """优先用 app.py 传入的 model，其次用本文件自己初始化的"""
     return gemini_model or _model
 
 
 # ════════════════════════════════════════════════════════════════
-# 1. Generate health/nutrition goal
+# 1. 生成营养目标
 # ════════════════════════════════════════════════════════════════
 
 def generate_nutrition_targets(profile: dict, goals: list, gemini_model=None) -> dict:
@@ -87,85 +92,83 @@ Respond ONLY with valid JSON, no markdown, no extra text:
 # 2. 生成一周餐食计划
 # ════════════════════════════════════════════════════════════════
 
+def _build_day_prompt(day_date, day_name, cal, prot, carbs, fat, diet, allergy):
+    """극简 single-day prompt — 固定 JSON 结构，参考 model_pipeline 风格"""
+    return (
+        f"Dietitian: create ONE day meal plan. Return JSON only, no markdown.\n"
+        f"Day: {day_name} {day_date}\n"
+        f"Targets: {cal}kcal P{prot}g C{carbs}g F{fat}g\n"
+        f"Diet: {diet} | Avoid: {allergy}\n"
+        f"Format:\n"
+        f'{{"date":"{day_date}","day_name":"{day_name}"'
+        f',"breakfast":{{"meal_type":"breakfast","name":"<n>","items":[{{"food":"<f>","amount_g":100,"calories":200,"protein":10,"carbs":25,"fat":5}}],"total_calories":400,"total_protein":20,"total_carbs":50,"total_fat":10}}'
+        f',"lunch":{{"meal_type":"lunch","name":"<n>","items":[...],"total_calories":500,"total_protein":30,"total_carbs":60,"total_fat":15}}'
+        f',"dinner":{{"meal_type":"dinner","name":"<n>","items":[...],"total_calories":500,"total_protein":30,"total_carbs":60,"total_fat":15}}'
+        f',"total_calories":1400}}\n'
+        f"Rules: 2-3 real food items per meal. Replace ALL placeholder values with real numbers."
+    )
+
+
 def generate_weekly_meal_plan(nutrition_plan: dict, health_profile: dict, gemini_model=None) -> dict:
     """
-    根据营养计划和健康档案，生成 7 天 × 3 餐的饮食计划。
-    返回符合 WeeklyMealPlan 数据模型的 dict。
+    7天餐食计划 — gemini-2.5-pro，3批并行，每批极简 prompt。
+    Batch 1: Mon-Wed | Batch 2: Thu-Fri | Batch 3: Sat-Sun
     """
+    import re
+    import concurrent.futures
+
     model = _get_model(gemini_model)
     if not model:
         raise Exception("Gemini model not available")
 
-    # 计算本周日期列表（周一开始）
     today      = datetime.now()
     week_start = today - timedelta(days=today.weekday())
-    day_names  = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    day_names  = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
     days_info  = []
     for i in range(7):
         d = week_start + timedelta(days=i)
         days_info.append({"date": d.strftime("%Y-%m-%d"), "day_name": day_names[i]})
 
-    dates_str = ", ".join(d["date"] for d in days_info)
+    cal     = nutrition_plan.get("daily_calories", 2000)
+    prot    = nutrition_plan.get("protein_g", 100)
+    carbs   = nutrition_plan.get("carbs_g", 250)
+    fat     = nutrition_plan.get("fat_g", 65)
+    diet    = ", ".join(health_profile.get("dietary_preferences", ["none"]))
+    allergy = ", ".join(health_profile.get("allergens", ["none"]))
 
-    prompt = f"""You are a clinical dietitian. Create a complete 7-day meal plan.
+    def generate_single_day(day: dict) -> dict:
+        prompt = _build_day_prompt(
+            day["date"], day["day_name"],
+            cal, prot, carbs, fat, diet, allergy
+        )
+        print(f"  📅 {day['day_name']} {day['date']}...")
+        response = model.generate_content(prompt)
+        text = re.sub(r"```json|```", "", response.text).strip()
+        return json.loads(text)
 
-Daily nutrition targets:
-- Calories: {nutrition_plan.get('daily_calories', 2000)} kcal
-- Protein: {nutrition_plan.get('protein_g', 100)}g
-- Carbohydrates: {nutrition_plan.get('carbs_g', 250)}g
-- Fat: {nutrition_plan.get('fat_g', 65)}g
-- Fiber: {nutrition_plan.get('fiber_g', 25)}g
-- Sodium: {nutrition_plan.get('sodium_mg', 2000)}mg
+    def generate_batch(batch_days: list) -> list:
+        results = []
+        for day in batch_days:
+            results.append(generate_single_day(day))
+        return results
 
-Patient restrictions:
-- Dietary preferences: {', '.join(health_profile.get('dietary_preferences', ['none']))}
-- Allergens to STRICTLY avoid: {', '.join(health_profile.get('allergens', ['none']))}
+    batches = [days_info[0:3], days_info[3:5], days_info[5:7]]
+    print(f"🍽️ gemini-2.5-pro | {cal} kcal/day | 3 parallel batches")
 
-Create exactly 7 days with dates: {dates_str}
-Each day has breakfast, lunch, and dinner.
-Each meal has specific food items with gram weights.
+    batch_results = {}
+    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {executor.submit(generate_batch, b): i for i, b in enumerate(batches)}
+        for future in concurrent.futures.as_completed(futures):
+            i = futures[future]
+            batch_results[i] = future.result()
+            print(f"✅ Batch {i+1}/3 complete")
 
-Respond ONLY with valid JSON, no markdown:
-{{
-  "week_start_date": "{days_info[0]['date']}",
-  "days": [
-    {{
-      "date": "{days_info[0]['date']}",
-      "day_name": "Monday",
-      "breakfast": {{
-        "meal_type": "breakfast",
-        "name": "<descriptive meal name>",
-        "items": [
-          {{
-            "food": "<specific food name>",
-            "amount_g": <number>,
-            "calories": <integer>,
-            "protein": <number>,
-            "carbs": <number>,
-            "fat": <number>
-          }}
-        ],
-        "total_calories": <integer>,
-        "total_protein": <integer>,
-        "total_carbs": <integer>,
-        "total_fat": <integer>,
-        "notes": "<optional cooking tip or substitution>"
-      }},
-      "lunch": {{ <same structure as breakfast> }},
-      "dinner": {{ <same structure as breakfast> }},
-      "total_calories": <integer>
-    }},
-    ... (6 more days for {", ".join(d["date"] for d in days_info[1:])})
-  ]
-}}"""
+    all_days = []
+    for i in range(3):
+        all_days.extend(batch_results[i])
 
-    print(f"🍽️ Generating 7-day meal plan | target={nutrition_plan.get('daily_calories')} kcal/day")
-    response = model.generate_content(prompt)
-    text = response.text.strip().replace("```json", "").replace("```", "").strip()
-    result = json.loads(text)
-
-    print(f"✅ Meal plan generated | {len(result.get('days', []))} days")
-    return result
+    print(f"✅ Meal plan ready | {len(all_days)} days")
+    return {"week_start_date": days_info[0]["date"], "days": all_days}
 
 
 # ════════════════════════════════════════════════════════════════
