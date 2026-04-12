@@ -7,6 +7,7 @@
 
 // HealthAPIManager.swift
 // Health Agent — 所有网络请求
+// 包含：Keep-alive 防休眠 + 异步生成餐食计划（轮询）
 
 import Foundation
 import UIKit
@@ -14,8 +15,31 @@ import UIKit
 class HealthAPIManager {
     static let shared = HealthAPIManager()
     private let base = "https://food-app-swift-qb4k.onrender.com"
+    private var keepAliveTimer: Timer?
 
     private var token: String? { SessionManager.shared.getAuthToken() }
+
+    // MARK: - Keep-Alive（防止 Render 冷启动）
+
+    func startKeepAlive() {
+        keepAliveTimer?.invalidate()
+        keepAliveTimer = Timer.scheduledTimer(withTimeInterval: 25 * 60, repeats: true) { _ in
+            guard let url = URL(string: "\(self.base)/ping") else { return }
+            URLSession.shared.dataTask(with: url) { _, _, _ in
+                print("🔄 Keep-alive ping sent")
+            }.resume()
+        }
+        if let url = URL(string: "\(base)/ping") {
+            URLSession.shared.dataTask(with: url) { _, _, _ in
+                print("🔄 Initial ping to wake up server")
+            }.resume()
+        }
+    }
+
+    func stopKeepAlive() {
+        keepAliveTimer?.invalidate()
+        keepAliveTimer = nil
+    }
 
     // MARK: - Health Profile
 
@@ -37,7 +61,7 @@ class HealthAPIManager {
     }
 
     func fetchHealthProfile(userId: String, completion: @escaping (HealthProfile?) -> Void) {
-        guard let url = URL(string: "\(base)/get-health-profile?user_id=\(userId)"),
+        guard let url = URL(string: "\(base)/get-health-profile"),
               let token = token else { completion(nil); return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -68,7 +92,6 @@ class HealthAPIManager {
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         req.timeoutInterval = 60
         let payload: [String: Any] = [
-            "user_id": profile.userId,
             "profile": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(profile))) ?? [:],
             "goals": goals
         ]
@@ -85,41 +108,108 @@ class HealthAPIManager {
         }.resume()
     }
 
-    // MARK: - Generate Weekly Meal Plan
+    // MARK: - Generate Weekly Meal Plan（异步提交 + 轮询）
 
     func generateWeeklyMealPlan(
         userId: String,
         nutritionPlan: NutritionPlan,
         healthProfile: HealthProfile,
+        onProgress: ((String) -> Void)? = nil,
         completion: @escaping (WeeklyMealPlan?, String?) -> Void
     ) {
-        guard let url = URL(string: "\(base)/generate-meal-plan"),
+        guard let url = URL(string: "\(base)/generate-meal-plan-async"),
               let token = token else { completion(nil, "Auth error"); return }
+
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 90   // AI 生成需要时间
+        req.timeoutInterval = 30
+
         let payload: [String: Any] = [
-            "user_id": userId,
             "nutrition_plan": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(nutritionPlan))) ?? [:],
             "health_profile": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(healthProfile))) ?? [:]
         ]
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
         URLSession.shared.dataTask(with: req) { data, resp, err in
-            DispatchQueue.main.async {
-                if let err = err { completion(nil, err.localizedDescription); return }
-                guard let data = data,
-                      (resp as? HTTPURLResponse)?.statusCode == 200,
-                      let plan = try? JSONDecoder().decode(WeeklyMealPlan.self, from: data)
-                else { completion(nil, "Failed to generate meal plan"); return }
-                completion(plan, nil)
+            if let err = err {
+                DispatchQueue.main.async { completion(nil, err.localizedDescription) }
+                return
+            }
+            guard let data = data,
+                  (resp as? HTTPURLResponse)?.statusCode == 202,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let jobId = json["job_id"] as? String
+            else {
+                DispatchQueue.main.async { completion(nil, "Failed to start generation") }
+                return
+            }
+            print("🍽️ Meal plan job started: \(jobId)")
+            DispatchQueue.main.async { onProgress?("Generating your meal plan…") }
+            self.pollMealPlanJob(jobId: jobId, token: token, retries: 40, onProgress: onProgress, completion: completion)
+        }.resume()
+    }
+
+    private func pollMealPlanJob(
+        jobId: String,
+        token: String,
+        retries: Int,
+        onProgress: ((String) -> Void)?,
+        completion: @escaping (WeeklyMealPlan?, String?) -> Void
+    ) {
+        guard retries > 0 else {
+            DispatchQueue.main.async { completion(nil, "Generation is taking too long, please try again") }
+            return
+        }
+
+        guard let url = URL(string: "\(base)/meal-plan-status/\(jobId)") else { return }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = 15
+
+        URLSession.shared.dataTask(with: req) { data, _, _ in
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            else {
+                DispatchQueue.global().asyncAfter(deadline: .now() + 3) {
+                    self.pollMealPlanJob(jobId: jobId, token: token, retries: retries - 1, onProgress: onProgress, completion: completion)
+                }
+                return
+            }
+
+            let status = json["status"] as? String ?? ""
+            print("📊 Job status: \(status) | retries left: \(retries)")
+
+            switch status {
+            case "done":
+                guard let resultObj = json["result"],
+                      let resultData = try? JSONSerialization.data(withJSONObject: resultObj),
+                      let plan = try? JSONDecoder().decode(WeeklyMealPlan.self, from: resultData)
+                else {
+                    DispatchQueue.main.async { completion(nil, "Failed to parse meal plan") }
+                    return
+                }
+                DispatchQueue.main.async { completion(plan, nil) }
+
+            case "error":
+                let errMsg = json["error"] as? String ?? "Unknown error"
+                DispatchQueue.main.async { completion(nil, errMsg) }
+
+            default:
+                let elapsed = (40 - retries) * 3
+                DispatchQueue.main.async { onProgress?("Still generating… (\(elapsed)s)") }
+                DispatchQueue.global().asyncAfter(deadline: .now() + 3) {
+                    self.pollMealPlanJob(jobId: jobId, token: token, retries: retries - 1, onProgress: onProgress, completion: completion)
+                }
             }
         }.resume()
     }
 
+    // MARK: - Fetch Current Week Plan
+
     func fetchCurrentWeekPlan(userId: String, completion: @escaping (WeeklyMealPlan?) -> Void) {
-        guard let url = URL(string: "\(base)/get-meal-plan?user_id=\(userId)"),
+        guard let url = URL(string: "\(base)/get-meal-plan"),
               let token = token else { completion(nil); return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -155,7 +245,6 @@ class HealthAPIManager {
         req.timeoutInterval = 90
 
         var payload: [String: Any] = [
-            "user_id": userId,
             "date": date,
             "meal_type": mealType,
             "image_base64": imageData.base64EncodedString()

@@ -2,12 +2,8 @@
 //  HealthProfileView.swift
 //  food-app-swift
 //
-//  Created by NutriCam on 4/9/26.
+//  Created by Helen Tu on 4/9/26.
 //
-
-// HealthProfileView.swift
-// Health Agent — 健康信息收集（4步 Onboarding）
-
 import SwiftUI
 
 struct HealthProfileView: View {
@@ -147,36 +143,26 @@ struct HealthProfileView: View {
             }
 
             // Height
-            sliderCard(label: "Height", value: $heightCm,
-                       range: 100...220, step: 0.5,
-                       display: "\(Int(heightCm)) cm")
+            MetricInputCard(
+                label: "Height", unit: "cm",
+                value: $heightCm, range: 100...220, step: 1,
+                format: { "\(Int($0))" }
+            )
 
             // Weight
-            sliderCard(label: "Weight", value: $weightKg,
-                       range: 30...200, step: 0.5,
-                       display: String(format: "%.1f kg", weightKg))
+            MetricInputCard(
+                label: "Weight", unit: "kg",
+                value: $weightKg, range: 30...250, step: 0.5,
+                format: { String(format: "%.1f", $0) }
+            )
 
             // Age
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Age")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(themeManager.current.secondaryText)
-                    Spacer()
-                    Text("\(age) years")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
-                        .foregroundColor(themeManager.current.primaryText)
-                }
-                Slider(value: Binding(
-                    get: { Double(age) },
-                    set: { age = Int($0) }
-                ), in: 12...100, step: 1)
-                .accentColor(themeManager.current == .dark ? .white : .black)
-            }
-            .padding(16)
-            .background(themeManager.current.cardBackground)
-            .cornerRadius(16)
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
+            MetricInputCard(
+                label: "Age", unit: "yrs",
+                value: Binding(get: { Double(age) }, set: { age = Int($0) }),
+                range: 12...100, step: 1,
+                format: { "\(Int($0))" }
+            )
 
             // Sex
             VStack(alignment: .leading, spacing: 10) {
@@ -674,5 +660,102 @@ struct HealthProfileView: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(themeManager.current.primaryText)
         }
+    }
+}
+
+// MARK: - MetricInputCard（滑块 + 可直接输入）
+
+struct MetricInputCard: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    let label: String
+    let unit: String
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let step: Double
+    let format: (Double) -> String
+
+    @State private var textInput: String = ""
+    @State private var isEditing = false
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text(label)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText)
+                Spacer()
+                // 点击数值可直接输入
+                HStack(spacing: 4) {
+                    if isEditing {
+                        TextField("", text: $textInput)
+                            .keyboardType(.decimalPad)
+                            .font(.system(size: 17, weight: .bold, design: .rounded))
+                            .foregroundColor(themeManager.current.primaryText)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 70)
+                            .focused($focused)
+                            .onSubmit { commitInput() }
+                            .onChange(of: focused) { _, isFocused in
+                                if !isFocused { commitInput() }
+                            }
+                    } else {
+                        Text(format(value))
+                            .font(.system(size: 17, weight: .bold, design: .rounded))
+                            .foregroundColor(themeManager.current.primaryText)
+                            .onTapGesture { startEditing() }
+                    }
+                    Text(unit)
+                        .font(.system(size: 13))
+                        .foregroundColor(themeManager.current.secondaryText)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(themeManager.current.inputBackground)
+                .cornerRadius(10)
+                .onTapGesture { startEditing() }
+            }
+
+            Slider(value: $value, in: range, step: step)
+                .accentColor(themeManager.current == .dark ? .white : .black)
+                .onChange(of: value) { _, newVal in
+                    if !isEditing {
+                        textInput = format(newVal)
+                    }
+                }
+
+            HStack {
+                Text("\(Int(range.lowerBound))\(unit)")
+                    .font(.caption2)
+                    .foregroundColor(themeManager.current.secondaryText)
+                Spacer()
+                Text("\(Int(range.upperBound))\(unit)")
+                    .font(.caption2)
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+        }
+        .padding(16)
+        .background(themeManager.current.cardBackground)
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .onAppear { textInput = format(value) }
+    }
+
+    func startEditing() {
+        textInput = format(value)
+        isEditing = true
+        focused = true
+    }
+
+    func commitInput() {
+        if let v = Double(textInput) {
+            let clamped = min(max(v, range.lowerBound), range.upperBound)
+            // snap to step
+            let steps = round((clamped - range.lowerBound) / step)
+            value = range.lowerBound + steps * step
+        }
+        textInput = format(value)
+        isEditing = false
     }
 }

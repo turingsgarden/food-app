@@ -32,6 +32,14 @@ from health_pipeline import (
        generate_weekly_meal_plan,
        analyze_meal_photo,
    )
+import threading
+from health_pipeline import (
+       generate_nutrition_targets,
+       generate_weekly_meal_plan,
+       analyze_meal_photo,
+   )
+
+
 
 #Load environment variables
 load_dotenv()
@@ -2000,8 +2008,260 @@ def analyze_meal_photo_route():
         print(f"❌ analyze_meal_photo_route: {e}")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
-
+meal_plan_jobs = {}
+ 
+# ── Keep-Alive（防止 Render Free 实例冷启动）───────────────────
+def _keep_alive_loop():
+    import time as _time
+    _time.sleep(60)  # 启动后等1分钟再开始
+    while True:
+        try:
+            requests.get("https://food-app-swift-qb4k.onrender.com/ping", timeout=10)
+            print("🔄 Keep-alive ping sent")
+        except Exception as e:
+            print(f"⚠️ Keep-alive ping failed: {e}")
+        _time.sleep(25 * 60)  # 每25分钟
+ 
+threading.Thread(target=_keep_alive_loop, daemon=True).start()
+print("✅ Keep-alive thread started")
+ 
+# ── Health Profile ──────────────────────────────────────────────
+ 
+@app.route("/save-health-profile", methods=["POST"])
+@token_required
+@db_required
+def save_health_profile():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+        data["user_id"] = request.user_id
+        data["updated_at"] = datetime.now().isoformat()
+        db["health_profiles"].update_one(
+            {"user_id": request.user_id},
+            {"$set": data},
+            upsert=True
+        )
+        print(f"✅ Health profile saved for {request.user_id}")
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        print(f"❌ save_health_profile: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+@app.route("/get-health-profile", methods=["GET"])
+@token_required
+@db_required
+def get_health_profile():
+    try:
+        profile = db["health_profiles"].find_one({"user_id": request.user_id})
+        if not profile:
+            return jsonify({"error": "not found"}), 404
+        profile["_id"] = str(profile["_id"])
+        return jsonify(profile), 200
+    except Exception as e:
+        print(f"❌ get_health_profile: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+# ── Nutrition Targets ───────────────────────────────────────────
+ 
+@app.route("/generate-targets", methods=["POST"])
+@token_required
+@db_required
+def generate_targets():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+ 
+        result = generate_nutrition_targets(
+            profile=data.get("profile", {}),
+            goals=data.get("goals", []),
+            gemini_model=gemini_model
+        )
+        result["user_id"] = request.user_id
+        result["goals"] = data.get("goals", [])
+        result["created_at"] = datetime.now().isoformat()
+ 
+        db["nutrition_plans"].update_one(
+            {"user_id": request.user_id},
+            {"$set": result},
+            upsert=True
+        )
+        return jsonify(result), 200
+ 
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format, please try again"}), 500
+    except Exception as e:
+        print(f"❌ generate_targets: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+# ── Weekly Meal Plan（同步，备用）──────────────────────────────
+ 
+@app.route("/generate-meal-plan", methods=["POST"])
+@token_required
+@db_required
+def generate_meal_plan():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+ 
+        result = generate_weekly_meal_plan(
+            nutrition_plan=data.get("nutrition_plan", {}),
+            health_profile=data.get("health_profile", {}),
+            gemini_model=gemini_model
+        )
+        result["user_id"] = request.user_id
+        result["created_at"] = datetime.now().isoformat()
+ 
+        db["meal_plans"].update_one(
+            {"user_id": request.user_id},
+            {"$set": result},
+            upsert=True
+        )
+        return jsonify(result), 200
+ 
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format, please try again"}), 500
+    except Exception as e:
+        print(f"❌ generate_meal_plan: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+# ── Weekly Meal Plan 异步版（推荐使用）─────────────────────────
+ 
+@app.route("/generate-meal-plan-async", methods=["POST"])
+@token_required
+@db_required
+def generate_meal_plan_async():
+    """
+    立即返回 job_id（202），后台线程继续生成。
+    Swift 端轮询 /meal-plan-status/<job_id> 获取结果。
+    """
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+ 
+        # 生成唯一 job_id
+        job_id = f"{request.user_id}_{int(datetime.now().timestamp() * 1000)}"
+        meal_plan_jobs[job_id] = {"status": "generating", "result": None, "error": None}
+ 
+        user_id = request.user_id  # 提前捕获，避免线程内 request context 失效
+ 
+        def run_generation():
+            try:
+                print(f"🍽️ Background job {job_id} started")
+                result = generate_weekly_meal_plan(
+                    nutrition_plan=data.get("nutrition_plan", {}),
+                    health_profile=data.get("health_profile", {}),
+                    gemini_model=gemini_model
+                )
+                result["user_id"] = user_id
+                result["created_at"] = datetime.now().isoformat()
+ 
+                # 存入数据库
+                db["meal_plans"].update_one(
+                    {"user_id": user_id},
+                    {"$set": result},
+                    upsert=True
+                )
+                meal_plan_jobs[job_id] = {"status": "done", "result": result, "error": None}
+                print(f"✅ Background job {job_id} complete")
+ 
+            except Exception as e:
+                print(f"❌ Background job {job_id} failed: {e}")
+                traceback.print_exc()
+                meal_plan_jobs[job_id] = {"status": "error", "result": None, "error": str(e)}
+ 
+        threading.Thread(target=run_generation, daemon=True).start()
+ 
+        # 立即返回 202，不等待生成
+        return jsonify({"job_id": job_id, "status": "generating"}), 202
+ 
+    except Exception as e:
+        print(f"❌ generate_meal_plan_async: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+@app.route("/meal-plan-status/<job_id>", methods=["GET"])
+@token_required
+def meal_plan_status(job_id):
+    """Swift 轮询这个 endpoint 来查询生成进度"""
+    job = meal_plan_jobs.get(job_id)
+    if not job:
+        # job_id 不存在（可能服务重启了）
+        return jsonify({"status": "error", "error": "Job not found, please generate again"}), 404
+    return jsonify(job), 200
+ 
+ 
+@app.route("/get-meal-plan", methods=["GET"])
+@token_required
+@db_required
+def get_meal_plan():
+    try:
+        plan = db["meal_plans"].find_one(
+            {"user_id": request.user_id},
+            sort=[("created_at", -1)]
+        )
+        if not plan:
+            return jsonify({"error": "not found"}), 404
+        plan["_id"] = str(plan["_id"])
+        return jsonify(plan), 200
+    except Exception as e:
+        print(f"❌ get_meal_plan: {e}")
+        return jsonify({"error": str(e)}), 500
+ 
+ 
+# ── Photo Compliance ────────────────────────────────────────────
+ 
+@app.route("/analyze-meal-photo", methods=["POST"])
+@token_required
+@db_required
+def analyze_meal_photo_route():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Empty request"}), 400
+ 
+        image_b64 = data.get("image_base64", "")
+        if not image_b64:
+            return jsonify({"error": "No image provided"}), 400
+ 
+        result = analyze_meal_photo(
+            image_b64=image_b64,
+            meal_type=data.get("meal_type", "lunch"),
+            planned_meal=data.get("planned_meal", {}),
+            remaining_plan=data.get("remaining_plan", []),
+            gemini_model=gemini_model
+        )
+ 
+        log_doc = {
+            "user_id": request.user_id,
+            "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
+            "meal_type": data.get("meal_type", "lunch"),
+            "planned_meal": data.get("planned_meal", {}),
+            **result,
+            "saved_at": datetime.now().isoformat()
+        }
+        db["meal_logs"].insert_one(log_doc)
+ 
+        return jsonify(result), 200
+ 
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format"}), 500
+    except Exception as e:
+        print(f"❌ analyze_meal_photo_route: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+        
+        
+        
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Starting Food Analyzer Backend on port {port}")
