@@ -4,6 +4,10 @@
 //
 //  Created by Helen Tu on 4/9/26.
 //
+// HealthProfileView.swift — 加预填充支持
+// 新增：init(existingProfile:onComplete:) 用于编辑已有档案
+// 其余 UI 逻辑完全不变
+
 import SwiftUI
 
 struct HealthProfileView: View {
@@ -23,7 +27,7 @@ struct HealthProfileView: View {
     @State private var age: Int = 30
     @State private var sex: String = ""
 
-    // Step 2 — Clinical markers (all optional)
+    // Step 2 — Clinical markers
     @State private var hasBP = false
     @State private var systolicBP: Double = 120
     @State private var diastolicBP: Double = 80
@@ -42,6 +46,23 @@ struct HealthProfileView: View {
     @State private var isSaving = false
     @State private var errorMsg = ""
     @State private var showError = false
+
+    // ✅ 预填充用的初始值（init 时传入，onAppear 时应用）
+    private let prefill: HealthProfile?
+
+    // MARK: - Init
+
+    /// 新建模式（onboarding）
+    init(onComplete: ((HealthProfile) -> Void)? = nil) {
+        self.prefill = nil
+        self.onComplete = onComplete
+    }
+
+    /// ✅ 编辑模式（从 ProfileView 打开，预填充已有数据）
+    init(existingProfile: HealthProfile?, onComplete: ((HealthProfile) -> Void)? = nil) {
+        self.prefill = existingProfile
+        self.onComplete = onComplete
+    }
 
     var bmi: Double {
         let h = heightCm / 100
@@ -74,10 +95,37 @@ struct HealthProfileView: View {
             }
             .preferredColorScheme(themeManager.current.colorScheme)
             .navigationBarHidden(true)
+            // ✅ 打开时预填充已有数据
+            .onAppear { applyPrefill() }
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
             } message: { Text(errorMsg) }
         }
+    }
+
+    // ✅ 把 existingProfile 的数据映射到各 @State 变量
+    func applyPrefill() {
+        guard let p = prefill else { return }
+        heightCm = p.heightCm
+        weightKg = p.weightKg
+        age = p.age
+        sex = p.sex
+
+        if let s = p.systolicBP, let d = p.diastolicBP {
+            hasBP = true; systolicBP = Double(s); diastolicBP = Double(d)
+        }
+        if let bs = p.fastingBloodSugar {
+            hasBloodSugar = true; bloodSugar = bs
+        }
+        if let ch = p.totalCholesterol {
+            hasCholesterol = true; cholesterol = ch
+        }
+        if let tr = p.triglycerides {
+            hasTriglycerides = true; triglycerides = tr
+        }
+
+        selectedDietary = Set(p.dietaryPreferences)
+        selectedAllergens = Set(p.allergens)
     }
 
     // MARK: - Progress Header
@@ -87,20 +135,20 @@ struct HealthProfileView: View {
             HStack {
                 Button(action: {
                     if currentStep > 0 { withAnimation(.spring()) { currentStep -= 1 } }
+                    else { dismiss() }   // ✅ 编辑模式第一步可以直接关闭
                 }) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(currentStep == 0 ? .clear : themeManager.current.primaryText)
+                        .foregroundColor(themeManager.current.primaryText)
                         .frame(width: 36, height: 36)
-                        .background(currentStep == 0 ? Color.clear : themeManager.current.inputBackground)
+                        .background(themeManager.current.inputBackground)
                         .cornerRadius(10)
                 }
-                .disabled(currentStep == 0)
 
                 Spacer()
 
                 VStack(spacing: 2) {
-                    Text("Health Profile")
+                    Text(prefill != nil ? "Edit Profile" : "Health Profile")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundColor(themeManager.current.primaryText)
                     Text("Step \(currentStep + 1) of \(totalSteps)")
@@ -109,13 +157,11 @@ struct HealthProfileView: View {
                 }
 
                 Spacer()
-                // Balance the back button
                 Color.clear.frame(width: 36, height: 36)
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
 
-            // Step dots
             HStack(spacing: 8) {
                 ForEach(0..<totalSteps, id: \.self) { i in
                     Capsule()
@@ -137,26 +183,18 @@ struct HealthProfileView: View {
             stepTitle(icon: "figure.stand", title: "Body Metrics",
                       subtitle: "We'll calculate your BMI and daily energy needs")
 
-            // BMI preview card
-            if !sex.isEmpty {
-                bmiCard
-            }
+            if !sex.isEmpty { bmiCard }
 
-            // Height
             MetricInputCard(
                 label: "Height", unit: "cm",
                 value: $heightCm, range: 100...220, step: 1,
                 format: { "\(Int($0))" }
             )
-
-            // Weight
             MetricInputCard(
                 label: "Weight", unit: "kg",
                 value: $weightKg, range: 30...250, step: 0.5,
                 format: { String(format: "%.1f", $0) }
             )
-
-            // Age
             MetricInputCard(
                 label: "Age", unit: "yrs",
                 value: Binding(get: { Double(age) }, set: { age = Int($0) }),
@@ -164,7 +202,6 @@ struct HealthProfileView: View {
                 format: { "\(Int($0))" }
             )
 
-            // Sex
             VStack(alignment: .leading, spacing: 10) {
                 Text("Biological Sex")
                     .font(.system(size: 14, weight: .medium))
@@ -198,8 +235,7 @@ struct HealthProfileView: View {
                 Text("Your BMI")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(themeManager.current.secondaryText)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
+                    .textCase(.uppercase).tracking(0.5)
                 HStack(alignment: .lastTextBaseline, spacing: 4) {
                     Text(String(format: "%.1f", bmi))
                         .font(.system(size: 32, weight: .black, design: .rounded))
@@ -213,21 +249,14 @@ struct HealthProfileView: View {
                 }
             }
             Spacer()
-            // BMI gauge
             ZStack {
-                Circle()
-                    .stroke(Color.gray.opacity(0.12), lineWidth: 8)
-                    .frame(width: 60, height: 60)
-                Circle()
-                    .trim(from: 0, to: min(bmi / 40.0, 1.0))
+                Circle().stroke(Color.gray.opacity(0.12), lineWidth: 8).frame(width: 60, height: 60)
+                Circle().trim(from: 0, to: min(bmi / 40.0, 1.0))
                     .stroke(bmiCategoryLabel().1, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .frame(width: 60, height: 60)
-                    .rotationEffect(.degrees(-90))
+                    .frame(width: 60, height: 60).rotationEffect(.degrees(-90))
             }
         }
-        .padding(16)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(16)
+        .padding(16).background(themeManager.current.cardBackground).cornerRadius(16)
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
     }
 
@@ -247,58 +276,29 @@ struct HealthProfileView: View {
             stepTitle(icon: "heart.fill", title: "Clinical Markers",
                       subtitle: "Optional — skip if you don't have these values")
 
-            clinicalToggleCard(
-                title: "Blood Pressure",
-                subtitle: "Normal: 90–120 / 60–80 mmHg",
-                icon: "waveform.path.ecg",
-                isOn: $hasBP
-            ) {
+            clinicalToggleCard(title: "Blood Pressure", subtitle: "Normal: 90–120 / 60–80 mmHg",
+                               icon: "waveform.path.ecg", isOn: $hasBP) {
                 VStack(spacing: 12) {
-                    sliderCard(label: "Systolic (upper)", value: $systolicBP,
-                               range: 80...200, step: 1,
-                               display: "\(Int(systolicBP)) mmHg",
-                               warningRange: 120...139)
-                    sliderCard(label: "Diastolic (lower)", value: $diastolicBP,
-                               range: 40...130, step: 1,
-                               display: "\(Int(diastolicBP)) mmHg",
-                               warningRange: 80...89)
+                    sliderCard(label: "Systolic (upper)", value: $systolicBP, range: 80...200, step: 1,
+                               display: "\(Int(systolicBP)) mmHg", warningRange: 120...139)
+                    sliderCard(label: "Diastolic (lower)", value: $diastolicBP, range: 40...130, step: 1,
+                               display: "\(Int(diastolicBP)) mmHg", warningRange: 80...89)
                 }
             }
-
-            clinicalToggleCard(
-                title: "Fasting Blood Sugar",
-                subtitle: "Normal: 3.9–5.5 mmol/L",
-                icon: "drop.fill",
-                isOn: $hasBloodSugar
-            ) {
-                sliderCard(label: "Blood Sugar", value: $bloodSugar,
-                           range: 2.0...15.0, step: 0.1,
-                           display: String(format: "%.1f mmol/L", bloodSugar),
-                           warningRange: 5.6...6.9)
+            clinicalToggleCard(title: "Fasting Blood Sugar", subtitle: "Normal: 3.9–5.5 mmol/L",
+                               icon: "drop.fill", isOn: $hasBloodSugar) {
+                sliderCard(label: "Blood Sugar", value: $bloodSugar, range: 2.0...15.0, step: 0.1,
+                           display: String(format: "%.1f mmol/L", bloodSugar), warningRange: 5.6...6.9)
             }
-
-            clinicalToggleCard(
-                title: "Total Cholesterol",
-                subtitle: "Normal: < 5.2 mmol/L",
-                icon: "chart.bar.fill",
-                isOn: $hasCholesterol
-            ) {
-                sliderCard(label: "Cholesterol", value: $cholesterol,
-                           range: 1.0...10.0, step: 0.1,
-                           display: String(format: "%.1f mmol/L", cholesterol),
-                           warningRange: 5.2...6.2)
+            clinicalToggleCard(title: "Total Cholesterol", subtitle: "Normal: < 5.2 mmol/L",
+                               icon: "chart.bar.fill", isOn: $hasCholesterol) {
+                sliderCard(label: "Cholesterol", value: $cholesterol, range: 1.0...10.0, step: 0.1,
+                           display: String(format: "%.1f mmol/L", cholesterol), warningRange: 5.2...6.2)
             }
-
-            clinicalToggleCard(
-                title: "Triglycerides",
-                subtitle: "Normal: < 1.7 mmol/L",
-                icon: "drop.triangle.fill",
-                isOn: $hasTriglycerides
-            ) {
-                sliderCard(label: "Triglycerides", value: $triglycerides,
-                           range: 0.2...8.0, step: 0.1,
-                           display: String(format: "%.1f mmol/L", triglycerides),
-                           warningRange: 1.7...2.3)
+            clinicalToggleCard(title: "Triglycerides", subtitle: "Normal: < 1.7 mmol/L",
+                               icon: "drop.triangle.fill", isOn: $hasTriglycerides) {
+                sliderCard(label: "Triglycerides", value: $triglycerides, range: 0.2...8.0, step: 0.1,
+                           display: String(format: "%.1f mmol/L", triglycerides), warningRange: 1.7...2.3)
             }
         }
     }
@@ -310,12 +310,9 @@ struct HealthProfileView: View {
             stepTitle(icon: "leaf.fill", title: "Diet & Allergens",
                       subtitle: "Help us build a meal plan that works for you")
 
-            // Dietary preferences
             VStack(alignment: .leading, spacing: 12) {
                 Text("Dietary Preferences")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(themeManager.current.primaryText)
-
+                    .font(.system(size: 15, weight: .bold)).foregroundColor(themeManager.current.primaryText)
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     ForEach(DietaryOption.all) { option in
                         let isSelected = selectedDietary.contains(option.id)
@@ -324,56 +321,41 @@ struct HealthProfileView: View {
                                 selectedDietary = isSelected ? [] : ["no_restriction"]
                             } else {
                                 selectedDietary.remove("no_restriction")
-                                if isSelected { selectedDietary.remove(option.id) }
-                                else { selectedDietary.insert(option.id) }
+                                if isSelected { selectedDietary.remove(option.id) } else { selectedDietary.insert(option.id) }
                             }
                         }) {
                             HStack(spacing: 8) {
-                                Image(systemName: option.icon)
-                                    .font(.system(size: 13))
-                                    .foregroundColor(isSelected
-                                        ? (themeManager.current == .dark ? .black : .white)
-                                        : .green)
+                                Image(systemName: option.icon).font(.system(size: 13))
+                                    .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white) : .green)
                                     .frame(width: 20)
                                 Text(option.displayName)
                                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                                    .foregroundColor(isSelected
-                                        ? (themeManager.current == .dark ? .black : .white)
-                                        : themeManager.current.primaryText)
+                                    .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white) : themeManager.current.primaryText)
                                 Spacer()
                             }
                             .padding(.horizontal, 12).padding(.vertical, 10)
                             .background(RoundedRectangle(cornerRadius: 12)
-                                .fill(isSelected
-                                      ? (themeManager.current == .dark ? Color.white : Color.black)
-                                      : themeManager.current.inputBackground))
-                            .overlay(RoundedRectangle(cornerRadius: 12)
-                                .stroke(themeManager.current.cardBorder, lineWidth: 1))
+                                .fill(isSelected ? (themeManager.current == .dark ? Color.white : Color.black) : themeManager.current.inputBackground))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(themeManager.current.cardBorder, lineWidth: 1))
                         }
                         .buttonStyle(.plain)
                     }
                 }
             }
 
-            // Allergens
             VStack(alignment: .leading, spacing: 12) {
                 Text("Allergens to Avoid")
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(themeManager.current.primaryText)
+                    .font(.system(size: 15, weight: .bold)).foregroundColor(themeManager.current.primaryText)
                 Text("We'll exclude these from your meal plan")
-                    .font(.system(size: 13))
-                    .foregroundColor(themeManager.current.secondaryText)
-
+                    .font(.system(size: 13)).foregroundColor(themeManager.current.secondaryText)
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     ForEach(AllergenOption.all) { allergen in
                         let isSelected = selectedAllergens.contains(allergen.id)
                         Button(action: {
-                            if isSelected { selectedAllergens.remove(allergen.id) }
-                            else { selectedAllergens.insert(allergen.id) }
+                            if isSelected { selectedAllergens.remove(allergen.id) } else { selectedAllergens.insert(allergen.id) }
                         }) {
                             HStack(spacing: 8) {
-                                Image(systemName: isSelected ? "xmark.circle.fill" : "circle")
-                                    .font(.system(size: 14))
+                                Image(systemName: isSelected ? "xmark.circle.fill" : "circle").font(.system(size: 14))
                                     .foregroundColor(isSelected ? .red : themeManager.current.secondaryText)
                                 Text(allergen.displayName)
                                     .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
@@ -398,9 +380,8 @@ struct HealthProfileView: View {
     var step4Review: some View {
         VStack(alignment: .leading, spacing: 20) {
             stepTitle(icon: "checkmark.circle.fill", title: "Review Profile",
-                      subtitle: "Confirm your health information before we create your plan")
+                      subtitle: "Confirm your health information before we save")
 
-            // Body
             reviewCard(title: "Body Metrics") {
                 reviewRow("Height", value: "\(Int(heightCm)) cm")
                 reviewRow("Weight", value: String(format: "%.1f kg", weightKg))
@@ -409,30 +390,18 @@ struct HealthProfileView: View {
                 reviewRow("BMI", value: String(format: "%.1f — %@", bmi, bmiCategoryLabel().0))
             }
 
-            // Clinical
             if hasBP || hasBloodSugar || hasCholesterol || hasTriglycerides {
                 reviewCard(title: "Clinical Markers") {
-                    if hasBP {
-                        reviewRow("Blood Pressure", value: "\(Int(systolicBP))/\(Int(diastolicBP)) mmHg")
-                    }
-                    if hasBloodSugar {
-                        reviewRow("Blood Sugar", value: String(format: "%.1f mmol/L", bloodSugar))
-                    }
-                    if hasCholesterol {
-                        reviewRow("Cholesterol", value: String(format: "%.1f mmol/L", cholesterol))
-                    }
-                    if hasTriglycerides {
-                        reviewRow("Triglycerides", value: String(format: "%.1f mmol/L", triglycerides))
-                    }
+                    if hasBP { reviewRow("Blood Pressure", value: "\(Int(systolicBP))/\(Int(diastolicBP)) mmHg") }
+                    if hasBloodSugar { reviewRow("Blood Sugar", value: String(format: "%.1f mmol/L", bloodSugar)) }
+                    if hasCholesterol { reviewRow("Cholesterol", value: String(format: "%.1f mmol/L", cholesterol)) }
+                    if hasTriglycerides { reviewRow("Triglycerides", value: String(format: "%.1f mmol/L", triglycerides)) }
                 }
             }
 
-            // Diet
             reviewCard(title: "Diet & Allergens") {
-                reviewRow("Preferences", value: selectedDietary.isEmpty ? "No restriction"
-                          : selectedDietary.joined(separator: ", "))
-                reviewRow("Allergens", value: selectedAllergens.isEmpty ? "None"
-                          : selectedAllergens.joined(separator: ", "))
+                reviewRow("Preferences", value: selectedDietary.isEmpty ? "No restriction" : selectedDietary.joined(separator: ", "))
+                reviewRow("Allergens", value: selectedAllergens.isEmpty ? "None" : selectedAllergens.joined(separator: ", "))
             }
         }
     }
@@ -444,31 +413,22 @@ struct HealthProfileView: View {
             Divider().background(themeManager.current.cardBorder)
             HStack(spacing: 12) {
                 if currentStep < totalSteps - 1 {
-                    // Skip (only step 1 cannot be skipped)
                     if currentStep > 0 {
-                        Button(action: {
-                            withAnimation(.spring()) { currentStep += 1 }
-                        }) {
+                        Button(action: { withAnimation(.spring()) { currentStep += 1 } }) {
                             Text("Skip")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(themeManager.current.secondaryText)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(themeManager.current.inputBackground)
-                                .cornerRadius(16)
+                                .frame(maxWidth: .infinity).padding(.vertical, 16)
+                                .background(themeManager.current.inputBackground).cornerRadius(16)
                         }
                     }
-                    // Next
                     Button(action: {
-                        if canProceed {
-                            withAnimation(.spring()) { currentStep += 1 }
-                        }
+                        if canProceed { withAnimation(.spring()) { currentStep += 1 } }
                     }) {
                         Text("Next")
                             .font(.system(size: 16, weight: .bold))
                             .foregroundColor(themeManager.current == .dark ? .black : .white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
+                            .frame(maxWidth: .infinity).padding(.vertical, 16)
                             .background(canProceed
                                 ? (themeManager.current == .dark ? Color.white : Color.black)
                                 : Color.gray.opacity(0.3))
@@ -476,27 +436,25 @@ struct HealthProfileView: View {
                     }
                     .disabled(!canProceed)
                 } else {
-                    // Final save
                     Button(action: saveProfile) {
                         HStack(spacing: 8) {
                             if isSaving {
                                 ProgressView().progressViewStyle(CircularProgressViewStyle(
                                     tint: themeManager.current == .dark ? .black : .white))
                             }
-                            Text(isSaving ? "Saving…" : "Save & Continue")
+                            // ✅ 编辑模式显示"Save Changes"，新建模式显示"Save & Continue"
+                            Text(isSaving ? "Saving…" : prefill != nil ? "Save Changes" : "Save & Continue")
                                 .font(.system(size: 16, weight: .bold))
                         }
                         .foregroundColor(themeManager.current == .dark ? .black : .white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .frame(maxWidth: .infinity).padding(.vertical, 16)
                         .background(themeManager.current == .dark ? Color.white : Color.black)
                         .cornerRadius(16)
                     }
                     .disabled(isSaving)
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+            .padding(.horizontal, 20).padding(.vertical, 14)
         }
     }
 
@@ -517,10 +475,7 @@ struct HealthProfileView: View {
 
         let profile = HealthProfile(
             userId: userId,
-            heightCm: heightCm,
-            weightKg: weightKg,
-            age: age,
-            sex: sex,
+            heightCm: heightCm, weightKg: weightKg, age: age, sex: sex,
             systolicBP: hasBP ? Int(systolicBP) : nil,
             diastolicBP: hasBP ? Int(diastolicBP) : nil,
             fastingBloodSugar: hasBloodSugar ? bloodSugar : nil,
@@ -548,16 +503,12 @@ struct HealthProfileView: View {
     func stepTitle(icon: String, title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
-                Image(systemName: icon)
-                    .font(.system(size: 20))
+                Image(systemName: icon).font(.system(size: 20))
                     .foregroundColor(themeManager.current == .dark ? .white : .black)
-                Text(title)
-                    .font(.system(size: 22, weight: .black, design: .rounded))
+                Text(title).font(.system(size: 22, weight: .black, design: .rounded))
                     .foregroundColor(themeManager.current.primaryText)
             }
-            Text(subtitle)
-                .font(.system(size: 14))
-                .foregroundColor(themeManager.current.secondaryText)
+            Text(subtitle).font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
         }
         .padding(.top, 8)
     }
@@ -567,34 +518,24 @@ struct HealthProfileView: View {
         let isWarning = warningRange.map { value.wrappedValue >= $0.lowerBound && value.wrappedValue <= $0.upperBound } ?? false
         let isDanger = warningRange.map { value.wrappedValue > $0.upperBound } ?? false
         let accentColor: Color = isDanger ? .red : isWarning ? .orange : (themeManager.current == .dark ? .white : .black)
-
         return VStack(spacing: 8) {
             HStack {
-                Text(label)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(themeManager.current.secondaryText)
+                Text(label).font(.system(size: 14, weight: .medium)).foregroundColor(themeManager.current.secondaryText)
                 Spacer()
-                Text(display)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundColor(accentColor)
+                Text(display).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundColor(accentColor)
             }
-            Slider(value: value, in: range, step: step)
-                .accentColor(accentColor)
+            Slider(value: value, in: range, step: step).accentColor(accentColor)
             if isWarning || isDanger {
                 HStack(spacing: 4) {
                     Image(systemName: isDanger ? "exclamationmark.circle.fill" : "exclamationmark.triangle.fill")
-                        .font(.system(size: 11))
-                        .foregroundColor(accentColor)
+                        .font(.system(size: 11)).foregroundColor(accentColor)
                     Text(isDanger ? "Above normal range" : "Borderline — consult your doctor")
-                        .font(.system(size: 11))
-                        .foregroundColor(accentColor)
+                        .font(.system(size: 11)).foregroundColor(accentColor)
                     Spacer()
                 }
             }
         }
-        .padding(16)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(16)
+        .padding(16).background(themeManager.current.cardBackground).cornerRadius(16)
         .overlay(RoundedRectangle(cornerRadius: 16)
             .stroke(isWarning || isDanger ? accentColor.opacity(0.3) : themeManager.current.cardBorder, lineWidth: 1))
     }
@@ -603,75 +544,53 @@ struct HealthProfileView: View {
                                            isOn: Binding<Bool>, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 16))
+                Image(systemName: icon).font(.system(size: 16))
                     .foregroundColor(isOn.wrappedValue ? (themeManager.current == .dark ? .white : .black) : themeManager.current.secondaryText)
                     .frame(width: 32, height: 32)
                     .background(isOn.wrappedValue ? (themeManager.current == .dark ? Color.white.opacity(0.15) : Color.black.opacity(0.08)) : themeManager.current.inputBackground)
                     .cornerRadius(8)
-
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(themeManager.current.primaryText)
-                    Text(subtitle)
-                        .font(.system(size: 12))
-                        .foregroundColor(themeManager.current.secondaryText)
+                    Text(title).font(.system(size: 15, weight: .semibold)).foregroundColor(themeManager.current.primaryText)
+                    Text(subtitle).font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
                 }
                 Spacer()
                 Toggle("", isOn: isOn)
                     .toggleStyle(SwitchToggleStyle(tint: themeManager.current == .dark ? .white : .black))
                     .labelsHidden()
             }
-            if isOn.wrappedValue {
-                content()
-            }
+            if isOn.wrappedValue { content() }
         }
-        .padding(16)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16)
-            .stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .padding(16).background(themeManager.current.cardBackground).cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
         .animation(.spring(response: 0.3, dampingFraction: 0.8), value: isOn.wrappedValue)
     }
 
     func reviewCard<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(themeManager.current.secondaryText)
-                .textCase(.uppercase)
-                .tracking(0.5)
+            Text(title).font(.system(size: 14, weight: .bold)).foregroundColor(themeManager.current.secondaryText)
+                .textCase(.uppercase).tracking(0.5)
             content()
         }
-        .padding(16)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(16)
+        .padding(16).background(themeManager.current.cardBackground).cornerRadius(16)
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
     }
 
     func reviewRow(_ label: String, value: String) -> some View {
         HStack {
-            Text(label)
-                .font(.system(size: 14))
-                .foregroundColor(themeManager.current.secondaryText)
+            Text(label).font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
             Spacer()
-            Text(value)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(themeManager.current.primaryText)
+            Text(value).font(.system(size: 14, weight: .semibold)).foregroundColor(themeManager.current.primaryText)
         }
     }
 }
 
-// MARK: - MetricInputCard（滑块 + 可直接输入）
+// MARK: - MetricInputCard（滑块 + 直接输入）
 
 struct MetricInputCard: View {
     @EnvironmentObject var themeManager: ThemeManager
-    let label: String
-    let unit: String
+    let label: String; let unit: String
     @Binding var value: Double
-    let range: ClosedRange<Double>
-    let step: Double
+    let range: ClosedRange<Double>; let step: Double
     let format: (Double) -> String
 
     @State private var textInput: String = ""
@@ -681,81 +600,50 @@ struct MetricInputCard: View {
     var body: some View {
         VStack(spacing: 10) {
             HStack {
-                Text(label)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(themeManager.current.secondaryText)
+                Text(label).font(.system(size: 14, weight: .medium)).foregroundColor(themeManager.current.secondaryText)
                 Spacer()
-                // 点击数值可直接输入
                 HStack(spacing: 4) {
                     if isEditing {
                         TextField("", text: $textInput)
                             .keyboardType(.decimalPad)
                             .font(.system(size: 17, weight: .bold, design: .rounded))
                             .foregroundColor(themeManager.current.primaryText)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 70)
-                            .focused($focused)
-                            .onSubmit { commitInput() }
-                            .onChange(of: focused) { _, isFocused in
-                                if !isFocused { commitInput() }
-                            }
+                            .multilineTextAlignment(.trailing).frame(width: 70)
+                            .focused($focused).onSubmit { commitInput() }
+                            .onChange(of: focused) { _, isFocused in if !isFocused { commitInput() } }
                     } else {
                         Text(format(value))
                             .font(.system(size: 17, weight: .bold, design: .rounded))
                             .foregroundColor(themeManager.current.primaryText)
                             .onTapGesture { startEditing() }
                     }
-                    Text(unit)
-                        .font(.system(size: 13))
-                        .foregroundColor(themeManager.current.secondaryText)
+                    Text(unit).font(.system(size: 13)).foregroundColor(themeManager.current.secondaryText)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(themeManager.current.inputBackground)
-                .cornerRadius(10)
+                .padding(.horizontal, 10).padding(.vertical, 6)
+                .background(themeManager.current.inputBackground).cornerRadius(10)
                 .onTapGesture { startEditing() }
             }
-
             Slider(value: $value, in: range, step: step)
                 .accentColor(themeManager.current == .dark ? .white : .black)
-                .onChange(of: value) { _, newVal in
-                    if !isEditing {
-                        textInput = format(newVal)
-                    }
-                }
-
+                .onChange(of: value) { _, newVal in if !isEditing { textInput = format(newVal) } }
             HStack {
-                Text("\(Int(range.lowerBound))\(unit)")
-                    .font(.caption2)
-                    .foregroundColor(themeManager.current.secondaryText)
+                Text("\(Int(range.lowerBound))\(unit)").font(.caption2).foregroundColor(themeManager.current.secondaryText)
                 Spacer()
-                Text("\(Int(range.upperBound))\(unit)")
-                    .font(.caption2)
-                    .foregroundColor(themeManager.current.secondaryText)
+                Text("\(Int(range.upperBound))\(unit)").font(.caption2).foregroundColor(themeManager.current.secondaryText)
             }
         }
-        .padding(16)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16)
-            .stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .padding(16).background(themeManager.current.cardBackground).cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
         .onAppear { textInput = format(value) }
     }
 
-    func startEditing() {
-        textInput = format(value)
-        isEditing = true
-        focused = true
-    }
-
+    func startEditing() { textInput = format(value); isEditing = true; focused = true }
     func commitInput() {
         if let v = Double(textInput) {
             let clamped = min(max(v, range.lowerBound), range.upperBound)
-            // snap to step
             let steps = round((clamped - range.lowerBound) / step)
             value = range.lowerBound + steps * step
         }
-        textInput = format(value)
-        isEditing = false
+        textInput = format(value); isEditing = false
     }
 }

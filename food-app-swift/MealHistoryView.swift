@@ -1,45 +1,6 @@
-// MealHistoryView.swift — 微调版
-// 改动：
-// 1. Header 更简洁，总卡路里改为右上角小胶囊
-// 2. 搜索栏更现代（圆角更大）
-// 3. Filter 胶囊颜色改为黑色系（light mode）
-// 4. MealHistoryCard 改为 Cal AI 列表行风格
-// 5. DateHeader 简化
-// 所有数据逻辑保持不变
+
 
 import SwiftUI
-
-// 兼容带微秒的 ISO8601 格式（2026-04-13T03:51:35.123456）
-func parseISO8601(_ s: String?) -> Date? {
-    guard let s = s, !s.isEmpty else { return nil }
-    let formatters: [ISO8601DateFormatter] = [
-        {
-            let f = ISO8601DateFormatter()
-            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            return f
-        }(),
-        {
-            let f = ISO8601DateFormatter()
-            f.formatOptions = [.withInternetDateTime]
-            return f
-        }(),
-        ISO8601DateFormatter()
-    ]
-    for f in formatters {
-        if let d = f.date(from: s) { return d }
-    }
-    // 最后尝试 DateFormatter
-    let df = DateFormatter()
-    for fmt in ["yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
-                "yyyy-MM-dd'T'HH:mm:ss.SSS",
-                "yyyy-MM-dd'T'HH:mm:ss",
-                "yyyy-MM-dd HH:mm:ss"] {
-        df.dateFormat = fmt
-        df.locale = Locale(identifier: "en_US_POSIX")
-        if let d = df.date(from: s) { return d }
-    }
-    return nil
-}
 
 struct MealHistoryView: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -93,7 +54,6 @@ struct MealHistoryView: View {
                                 .foregroundColor(themeManager.current.secondaryText)
                         }
                         Spacer()
-                        // 总卡路里胶囊
                         HStack(spacing: 4) {
                             Image(systemName: "flame.fill")
                                 .font(.system(size: 11))
@@ -222,16 +182,22 @@ struct MealHistoryView: View {
             }
             .preferredColorScheme(themeManager.current.colorScheme)
             .onAppear { fetchMeals() }
+            // ✅ 监听 Diet Plan 拍照分析完成后的通知（立即刷新）
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { fetchMeals() }
+                // 稍微延迟确保后端已写入
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { fetchMeals() }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealUpdated"))) { _ in
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { fetchMeals() }
             }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealDeleted"))) { _ in fetchMeals() }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealDeleted"))) { _ in
+                fetchMeals()
+            }
             .refreshable { await fetchMealsAsync() }
             .sheet(item: $selectedMeal) { meal in
-                MealDetailView(meal: meal).environmentObject(themeManager).onDisappear { fetchMeals() }
+                MealDetailView(meal: meal)
+                    .environmentObject(themeManager)
+                    .onDisappear { fetchMeals() }
             }
         }
     }
@@ -240,41 +206,56 @@ struct MealHistoryView: View {
         let calendar = Calendar.current
         if calendar.isDateInToday(date) { return "Today" }
         if calendar.isDateInYesterday(date) { return "Yesterday" }
-        let formatter = DateFormatter(); formatter.dateFormat = "EEEE, MMM d"
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEE, MMM d"
         return formatter.string(from: date)
     }
 
-    // 保留原有 fetchMeals 逻辑不变
     func fetchMeals() {
-        isLoading = true; errorMessage = ""; lastRefreshTime = Date()
+        isLoading = true
+        errorMessage = ""
+        lastRefreshTime = Date()
+
         guard SessionManager.shared.isLoggedIn else {
-            errorMessage = "Please log in to view meal history"; isLoading = false; return
+            errorMessage = "Please log in to view meal history"
+            isLoading = false
+            return
         }
+
         NetworkManager.shared.getUserMeals { result in
             DispatchQueue.main.async {
                 self.isLoading = false
                 switch result {
                 case .success(let fetchedMeals):
-                    var uniqueMeals: [Meal] = []; var seenIds: Set<String> = []
+                    var uniqueMeals: [Meal] = []
+                    var seenIds: Set<String> = []
                     for meal in fetchedMeals {
-                        if !seenIds.contains(meal._id) { seenIds.insert(meal._id); uniqueMeals.append(meal) }
+                        if !seenIds.contains(meal._id) {
+                            seenIds.insert(meal._id)
+                            uniqueMeals.append(meal)
+                        }
                     }
                     self.meals = uniqueMeals.sorted {
                         guard let d1 = parseISO8601($0.saved_at),
                               let d2 = parseISO8601($1.saved_at) else { return false }
                         return d1 > d2
                     }
-                    self.totalCalories = self.meals.compactMap { extractCalories(from: $0.nutrition_info) }.reduce(0, +)
+                    self.totalCalories = self.meals
+                        .compactMap { extractCalories(from: $0.nutrition_info) }
+                        .reduce(0, +)
+
                 case .failure(let error):
                     let code = (error as NSError).code
                     switch code {
                     case 401:
                         self.errorMessage = "Session expired. Please log in again."
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { SessionManager.shared.logout() }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            SessionManager.shared.logout()
+                        }
                     case -1009: self.errorMessage = "No internet connection"
                     case -1001: self.errorMessage = "Request timed out"
                     case -1005: self.errorMessage = "Network connection lost"
-                    default: self.errorMessage = "Failed to load meal history"
+                    default:    self.errorMessage = "Failed to load meal history"
                     }
                 }
             }
@@ -284,20 +265,24 @@ struct MealHistoryView: View {
     func fetchMealsAsync() async {
         await withCheckedContinuation { continuation in
             fetchMeals()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { continuation.resume() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                continuation.resume()
+            }
         }
     }
 
     private func extractCalories(from text: String) -> Int? {
         for line in text.split(separator: "\n") {
             let parts = line.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-            if parts.count >= 2, parts[0].lowercased().contains("calorie") { return Int(parts[1]) }
+            if parts.count >= 2, parts[0].lowercased().contains("calorie") {
+                return Int(parts[1])
+            }
         }
         return nil
     }
 }
 
-// MARK: - 新餐食行（Cal AI 风格）
+// MARK: - 餐食行（Cal AI 风格）
 
 struct HistoryMealRow: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -306,28 +291,41 @@ struct HistoryMealRow: View {
     var calories: Int? {
         for line in meal.nutrition_info.split(separator: "\n") {
             let parts = line.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-            if parts.count >= 2, parts[0].lowercased().contains("calorie") { return Int(parts[1]) }
+            if parts.count >= 2, parts[0].lowercased().contains("calorie") {
+                return Int(parts[1])
+            }
         }
         return nil
     }
 
     var mealTime: String {
         guard let s = meal.saved_at, let d = parseISO8601(s) else { return "" }
-        let f = DateFormatter(); f.timeStyle = .short; return f.string(from: d)
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f.string(from: d)
+    }
+
+    // ✅ 新增：Diet Plan 来源标记
+    var isDietPlan: Bool {
+        (meal as AnyObject).value(forKey: "from_diet_plan") as? Bool ?? false
     }
 
     var body: some View {
         HStack(spacing: 14) {
             // 图片
             Group {
-                if let base64 = meal.image_thumb ?? meal.image_full, !base64.isEmpty,
-                   let data = Data(base64Encoded: base64), let image = UIImage(data: data) {
+                if let base64 = meal.image_thumb ?? meal.image_full,
+                   !base64.isEmpty,
+                   let data = Data(base64Encoded: base64),
+                   let image = UIImage(data: data) {
                     Image(uiImage: image).resizable().scaledToFill()
                 } else {
                     themeManager.current.inputBackground
-                        .overlay(Image(systemName: "photo")
-                            .font(.system(size: 18))
-                            .foregroundColor(themeManager.current.secondaryText.opacity(0.4)))
+                        .overlay(
+                            Image(systemName: "photo")
+                                .font(.system(size: 18))
+                                .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
+                        )
                 }
             }
             .frame(width: 60, height: 60)
@@ -351,6 +349,16 @@ struct HistoryMealRow: View {
                     Text(mealTime)
                         .font(.system(size: 12))
                         .foregroundColor(themeManager.current.secondaryText)
+
+                    // ✅ Diet Plan 来源标记
+                    if let fromPlan = meal.from_diet_plan, fromPlan {
+                        Text("Diet Plan")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.purple)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Color.purple.opacity(0.1))
+                            .cornerRadius(4)
+                    }
                 }
             }
 
@@ -381,11 +389,14 @@ struct HistoryMealRow: View {
     }
 }
 
-// MARK: - 辅助 Supporting Views（主题化）
+// MARK: - 辅助 Views
 
 struct FilterPill: View {
     @EnvironmentObject var themeManager: ThemeManager
-    let title: String; let isSelected: Bool; let action: () -> Void
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -406,13 +417,17 @@ struct FilterPill: View {
 
 struct DateHeader: View {
     @EnvironmentObject var themeManager: ThemeManager
-    let date: String; let count: Int
+    let date: String
+    let count: Int
+
     var body: some View {
         HStack {
-            Text(date).font(.system(size: 14, weight: .semibold))
+            Text(date)
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(themeManager.current.primaryText)
             Spacer()
-            Text("\(count) meals").font(.caption)
+            Text("\(count) meals")
+                .font(.caption)
                 .foregroundColor(themeManager.current.secondaryText)
         }
         .padding(.vertical, 8)
@@ -424,13 +439,16 @@ struct EmptyHistoryState: View {
     @EnvironmentObject var themeManager: ThemeManager
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "tray").font(.system(size: 48))
+            Image(systemName: "tray")
+                .font(.system(size: 48))
                 .foregroundColor(themeManager.current.secondaryText.opacity(0.3))
             VStack(spacing: 6) {
-                Text("No meals yet").font(.system(size: 17, weight: .bold))
+                Text("No meals yet")
+                    .font(.system(size: 17, weight: .bold))
                     .foregroundColor(themeManager.current.primaryText)
                 Text("Start tracking your nutrition journey")
-                    .font(.subheadline).foregroundColor(themeManager.current.secondaryText)
+                    .font(.subheadline)
+                    .foregroundColor(themeManager.current.secondaryText)
             }
         }
     }
@@ -440,11 +458,14 @@ struct NoResultsView: View {
     @EnvironmentObject var themeManager: ThemeManager
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "magnifyingglass").font(.system(size: 40))
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 40))
                 .foregroundColor(themeManager.current.secondaryText.opacity(0.3))
-            Text("No meals found").font(.system(size: 17, weight: .bold))
+            Text("No meals found")
+                .font(.system(size: 17, weight: .bold))
                 .foregroundColor(themeManager.current.primaryText)
-            Text("Try adjusting your search or filters").font(.subheadline)
+            Text("Try adjusting your search or filters")
+                .font(.subheadline)
                 .foregroundColor(themeManager.current.secondaryText)
         }
     }
@@ -452,20 +473,27 @@ struct NoResultsView: View {
 
 struct ErrorStateView: View {
     @EnvironmentObject var themeManager: ThemeManager
-    let message: String; let retry: () -> Void
+    let message: String
+    let retry: () -> Void
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 44)).foregroundColor(.orange)
-            Text(message).font(.subheadline)
+                .font(.system(size: 44))
+                .foregroundColor(.orange)
+            Text(message)
+                .font(.subheadline)
                 .foregroundColor(themeManager.current.primaryText)
-                .multilineTextAlignment(.center).padding(.horizontal)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
             if !message.contains("Session expired") {
                 Button(action: retry) {
                     Label("Try Again", systemImage: "arrow.clockwise")
-                        .fontWeight(.semibold).foregroundColor(.white)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.white)
                         .padding(.horizontal, 24).padding(.vertical, 12)
-                        .background(Color.orange).cornerRadius(12)
+                        .background(Color.orange)
+                        .cornerRadius(12)
                 }
             }
         }

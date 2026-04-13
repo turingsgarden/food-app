@@ -4,10 +4,13 @@
 //
 //  Created by Helen Tu on 4/12/26.
 //
-// ExpandableMealCard.swift
-// Diet Plan 餐食卡片：
-// - 展开/收起食物列表
-// - 拍照 or 从相册选择
+//
+//  ExpandableMealCard.swift
+//  food-app-swift
+//
+//  修复：加入 onViewResult 回调
+//  - 已分析过的 meal，点击分数徽章（紫色 "85%" 按钮）重新显示对比结果
+//  - 未分析的 meal，正常显示 Log 按钮拍照
 
 import SwiftUI
 import PhotosUI
@@ -18,7 +21,8 @@ struct ExpandableMealCard: View {
     let day: DayMealPlan
     let plan: WeeklyMealPlan
     let today: String
-    var complianceScore: Int? = nil   // 已 log 则显示分数徽章
+    var complianceScore: Int? = nil
+    var onViewResult: (() -> Void)? = nil      // ✅ 新增：点击已分析徽章时回调
     var onPhotoSelected: ((Data) -> Void)?
 
     @State private var isExpanded = false
@@ -28,13 +32,20 @@ struct ExpandableMealCard: View {
     @State private var selectedPhotoItem: PhotosPickerItem?
 
     var canLog: Bool { day.date >= today }
+    var isLogged: Bool { complianceScore != nil }
+
+    var scoreColor: Color {
+        guard let score = complianceScore else { return .gray }
+        if score >= 75 { return .green }
+        if score >= 50 { return .orange }
+        return .red
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // ── Header row ──
             Button(action: { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { isExpanded.toggle() } }) {
                 VStack(alignment: .leading, spacing: 6) {
-                    // Row 1: badge + kcal + score + chevron
                     HStack(spacing: 8) {
                         Text(meal.mealType.capitalized)
                             .font(.system(size: 11, weight: .bold))
@@ -49,13 +60,22 @@ struct ExpandableMealCard: View {
                             .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundColor(themeManager.current.primaryText)
 
+                        // ✅ 分数徽章 — 点击重新查看对比结果
                         if let score = complianceScore {
-                            Text("\(score)%")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 7).padding(.vertical, 3)
-                                .background(score >= 75 ? Color.green : score >= 50 ? Color.orange : Color.red)
+                            Button(action: { onViewResult?() }) {
+                                HStack(spacing: 3) {
+                                    Text("\(score)%")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.white)
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundColor(.white.opacity(0.8))
+                                }
+                                .padding(.horizontal, 8).padding(.vertical, 4)
+                                .background(scoreColor)
                                 .cornerRadius(10)
+                            }
+                            .buttonStyle(.plain)
                         }
 
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
@@ -63,7 +83,6 @@ struct ExpandableMealCard: View {
                             .foregroundColor(themeManager.current.secondaryText)
                     }
 
-                    // Row 2: meal name (1 line collapsed, full expanded)
                     if let name = meal.name {
                         Text(name)
                             .font(.system(size: 15, weight: .semibold))
@@ -78,13 +97,10 @@ struct ExpandableMealCard: View {
             }
             .buttonStyle(.plain)
 
-            // ── Expanded content ──
+            // ── Expanded ──
             if isExpanded {
-                Divider()
-                    .background(themeManager.current.cardBorder)
-                    .padding(.horizontal, 16)
+                Divider().background(themeManager.current.cardBorder).padding(.horizontal, 16)
 
-                // Food items
                 VStack(spacing: 8) {
                     ForEach(meal.items) { item in
                         HStack {
@@ -104,84 +120,38 @@ struct ExpandableMealCard: View {
                         }
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 16).padding(.vertical, 10)
 
-                // Macro pills + Log button
-                HStack(spacing: 8) {
-                    macroPill("P", "\(meal.totalProtein)g", Color(red: 0.93, green: 0.36, blue: 0.36))
-                    macroPill("C", "\(meal.totalCarbs)g", Color(red: 0.95, green: 0.61, blue: 0.20))
-                    macroPill("F", "\(meal.totalFat)g", Color(red: 0.35, green: 0.62, blue: 0.93))
-                    Spacer()
-
-                    if canLog {
-                        Button(action: { showImageSourceSheet = true }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "camera.fill")
-                                    .font(.system(size: 11))
-                                Text("Log")
-                                    .font(.system(size: 11, weight: .bold))
-                            }
-                            .foregroundColor(themeManager.current == .dark ? .black : .white)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(themeManager.current == .dark ? Color.white : Color.black)
-                            .cornerRadius(20)
-                        }
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 14)
+                bottomBar
+                    .padding(.horizontal, 16).padding(.bottom, 14)
             } else {
-                // Collapsed: show macro pills + log in one line
-                HStack(spacing: 8) {
-                    macroPill("P", "\(meal.totalProtein)g", Color(red: 0.93, green: 0.36, blue: 0.36))
-                    macroPill("C", "\(meal.totalCarbs)g", Color(red: 0.95, green: 0.61, blue: 0.20))
-                    macroPill("F", "\(meal.totalFat)g", Color(red: 0.35, green: 0.62, blue: 0.93))
-                    Spacer()
-                    if canLog {
-                        Button(action: { showImageSourceSheet = true }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "camera.fill")
-                                    .font(.system(size: 11))
-                                Text("Log")
-                                    .font(.system(size: 11, weight: .bold))
-                            }
-                            .foregroundColor(themeManager.current == .dark ? .black : .white)
-                            .padding(.horizontal, 12).padding(.vertical, 6)
-                            .background(themeManager.current == .dark ? Color.white : Color.black)
-                            .cornerRadius(20)
-                        }
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 14)
+                bottomBar
+                    .padding(.horizontal, 16).padding(.bottom, 14)
             }
         }
-        .background(themeManager.current.cardBackground)
+        .background(
+            themeManager.current.cardBackground
+                // ✅ 已分析的 meal 加一个细边框提示
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18)
+                        .stroke(isLogged ? scoreColor.opacity(0.3) : themeManager.current.cardBorder, lineWidth: isLogged ? 1.5 : 1)
+                )
+        )
         .cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
 
-        // ── Image source action sheet ──
         .confirmationDialog("Add Photo", isPresented: $showImageSourceSheet, titleVisibility: .visible) {
             Button("Take Photo") { showCamera = true }
             Button("Choose from Library") { showPhotoPicker = true }
             Button("Cancel", role: .cancel) {}
         }
-
-        // ── Camera ──
         .sheet(isPresented: $showCamera) {
             ImagePickerView(sourceType: .camera) { image in
                 guard let img = image,
-                      let data = HealthAPIManager.shared.compressImage(img)
-                else { return }
+                      let data = HealthAPIManager.shared.compressImage(img) else { return }
                 onPhotoSelected?(data)
             }
         }
-
-        // ── Photo Library (PhotosPickerItem) ──
-        .photosPicker(isPresented: $showPhotoPicker,
-                      selection: $selectedPhotoItem,
-                      matching: .images)
+        .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
         .onChange(of: selectedPhotoItem) { _, newItem in
             guard let newItem else { return }
             Task {
@@ -189,6 +159,46 @@ struct ExpandableMealCard: View {
                    let ui = UIImage(data: data),
                    let compressed = HealthAPIManager.shared.compressImage(ui) {
                     await MainActor.run { onPhotoSelected?(compressed) }
+                }
+            }
+        }
+    }
+
+    // ── Macro pills + action button ──
+    var bottomBar: some View {
+        HStack(spacing: 8) {
+            macroPill("P", "\(meal.totalProtein)g", Color(red: 0.93, green: 0.36, blue: 0.36))
+            macroPill("C", "\(meal.totalCarbs)g", Color(red: 0.95, green: 0.61, blue: 0.20))
+            macroPill("F", "\(meal.totalFat)g", Color(red: 0.35, green: 0.62, blue: 0.93))
+            Spacer()
+
+            if isLogged {
+                // ✅ 已分析：显示"View Result"按钮
+                Button(action: { onViewResult?() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chart.bar.fill")
+                            .font(.system(size: 11))
+                        Text("View Result")
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(scoreColor)
+                    .cornerRadius(20)
+                }
+            } else if canLog {
+                // 未分析：显示"Log"拍照按钮
+                Button(action: { showImageSourceSheet = true }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 11))
+                        Text("Log")
+                            .font(.system(size: 11, weight: .bold))
+                    }
+                    .foregroundColor(themeManager.current == .dark ? .black : .white)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(themeManager.current == .dark ? Color.white : Color.black)
+                    .cornerRadius(20)
                 }
             }
         }
@@ -214,7 +224,7 @@ struct ExpandableMealCard: View {
     }
 }
 
-// MARK: - UIImagePickerController wrapper (Camera support)
+// MARK: - UIImagePickerController wrapper
 
 struct ImagePickerView: UIViewControllerRepresentable {
     let sourceType: UIImagePickerController.SourceType

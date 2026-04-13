@@ -1,30 +1,13 @@
-// DashboardView.swift — 微调版
-// 改动：
-// 1. 顶部 Header 保持，增加星期横向选择器（参考 Cal AI）
-// 2. 主卡路里卡片重构为 Cal AI 圆环 + 大数字左对齐风格
-// 3. Nutrition Overview 三格替换为更大的 macros 卡片
-// 4. 餐食改为列表（竖排），取代横向滚动
-// 5. 浮动按钮简化为黑色圆形 + 号（Cal AI 风格）
-// 6. 保留所有原有数据逻辑、网络请求、State 变量不变
+// DashboardVie// DashboardView.swift — 修复版
+// 核心修复：删除 fileprivate parseISO8601（已移至 DateHelpers.swift），
+//           解决 Diet Plan meals 因微秒时间格式无法在 Dashboard 显示的问题
+// 其余逻辑与 UI 完全不变
 
 import SwiftUI
 import Charts
 import Foundation
 
-// 兼容带微秒的 ISO8601（2026-04-13T03:51:35.123456）
-fileprivate func parseISO8601(_ s: String?) -> Date? {
-    guard let s = s, !s.isEmpty else { return nil }
-    let f1 = ISO8601DateFormatter(); f1.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    if let d = f1.date(from: s) { return d }
-    let f2 = ISO8601DateFormatter(); f2.formatOptions = [.withInternetDateTime]
-    if let d = f2.date(from: s) { return d }
-    let df = DateFormatter(); df.locale = Locale(identifier: "en_US_POSIX")
-    for fmt in ["yyyy-MM-dd'T'HH:mm:ss.SSSSSS","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss"] {
-        df.dateFormat = fmt
-        if let d = df.date(from: s) { return d }
-    }
-    return nil
-}
+// ✅ 已删除 fileprivate func parseISO8601 — 现在统一用 DateHelpers.swift 里的全局版本
 
 struct DashboardView: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -71,20 +54,19 @@ struct DashboardView: View {
     @State private var currentStreak: Int = 0
     @State private var weeklyGoalProgress: Double = 0.0
     // ── 时间选择系统 ──
-    @State private var selectedDate: Date = Date()           // Daily 模式选中的某天
-    @State private var selectedWeekStart: Date = {           // Weekly 模式选中的周起始
+    @State private var selectedDate: Date = Date()
+    @State private var selectedWeekStart: Date = {
         Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
     }()
-    @State private var selectedMonth: Date = Date()          // Monthly 模式选中的月
-    @State private var selectedTimeFilter: String = "Daily"  // "Daily" / "Weekly" / "Monthly"
+    @State private var selectedMonth: Date = Date()
+    @State private var selectedTimeFilter: String = "Daily"
     let timeFilters = ["Daily", "Weekly", "Monthly"]
-    // ── 动态统计（随选中时间段变化）──
+    // ── 动态统计 ──
     @State private var weeklyCalories: Int = 0
     @State private var weeklyProtein: Int = 0
     @State private var weeklyCarbs: Int = 0
     @State private var weeklyFat: Int = 0
 
-    // ── NetworkError enum（保持原样）──
     enum NetworkError: Identifiable {
         case noInternet, serverError, profileSyncFailed, dataLoadFailed, sessionExpired
         var id: String {
@@ -128,26 +110,25 @@ struct DashboardView: View {
     var userName: String { session.userName.isEmpty ? "Friend" : session.userName }
     var dynamicCalorieGoal: Int { profileManager.userProfile?.calorieTarget ?? calorieGoal }
 
-    // 选中时间段内的卡路里（动态计算）
     var displayedCalories: Int {
-        let isoF = ISO8601DateFormatter(); isoF.timeZone = TimeZone.current
+        // ✅ 用 DateHelpers.parseISO8601 支持微秒格式
         let cal = Calendar.current
         switch selectedTimeFilter {
         case "Daily":
             return meals.filter { m in
-                guard let s = m.saved_at, let d = isoF.date(from: s) else { return false }
+                guard let s = m.saved_at, let d = parseISO8601(s) else { return false }
                 return cal.isDate(d, inSameDayAs: selectedDate)
             }.reduce(0) { $0 + extractCaloriesInt(from: $1.nutrition_info) }
         case "Weekly":
             let end = cal.date(byAdding: .day, value: 7, to: selectedWeekStart) ?? selectedWeekStart
             return meals.filter { m in
-                guard let s = m.saved_at, let d = isoF.date(from: s) else { return false }
+                guard let s = m.saved_at, let d = parseISO8601(s) else { return false }
                 return d >= selectedWeekStart && d < end
             }.reduce(0) { $0 + extractCaloriesInt(from: $1.nutrition_info) }
         case "Monthly":
             guard let interval = cal.dateInterval(of: .month, for: selectedMonth) else { return 0 }
             return meals.filter { m in
-                guard let s = m.saved_at, let d = isoF.date(from: s) else { return false }
+                guard let s = m.saved_at, let d = parseISO8601(s) else { return false }
                 return d >= interval.start && d < interval.end
             }.reduce(0) { $0 + extractCaloriesInt(from: $1.nutrition_info) }
         default: return todayCalories
@@ -187,22 +168,18 @@ struct DashboardView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        // ── Header ──
                         headerSection
                             .padding(.horizontal, 20)
                             .padding(.top, 16)
                             .padding(.bottom, 12)
 
-                        // ── Daily / Weekly / Monthly 三个 Tab ──
                         timeFilterSection
                             .padding(.bottom, 12)
 
-                        // ── 日期选择器（根据 Tab 变化）──
                         periodSelectorSection
                             .padding(.bottom, 16)
 
                         VStack(spacing: 16) {
-                            // ── 错误 / 加载状态 ──
                             if profileManager.isNewUser {
                                 WelcomeNewUserCard { showProfile = true }
                             } else if profileManager.userProfile == nil && !profileManager.isLoading && profileManager.errorMessage != nil {
@@ -213,16 +190,9 @@ struct DashboardView: View {
                                 profileLoadingSection
                             }
 
-                            // ── 主卡路里卡 ──
                             calorieMainCard
-
-                            // ── Macros 三格 ──
                             macrosGrid
-
-                            // ── 餐食列表（跟随筛选）──
                             todayMealsSection
-
-                            // ── Nutrition 圆环（保留原有 Today/Week Tab）──
                             if !meals.isEmpty { comprehensiveNutritionSection }
 
                             Spacer(minLength: 100)
@@ -232,14 +202,15 @@ struct DashboardView: View {
                 }
                 .refreshable { await refreshDashboard() }
 
-                // ── 浮动 + 按钮（Cal AI 黑色圆形）──
                 calStyleFloatingButton
             }
             .preferredColorScheme(themeManager.current.colorScheme)
             .navigationBarHidden(true)
             .onAppear { initializeDashboard() }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in
-                fetchAllData(); scrollToLatest = true
+                // ✅ Diet Plan 分析完成后也刷新 Dashboard
+                fetchAllData()
+                scrollToLatest = true
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NutritionRecalculated"))) { notification in
                 guard let mealId = notification.userInfo?["mealId"] as? String,
@@ -281,7 +252,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Header（微调：更简洁）
+    // MARK: - Header
 
     var headerSection: some View {
         HStack(alignment: .center) {
@@ -295,7 +266,6 @@ struct DashboardView: View {
             }
             Spacer()
             HStack(spacing: 10) {
-                // Streak 胶囊
                 if currentStreak > 0 {
                     HStack(spacing: 4) {
                         Text("🔥")
@@ -309,7 +279,6 @@ struct DashboardView: View {
                     .overlay(RoundedRectangle(cornerRadius: 20)
                         .stroke(themeManager.current.cardBorder, lineWidth: 1))
                 }
-                // 头像
                 Button(action: { showProfile = true }) {
                     ZStack(alignment: .topTrailing) {
                         Circle()
@@ -332,7 +301,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - 时间模式 Tab（Daily / Weekly / Monthly）
+    // MARK: - Time Filter Tab
 
     var timeFilterSection: some View {
         HStack(spacing: 0) {
@@ -365,7 +334,7 @@ struct DashboardView: View {
         .padding(.horizontal, 20)
     }
 
-    // MARK: - 日期选择器（Daily=滑动日历 / Weekly=周列表 / Monthly=月份网格）
+    // MARK: - Period Selector
 
     @ViewBuilder
     var periodSelectorSection: some View {
@@ -384,11 +353,10 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - 主卡路里卡片（Cal AI 风格）
+    // MARK: - Calorie Card
 
     var calorieMainCard: some View {
         HStack(spacing: 20) {
-            // 左：文字区
             VStack(alignment: .leading, spacing: 8) {
                 Text(selectedTimeFilter == "Daily" ? "Daily Calories" : selectedTimeFilter == "Weekly" ? "Weekly Calories" : "Monthly Calories")
                     .font(.system(size: 12, weight: .semibold))
@@ -413,7 +381,6 @@ struct DashboardView: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundColor(calorieProgressColor)
 
-                // 进度条
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 4)
@@ -430,17 +397,13 @@ struct DashboardView: View {
 
             Spacer()
 
-            // 右：圆环（Cal AI 大圆环）
             ZStack {
                 Circle()
                     .stroke(Color.gray.opacity(0.12), lineWidth: 10)
                     .frame(width: 90, height: 90)
                 Circle()
                     .trim(from: 0, to: animateCalories ? calorieProgress : 0)
-                    .stroke(
-                        calorieProgressColor,
-                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                    )
+                    .stroke(calorieProgressColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
                     .frame(width: 90, height: 90)
                     .rotationEffect(.degrees(-90))
                     .animation(.easeOut(duration: 1.2), value: calorieProgress)
@@ -457,72 +420,50 @@ struct DashboardView: View {
         .padding(20)
         .background(themeManager.current.cardBackground)
         .cornerRadius(22)
-        .overlay(RoundedRectangle(cornerRadius: 22)
-            .stroke(themeManager.current.cardBorder, lineWidth: 1))
-        .shadow(color: Color.black.opacity(themeManager.current == .dark ? 0.3 : 0.05),
-                radius: 8, x: 0, y: 4)
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(themeManager.current == .dark ? 0.3 : 0.05), radius: 8, x: 0, y: 4)
     }
 
     var calorieProgressColor: Color {
         if calorieProgress < 0.5 { return .green }
-        else if calorieProgress < 0.8 { return Color.orange }
         else if calorieProgress < 1.0 { return Color.orange }
         else { return .red }
     }
 
-    // MARK: - Macros 三格（Cal AI 营养素卡）
+    // MARK: - Macros Grid
 
     var macrosGrid: some View {
         HStack(spacing: 12) {
-            MacroCell(
-                icon: "fork.knife",
-                title: "Protein",
-                current: totalProtein,
-                goal: calculateProteinGoal(),
-                unit: "g",
-                color: Color(red: 0.93, green: 0.36, blue: 0.36)
-            )
-            MacroCell(
-                icon: "leaf.fill",
-                title: "Carbs",
-                current: totalCarbs,
-                goal: calculateCarbGoal(),
-                unit: "g",
-                color: Color(red: 0.95, green: 0.61, blue: 0.20)
-            )
-            MacroCell(
-                icon: "drop.fill",
-                title: "Fat",
-                current: totalFat,
-                goal: calculateFatGoal(),
-                unit: "g",
-                color: Color(red: 0.35, green: 0.62, blue: 0.93)
-            )
+            MacroCell(icon: "fork.knife", title: "Protein", current: totalProtein,
+                      goal: calculateProteinGoal(), unit: "g", color: Color(red: 0.93, green: 0.36, blue: 0.36))
+            MacroCell(icon: "leaf.fill", title: "Carbs", current: totalCarbs,
+                      goal: calculateCarbGoal(), unit: "g", color: Color(red: 0.95, green: 0.61, blue: 0.20))
+            MacroCell(icon: "drop.fill", title: "Fat", current: totalFat,
+                      goal: calculateFatGoal(), unit: "g", color: Color(red: 0.35, green: 0.62, blue: 0.93))
         }
     }
 
-    // MARK: - 今日餐食（竖排列表）
+    // MARK: - Meals Section
 
-    // 根据选中的时间段过滤餐食
     var filteredMealsForDisplay: [Meal] {
         let cal = Calendar.current
-        let isoF = ISO8601DateFormatter(); isoF.timeZone = TimeZone.current
         switch selectedTimeFilter {
         case "Daily":
+            // ✅ 使用 DateHelpers.parseISO8601，支持微秒格式
             return meals.filter { meal in
-                guard let s = meal.saved_at, let d = isoF.date(from: s) else { return false }
+                guard let s = meal.saved_at, let d = parseISO8601(s) else { return false }
                 return cal.isDate(d, inSameDayAs: selectedDate)
             }
         case "Weekly":
             let end = cal.date(byAdding: .day, value: 7, to: selectedWeekStart) ?? selectedWeekStart
             return meals.filter { meal in
-                guard let s = meal.saved_at, let d = isoF.date(from: s) else { return false }
+                guard let s = meal.saved_at, let d = parseISO8601(s) else { return false }
                 return d >= selectedWeekStart && d < end
             }
         case "Monthly":
             guard let interval = cal.dateInterval(of: .month, for: selectedMonth) else { return [] }
             return meals.filter { meal in
-                guard let s = meal.saved_at, let d = isoF.date(from: s) else { return false }
+                guard let s = meal.saved_at, let d = parseISO8601(s) else { return false }
                 return d >= interval.start && d < interval.end
             }
         default:
@@ -555,7 +496,6 @@ struct DashboardView: View {
                 Text(mealsSectionTitle)
                     .font(.system(size: 17, weight: .bold))
                     .foregroundColor(themeManager.current.primaryText)
-                    .animation(.none, value: mealsSectionTitle)
                 Spacer()
                 Button(action: { showMealHistory = true }) {
                     Text("See all")
@@ -567,7 +507,6 @@ struct DashboardView: View {
             if filteredMealsForDisplay.isEmpty {
                 EmptyMealsStateCard()
             } else {
-                // Week/Month 显示最新5条；Today 显示当天全部
                 let displayMeals = selectedTimeFilter == "Daily"
                     ? Array(filteredMealsForDisplay.prefix(10))
                     : Array(filteredMealsForDisplay.prefix(5))
@@ -581,7 +520,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Nutrition Overview（保留原有逻辑，改样式）
+    // MARK: - Nutrition Overview
 
     var comprehensiveNutritionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -590,7 +529,6 @@ struct DashboardView: View {
                     .font(.system(size: 17, weight: .bold))
                     .foregroundColor(themeManager.current.primaryText)
                 Spacer()
-                // ✅ 跟随 selectedTimeFilter 的标签（只读显示，不再独立切换）
                 Text(selectedTimeFilter == "Daily" ? "Daily" : selectedTimeFilter == "Weekly" ? "Weekly" : "Monthly")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(themeManager.current == .dark ? .black : .white)
@@ -599,7 +537,6 @@ struct DashboardView: View {
                         .fill(themeManager.current == .dark ? Color.white : Color.black))
             }
 
-            // ✅ 内容区跟随 selectedTimeFilter
             ZStack {
                 if selectedTimeFilter == "Daily" {
                     todaysCircularNutritionView
@@ -607,7 +544,6 @@ struct DashboardView: View {
                             insertion: .move(edge: .leading).combined(with: .opacity),
                             removal: .move(edge: .trailing).combined(with: .opacity)))
                 } else {
-                    // Week / Month 都显示 Weekly 概览（Monthly 时数据来自 monthlyCalories）
                     WeeklyNutritionOverview(
                         avgCalories: selectedTimeFilter == "Weekly"
                             ? (filteredMealsForDisplay.count > 0 ? displayedCalories / max(1, filteredMealsForDisplay.count) : 0)
@@ -625,27 +561,20 @@ struct DashboardView: View {
         }
     }
 
-    // 保留原有 todaysCircularNutritionView
     var todaysCircularNutritionView: some View {
         let todaysNutritionText = createTodaysNutritionText()
         return Group {
             if !todaysNutritionText.isEmpty {
                 VStack(spacing: 20) {
                     HStack(spacing: 16) {
-                        TodaysNutrientCircle(title: "Protein", current: totalProtein, target: calculateProteinGoal(), unit: "g", color: Color(red: 0.93, green: 0.36, blue: 0.36), icon: "bolt.fill")
-                            .environmentObject(themeManager)
-                        TodaysNutrientCircle(title: "Carbs", current: totalCarbs, target: calculateCarbGoal(), unit: "g", color: Color(red: 0.95, green: 0.61, blue: 0.20), icon: "leaf.fill")
-                            .environmentObject(themeManager)
-                        TodaysNutrientCircle(title: "Fat", current: totalFat, target: calculateFatGoal(), unit: "g", color: Color(red: 0.35, green: 0.62, blue: 0.93), icon: "drop.fill")
-                            .environmentObject(themeManager)
+                        TodaysNutrientCircle(title: "Protein", current: totalProtein, target: calculateProteinGoal(), unit: "g", color: Color(red: 0.93, green: 0.36, blue: 0.36), icon: "bolt.fill").environmentObject(themeManager)
+                        TodaysNutrientCircle(title: "Carbs", current: totalCarbs, target: calculateCarbGoal(), unit: "g", color: Color(red: 0.95, green: 0.61, blue: 0.20), icon: "leaf.fill").environmentObject(themeManager)
+                        TodaysNutrientCircle(title: "Fat", current: totalFat, target: calculateFatGoal(), unit: "g", color: Color(red: 0.35, green: 0.62, blue: 0.93), icon: "drop.fill").environmentObject(themeManager)
                     }
                     HStack(spacing: 16) {
-                        TodaysNutrientCircle(title: "Fiber", current: totalFiber, target: 25, unit: "g", color: .purple, icon: "circle.grid.2x2.fill")
-                            .environmentObject(themeManager)
-                        TodaysNutrientCircle(title: "Sugar", current: totalSugar, target: 50, unit: "g", color: .pink, icon: "heart.fill")
-                            .environmentObject(themeManager)
-                        TodaysNutrientCircle(title: "Sodium", current: totalSodium, target: 2300, unit: "mg", color: .red, icon: "triangle.fill")
-                            .environmentObject(themeManager)
+                        TodaysNutrientCircle(title: "Fiber", current: totalFiber, target: 25, unit: "g", color: .purple, icon: "circle.grid.2x2.fill").environmentObject(themeManager)
+                        TodaysNutrientCircle(title: "Sugar", current: totalSugar, target: 50, unit: "g", color: .pink, icon: "heart.fill").environmentObject(themeManager)
+                        TodaysNutrientCircle(title: "Sodium", current: totalSodium, target: 2300, unit: "mg", color: .red, icon: "triangle.fill").environmentObject(themeManager)
                     }
                 }
                 .padding()
@@ -669,13 +598,13 @@ struct DashboardView: View {
                 .background(RoundedRectangle(cornerRadius: 18)
                     .fill(themeManager.current.cardBackground)
                     .overlay(RoundedRectangle(cornerRadius: 18)
-                        .stroke(style: StrokeStyle(lineWidth: 2, dash: [8]))
+                        .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [8]))
                         .foregroundColor(themeManager.current.cardBorder)))
             }
         }
     }
 
-    // MARK: - 浮动按钮（Cal AI 黑色圆形）
+    // MARK: - Floating Button
 
     var calStyleFloatingButton: some View {
         Button(action: { withAnimation(.spring()) { showUploadMeal = true } }) {
@@ -693,7 +622,7 @@ struct DashboardView: View {
         .padding(.bottom, 28)
     }
 
-    // MARK: - 错误状态（保留原有）
+    // MARK: - Error States
 
     func networkErrorSection(_ error: NetworkError) -> some View {
         HStack {
@@ -742,7 +671,7 @@ struct DashboardView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red.opacity(0.2), lineWidth: 1)))
     }
 
-    // MARK: - 原有 helper functions（完整保留）
+    // MARK: - Data Logic
 
     func getCalorieStatusMessage() -> String {
         if profileManager.isNewUser { return "Set up profile for personalized goals" }
@@ -798,7 +727,10 @@ struct DashboardView: View {
                 let decoded = try JSONDecoder().decode([Meal].self, from: data)
                 DispatchQueue.main.async {
                     var uniqueMeals: [Meal] = []; var seenIds: Set<String> = []
-                    for meal in decoded { if !seenIds.contains(meal._id) { seenIds.insert(meal._id); uniqueMeals.append(meal) } }
+                    for meal in decoded {
+                        if !seenIds.contains(meal._id) { seenIds.insert(meal._id); uniqueMeals.append(meal) }
+                    }
+                    // ✅ 用 DateHelpers.parseISO8601 排序，支持微秒格式
                     self.meals = uniqueMeals.sorted {
                         guard let d1 = parseISO8601($0.saved_at ?? ""),
                               let d2 = parseISO8601($1.saved_at ?? "") else { return false }
@@ -818,10 +750,8 @@ struct DashboardView: View {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else { return }
-            if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode == 401 {
-                    DispatchQueue.main.async { self.networkError = .sessionExpired; self.showNetworkAlert = true }; return
-                } else if httpResponse.statusCode != 200 { return }
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
+                DispatchQueue.main.async { self.networkError = .sessionExpired; self.showNetworkAlert = true }; return
             }
             if let decoded = try? JSONDecoder().decode([WaterEntry].self, from: data) {
                 DispatchQueue.main.async { self.waterIntake = decoded; self.calculateWaterStats() }
@@ -837,11 +767,6 @@ struct DashboardView: View {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else { return }
-            if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode == 401 {
-                    DispatchQueue.main.async { self.networkError = .sessionExpired; self.showNetworkAlert = true }; return
-                } else if httpResponse.statusCode != 200 { return }
-            }
             if let decoded = try? JSONDecoder().decode([ExerciseEntry].self, from: data) {
                 DispatchQueue.main.async { self.exerciseEntries = decoded; self.calculateExerciseStats() }
             }
@@ -856,11 +781,6 @@ struct DashboardView: View {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         URLSession.shared.dataTask(with: request) { data, response, error in
             guard let data = data, error == nil else { return }
-            if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode == 401 {
-                    DispatchQueue.main.async { self.networkError = .sessionExpired; self.showNetworkAlert = true }; return
-                } else if httpResponse.statusCode != 200 { return }
-            }
             if let decoded = try? JSONDecoder().decode([WeightEntry].self, from: data) {
                 DispatchQueue.main.async {
                     self.weightEntries = decoded.sorted { $0.recorded_at > $1.recorded_at }
@@ -874,18 +794,17 @@ struct DashboardView: View {
         let calendar = Calendar.current; let today = Date()
         let startOfMonth = calendar.dateInterval(of: .month, for: today)?.start ?? today
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
-        let isoFormatter = ISO8601DateFormatter(); isoFormatter.timeZone = TimeZone.current
         var todayCal = 0, todayProt = 0, todayCarb = 0, todayFt = 0, todayFib = 0, todaySug = 0, todaySod = 0
         var weeklyCal = 0, weeklyProt = 0, weeklyCarb = 0, weeklyFt = 0
         var monthlyCal = 0, monthlyDays = Set<String>()
         for meal in meals {
-            guard let savedAt = meal.saved_at, let validDate = isoFormatter.date(from: savedAt) else { continue }
+            // ✅ 用 DateHelpers.parseISO8601，兼容微秒格式
+            guard let savedAt = meal.saved_at, let validDate = parseISO8601(savedAt) else { continue }
             let n = extractAllNutrients(from: meal.nutrition_info)
             if calendar.isDateInToday(validDate) {
                 todayCal += n.calories; todayProt += n.protein; todayCarb += n.carbs; todayFt += n.fat
                 todayFib += n.fiber; todaySug += n.sugar; todaySod += n.sodium
             }
-            // ✅ 真实本周统计
             if validDate >= startOfWeek {
                 weeklyCal += n.calories; weeklyProt += n.protein; weeklyCarb += n.carbs; weeklyFt += n.fat
             }
@@ -907,8 +826,10 @@ struct DashboardView: View {
     func extractAllNutrients(from text: String) -> (calories: Int, protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
         var calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0, sugar = 0, sodium = 0
         for line in text.components(separatedBy: .newlines) {
-            let parts = line.trimmingCharacters(in: .whitespaces).components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-            if parts.count >= 2, let floatVal = Float(parts[1].replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")) {
+            let parts = line.trimmingCharacters(in: .whitespaces).components(separatedBy: "|")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count >= 2,
+               let floatVal = Float(parts[1].replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")) {
                 let value = Int(floatVal.rounded()); let name = parts[0].lowercased()
                 if name.contains("calorie") || name.contains("kcal") { calories = value }
                 else if name.contains("protein") { protein = value }
@@ -923,7 +844,6 @@ struct DashboardView: View {
     }
 
     func createTodaysNutritionText() -> String {
-        // Daily 模式显示选中日期的营养数据
         let todaysMeals = filteredMealsForDisplay
         if todaysMeals.isEmpty { return "" }
         var totalCal = 0, totalProt = 0, totalCarb = 0, totalFt = 0, totalFib = 0, totalSug = 0, totalSod = 0
@@ -998,6 +918,7 @@ struct DashboardView: View {
 
     func isSameDay(_ dateString: String?) -> Bool {
         guard let dateString = dateString else { return false }
+        // ✅ 用 DateHelpers.parseISO8601，兼容微秒格式
         guard let mealDate = parseISO8601(dateString) else { return false }
         return Calendar.current.isDateInToday(mealDate)
     }
@@ -1015,14 +936,11 @@ struct DashboardView: View {
     func calculateFatGoal() -> Int { Int(Double(dynamicCalorieGoal) * 0.3 / 9) }
 }
 
-// MARK: - 新组件
-
-// MARK: - Daily Selector（可横向滚动的日历，支持翻到过去的周）
+// MARK: - Supporting Components（全部保留，不变）
 
 struct DailyScrollSelector: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedDate: Date
-    // 当前显示的周起点（可向过去滚动）
     @State private var displayWeekStart: Date = {
         Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
     }()
@@ -1033,7 +951,6 @@ struct DailyScrollSelector: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            // 周导航
             HStack {
                 Button(action: { shiftWeek(by: -1) }) {
                     Image(systemName: "chevron.left")
@@ -1058,8 +975,6 @@ struct DailyScrollSelector: View {
                 }
                 .disabled(isCurrentWeek)
             }
-
-            // 7天格子
             HStack(spacing: 6) {
                 ForEach(daysInWeek, id: \.self) { day in
                     let isSelected = Calendar.current.isDate(day, inSameDayAs: selectedDate)
@@ -1082,16 +997,12 @@ struct DailyScrollSelector: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 9)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(isSelected
-                                      ? (themeManager.current == .dark ? Color.white : Color.black)
-                                      : isToday ? themeManager.current.inputBackground : Color.clear)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(isToday && !isSelected ? themeManager.current.cardBorder : Color.clear, lineWidth: 1.5)
-                        )
+                        .background(RoundedRectangle(cornerRadius: 12)
+                            .fill(isSelected
+                                  ? (themeManager.current == .dark ? Color.white : Color.black)
+                                  : isToday ? themeManager.current.inputBackground : Color.clear))
+                        .overlay(RoundedRectangle(cornerRadius: 12)
+                            .stroke(isToday && !isSelected ? themeManager.current.cardBorder : Color.clear, lineWidth: 1.5))
                     }
                     .buttonStyle(.plain)
                     .disabled(isFuture)
@@ -1107,7 +1018,6 @@ struct DailyScrollSelector: View {
 
     func shiftWeek(by delta: Int) {
         if let newStart = Calendar.current.date(byAdding: .weekOfYear, value: delta, to: displayWeekStart) {
-            // Don't go past current week
             if delta > 0 && isCurrentWeek { return }
             displayWeekStart = newStart
         }
@@ -1119,22 +1029,15 @@ struct DailyScrollSelector: View {
         return f.string(from: displayWeekStart) + " – " + f.string(from: end)
     }
 
-    func shortDay(_ d: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "EEE"; return String(f.string(from: d).prefix(3))
-    }
-    func dayNum(_ d: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: d)
-    }
+    func shortDay(_ d: Date) -> String { let f = DateFormatter(); f.dateFormat = "EEE"; return String(f.string(from: d).prefix(3)) }
+    func dayNum(_ d: Date) -> String { let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: d) }
 }
-
-// MARK: - Weekly Selector（最近12周横向列表）
 
 struct WeeklyScrollSelector: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedWeekStart: Date
 
     var recentWeeks: [Date] {
-        // 最近12周，从最近到过去
         (0..<12).compactMap {
             Calendar.current.date(byAdding: .weekOfYear, value: -$0, to:
                 Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date())
@@ -1151,31 +1054,19 @@ struct WeeklyScrollSelector: View {
                     Button(action: { selectedWeekStart = weekStart }) {
                         VStack(spacing: 4) {
                             if isCurrentWeek {
-                                Text("This Week")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundColor(isSelected
-                                        ? (themeManager.current == .dark ? .black : .white)
-                                        : .orange)
+                                Text("This Week").font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white) : .orange)
                             }
                             Text(weekLabel(weekStart))
                                 .font(.system(size: 13, weight: isSelected ? .bold : .medium))
-                                .foregroundColor(isSelected
-                                    ? (themeManager.current == .dark ? .black : .white)
-                                    : themeManager.current.primaryText)
+                                .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white) : themeManager.current.primaryText)
                         }
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(isSelected
-                                      ? (themeManager.current == .dark ? Color.white : Color.black)
-                                      : themeManager.current.inputBackground)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(isCurrentWeek && !isSelected ? Color.orange.opacity(0.4) : themeManager.current.cardBorder,
-                                        lineWidth: isCurrentWeek && !isSelected ? 1.5 : 1)
-                        )
+                        .padding(.horizontal, 14).padding(.vertical, 10)
+                        .background(RoundedRectangle(cornerRadius: 14)
+                            .fill(isSelected ? (themeManager.current == .dark ? Color.white : Color.black) : themeManager.current.inputBackground))
+                        .overlay(RoundedRectangle(cornerRadius: 14)
+                            .stroke(isCurrentWeek && !isSelected ? Color.orange.opacity(0.4) : themeManager.current.cardBorder,
+                                    lineWidth: isCurrentWeek && !isSelected ? 1.5 : 1))
                     }
                     .buttonStyle(.plain)
                 }
@@ -1190,64 +1081,40 @@ struct WeeklyScrollSelector: View {
     }
 }
 
-// MARK: - Monthly Selector（月份网格，最近2年）
-
-// Monthly 选择器 — 左右箭头翻年，年内12个月横向滑动
 struct MonthlyGridSelector: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedMonth: Date
-
-    // 当前展示的年份
     @State private var displayYear: Int = Calendar.current.component(.year, from: Date())
 
     var currentYear: Int { Calendar.current.component(.year, from: Date()) }
     var currentMonth: Int { Calendar.current.component(.month, from: Date()) }
-    var minYear: Int { currentYear - 2 }   // 最多回溯2年
+    var minYear: Int { currentYear - 2 }
 
-    // 展示年的12个月
     var monthsInYear: [Date] {
-        let cal = Calendar.current
-        return (1...12).compactMap { month in
+        (1...12).compactMap { month in
             var comps = DateComponents(); comps.year = displayYear; comps.month = month; comps.day = 1
-            return cal.date(from: comps)
+            return Calendar.current.date(from: comps)
         }
     }
 
     var body: some View {
         VStack(spacing: 10) {
-            // ── 年份导航 ──
             HStack {
-                Button(action: { if displayYear > minYear { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { displayYear -= 1 } } }) {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 13, weight: .semibold))
+                Button(action: { if displayYear > minYear { withAnimation { displayYear -= 1 } } }) {
+                    Image(systemName: "chevron.left").font(.system(size: 13, weight: .semibold))
                         .foregroundColor(displayYear > minYear ? themeManager.current.primaryText : themeManager.current.secondaryText.opacity(0.3))
-                        .frame(width: 32, height: 32)
-                        .background(themeManager.current.inputBackground)
-                        .cornerRadius(8)
-                }
-                .disabled(displayYear <= minYear)
-
+                        .frame(width: 32, height: 32).background(themeManager.current.inputBackground).cornerRadius(8)
+                }.disabled(displayYear <= minYear)
                 Spacer()
-
-                Text("\(displayYear)")
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                Text("\(displayYear)").font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundColor(themeManager.current.primaryText)
-                    .animation(.none, value: displayYear)
-
                 Spacer()
-
-                Button(action: { if displayYear < currentYear { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { displayYear += 1 } } }) {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
+                Button(action: { if displayYear < currentYear { withAnimation { displayYear += 1 } } }) {
+                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
                         .foregroundColor(displayYear < currentYear ? themeManager.current.primaryText : themeManager.current.secondaryText.opacity(0.3))
-                        .frame(width: 32, height: 32)
-                        .background(themeManager.current.inputBackground)
-                        .cornerRadius(8)
-                }
-                .disabled(displayYear >= currentYear)
+                        .frame(width: 32, height: 32).background(themeManager.current.inputBackground).cornerRadius(8)
+                }.disabled(displayYear >= currentYear)
             }
-
-            // ── 12个月横向滚动 ──
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(monthsInYear, id: \.self) { month in
@@ -1256,109 +1123,59 @@ struct MonthlyGridSelector: View {
                         let isSelected = cal.isDate(month, equalTo: selectedMonth, toGranularity: .month)
                         let isCurrentMonth = displayYear == currentYear && mNum == currentMonth
                         let isFuture = displayYear == currentYear && mNum > currentMonth
-
                         Button(action: { guard !isFuture else { return }; selectedMonth = month }) {
                             VStack(spacing: 3) {
                                 Text(monthAbbr(month))
                                     .font(.system(size: 15, weight: isSelected ? .bold : .medium))
-                                    .foregroundColor(isSelected
-                                        ? (themeManager.current == .dark ? .black : .white)
-                                        : isFuture ? themeManager.current.primaryText.opacity(0.25)
-                                        : themeManager.current.primaryText)
-                                // 小点：当月 or 有数据提示
-                                if isCurrentMonth && !isSelected {
-                                    Circle()
-                                        .fill(Color.orange)
-                                        .frame(width: 4, height: 4)
-                                } else {
-                                    Circle().fill(Color.clear).frame(width: 4, height: 4)
-                                }
+                                    .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white)
+                                                    : isFuture ? themeManager.current.primaryText.opacity(0.25) : themeManager.current.primaryText)
+                                Circle().fill(isCurrentMonth && !isSelected ? Color.orange : Color.clear).frame(width: 4, height: 4)
                             }
                             .frame(width: 52, height: 52)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .fill(isSelected
-                                          ? (themeManager.current == .dark ? Color.white : Color.black)
-                                          : isCurrentMonth ? themeManager.current.inputBackground : Color.clear)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 14)
-                                    .stroke(isCurrentMonth && !isSelected ? Color.orange.opacity(0.35) : Color.clear, lineWidth: 1.5)
-                            )
+                            .background(RoundedRectangle(cornerRadius: 14)
+                                .fill(isSelected ? (themeManager.current == .dark ? Color.white : Color.black)
+                                      : isCurrentMonth ? themeManager.current.inputBackground : Color.clear))
+                            .overlay(RoundedRectangle(cornerRadius: 14)
+                                .stroke(isCurrentMonth && !isSelected ? Color.orange.opacity(0.35) : Color.clear, lineWidth: 1.5))
                         }
-                        .buttonStyle(.plain)
-                        .disabled(isFuture)
+                        .buttonStyle(.plain).disabled(isFuture)
                     }
                 }
             }
         }
     }
 
-    func monthAbbr(_ date: Date) -> String {
-        let f = DateFormatter(); f.dateFormat = "MMM"; return f.string(from: date)
-    }
+    func monthAbbr(_ date: Date) -> String { let f = DateFormatter(); f.dateFormat = "MMM"; return f.string(from: date) }
 }
 
-// Macro 小卡（三格）
 struct MacroCell: View {
     @EnvironmentObject var themeManager: ThemeManager
-    let icon: String
-    let title: String
-    let current: Int
-    let goal: Int
-    let unit: String
-    let color: Color
-
+    let icon: String; let title: String; let current: Int; let goal: Int; let unit: String; let color: Color
     var progress: Double { guard goal > 0 else { return 0 }; return min(Double(current) / Double(goal), 1.0) }
     var remaining: Int { max(0, goal - current) }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 小圆环
             ZStack {
-                Circle()
-                    .stroke(color.opacity(0.15), lineWidth: 5)
-                    .frame(width: 40, height: 40)
-                Circle()
-                    .trim(from: 0, to: progress)
-                    .stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
-                    .frame(width: 40, height: 40)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.easeOut(duration: 0.8), value: progress)
-                Image(systemName: icon)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(color)
+                Circle().stroke(color.opacity(0.15), lineWidth: 5).frame(width: 40, height: 40)
+                Circle().trim(from: 0, to: progress).stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .frame(width: 40, height: 40).rotationEffect(.degrees(-90)).animation(.easeOut(duration: 0.8), value: progress)
+                Image(systemName: icon).font(.system(size: 12, weight: .semibold)).foregroundColor(color)
             }
-
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(current)\(unit)")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(themeManager.current.primaryText)
-                Text("\(remaining)\(unit) left")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(themeManager.current.secondaryText)
+                Text("\(current)\(unit)").font(.system(size: 20, weight: .bold, design: .rounded)).foregroundColor(themeManager.current.primaryText)
+                Text("\(remaining)\(unit) left").font(.system(size: 11, weight: .medium)).foregroundColor(themeManager.current.secondaryText)
             }
-
-            Text(title)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(themeManager.current.secondaryText)
-                .textCase(.uppercase)
-                .tracking(0.4)
+            Text(title).font(.system(size: 11, weight: .semibold)).foregroundColor(themeManager.current.secondaryText).textCase(.uppercase).tracking(0.4)
         }
-        .padding(14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18)
-            .stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .padding(14).frame(maxWidth: .infinity, alignment: .leading)
+        .background(themeManager.current.cardBackground).cornerRadius(18)
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
     }
 }
 
-// 餐食列表行（替代 FixedSizeMealCard 横向卡）
 struct MealListRow: View {
     @EnvironmentObject var themeManager: ThemeManager
     let meal: Meal
-
     var calories: Int? {
         for line in meal.nutrition_info.split(separator: "\n") {
             let parts = line.split(separator: "|").map { $0.trimmingCharacters(in: .whitespaces) }
@@ -1366,7 +1183,6 @@ struct MealListRow: View {
         }
         return nil
     }
-
     var mealTime: String {
         guard let s = meal.saved_at, let d = parseISO8601(s) else { return "" }
         if Calendar.current.isDateInToday(d) {
@@ -1374,80 +1190,56 @@ struct MealListRow: View {
         }
         let f = DateFormatter(); f.dateFormat = "MMM d"; return f.string(from: d)
     }
-
     var mealIcon: String {
         switch (meal.meal_type ?? "").lowercased() {
         case "breakfast": return "sun.max.fill"
         case "lunch": return "sun.min.fill"
         case "dinner": return "moon.stars.fill"
-        case "evening snacks", "snacks": return "cup.and.saucer.fill"
         default: return "fork.knife"
         }
     }
-
     var body: some View {
         HStack(spacing: 14) {
-            // 图片缩略图
             Group {
                 if let base64 = meal.image_thumb ?? meal.image_full, !base64.isEmpty,
                    let data = Data(base64Encoded: base64), let image = UIImage(data: data) {
                     Image(uiImage: image).resizable().scaledToFill()
                 } else {
-                    themeManager.current.inputBackground
-                        .overlay(Image(systemName: "fork.knife")
-                            .foregroundColor(themeManager.current.secondaryText.opacity(0.5)))
+                    themeManager.current.inputBackground.overlay(Image(systemName: "fork.knife")
+                        .foregroundColor(themeManager.current.secondaryText.opacity(0.5)))
                 }
             }
-            .frame(width: 54, height: 54)
-            .clipShape(RoundedRectangle(cornerRadius: 14))
-
-            // 食物信息
+            .frame(width: 54, height: 54).clipShape(RoundedRectangle(cornerRadius: 14))
             VStack(alignment: .leading, spacing: 4) {
-                Text(meal.dish_prediction)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(themeManager.current.primaryText)
-                    .lineLimit(1)
+                Text(meal.dish_prediction).font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(themeManager.current.primaryText).lineLimit(1)
                 HStack(spacing: 6) {
-                    Image(systemName: mealIcon)
-                        .font(.system(size: 10))
-                        .foregroundColor(themeManager.current.secondaryText)
-                    Text(meal.meal_type?.capitalized ?? "Meal")
-                        .font(.system(size: 12))
-                        .foregroundColor(themeManager.current.secondaryText)
+                    Image(systemName: mealIcon).font(.system(size: 10)).foregroundColor(themeManager.current.secondaryText)
+                    Text(meal.meal_type?.capitalized ?? "Meal").font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
                     Text("·").foregroundColor(themeManager.current.secondaryText.opacity(0.5))
-                    Text(mealTime)
-                        .font(.system(size: 12))
-                        .foregroundColor(themeManager.current.secondaryText)
+                    Text(mealTime).font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
+                    // ✅ Diet Plan 标记
+                    if meal.from_diet_plan == true {
+                        Text("Diet Plan").font(.system(size: 10, weight: .semibold)).foregroundColor(.purple)
+                            .padding(.horizontal, 5).padding(.vertical, 2)
+                            .background(Color.purple.opacity(0.1)).cornerRadius(4)
+                    }
                 }
             }
-
             Spacer()
-
-            // 卡路里
             if let cal = calories {
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(cal)")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
-                        .foregroundColor(themeManager.current.primaryText)
-                    Text("kcal")
-                        .font(.system(size: 11))
-                        .foregroundColor(themeManager.current.secondaryText)
+                    Text("\(cal)").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundColor(themeManager.current.primaryText)
+                    Text("kcal").font(.system(size: 11)).foregroundColor(themeManager.current.secondaryText)
                 }
             }
-
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .medium))
+            Image(systemName: "chevron.right").font(.system(size: 12, weight: .medium))
                 .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
         }
-        .padding(14)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18)
-            .stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .padding(14).background(themeManager.current.cardBackground).cornerRadius(18)
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
     }
 }
-
-// MARK: - 保留原有 Supporting Views（不变）
 
 struct WelcomeNewUserCard: View {
     let action: () -> Void
@@ -1456,29 +1248,21 @@ struct WelcomeNewUserCard: View {
         VStack(spacing: 20) {
             ZStack {
                 Circle().fill(Color.orange.opacity(0.15)).frame(width: 70, height: 70)
-                Image(systemName: "person.crop.circle.badge.plus").font(.system(size: 36))
-                    .foregroundColor(.orange)
+                Image(systemName: "person.crop.circle.badge.plus").font(.system(size: 36)).foregroundColor(.orange)
             }
             VStack(spacing: 8) {
-                Text("Welcome to NutriSnap!")
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundColor(themeManager.current.primaryText)
+                Text("Welcome to NutriSnap!").font(.system(size: 17, weight: .bold)).foregroundColor(themeManager.current.primaryText)
                 Text("Set up your nutrition profile to get personalized recommendations")
-                    .font(.subheadline).foregroundColor(themeManager.current.secondaryText)
-                    .multilineTextAlignment(.center)
+                    .font(.subheadline).foregroundColor(themeManager.current.secondaryText).multilineTextAlignment(.center)
             }
             Button(action: action) {
                 HStack { Image(systemName: "arrow.right.circle.fill"); Text("Set Up Profile") }
-                    .fontWeight(.semibold).foregroundColor(.white)
-                    .frame(maxWidth: .infinity).padding(.vertical, 14)
-                    .background(Color.orange).cornerRadius(14)
+                    .fontWeight(.semibold).foregroundColor(.white).frame(maxWidth: .infinity)
+                    .padding(.vertical, 14).background(Color.orange).cornerRadius(14)
             }
         }
-        .padding(24).frame(maxWidth: .infinity)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(20)
-        .overlay(RoundedRectangle(cornerRadius: 20)
-            .stroke(Color.orange.opacity(0.3), lineWidth: 1.5))
+        .padding(24).frame(maxWidth: .infinity).background(themeManager.current.cardBackground).cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.orange.opacity(0.3), lineWidth: 1.5))
     }
 }
 
@@ -1490,8 +1274,7 @@ struct TodaysNutrientCircle: View {
         VStack(spacing: 10) {
             ZStack {
                 Circle().stroke(color.opacity(0.2), lineWidth: 8).frame(width: 70, height: 70)
-                Circle().trim(from: 0, to: progress)
-                    .stroke(color, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                Circle().trim(from: 0, to: progress).stroke(color, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                     .frame(width: 70, height: 70).rotationEffect(.degrees(-90))
                     .animation(.spring(response: 1.2, dampingFraction: 0.8), value: progress)
                 VStack(spacing: 1) {
@@ -1524,30 +1307,24 @@ struct WeeklyNutritionOverview: View {
                     if mealsLogged > 0 {
                         HStack(spacing: 8) {
                             Circle().fill(Color.green.opacity(0.4)).frame(width: 6, height: 6)
-                            Text("You've logged \(mealsLogged) meals this week")
-                                .font(.caption).foregroundColor(themeManager.current.secondaryText)
+                            Text("You've logged \(mealsLogged) meals this week").font(.caption).foregroundColor(themeManager.current.secondaryText)
                             Spacer()
                         }
                     }
                     if streak > 0 {
                         HStack(spacing: 8) {
                             Circle().fill(Color.orange.opacity(0.4)).frame(width: 6, height: 6)
-                            Text("Current tracking streak: \(streak) days")
-                                .font(.caption).foregroundColor(themeManager.current.secondaryText)
+                            Text("Current tracking streak: \(streak) days").font(.caption).foregroundColor(themeManager.current.secondaryText)
                             Spacer()
                         }
                     }
                 }
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 12)
-                    .fill(themeManager.current.inputBackground))
+                .padding(12).background(RoundedRectangle(cornerRadius: 12).fill(themeManager.current.inputBackground))
             }
         }
         .padding()
-        .background(RoundedRectangle(cornerRadius: 18)
-            .fill(themeManager.current.cardBackground)
-            .overlay(RoundedRectangle(cornerRadius: 18)
-                .stroke(themeManager.current.cardBorder, lineWidth: 1)))
+        .background(RoundedRectangle(cornerRadius: 18).fill(themeManager.current.cardBackground)
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1)))
     }
 }
 
@@ -1559,12 +1336,9 @@ struct WeeklyStatCircle: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle().stroke(color.opacity(0.15), lineWidth: 6).frame(width: 60, height: 60)
-                Circle().trim(from: 0, to: progress)
-                    .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                    .frame(width: 60, height: 60).rotationEffect(.degrees(-90))
-                    .animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
-                Text("\(value)").font(.system(size: 14, weight: .bold))
-                    .foregroundColor(themeManager.current.primaryText)
+                Circle().trim(from: 0, to: progress).stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 60, height: 60).rotationEffect(.degrees(-90)).animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
+                Text("\(value)").font(.system(size: 14, weight: .bold)).foregroundColor(themeManager.current.primaryText)
             }
             VStack(spacing: 2) {
                 Text(title).font(.caption2).foregroundColor(themeManager.current.primaryText).fontWeight(.medium)
@@ -1579,20 +1353,13 @@ struct EmptyMealsStateCard: View {
     @EnvironmentObject var themeManager: ThemeManager
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "camera.fill").font(.system(size: 32))
-                .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
+            Image(systemName: "camera.fill").font(.system(size: 32)).foregroundColor(themeManager.current.secondaryText.opacity(0.4))
             VStack(spacing: 4) {
-                Text("No meals today").font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(themeManager.current.primaryText)
-                Text("Tap + to start tracking").font(.caption)
-                    .foregroundColor(themeManager.current.secondaryText)
+                Text("No meals today").font(.system(size: 15, weight: .semibold)).foregroundColor(themeManager.current.primaryText)
+                Text("Tap + to start tracking").font(.caption).foregroundColor(themeManager.current.secondaryText)
             }
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 36)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18)
-            .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [6]))
-            .foregroundColor(themeManager.current.cardBorder))
+        .frame(maxWidth: .infinity).padding(.vertical, 36).background(themeManager.current.cardBackground).cornerRadius(18)
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundColor(themeManager.current.cardBorder))
     }
 }

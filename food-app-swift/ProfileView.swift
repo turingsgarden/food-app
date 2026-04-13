@@ -1,3 +1,6 @@
+// ProfileView.swift — 统一黑白风格 + Edit Profile 接入 HealthProfileView
+// 改动：showEditProfile sheet 从旧 ProfileSetupView → HealthProfileView(existingProfile:)
+
 import SwiftUI
 import StoreKit
 
@@ -6,6 +9,7 @@ struct ProfileView: View {
     @ObservedObject var session = SessionManager.shared
     @ObservedObject var profileManager = ProfileManager.shared
     @Environment(\.dismiss) var dismiss
+
     @State private var showLogoutAlert = false
     @State private var showDeleteAccountAlert = false
     @State private var showDeleteConfirmation = false
@@ -21,431 +25,456 @@ struct ProfileView: View {
     @State private var isSavingName = false
     @State private var nameError = ""
 
+    var userName: String { session.userName.isEmpty ? "User" : session.userName }
+
     var body: some View {
         NavigationView {
-            mainContent
-                .preferredColorScheme(themeManager.current.colorScheme)
-                .navigationTitle("Profile")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar { toolbarContent }
-                .onAppear(perform: handleAppear)
-                .alert("Logout", isPresented: $showLogoutAlert, actions: logoutAlertButtons, message: logoutAlertMessage)
-                .alert("Delete Account", isPresented: $showDeleteAccountAlert, actions: deleteAlertButtons, message: deleteAlertMessage)
-                .alert("Final Confirmation", isPresented: $showDeleteConfirmation, actions: finalDeleteButtons, message: finalDeleteMessage)
-                .alert("Error", isPresented: $showErrorAlert, actions: errorAlertButtons, message: errorAlertMessage)
-                .sheet(isPresented: $showEditProfile) { profileEditSheet }
-                .alert("Help & Support", isPresented: $showHelpSupport, actions: helpAlertButtons, message: helpAlertMessage)
-                .refreshable { await refreshProfile() }
-        }
-    }
-
-    // MARK: - Body Components
-
-    private var mainContent: some View {
-        ZStack {
-            themeManager.current.background.ignoresSafeArea()
-            if profileManager.isLoading && profileManager.userProfile == nil && !hasAppeared {
-                loadingView
-            } else {
-                scrollContent
+            ZStack {
+                themeManager.current.background.ignoresSafeArea()
+                if profileManager.isLoading && profileManager.userProfile == nil && !hasAppeared {
+                    loadingView
+                } else {
+                    scrollContent
+                }
+                if isDeletingAccount { deletionOverlay }
             }
-            if isDeletingAccount { deletionOverlay }
+            .preferredColorScheme(themeManager.current.colorScheme)
+            .navigationTitle("Profile")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { toolbarContent }
+            .onAppear { if !hasAppeared { hasAppeared = true; profileManager.fetchProfile(force: false) } }
+            .alert("Logout", isPresented: $showLogoutAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Logout", role: .destructive) { performLogout() }
+            } message: { Text("Are you sure you want to logout?") }
+            .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) { showDeleteConfirmation = true }
+            } message: { Text("This will permanently delete all your data. This action cannot be undone.") }
+            .alert("Final Confirmation", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete Forever", role: .destructive) { performAccountDeletion() }
+            } message: { Text("All your data will be lost forever.") }
+            .alert("Error", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) {}
+            } message: { Text(errorMessage) }
+            .alert("Help & Support", isPresented: $showHelpSupport) {
+                Button("Contact Support") { openEmailSupport() }
+                Button("Cancel", role: .cancel) {}
+            } message: { Text("For support, contact us at support@nutricam.com") }
+            // ✅ 用 HealthProfileView 替代旧的 ProfileSetupView
+            .sheet(isPresented: $showEditProfile) {
+                HealthProfileView(
+                    existingProfile: healthProfileFromUserProfile(),
+                    onComplete: { savedProfile in
+                        // 同时更新 HealthAPI 侧的档案
+                        HealthAPIManager.shared.saveHealthProfile(savedProfile) { _, _ in }
+                        profileManager.fetchProfile(force: true)
+                    }
+                )
+                .environmentObject(themeManager)
+                .onDisappear { profileManager.fetchProfile(force: true) }
+            }
+            .refreshable { await refreshProfile() }
         }
     }
 
-    private var loadingView: some View {
-        VStack(spacing: 20) {
-            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .orange)).scaleEffect(1.5)
-            Text("Loading your profile...").font(.headline).foregroundColor(themeManager.current.primaryText)
+    // ✅ 把 ProfileManager 的 UserProfile 转成 HealthProfile 用于预填充
+    func healthProfileFromUserProfile() -> HealthProfile? {
+        guard profileManager.userProfile != nil else { return nil }
+        let userId = session.userID.isEmpty
+            ? UserDefaults.standard.string(forKey: "user_id") ?? ""
+            : session.userID
+        // ✅ UserProfile 没有 height/weight/dietaryPreferences，用默认值
+        // HealthProfileView 打开后用户可以自行填写
+        return HealthProfile(
+            userId: userId,
+            heightCm: 170,
+            weightKg: 70,
+            age: profileManager.userProfile?.age ?? 25,
+            sex: profileManager.userProfile?.gender.lowercased() ?? "other",
+            systolicBP: nil, diastolicBP: nil,
+            fastingBloodSugar: nil, totalCholesterol: nil, triglycerides: nil,
+            dietaryPreferences: [],
+            allergens: []
+        )
+    }
+
+    // MARK: - Loading
+
+    var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: themeManager.current.primaryText))
+                .scaleEffect(1.3)
+            Text("Loading profile…").font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
         }
     }
 
-    private var scrollContent: some View {
-        ScrollView {
+    // MARK: - Scroll Content
+
+    var scrollContent: some View {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
-                profileHeaderSection
+                avatarSection.padding(.top, 8)
                 if let profile = profileManager.userProfile {
-                    profileStatsSection(profile: profile)
+                    statsSection(profile: profile)
                     settingsSection(profile: profile)
                 } else {
-                    profileSetupPromptSection
+                    setupPrompt
                 }
                 accountSection
-                appInfoSection()
+                appInfo
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
         }
     }
 
-    private var deletionOverlay: some View {
-        Color.black.opacity(0.7).ignoresSafeArea().overlay(deletionProgress)
-    }
-
-    private var deletionProgress: some View {
-        VStack(spacing: 20) {
-            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .orange)).scaleEffect(1.5)
-            Text("Deleting your account...").font(.headline).foregroundColor(.white)
-            Text("Please wait").font(.subheadline).foregroundColor(.gray)
-        }
-        .padding(40)
-        .background(RoundedRectangle(cornerRadius: 20).fill(Color.black.opacity(0.9))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.orange.opacity(0.3), lineWidth: 1)))
-    }
+    // MARK: - Toolbar
 
     @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
+    var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
-            if profileManager.isLoading {
-                ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .orange)).scaleEffect(0.8)
-            } else if profileManager.userProfile != nil {
-                Button(action: {
-                    print("🔄 Manual refresh button tapped")
-                    profileManager.fetchProfile(force: true)
-                }) {
-                    Image(systemName: "arrow.clockwise").foregroundColor(.orange)
-                }
+            Button(action: { profileManager.fetchProfile(force: true) }) {
+                Image(systemName: "arrow.clockwise")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(themeManager.current.primaryText)
             }
         }
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button("Done") { dismiss() }.foregroundColor(.orange)
+            Button("Done") { dismiss() }
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(themeManager.current.primaryText)
         }
     }
 
-    // MARK: - Alert Builders
+    // MARK: - Avatar
 
-    private func handleAppear() {
-        if !hasAppeared {
-            hasAppeared = true
-            print("👤 ProfileView appeared - fetching profile")
-            profileManager.fetchProfile(force: false)
-        }
-    }
-
-    @ViewBuilder private func logoutAlertButtons() -> some View {
-        Button("Cancel", role: .cancel) { }
-        Button("Logout", role: .destructive) { performLogout() }
-    }
-    private func logoutAlertMessage() -> some View {
-        Text("Are you sure you want to logout? You'll need to login again to access your meals.")
-    }
-
-    @ViewBuilder private func deleteAlertButtons() -> some View {
-        Button("Cancel", role: .cancel) { }
-        Button("Delete", role: .destructive) { showDeleteConfirmation = true }
-    }
-    private func deleteAlertMessage() -> some View {
-        Text("Are you sure you want to delete your account? This will permanently delete all your data including meals, nutrition history, and profile information. This action cannot be undone.")
-    }
-
-    @ViewBuilder private func finalDeleteButtons() -> some View {
-        Button("Cancel", role: .cancel) { }
-        Button("Delete Forever", role: .destructive) { performAccountDeletion() }
-    }
-    private func finalDeleteMessage() -> some View {
-        Text("This is your last chance. Deleting your account is permanent and irreversible. All your data will be lost forever.")
-    }
-
-    @ViewBuilder private func errorAlertButtons() -> some View {
-        Button("OK", role: .cancel) { }
-    }
-    private func errorAlertMessage() -> some View { Text(errorMessage) }
-
-    private var profileEditSheet: some View {
-        ProfileSetupView(existingProfile: profileManager.userProfile)
-            .environmentObject(themeManager)
-            .onDisappear {
-                print("🔃 Profile setup/edit completed, refreshing profile")
-                profileManager.fetchProfile(force: true)
-            }
-    }
-
-    @ViewBuilder private func helpAlertButtons() -> some View {
-        Button("Contact Support") { openEmailSupport() }
-        Button("Cancel", role: .cancel) { }
-    }
-    private func helpAlertMessage() -> some View {
-        Text("For support, please contact us at support@nutricam.com")
-    }
-
-    private func openEmailSupport() {
-        let email = "support@nutricam.com"
-        let subject = "NutriCam Support Request"
-        let body = "Hi NutriCam Support Team,\n\nI need help with:\n\n[Please describe your issue here]\n\n---\nApp Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown")\nDevice: \(UIDevice.current.model)\niOS Version: \(UIDevice.current.systemVersion)"
-        if let url = URL(string: "mailto:\(email)?subject=\(subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&body=\(body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")") {
-            if UIApplication.shared.canOpenURL(url) { UIApplication.shared.open(url) }
-        }
-    }
-
-    // MARK: - View Components
-
-    @ViewBuilder
-    var profileHeaderSection: some View {
+    var avatarSection: some View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.7)]),
-                                         startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 120, height: 120)
-                Text(session.userName.prefix(1).uppercased())
-                    .font(.system(size: 48, weight: .bold)).foregroundColor(.white)
+                    .fill(themeManager.current.inputBackground)
+                    .frame(width: 100, height: 100)
+                    .overlay(Circle().stroke(themeManager.current.cardBorder, lineWidth: 1.5))
+                Text(String(userName.prefix(1)).uppercased())
+                    .font(.system(size: 40, weight: .black, design: .rounded))
+                    .foregroundColor(themeManager.current.primaryText)
             }
-            .shadow(color: .orange.opacity(0.3), radius: 20)
 
-            VStack(spacing: 4) {
-                HStack(spacing: 8) {
-                    if !isEditingName {
-                        Text(session.userName)
-                            .font(.title2.bold())
-                            .foregroundColor(themeManager.current.primaryText)
-                        Button(action: {
-                            editedName = session.userName; nameError = ""; isEditingName = true
-                        }) {
-                            Image(systemName: "pencil").foregroundColor(.orange)
-                        }
-                    }
-                }
-
+            VStack(spacing: 8) {
                 if isEditingName {
                     VStack(spacing: 10) {
                         TextField("Enter new name", text: $editedName)
-                            .foregroundColor(themeManager.current.primaryText)
-                            .padding(10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(themeManager.current.cardBorder, lineWidth: 1)
-                                    .background(themeManager.current.inputBackground.cornerRadius(10))
-                            )
+                            .font(.system(size: 15)).foregroundColor(themeManager.current.primaryText)
+                            .padding(.horizontal, 14).padding(.vertical, 10)
+                            .background(themeManager.current.inputBackground).cornerRadius(12)
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(themeManager.current.cardBorder, lineWidth: 1))
+
                         if !nameError.isEmpty {
                             Text(nameError).font(.caption).foregroundColor(.red)
                         }
-                        HStack(spacing: 20) {
+
+                        HStack(spacing: 12) {
                             Button("Cancel") { isEditingName = false; nameError = "" }
+                                .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(themeManager.current.secondaryText)
+                                .padding(.horizontal, 16).padding(.vertical, 8)
+                                .background(themeManager.current.inputBackground).cornerRadius(10)
+
                             Button(action: saveName) {
-                                if isSavingName { ProgressView().tint(.white) }
-                                else { Text("Save") }
+                                Group {
+                                    if isSavingName {
+                                        ProgressView().progressViewStyle(CircularProgressViewStyle(
+                                            tint: themeManager.current == .dark ? .black : .white)).scaleEffect(0.8)
+                                    } else { Text("Save") }
+                                }
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(themeManager.current == .dark ? .black : .white)
+                                .padding(.horizontal, 20).padding(.vertical, 8)
+                                .background(themeManager.current == .dark ? Color.white : Color.black).cornerRadius(10)
                             }
-                            .padding(.horizontal, 16).padding(.vertical, 6)
-                            .background(Color.orange).foregroundColor(.white).cornerRadius(8)
                             .disabled(isSavingName)
                         }
                     }
-                    .padding(.top, 4)
+                    .padding(.horizontal, 20)
+                } else {
+                    HStack(spacing: 8) {
+                        Text(userName)
+                            .font(.system(size: 22, weight: .black, design: .rounded))
+                            .foregroundColor(themeManager.current.primaryText)
+                        Button(action: { editedName = session.userName; nameError = ""; isEditingName = true }) {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(themeManager.current.secondaryText)
+                        }
+                    }
                 }
 
                 if let profile = profileManager.userProfile {
                     Text("\(profile.age) years old • \(profile.gender)")
-                        .font(.subheadline).foregroundColor(themeManager.current.secondaryText)
+                        .font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
                     if let lastSync = profileManager.lastSyncDate {
-                        Text("Last synced: \(formatSyncDate(lastSync))")
-                            .font(.caption2).foregroundColor(themeManager.current.secondaryText)
+                        Text("Synced \(formatSyncDate(lastSync))")
+                            .font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText.opacity(0.6))
                     }
-                } else {
-                    Text("Profile not set up").font(.subheadline).foregroundColor(.orange)
                 }
-            }
 
-            Button(action: { showEditProfile = true }) {
-                HStack {
-                    Image(systemName: profileManager.userProfile != nil ? "pencil" : "person.fill.badge.plus")
-                    Text(profileManager.userProfile != nil ? "Edit Profile" : "Setup Profile")
-                }
-                .font(.subheadline).fontWeight(.semibold).foregroundColor(.orange)
-                .padding(.horizontal, 20).padding(.vertical, 8)
-                .background(Capsule().fill(Color.orange.opacity(0.15))
-                    .overlay(Capsule().stroke(Color.orange.opacity(0.3), lineWidth: 1)))
-            }
-        }
-        .padding(.top, 20)
-    }
-
-    @ViewBuilder
-    var profileSetupPromptSection: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 16) {
-                Image(systemName: "exclamationmark.circle.fill").font(.system(size: 40)).foregroundColor(.orange)
-                VStack(spacing: 8) {
-                    Text("Complete Your Profile").font(.headline)
-                        .foregroundColor(themeManager.current.primaryText)
-                    Text("Set up your profile to get personalized nutrition recommendations and accurate calorie tracking")
-                        .font(.subheadline).foregroundColor(themeManager.current.secondaryText)
-                        .multilineTextAlignment(.center)
-                }
                 Button(action: { showEditProfile = true }) {
-                    HStack {
-                        Image(systemName: "arrow.right.circle.fill")
-                        Text("Set Up Now")
+                    HStack(spacing: 6) {
+                        Image(systemName: profileManager.userProfile != nil ? "pencil" : "person.fill.badge.plus")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(profileManager.userProfile != nil ? "Edit Profile" : "Set Up Profile")
+                            .font(.system(size: 13, weight: .semibold))
                     }
-                    .fontWeight(.semibold).foregroundColor(.white)
-                    .padding(.horizontal, 24).padding(.vertical, 12)
-                    .background(LinearGradient(gradient: Gradient(colors: [.orange, .orange.opacity(0.8)]),
-                                               startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .cornerRadius(12).shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
+                    .foregroundColor(themeManager.current == .dark ? .black : .white)
+                    .padding(.horizontal, 18).padding(.vertical, 9)
+                    .background(themeManager.current == .dark ? Color.white : Color.black)
+                    .cornerRadius(20)
                 }
+                .padding(.top, 4)
             }
-            .padding(24)
-            .background(RoundedRectangle(cornerRadius: 16).fill(themeManager.current.cardBackground)
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.orange.opacity(0.3), lineWidth: 1)))
         }
     }
 
-    @ViewBuilder
-    func profileStatsSection(profile: UserProfile) -> some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-            StatCard(title: "Daily Goal", value: "\(profile.calorieTarget)", unit: "kcal", icon: "target", color: .orange)
-            StatCard(title: "Activity", value: profile.activityLevelText(), unit: "", icon: "figure.run", color: .orange)
+    // MARK: - Stats
+
+    func statsSection(profile: UserProfile) -> some View {
+        HStack(spacing: 12) {
+            profileStatCell(icon: "flame.fill", value: "\(profile.calorieTarget)", unit: "kcal",
+                            label: "Daily Goal", color: Color(red: 0.95, green: 0.61, blue: 0.20))
+            profileStatCell(icon: "figure.run", value: profile.activityLevelShort(), unit: "",
+                            label: "Activity", color: Color(red: 0.35, green: 0.62, blue: 0.93))
         }
     }
 
-    @ViewBuilder
+    func profileStatCell(icon: String, value: String, unit: String, label: String, color: Color) -> some View {
+        VStack(spacing: 10) {
+            Image(systemName: icon).font(.system(size: 20, weight: .semibold)).foregroundColor(color)
+            VStack(spacing: 2) {
+                HStack(alignment: .lastTextBaseline, spacing: 2) {
+                    Text(value).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundColor(themeManager.current.primaryText)
+                    if !unit.isEmpty { Text(unit).font(.system(size: 11)).foregroundColor(themeManager.current.secondaryText) }
+                }
+                Text(label).font(.system(size: 11, weight: .medium)).foregroundColor(themeManager.current.secondaryText)
+                    .textCase(.uppercase).tracking(0.3)
+            }
+        }
+        .frame(maxWidth: .infinity).padding(.vertical, 18)
+        .background(themeManager.current.cardBackground).cornerRadius(18)
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
+    }
+
+    // MARK: - Settings
+
     func settingsSection(profile: UserProfile) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Settings").font(.headline)
-                .foregroundColor(themeManager.current.primaryText)
-                .padding(.horizontal)
-
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Settings")
             VStack(spacing: 0) {
-                SettingsRow(icon: "person.fill", title: "Personal Information",
-                            subtitle: "\(profile.age) years • \(profile.gender) • \(profile.activityLevelText())",
-                            action: { showEditProfile = true })
-                Divider().background(themeManager.current.cardBorder)
+                profileRow(icon: "person.fill", label: "Personal Info",
+                           detail: "\(profile.age)y • \(profile.gender)") { showEditProfile = true }
+                rowDivider
+                profileRow(icon: "target", label: "Nutrition Goals",
+                           detail: "\(profile.calorieTarget) kcal") { showEditProfile = true }
+                rowDivider
+                profileRow(icon: "leaf.fill", label: "Dietary Preferences",
+                           detail: profile.dietaryPreferencesText.isEmpty ? "None" : profile.dietaryPreferencesText) { showEditProfile = true }
+                rowDivider
+                appearanceRow
+                rowDivider
+                profileRow(icon: "star.fill", label: "Rate NutriCam",
+                           detail: "Leave us a review") { rateApp() }
+                rowDivider
+                profileRow(icon: "questionmark.circle.fill", label: "Help & Support",
+                           detail: "FAQ and contact") { showHelpSupport = true }
+            }
+            .background(themeManager.current.cardBackground).cornerRadius(18)
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
+        }
+    }
 
-                SettingsRow(icon: "target", title: "Nutrition Goals",
-                            subtitle: "\(profile.calorieTarget) kcal daily target",
-                            action: { showEditProfile = true })
-                Divider().background(themeManager.current.cardBorder)
-
-                SettingsRow(icon: "leaf.fill", title: "Dietary Preferences",
-                            subtitle: profile.dietaryPreferencesText,
-                            action: { showEditProfile = true })
-                Divider().background(themeManager.current.cardBorder)
-
-                HStack(spacing: 16) {
-                    Image(systemName: themeManager.current.icon).font(.title3).foregroundColor(.orange).frame(width: 24)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Appearance").font(.subheadline).fontWeight(.medium)
-                            .foregroundColor(themeManager.current.primaryText)
-                        Text(themeManager.current == .dark ? "Dark Mode" : "Light Mode")
-                            .font(.caption).foregroundColor(themeManager.current.secondaryText)
-                    }
-                    Spacer()
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                            themeManager.current = themeManager.current == .dark ? .light : .dark
-                        }
-                    }) {
-                        ZStack {
-                            Capsule()
-                                .fill(themeManager.current == .dark ? Color.white.opacity(0.15) : Color.orange)
-                                .frame(width: 56, height: 30)
-                            HStack {
-                                if themeManager.current == .light { Spacer() }
-                                Circle().fill(.white).frame(width: 24, height: 24).shadow(radius: 2).padding(3)
-                                if themeManager.current == .dark { Spacer() }
-                            }
-                            .frame(width: 56, height: 30)
-                        }
-                    }
-                    .buttonStyle(PlainButtonStyle())
+    var appearanceRow: some View {
+        HStack(spacing: 14) {
+            Image(systemName: themeManager.current == .dark ? "moon.fill" : "sun.max.fill")
+                .font(.system(size: 16, weight: .semibold)).foregroundColor(themeManager.current.primaryText).frame(width: 22)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Appearance").font(.system(size: 15, weight: .medium)).foregroundColor(themeManager.current.primaryText)
+                Text(themeManager.current == .dark ? "Dark Mode" : "Light Mode")
+                    .font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
+            }
+            Spacer()
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    themeManager.current = themeManager.current == .dark ? .light : .dark
                 }
-                .padding().contentShape(Rectangle())
-                Divider().background(themeManager.current.cardBorder)
-
-                SettingsRow(icon: "star.fill", title: "Rate NutriCam",
-                            subtitle: "Love the app? Leave us a review!", action: rateApp)
-                Divider().background(themeManager.current.cardBorder)
-
-                SettingsRow(icon: "questionmark.circle.fill", title: "Help & Support",
-                            subtitle: "Privacy Policy, FAQ and support",
-                            action: { showHelpSupport = true })
+            }) {
+                ZStack {
+                    Capsule()
+                        .fill(themeManager.current == .dark ? Color.white.opacity(0.15) : Color.black.opacity(0.08))
+                        .frame(width: 52, height: 28)
+                        .overlay(Capsule().stroke(themeManager.current.cardBorder, lineWidth: 1))
+                    HStack {
+                        if themeManager.current == .light { Spacer() }
+                        Circle().fill(themeManager.current == .dark ? Color.white : Color.black)
+                            .frame(width: 22, height: 22).padding(3)
+                        if themeManager.current == .dark { Spacer() }
+                    }
+                    .frame(width: 52)
+                }
             }
-            .background(RoundedRectangle(cornerRadius: 16).fill(themeManager.current.cardBackground)
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1)))
+            .buttonStyle(.plain)
         }
+        .padding(.horizontal, 16).padding(.vertical, 14)
     }
 
-    @ViewBuilder
+    // MARK: - Account
+
     var accountSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Account").font(.headline)
-                .foregroundColor(themeManager.current.primaryText)
-                .padding(.horizontal)
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeader("Account")
             VStack(spacing: 0) {
-                SettingsRow(icon: "arrow.right.square.fill", title: "Logout",
-                            subtitle: "Sign out of your account", titleColor: .red,
-                            action: { showLogoutAlert = true })
-                Divider().background(themeManager.current.cardBorder)
-                SettingsRow(icon: "trash.fill", title: "Delete Account",
-                            subtitle: "Permanently delete your account and all data", titleColor: .red,
-                            action: { showDeleteAccountAlert = true })
+                Button(action: { showLogoutAlert = true }) {
+                    HStack(spacing: 14) {
+                        Image(systemName: "arrow.right.square.fill")
+                            .font(.system(size: 16, weight: .semibold)).foregroundColor(.red).frame(width: 22)
+                        Text("Logout").font(.system(size: 15, weight: .medium)).foregroundColor(.red)
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .medium))
+                            .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 14)
+                }
+                .buttonStyle(.plain)
+
+                Divider().background(themeManager.current.cardBorder).padding(.leading, 52)
+
+                Button(action: { showDeleteAccountAlert = true }) {
+                    HStack(spacing: 14) {
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 16, weight: .semibold)).foregroundColor(.red).frame(width: 22)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Delete Account").font(.system(size: 15, weight: .medium)).foregroundColor(.red)
+                            Text("Permanently removes all data").font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .medium))
+                            .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 14)
+                }
+                .buttonStyle(.plain)
             }
-            .background(RoundedRectangle(cornerRadius: 16).fill(Color.red.opacity(0.05))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.red.opacity(0.2), lineWidth: 1)))
+            .background(themeManager.current.cardBackground).cornerRadius(18)
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.red.opacity(0.15), lineWidth: 1))
         }
     }
 
-    @ViewBuilder
-    func appInfoSection() -> some View {
-        VStack(spacing: 8) {
-            Text("NutriCam").font(.caption).foregroundColor(themeManager.current.secondaryText)
-            Text("Version 1.0.0").font(.caption2).foregroundColor(themeManager.current.secondaryText)
+    var appInfo: some View {
+        VStack(spacing: 4) {
+            Text("NutriSnap").font(.system(size: 12, weight: .semibold))
+                .foregroundColor(themeManager.current.secondaryText.opacity(0.6))
+            Text("Version 1.0.0").font(.system(size: 11))
+                .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
         }
-        .padding(.bottom, 40)
+        .padding(.top, 8)
     }
 
-    // MARK: - Helper Functions
+    var setupPrompt: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "person.crop.circle.badge.exclamationmark")
+                .font(.system(size: 44)).foregroundColor(themeManager.current.secondaryText.opacity(0.4))
+            VStack(spacing: 6) {
+                Text("Profile not set up").font(.system(size: 17, weight: .bold)).foregroundColor(themeManager.current.primaryText)
+                Text("Set up your profile to get personalized nutrition goals")
+                    .font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText).multilineTextAlignment(.center)
+            }
+            Button(action: { showEditProfile = true }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.right.circle.fill")
+                    Text("Set Up Now")
+                }
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(themeManager.current == .dark ? .black : .white)
+                .frame(maxWidth: .infinity).padding(.vertical, 14)
+                .background(themeManager.current == .dark ? Color.white : Color.black).cornerRadius(14)
+            }
+            .padding(.horizontal, 20)
+        }
+        .padding(24).background(themeManager.current.cardBackground).cornerRadius(18)
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
+    }
+
+    var deletionOverlay: some View {
+        Color.black.opacity(0.5).ignoresSafeArea()
+            .overlay(VStack(spacing: 16) {
+                ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)).scaleEffect(1.4)
+                Text("Deleting account…").font(.system(size: 15, weight: .semibold)).foregroundColor(.white)
+            }
+            .padding(32).background(Color.black.opacity(0.7)).cornerRadius(20))
+    }
+
+    // MARK: - Row Components
+
+    func profileRow(icon: String, label: String, detail: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: icon).font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(themeManager.current.primaryText).frame(width: 22)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(label).font(.system(size: 15, weight: .medium)).foregroundColor(themeManager.current.primaryText)
+                    Text(detail).font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText).lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
+            }
+            .padding(.horizontal, 16).padding(.vertical, 14).contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    var rowDivider: some View {
+        Divider().background(themeManager.current.cardBorder).padding(.leading, 52)
+    }
+
+    func sectionHeader(_ title: String) -> some View {
+        Text(title).font(.system(size: 13, weight: .semibold)).foregroundColor(themeManager.current.secondaryText)
+            .textCase(.uppercase).tracking(0.5).padding(.horizontal, 4)
+    }
+
+    // MARK: - Actions
 
     func formatSyncDate(_ date: Date) -> String {
-        let formatter = RelativeDateTimeFormatter(); formatter.unitsStyle = .short
-        return formatter.localizedString(for: date, relativeTo: Date())
+        let f = RelativeDateTimeFormatter(); f.unitsStyle = .short
+        return f.localizedString(for: date, relativeTo: Date())
     }
 
     func refreshProfile() async {
         await withCheckedContinuation { continuation in
-            print("🔄 Pull-to-refresh triggered")
             profileManager.fetchProfile(force: true)
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { continuation.resume() }
         }
     }
 
-    func performLogout() {
-        isLoggingOut = true; profileManager.clearProfile(); session.logout()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { self.isLoggingOut = false; self.dismiss() }
-    }
+    func performLogout() { profileManager.clearProfile(); session.logout(); dismiss() }
 
     func performAccountDeletion() {
         isDeletingAccount = true
         guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/delete_account") else {
-            DispatchQueue.main.async { self.isDeletingAccount = false; self.errorMessage = "Failed to connect to server"; self.showErrorAlert = true }
-            return
+            isDeletingAccount = false; errorMessage = "Server error"; showErrorAlert = true; return
         }
         var request = URLRequest(url: url); request.httpMethod = "DELETE"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token = session.getAuthToken() { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
-        print("🗑️ Sending account deletion request...")
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
                 self.isDeletingAccount = false
-                if let error = error {
-                    print("❌ Account deletion network error: \(error.localizedDescription)")
-                    self.errorMessage = "Network error. Please try again."; self.showErrorAlert = true; return
-                }
-                if let httpResponse = response as? HTTPURLResponse {
-                    print("🌐 Account deletion response code: \(httpResponse.statusCode)")
-                    if httpResponse.statusCode == 200 {
-                        print("✅ Account deleted successfully")
-                        self.profileManager.clearProfile(); self.session.logout(); self.dismiss()
-                    } else if httpResponse.statusCode == 401 {
-                        print("❌ Unauthorized - token may be expired")
-                        self.errorMessage = "Session expired. Please login again."; self.showErrorAlert = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) { self.session.logout(); self.dismiss() }
-                    } else {
-                        print("❌ Account deletion failed with status: \(httpResponse.statusCode)")
-                        self.errorMessage = "Failed to delete account. Please contact support."; self.showErrorAlert = true
-                    }
+                if error != nil { self.errorMessage = "Network error."; self.showErrorAlert = true; return }
+                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                    self.profileManager.clearProfile(); self.session.logout(); self.dismiss()
                 } else {
-                    print("❌ Invalid response from server")
-                    self.errorMessage = "Invalid server response. Please try again."; self.showErrorAlert = true
+                    self.errorMessage = "Failed to delete account. Please contact support."; self.showErrorAlert = true
                 }
             }
         }.resume()
@@ -459,129 +488,47 @@ struct ProfileView: View {
         var request = URLRequest(url: url); request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let token = session.getAuthToken() { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
-        let body = ["name": trimmed]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-        URLSession.shared.dataTask(with: request) { data, response, error in
+        request.httpBody = try? JSONSerialization.data(withJSONObject: ["name": trimmed])
+        URLSession.shared.dataTask(with: request) { _, response, error in
             DispatchQueue.main.async {
-                isSavingName = false
-                if let error = error { nameError = error.localizedDescription; return }
-                guard let http = response as? HTTPURLResponse else { nameError = "Invalid server response"; return }
-                if http.statusCode == 200 {
-                    session.userName = trimmed; isEditingName = false; profileManager.fetchProfile(force: true)
-                } else { nameError = "Failed to update name" }
+                self.isSavingName = false
+                if error != nil { self.nameError = "Network error"; return }
+                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                    self.session.userName = trimmed; self.isEditingName = false; self.profileManager.fetchProfile(force: true)
+                } else { self.nameError = "Failed to update name" }
             }
         }.resume()
+    }
+
+    func openEmailSupport() {
+        if let url = URL(string: "mailto:support@nutricam.com?subject=NutriCam%20Support%20Request") {
+            UIApplication.shared.open(url)
+        }
     }
 
     func rateApp() {
         if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
             AppStore.requestReview(in: windowScene)
-        } else if let url = URL(string: "https://apps.apple.com/us/app/nutrition-cam/id6749919732") {
-            UIApplication.shared.open(url)
         }
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - UserProfile extensions
 
-struct PrivacyPolicyPoint: View {
-    let icon: String; let title: String; let description: String
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon).foregroundColor(.orange).font(.title3).frame(width: 24)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.subheadline).fontWeight(.semibold).foregroundColor(.white)
-                Text(description).font(.caption).foregroundColor(.gray).fixedSize(horizontal: false, vertical: true)
-            }
+extension UserProfile {
+    func activityLevelShort() -> String {
+        switch activityLevel.lowercased() {
+        case "sedentary":         return "Sedentary"
+        case "lightly_active":    return "Light"
+        case "moderately_active": return "Moderate"
+        case "very_active":       return "Active"
+        case "extremely_active":  return "Extreme"
+        default:                  return activityLevelText()
         }
     }
 }
 
-struct SupportContactRow: View {
-    let icon: String; let title: String; let subtitle: String; let action: () -> Void
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: icon).foregroundColor(.orange).font(.title3).frame(width: 24)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title).font(.subheadline).fontWeight(.medium).foregroundColor(.white)
-                    Text(subtitle).font(.caption).foregroundColor(.gray)
-                }
-                Spacer()
-                Image(systemName: "chevron.right").font(.caption).foregroundColor(.gray)
-            }
-            .padding(.vertical, 8)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-struct FullPrivacyPolicyView: View {
-    @Environment(\.dismiss) var dismiss
-    let privacyPolicyText = """
-    Privacy Policy for NutriSnap
-
-    Last updated: August 01, 2025
-
-    This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.
-
-    We use Your Personal data to provide and improve the Service. By using the Service, You agree to the collection and use of information in accordance with this Privacy Policy.
-
-    COLLECTING AND USING YOUR PERSONAL DATA
-
-    Types of Data Collected:
-    • Email address
-    • Usage Data (IP address, browser type, device information)
-    • Photos and camera access (for meal analysis)
-    • Location information (with your permission)
-
-    How We Use Your Data:
-    • To provide and maintain our Service
-    • To manage your account and registration
-    • To contact you about updates and security notifications
-    • To analyze usage and improve our Service
-    • For business transfers or legal requirements
-
-    DATA SECURITY
-    The security of Your Personal Data is important to Us. While We strive to use commercially acceptable means to protect Your Personal Data, We cannot guarantee its absolute security.
-
-    YOUR RIGHTS
-    • Right to access your personal data
-    • Right to correct or update your information
-    • Right to delete your personal data
-    • Right to data portability
-
-    ACCOUNT DELETION
-    You can delete your account at any time through the app settings. Account deletion will permanently remove all your data including meals, nutrition history, and profile information. This action cannot be undone.
-
-    CHILDREN'S PRIVACY
-    Our Service does not address anyone under the age of 13. We do not knowingly collect personally identifiable information from anyone under the age of 13.
-
-    CONTACT US
-    If you have any questions about this Privacy Policy, You can contact us:
-    • By email: support@nutricam.com
-
-    For the complete Privacy Policy, visit our website or contact us directly.
-    """
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    Text(privacyPolicyText).font(.system(size: 14)).foregroundColor(.white).padding()
-                }
-            }
-            .background(Color.black)
-            .navigationTitle("Privacy Policy")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") { dismiss() }.foregroundColor(.orange)
-                }
-            }
-        }
-        .preferredColorScheme(.dark)
-    }
-}
+// MARK: - Supporting Views（保留，供其他地方使用）
 
 struct StatCard: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -599,7 +546,7 @@ struct StatCard: View {
         }
         .frame(maxWidth: .infinity).padding(.vertical, 20)
         .background(RoundedRectangle(cornerRadius: 16).fill(themeManager.current.cardBackground)
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(color.opacity(0.2), lineWidth: 1)))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1)))
     }
 }
 
@@ -612,8 +559,7 @@ struct SettingsRow: View {
         Button(action: action) {
             HStack(spacing: 16) {
                 Image(systemName: icon).font(.title3)
-                    .foregroundColor(titleColor == .primary ? .orange : titleColor)
-                    .frame(width: 24)
+                    .foregroundColor(titleColor == .primary ? themeManager.current.primaryText : titleColor).frame(width: 24)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title).font(.subheadline).fontWeight(.medium)
                         .foregroundColor(titleColor == .primary ? themeManager.current.primaryText : titleColor)
@@ -625,5 +571,19 @@ struct SettingsRow: View {
             .padding().contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct FullPrivacyPolicyView: View {
+    @Environment(\.dismiss) var dismiss
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                Text("Privacy Policy for NutriSnap\n\nLast updated: August 01, 2025\n\nWe collect email, usage data, photos, and location (with permission) to provide and improve our service. Contact: support@nutricam.com")
+                    .font(.system(size: 14)).foregroundColor(.primary).padding()
+            }
+            .navigationTitle("Privacy Policy").navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .navigationBarTrailing) { Button("Done") { dismiss() } } }
+        }
     }
 }
