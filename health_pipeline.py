@@ -1,12 +1,5 @@
 # health_pipeline.py
 # Health Agent — AI 逻辑层
-# app.py 通过 import 调用这里的函数
-# 跟 model_pipeline.py 的架构完全一致
-# health_pipeline.py
-# Health Agent — AI 逻辑层
-# app.py 通过 import 调用这里的函数
-# health_pipeline.py
-# Health Agent — AI 逻辑层
 
 import google.generativeai as genai
 import os
@@ -281,10 +274,15 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
         try: os.remove(tmp_path)
         except: pass
 
+        # ✅ 检查 model_pipeline 是否成功
+        if "error" in analysis or not analysis.get("nutrition_info"):
+            raise Exception(f"model_pipeline failed: {analysis.get('error', 'empty nutrition_info')}")
+
         dish_name      = analysis.get("dish_prediction", "Unknown dish")
         visible_ingr   = analysis.get("image_description", "")
         hidden_ingr    = analysis.get("hidden_ingredients", "")
         nutrition_info = analysis.get("nutrition_info", "")
+        print(f"✅ model_pipeline success: {dish_name} | nutrition lines: {len(nutrition_info.splitlines())}")
 
         # 解析营养数值
         def parse_nutrient(text, key):

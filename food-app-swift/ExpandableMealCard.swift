@@ -4,7 +4,6 @@
 //
 //  Created by Helen Tu on 4/12/26.
 //
-
 // ExpandableMealCard.swift
 // Diet Plan 餐食卡片：
 // - 展开/收起食物列表
@@ -19,6 +18,7 @@ struct ExpandableMealCard: View {
     let day: DayMealPlan
     let plan: WeeklyMealPlan
     let today: String
+    var complianceScore: Int? = nil   // 已 log 则显示分数徽章
     var onPhotoSelected: ((Data) -> Void)?
 
     @State private var isExpanded = false
@@ -33,40 +33,48 @@ struct ExpandableMealCard: View {
         VStack(alignment: .leading, spacing: 0) {
             // ── Header row ──
             Button(action: { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { isExpanded.toggle() } }) {
-                HStack(spacing: 10) {
-                    // Meal type badge
-                    Text(meal.mealType.capitalized)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(mealTypeColor(meal.mealType))
-                        .padding(.horizontal, 8).padding(.vertical, 4)
-                        .background(mealTypeColor(meal.mealType).opacity(0.12))
-                        .cornerRadius(20)
+                VStack(alignment: .leading, spacing: 6) {
+                    // Row 1: badge + kcal + score + chevron
+                    HStack(spacing: 8) {
+                        Text(meal.mealType.capitalized)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(mealTypeColor(meal.mealType))
+                            .padding(.horizontal, 8).padding(.vertical, 3)
+                            .background(mealTypeColor(meal.mealType).opacity(0.12))
+                            .cornerRadius(20)
 
-                    // Meal name — full text, no truncation
+                        Spacer()
+
+                        Text("\(meal.totalCalories) kcal")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(themeManager.current.primaryText)
+
+                        if let score = complianceScore {
+                            Text("\(score)%")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .background(score >= 75 ? Color.green : score >= 50 ? Color.orange : Color.red)
+                                .cornerRadius(10)
+                        }
+
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(themeManager.current.secondaryText)
+                    }
+
+                    // Row 2: meal name (1 line collapsed, full expanded)
                     if let name = meal.name {
                         Text(name)
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(themeManager.current.primaryText)
-                            .multilineTextAlignment(.leading)
+                            .lineLimit(isExpanded ? nil : 2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-
-                    Spacer(minLength: 8)
-
-                    // Calories
-                    Text("\(meal.totalCalories) kcal")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
-                        .foregroundColor(themeManager.current.primaryText)
-                        .fixedSize()
-
-                    // Expand chevron
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(themeManager.current.secondaryText)
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 14)
-                .padding(.bottom, isExpanded ? 10 : 14)
+                .padding(.top, 12)
+                .padding(.bottom, isExpanded ? 8 : 12)
             }
             .buttonStyle(.plain)
 

@@ -4,7 +4,6 @@
 //
 //  Created by Helen Tu on 4/9/26.
 //
-
 // MealPlanView.swift
 // Health Agent — 一周饮食计划展示
 
@@ -26,6 +25,7 @@ struct MealPlanView: View {
     @State private var showError = false
     @State private var showPlanGenerator = false
     @State private var isAnalyzing = false
+    @State private var loggedMeals: [String: Int] = [:]  // meal.id → compliance score
 
     let nutritionPlan: NutritionPlan
     let healthProfile: HealthProfile
@@ -78,9 +78,20 @@ struct MealPlanView: View {
             // Camera handled by ExpandableMealCard
             .sheet(isPresented: $showCompliance) {
                 if let result = complianceResult {
-                    PhotoComplianceView(mealLog: result, weeklyPlan: weeklyPlan)
-                        .environmentObject(themeManager)
-                        .onDisappear { loadOrGeneratePlan() }
+                    PhotoComplianceView(
+                        mealLog: result,
+                        weeklyPlan: weeklyPlan,
+                        plannedMeal: selectedMealForPhoto
+                    )
+                    .environmentObject(themeManager)
+                    .onDisappear {
+                        // 记录该餐已完成，更新 UI 标记
+                        if let meal = selectedMealForPhoto,
+                           let score = complianceResult?.complianceScore {
+                            loggedMeals[meal.id] = score
+                        }
+                        loadOrGeneratePlan()
+                    }
                 }
             }
             .alert("Error", isPresented: $showError) {
@@ -223,11 +234,17 @@ struct MealPlanView: View {
     }
 
     func plannedMealCard(meal: PlannedMeal, day: DayMealPlan, plan: WeeklyMealPlan) -> some View {
-        ExpandableMealCard(meal: meal, day: day, plan: plan,
-                           today: today, onPhotoSelected: { imageData in
-            selectedMealForPhoto = meal
-            analyzePhoto(imageData: imageData)
-        })
+        ExpandableMealCard(
+            meal: meal,
+            day: day,
+            plan: plan,
+            today: today,
+            complianceScore: loggedMeals[meal.id],  // 已分析的显示分数徽章
+            onPhotoSelected: { imageData in
+                selectedMealForPhoto = meal
+                analyzePhoto(imageData: imageData)
+            }
+        )
         .environmentObject(themeManager)
     }
 
@@ -466,6 +483,7 @@ struct PhotoComplianceView: View {
 
     let mealLog: MealLog
     let weeklyPlan: WeeklyMealPlan?
+    var plannedMeal: PlannedMeal? = nil  // 直接传入，不依赖 mealLog.plannedMeal
 
     var scoreColor: Color {
         switch mealLog.complianceScore {
@@ -543,29 +561,33 @@ struct PhotoComplianceView: View {
                 .font(.system(size: 15, weight: .bold))
                 .foregroundColor(themeManager.current.primaryText)
 
-            let planned = mealLog.plannedMeal
+            let planned = plannedMeal ?? mealLog.plannedMeal
             HStack(spacing: 0) {
                 VStack(spacing: 8) {
                     Text("Actual")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(themeManager.current.secondaryText)
-                    compRow("Calories", "\(mealLog.estimatedCalories) kcal")
-                    compRow("Protein", "\(mealLog.estimatedProtein)g")
-                    compRow("Carbs", "\(mealLog.estimatedCarbs)g")
-                    compRow("Fat", "\(mealLog.estimatedFat)g")
+                    compRow("Calories", "\(mealLog.estimatedCalories) kcal",
+                            planned.map { abs(mealLog.estimatedCalories - $0.totalCalories) < $0.totalCalories / 4 })
+                    compRow("Protein", "\(mealLog.estimatedProtein)g",
+                            planned.map { abs(mealLog.estimatedProtein - $0.totalProtein) < $0.totalProtein / 4 })
+                    compRow("Carbs", "\(mealLog.estimatedCarbs)g",
+                            planned.map { abs(mealLog.estimatedCarbs - $0.totalCarbs) < $0.totalCarbs / 4 })
+                    compRow("Fat", "\(mealLog.estimatedFat)g",
+                            planned.map { abs(mealLog.estimatedFat - $0.totalFat) < $0.totalFat / 4 })
                 }
                 .frame(maxWidth: .infinity)
 
-                Divider().frame(height: 120).background(themeManager.current.cardBorder)
+                Divider().frame(height: 140).background(themeManager.current.cardBorder)
 
                 VStack(spacing: 8) {
                     Text("Planned")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(themeManager.current.secondaryText)
-                    compRow("Calories", planned.map { "\($0.totalCalories) kcal" } ?? "—")
-                    compRow("Protein", planned.map { "\($0.totalProtein)g" } ?? "—")
-                    compRow("Carbs", planned.map { "\($0.totalCarbs)g" } ?? "—")
-                    compRow("Fat", planned.map { "\($0.totalFat)g" } ?? "—")
+                    compRow("Calories", planned.map { "\($0.totalCalories) kcal" } ?? "—", nil)
+                    compRow("Protein", planned.map { "\($0.totalProtein)g" } ?? "—", nil)
+                    compRow("Carbs", planned.map { "\($0.totalCarbs)g" } ?? "—", nil)
+                    compRow("Fat", planned.map { "\($0.totalFat)g" } ?? "—", nil)
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -576,11 +598,19 @@ struct PhotoComplianceView: View {
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
     }
 
-    func compRow(_ label: String, _ value: String) -> some View {
+    func compRow(_ label: String, _ value: String, _ withinRange: Bool?) -> some View {
         VStack(spacing: 2) {
-            Text(value)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(themeManager.current.primaryText)
+            HStack(spacing: 3) {
+                Text(value)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(withinRange == nil ? themeManager.current.primaryText
+                                     : withinRange! ? .green : .orange)
+                if let ok = withinRange {
+                    Image(systemName: ok ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(ok ? .green : .orange)
+                }
+            }
             Text(label)
                 .font(.system(size: 11))
                 .foregroundColor(themeManager.current.secondaryText)
