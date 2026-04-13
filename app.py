@@ -395,7 +395,13 @@ def save_meal():
 def get_user_meals():
     try:
         user_id = request.user_id
-        meals = list(meals_collection.find({"user_id": user_id}).sort("saved_at", -1))
+        # 同时匹配 string 和 ObjectId 格式的 user_id（兼容旧数据）
+        try:
+            query = {"$or": [{"user_id": user_id}, {"user_id": ObjectId(user_id)}]}
+        except Exception:
+            query = {"user_id": user_id}
+        meals = list(meals_collection.find(query).sort("saved_at", -1))
+        print(f"📊 Found {len(meals)} meals for user {user_id}")
         processed = []
         for meal in meals:
             meal["_id"] = str(meal["_id"])
@@ -416,6 +422,9 @@ def get_user_meals():
                 meal.pop(f, None)
             meal.setdefault("image_full", "")
             meal.setdefault("image_thumb", "")
+            # 确保新字段存在（diet plan meals）
+            meal.setdefault("from_diet_plan", False)
+            meal.setdefault("compliance_score", None)
             processed.append(meal)
         return jsonify(processed), 200
     except Exception as e:
@@ -1078,24 +1087,57 @@ def analyze_meal_photo_route():
         }
         db["meal_logs"].insert_one(log_doc)
 
-        # ── 2. 同时保存到 meals（出现在 Meal History / Dashboard）──
-        if result.get("dish_prediction") and result.get("nutrition_info"):
-            meal_doc = {
-                "user_id": user_id,
-                "dish_prediction": result.get("dish_prediction", "Diet Plan Meal"),
-                "image_description": result.get("image_description", ""),
-                "nutrition_info": result.get("nutrition_info", ""),
-                "hidden_ingredients": result.get("hidden_ingredients", ""),
-                "image_full": None,
-                "image_thumb": None,
-                "meal_type": meal_type.capitalize(),
-                "saved_at": datetime.now().isoformat(),
-                "analysis_method": "health_agent",
-                "from_diet_plan": True,
-                "compliance_score": result.get("compliance_score", 0)
-            }
-            meals_collection.insert_one(meal_doc)
-            print(f"✅ Meal saved to history: {meal_doc['dish_prediction']}")
+        # ── 2. 同时保存到 meals（Meal History / Dashboard）──
+        estimated_cal = result.get("estimated_calories", 0)
+        nutrition_info = result.get("nutrition_info", "")
+
+        # 如果 nutrition_info 为空，用 estimated 数值构建
+        if not nutrition_info:
+            ep = result.get("estimated_protein", 0)
+            ec = result.get("estimated_carbs", 0)
+            ef = result.get("estimated_fat", 0)
+            nutrition_info = (
+                f"Calories|{estimated_cal}|kcal\n"
+                f"Protein|{ep}|g\n"
+                f"Fat|{ef}|g\n"
+                f"Carbohydrates|{ec}|g\n"
+                f"Fiber|0|g\nSugar|0|g\nSodium|0|mg"
+            )
+
+        dish = result.get("dish_prediction") or f"Diet Plan {meal_type.capitalize()}"
+        img_desc = result.get("image_description") or ", ".join(result.get("detected_foods", []))
+
+        # 压缩图片存缩略图
+        try:
+            import base64 as b64mod
+            from PIL import Image as PILImage
+            from io import BytesIO
+            raw = b64mod.b64decode(image_b64)
+            img = PILImage.open(BytesIO(raw)).convert("RGB")
+            buf = BytesIO()
+            img.thumbnail((200, 200))
+            img.save(buf, format="JPEG", quality=50)
+            thumb_b64 = b64mod.b64encode(buf.getvalue()).decode()
+        except Exception as ie:
+            print(f"⚠️ Thumb failed: {ie}")
+            thumb_b64 = None
+
+        meal_doc = {
+            "user_id": user_id,
+            "dish_prediction": dish,
+            "image_description": img_desc,
+            "nutrition_info": nutrition_info,
+            "hidden_ingredients": result.get("hidden_ingredients", ""),
+            "image_full": None,
+            "image_thumb": thumb_b64,
+            "meal_type": meal_type.capitalize(),
+            "saved_at": datetime.now().isoformat(),
+            "analysis_method": "health_agent",
+            "from_diet_plan": True,
+            "compliance_score": result.get("compliance_score", 0)
+        }
+        meals_collection.insert_one(meal_doc)
+        print(f"✅ Meal saved to history: {dish} | {estimated_cal} kcal | thumb: {bool(thumb_b64)}")
 
         return jsonify(result), 200
 

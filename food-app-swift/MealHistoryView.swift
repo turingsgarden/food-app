@@ -9,6 +9,38 @@
 
 import SwiftUI
 
+// 兼容带微秒的 ISO8601 格式（2026-04-13T03:51:35.123456）
+func parseISO8601(_ s: String?) -> Date? {
+    guard let s = s, !s.isEmpty else { return nil }
+    let formatters: [ISO8601DateFormatter] = [
+        {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return f
+        }(),
+        {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime]
+            return f
+        }(),
+        ISO8601DateFormatter()
+    ]
+    for f in formatters {
+        if let d = f.date(from: s) { return d }
+    }
+    // 最后尝试 DateFormatter
+    let df = DateFormatter()
+    for fmt in ["yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd HH:mm:ss"] {
+        df.dateFormat = fmt
+        df.locale = Locale(identifier: "en_US_POSIX")
+        if let d = df.date(from: s) { return d }
+    }
+    return nil
+}
+
 struct MealHistoryView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @State private var meals: [Meal] = []
@@ -32,14 +64,14 @@ struct MealHistoryView: View {
 
     var groupedMeals: [(String, [Meal])] {
         let grouped = Dictionary(grouping: filteredMeals) { meal -> String in
-            if let savedAt = meal.saved_at, let date = ISO8601DateFormatter().date(from: savedAt) {
+            if let savedAt = meal.saved_at, let date = parseISO8601(savedAt) {
                 return formatDateHeader(date)
             }
             return "Unknown Date"
         }
         return grouped.sorted { a, b in
-            let dateA = a.value.compactMap { ISO8601DateFormatter().date(from: $0.saved_at ?? "") }.max() ?? .distantPast
-            let dateB = b.value.compactMap { ISO8601DateFormatter().date(from: $0.saved_at ?? "") }.max() ?? .distantPast
+            let dateA = a.value.compactMap { parseISO8601($0.saved_at) }.max() ?? .distantPast
+            let dateB = b.value.compactMap { parseISO8601($0.saved_at) }.max() ?? .distantPast
             return dateA > dateB
         }.map { ($0.key, $0.value) }
     }
@@ -228,8 +260,8 @@ struct MealHistoryView: View {
                         if !seenIds.contains(meal._id) { seenIds.insert(meal._id); uniqueMeals.append(meal) }
                     }
                     self.meals = uniqueMeals.sorted {
-                        guard let d1 = ISO8601DateFormatter().date(from: $0.saved_at ?? ""),
-                              let d2 = ISO8601DateFormatter().date(from: $1.saved_at ?? "") else { return false }
+                        guard let d1 = parseISO8601($0.saved_at),
+                              let d2 = parseISO8601($1.saved_at) else { return false }
                         return d1 > d2
                     }
                     self.totalCalories = self.meals.compactMap { extractCalories(from: $0.nutrition_info) }.reduce(0, +)
@@ -280,7 +312,7 @@ struct HistoryMealRow: View {
     }
 
     var mealTime: String {
-        guard let s = meal.saved_at, let d = ISO8601DateFormatter().date(from: s) else { return "" }
+        guard let s = meal.saved_at, let d = parseISO8601(s) else { return "" }
         let f = DateFormatter(); f.timeStyle = .short; return f.string(from: d)
     }
 

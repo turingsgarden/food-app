@@ -7,18 +7,24 @@
 // 5. 浮动按钮简化为黑色圆形 + 号（Cal AI 风格）
 // 6. 保留所有原有数据逻辑、网络请求、State 变量不变
 
-// DashboardView.swift — 微调版
-// 改动：
-// 1. 顶部 Header 保持，增加星期横向选择器（参考 Cal AI）
-// 2. 主卡路里卡片重构为 Cal AI 圆环 + 大数字左对齐风格
-// 3. Nutrition Overview 三格替换为更大的 macros 卡片
-// 4. 餐食改为列表（竖排），取代横向滚动
-// 5. 浮动按钮简化为黑色圆形 + 号（Cal AI 风格）
-// 6. 保留所有原有数据逻辑、网络请求、State 变量不变
-
 import SwiftUI
 import Charts
 import Foundation
+
+// 兼容带微秒的 ISO8601（2026-04-13T03:51:35.123456）
+fileprivate func parseISO8601(_ s: String?) -> Date? {
+    guard let s = s, !s.isEmpty else { return nil }
+    let f1 = ISO8601DateFormatter(); f1.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    if let d = f1.date(from: s) { return d }
+    let f2 = ISO8601DateFormatter(); f2.formatOptions = [.withInternetDateTime]
+    if let d = f2.date(from: s) { return d }
+    let df = DateFormatter(); df.locale = Locale(identifier: "en_US_POSIX")
+    for fmt in ["yyyy-MM-dd'T'HH:mm:ss.SSSSSS","yyyy-MM-dd'T'HH:mm:ss.SSS","yyyy-MM-dd'T'HH:mm:ss"] {
+        df.dateFormat = fmt
+        if let d = df.date(from: s) { return d }
+    }
+    return nil
+}
 
 struct DashboardView: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -392,7 +398,9 @@ struct DashboardView: View {
 
                 HStack(alignment: .lastTextBaseline, spacing: 4) {
                     Text("\(animateCalories ? displayedCalories : 0)")
-                        .font(.system(size: 38, weight: .black, design: .rounded))
+                        .font(.system(size: 28, weight: .black, design: .rounded))
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
                         .foregroundColor(themeManager.current.primaryText)
                         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: displayedCalories)
                     Text("/ \(displayedGoal) kcal")
@@ -792,8 +800,8 @@ struct DashboardView: View {
                     var uniqueMeals: [Meal] = []; var seenIds: Set<String> = []
                     for meal in decoded { if !seenIds.contains(meal._id) { seenIds.insert(meal._id); uniqueMeals.append(meal) } }
                     self.meals = uniqueMeals.sorted {
-                        guard let d1 = ISO8601DateFormatter().date(from: $0.saved_at ?? ""),
-                              let d2 = ISO8601DateFormatter().date(from: $1.saved_at ?? "") else { return false }
+                        guard let d1 = parseISO8601($0.saved_at ?? ""),
+                              let d2 = parseISO8601($1.saved_at ?? "") else { return false }
                         return d1 > d2
                     }
                     self.calculateStats(); self.calculateWeeklyStats()
@@ -936,7 +944,7 @@ struct DashboardView: View {
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? today
         var tw = 0.0; var ww: [Double] = []
         for entry in waterIntake {
-            if let d = ISO8601DateFormatter().date(from: entry.recorded_at) {
+            if let d = parseISO8601(entry.recorded_at) {
                 if calendar.isDate(d, inSameDayAs: today) { tw += entry.amount }
                 if d >= startOfWeek { ww.append(entry.amount) }
             }
@@ -949,7 +957,7 @@ struct DashboardView: View {
         let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? today
         var te = 0, we = 0
         for entry in exerciseEntries {
-            if let d = ISO8601DateFormatter().date(from: entry.recorded_at) {
+            if let d = parseISO8601(entry.recorded_at) {
                 if calendar.isDate(d, inSameDayAs: today) { te += entry.duration }
                 if d >= startOfWeek { we += entry.duration }
             }
@@ -964,7 +972,7 @@ struct DashboardView: View {
     func calculateWeeklyStats() {
         let startOfWeek = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
         weeklyMeals = meals.filter { meal in
-            guard let s = meal.saved_at, let d = ISO8601DateFormatter().date(from: s) else { return false }
+            guard let s = meal.saved_at, let d = parseISO8601(s) else { return false }
             return d >= startOfWeek
         }.count
     }
@@ -973,7 +981,7 @@ struct DashboardView: View {
         let calendar = Calendar.current; var streak = 0; var currentDate = calendar.startOfDay(for: Date())
         for _ in 0..<30 {
             let hasM = meals.contains { meal in
-                guard let s = meal.saved_at, let d = ISO8601DateFormatter().date(from: s) else { return false }
+                guard let s = meal.saved_at, let d = parseISO8601(s) else { return false }
                 return calendar.isDate(d, inSameDayAs: currentDate)
             }
             if hasM { streak += 1; currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate }
@@ -990,8 +998,7 @@ struct DashboardView: View {
 
     func isSameDay(_ dateString: String?) -> Bool {
         guard let dateString = dateString else { return false }
-        let formatter = ISO8601DateFormatter(); formatter.timeZone = TimeZone.current
-        guard let mealDate = formatter.date(from: dateString) else { return false }
+        guard let mealDate = parseISO8601(dateString) else { return false }
         return Calendar.current.isDateInToday(mealDate)
     }
 
@@ -1361,7 +1368,7 @@ struct MealListRow: View {
     }
 
     var mealTime: String {
-        guard let s = meal.saved_at, let d = ISO8601DateFormatter().date(from: s) else { return "" }
+        guard let s = meal.saved_at, let d = parseISO8601(s) else { return "" }
         if Calendar.current.isDateInToday(d) {
             let f = DateFormatter(); f.timeStyle = .short; return f.string(from: d)
         }

@@ -1,22 +1,21 @@
 // Meal.swift
 
 import Foundation
-
 struct Meal: Identifiable, Codable {
     let _id: String
     var id: String { _id }
-
-    let user_id: String
+    let user_id: String?          // 改成可选
     var dish_prediction: String
     var image_description: String
-    var hidden_ingredients: String?  // Changed from 'let' to 'var'
-    var nutrition_info: String       // Changed from 'let' to 'var'
+    var hidden_ingredients: String?
+    var nutrition_info: String
     let image_full: String?
     let image_thumb: String?
     let saved_at: String?
     let meal_type: String?
+    let from_diet_plan: Bool?     // 新增，diet plan 来的会有这个
+    let compliance_score: Int?    // 新增
 }
-
 struct GeminiResult: Codable {
     let image_description: String
     let dish_prediction: String
