@@ -30,24 +30,22 @@ from health_pipeline import (
     generate_nutrition_targets,
     generate_weekly_meal_plan,
     analyze_meal_photo,
+    generate_health_report,
 )
 
-# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 verification_store = {}
-meal_plan_jobs = {}  # async job storage
+meal_plan_jobs = {}
 
 APPLE_KEYS = None
 APPLE_KEYS_LAST_FETCH = 0
 
-# JWT Configuration
 app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
 app.config['JWT_EXPIRATION_HOURS'] = 24 * 7
 
-# ── Keep-Alive（防止 Render Free 实例冷启动）
 def _keep_alive_loop():
     time.sleep(60)
     while True:
@@ -61,7 +59,6 @@ def _keep_alive_loop():
 threading.Thread(target=_keep_alive_loop, daemon=True).start()
 print("✅ Keep-alive thread started")
 
-# ── MongoDB
 def init_mongodb():
     try:
         mongo_uri = os.getenv("MONGO_URI")
@@ -97,7 +94,6 @@ else:
     print("⚠️ MongoDB not available")
     users_collection = profiles_collection = meals_collection = analysis_collection = None
 
-# ── Gemini
 try:
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key:
@@ -111,7 +107,6 @@ except Exception as e:
     print(f"❌ Gemini failed: {e}")
     gemini_model = None
 
-# ── Decorators
 def db_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -154,7 +149,8 @@ def generate_token(user_id):
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
-# ── Basic Routes
+# ── Basic Routes ──
+
 @app.route("/ping", methods=["GET"])
 def ping():
     return jsonify({"status": "ok", "timestamp": datetime.now().isoformat()}), 200
@@ -193,7 +189,8 @@ def debug_env():
         "jwt_secret_set": bool(os.getenv("JWT_SECRET_KEY"))
     }), 200
 
-# ── Auth
+# ── Auth ──
+
 @app.route("/register", methods=["POST"])
 @db_required
 def register():
@@ -243,7 +240,8 @@ def login():
         print(f"❌ Login: {e}")
         return jsonify({"error": "Login failed"}), 500
 
-# ── Profile (original nutrition app)
+# ── Profile ──
+
 @app.route("/save-profile", methods=["POST"])
 @token_required
 @db_required
@@ -272,7 +270,8 @@ def get_profile():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ── Analyze (original food photo)
+# ── Analyze ──
+
 @app.route("/analyze", methods=["POST"])
 @token_required
 def analyze():
@@ -361,7 +360,8 @@ def image_file_to_base64(image_path):
     with open(image_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-# ── Meals
+# ── Meals ──
+
 @app.route("/save-meal", methods=["POST"])
 @token_required
 @db_required
@@ -395,7 +395,6 @@ def save_meal():
 def get_user_meals():
     try:
         user_id = request.user_id
-        # 同时匹配 string 和 ObjectId 格式的 user_id（兼容旧数据）
         try:
             query = {"$or": [{"user_id": user_id}, {"user_id": ObjectId(user_id)}]}
         except Exception:
@@ -422,7 +421,6 @@ def get_user_meals():
                 meal.pop(f, None)
             meal.setdefault("image_full", "")
             meal.setdefault("image_thumb", "")
-            # 确保新字段存在（diet plan meals）
             meal.setdefault("from_diet_plan", False)
             meal.setdefault("compliance_score", None)
             processed.append(meal)
@@ -491,7 +489,8 @@ def recalculate_nutrition():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ── Exercise / Water / Weight
+# ── Exercise / Water / Weight ──
+
 @app.route("/add-exercise", methods=["POST"])
 @token_required
 @db_required
@@ -576,7 +575,8 @@ def get_user_weight():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ── Dashboard Stats & Insights
+# ── Dashboard Stats & Insights ──
+
 @app.route("/dashboard-stats", methods=["GET"])
 @token_required
 @db_required
@@ -659,7 +659,8 @@ def get_user_insights():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ── Email / Verification
+# ── Email / Verification ──
+
 from gmail_sender import gmail_send_email
 
 @app.route("/reset_password", methods=["POST"])
@@ -741,7 +742,8 @@ def verify_code():
     del verification_store[email]
     return jsonify({"status": "verified"}), 200
 
-# ── Apple / Google Login
+# ── Apple / Google Login ──
+
 APPLE_KEYS = None
 APPLE_KEYS_LAST_FETCH = 0
 
@@ -832,7 +834,8 @@ def google_login():
         print(f"❌ Google login: {e}")
         return jsonify({"error": "Google login failed"}), 500
 
-# ── Account Management
+# ── Account Management ──
+
 @app.route("/delete_account", methods=["DELETE"])
 @token_required
 @db_required
@@ -907,7 +910,7 @@ def link_email_password():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ── Health Agent Endpoints
+# ── Health Agent Endpoints ──
 
 @app.route("/save-health-profile", methods=["POST"])
 @token_required
@@ -920,6 +923,7 @@ def save_health_profile():
         data["user_id"] = request.user_id
         data["updated_at"] = datetime.now().isoformat()
         db["health_profiles"].update_one({"user_id": request.user_id}, {"$set": data}, upsert=True)
+        # 用户更新档案后删除旧报告，下次打开 Health Tab 时重新生成
         db["health_reports"].delete_many({"user_id": request.user_id})
         print(f"✅ Health profile saved for {request.user_id}")
         return jsonify({"success": True}), 200
@@ -967,7 +971,7 @@ def generate_targets():
 @app.route("/generate-meal-plan", methods=["POST"])
 @token_required
 @db_required
-def generate_meal_plan():
+def generate_meal_plan_route():
     try:
         data = request.get_json()
         if not data:
@@ -1002,11 +1006,11 @@ def generate_meal_plan_async():
             try:
                 print(f"🍽️ Background job {job_id} started")
                 result = generate_weekly_meal_plan(
-                                                   nutrition_plan=data.get("nutrition_plan", {}),
-                                                   health_profile=data.get("health_profile", {}),
-                                                   days=data.get("days", 7),
-                                                   meals_per_day=data.get("meals_per_day", 3),
-                                                   gemini_model=gemini_model)
+                    nutrition_plan=data.get("nutrition_plan", {}),
+                    health_profile=data.get("health_profile", {}),
+                    days=data.get("days", 7),
+                    meals_per_day=data.get("meals_per_day", 3),
+                    gemini_model=gemini_model)
                 result["user_id"] = user_id
                 result["created_at"] = datetime.now().isoformat()
                 db["meal_plans"].update_one({"user_id": user_id}, {"$set": result}, upsert=True)
@@ -1045,7 +1049,6 @@ def get_meal_plan():
         print(f"❌ get_meal_plan: {e}")
         return jsonify({"error": str(e)}), 500
 
-get-meal-plan
 @app.route("/analyze-meal-photo", methods=["POST"])
 @token_required
 @db_required
@@ -1071,11 +1074,8 @@ def analyze_meal_photo_route():
             user_id=user_id
         )
 
-        # ── 1. 保存到 meal_logs（合规记录）──
         log_doc = {
-            "user_id": user_id,
-            "date": date_str,
-            "meal_type": meal_type,
+            "user_id": user_id, "date": date_str, "meal_type": meal_type,
             "planned_meal": data.get("planned_meal", {}),
             "detected_foods": result.get("detected_foods", []),
             "estimated_calories": result.get("estimated_calories", 0),
@@ -1089,31 +1089,22 @@ def analyze_meal_photo_route():
         }
         db["meal_logs"].insert_one(log_doc)
 
-        # ── 2. 同时保存到 meals（Meal History / Dashboard）──
         estimated_cal = result.get("estimated_calories", 0)
         nutrition_info = result.get("nutrition_info", "")
-
-        # 如果 nutrition_info 为空，用 estimated 数值构建
         if not nutrition_info:
             ep = result.get("estimated_protein", 0)
             ec = result.get("estimated_carbs", 0)
             ef = result.get("estimated_fat", 0)
-            nutrition_info = (
-                f"Calories|{estimated_cal}|kcal\n"
-                f"Protein|{ep}|g\n"
-                f"Fat|{ef}|g\n"
-                f"Carbohydrates|{ec}|g\n"
-                f"Fiber|0|g\nSugar|0|g\nSodium|0|mg"
-            )
+            nutrition_info = (f"Calories|{estimated_cal}|kcal\nProtein|{ep}|g\n"
+                              f"Fat|{ef}|g\nCarbohydrates|{ec}|g\n"
+                              f"Fiber|0|g\nSugar|0|g\nSodium|0|mg")
 
         dish = result.get("dish_prediction") or f"Diet Plan {meal_type.capitalize()}"
         img_desc = result.get("image_description") or ", ".join(result.get("detected_foods", []))
 
-        # 压缩图片存缩略图
         try:
             import base64 as b64mod
             from PIL import Image as PILImage
-            from io import BytesIO
             raw = b64mod.b64decode(image_b64)
             img = PILImage.open(BytesIO(raw)).convert("RGB")
             buf = BytesIO()
@@ -1125,13 +1116,10 @@ def analyze_meal_photo_route():
             thumb_b64 = None
 
         meal_doc = {
-            "user_id": user_id,
-            "dish_prediction": dish,
-            "image_description": img_desc,
-            "nutrition_info": nutrition_info,
+            "user_id": user_id, "dish_prediction": dish,
+            "image_description": img_desc, "nutrition_info": nutrition_info,
             "hidden_ingredients": result.get("hidden_ingredients", ""),
-            "image_full": None,
-            "image_thumb": thumb_b64,
+            "image_full": None, "image_thumb": thumb_b64,
             "meal_type": meal_type.capitalize(),
             "saved_at": datetime.now().isoformat(),
             "analysis_method": "health_agent",
@@ -1139,7 +1127,7 @@ def analyze_meal_photo_route():
             "compliance_score": result.get("compliance_score", 0)
         }
         meals_collection.insert_one(meal_doc)
-        print(f"✅ Meal saved to history: {dish} | {estimated_cal} kcal | thumb: {bool(thumb_b64)}")
+        print(f"✅ Meal saved: {dish} | {estimated_cal} kcal")
 
         return jsonify(result), 200
 
@@ -1150,7 +1138,102 @@ def analyze_meal_photo_route():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-# ── Error Handlers
+# ✅ 新增：Health Report Endpoints
+
+@app.route("/generate-health-report", methods=["POST"])
+@token_required
+@db_required
+def generate_health_report_route():
+    try:
+        data = request.get_json()
+        force_regenerate = data.get("force", False) if data else False
+
+        # 如果不强制重新生成，先查缓存
+        if not force_regenerate:
+            existing = db["health_reports"].find_one(
+                {"user_id": request.user_id},
+                sort=[("created_at", -1)]
+            )
+            if existing:
+                existing["_id"] = str(existing["_id"])
+                print(f"📋 Returning cached health report for {request.user_id}")
+                return jsonify(existing), 200
+
+        # 获取健康档案
+        profile = db["health_profiles"].find_one({"user_id": request.user_id})
+        if not profile:
+            return jsonify({"error": "Health profile not found"}), 404
+
+        goals = data.get("goals", []) if data else []
+        if not goals:
+            plan = db["nutrition_plans"].find_one({"user_id": request.user_id})
+            if plan:
+                goals = plan.get("goals", [])
+
+        # 生成报告
+        result = generate_health_report(
+            profile=profile,
+            goals=goals,
+            gemini_model=gemini_model
+        )
+
+        result["user_id"] = request.user_id
+        result["goals"] = goals
+        result["created_at"] = datetime.now().isoformat()
+
+        db["health_reports"].update_one(
+            {"user_id": request.user_id},
+            {"$set": result},
+            upsert=True
+        )
+
+        # 同步更新 nutrition_plans，让 Dashboard 能读到最新营养目标
+        db["nutrition_plans"].update_one(
+            {"user_id": request.user_id},
+            {"$set": {
+                "user_id": request.user_id,
+                "daily_calories": result.get("daily_calories", 2000),
+                "protein_g": result.get("protein_g", 100),
+                "carbs_g": result.get("carbs_g", 250),
+                "fat_g": result.get("fat_g", 65),
+                "fiber_g": result.get("fiber_g", 25),
+                "sodium_mg": result.get("sodium_mg", 2300),
+                "goals": goals,
+                "updated_at": datetime.now().isoformat()
+            }},
+            upsert=True
+        )
+
+        print(f"✅ Health report generated | score={result.get('health_score')} | {result.get('daily_calories')} kcal/day")
+        return jsonify(result), 200
+
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format, please try again"}), 500
+    except Exception as e:
+        print(f"❌ generate_health_report_route: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get-health-report", methods=["GET"])
+@token_required
+@db_required
+def get_health_report():
+    try:
+        report = db["health_reports"].find_one(
+            {"user_id": request.user_id},
+            sort=[("created_at", -1)]
+        )
+        if not report:
+            return jsonify({"error": "not found"}), 404
+        report["_id"] = str(report["_id"])
+        return jsonify(report), 200
+    except Exception as e:
+        print(f"❌ get_health_report: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# ── Error Handlers ──
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Endpoint not found"}), 404
