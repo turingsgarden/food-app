@@ -1,8 +1,27 @@
-// ProfileView.swift — 统一黑白风格 + Edit Profile 接入 HealthProfileView
-// 改动：showEditProfile sheet 从旧 ProfileSetupView → HealthProfileView(existingProfile:)
+// ProfileView.swift
+// 改动：
+// 1. Settings 拆分：Personal Info（username/email/dob/gender）和 My Health Profile（身高体重等）分开
+// 2. 主题切换改为 System / Light / Dark 三选一，带预览图
+// 3. 显示 email
 
 import SwiftUI
 import StoreKit
+
+// MARK: - Theme Preference
+
+enum ThemePreference: String, CaseIterable {
+    case system = "System"
+    case light = "Light"
+    case dark = "Dark"
+
+    var icon: String {
+        switch self {
+        case .system: return "circle.lefthalf.filled"
+        case .light: return "sun.max.fill"
+        case .dark: return "moon.fill"
+        }
+    }
+}
 
 struct ProfileView: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -13,19 +32,25 @@ struct ProfileView: View {
     @State private var showLogoutAlert = false
     @State private var showDeleteAccountAlert = false
     @State private var showDeleteConfirmation = false
-    @State private var isLoggingOut = false
     @State private var isDeletingAccount = false
-    @State private var showEditProfile = false
+    @State private var showEditPersonalInfo = false
+    @State private var showEditHealthProfile = false
     @State private var showErrorAlert = false
     @State private var errorMessage = ""
     @State private var hasAppeared = false
     @State private var showHelpSupport = false
-    @State private var isEditingName = false
-    @State private var editedName = ""
-    @State private var isSavingName = false
-    @State private var nameError = ""
+    @State private var savedHealthProfile: HealthProfile? = nil
+    @State private var userEmail: String = ""
+    // ✅ 主题偏好（三选一）
+    @State private var themePreference: ThemePreference = .system
 
     var userName: String { session.userName.isEmpty ? "User" : session.userName }
+
+    var currentUserId: String {
+        session.userID.isEmpty
+            ? UserDefaults.standard.string(forKey: "user_id") ?? ""
+            : session.userID
+    }
 
     var body: some View {
         NavigationView {
@@ -42,7 +67,17 @@ struct ProfileView: View {
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
-            .onAppear { if !hasAppeared { hasAppeared = true; profileManager.fetchProfile(force: false) } }
+            .onAppear {
+                if !hasAppeared {
+                    hasAppeared = true
+                    profileManager.fetchProfile(force: false)
+                    fetchUserEmail()
+                    HealthAPIManager.shared.fetchHealthProfile(userId: currentUserId) { profile in
+                        self.savedHealthProfile = profile
+                    }
+                    loadThemePreference()
+                }
+            }
             .alert("Logout", isPresented: $showLogoutAlert) {
                 Button("Cancel", role: .cancel) {}
                 Button("Logout", role: .destructive) { performLogout() }
@@ -50,7 +85,7 @@ struct ProfileView: View {
             .alert("Delete Account", isPresented: $showDeleteAccountAlert) {
                 Button("Cancel", role: .cancel) {}
                 Button("Delete", role: .destructive) { showDeleteConfirmation = true }
-            } message: { Text("This will permanently delete all your data. This action cannot be undone.") }
+            } message: { Text("This will permanently delete all your data.") }
             .alert("Final Confirmation", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {}
                 Button("Delete Forever", role: .destructive) { performAccountDeletion() }
@@ -62,42 +97,31 @@ struct ProfileView: View {
                 Button("Contact Support") { openEmailSupport() }
                 Button("Cancel", role: .cancel) {}
             } message: { Text("For support, contact us at support@nutricam.com") }
-            // ✅ 用 HealthProfileView 替代旧的 ProfileSetupView
-            .sheet(isPresented: $showEditProfile) {
-                HealthProfileView(
-                    existingProfile: healthProfileFromUserProfile(),
-                    onComplete: { savedProfile in
-                        // 同时更新 HealthAPI 侧的档案
-                        HealthAPIManager.shared.saveHealthProfile(savedProfile) { _, _ in }
+            // ✅ Personal Info 编辑
+            .sheet(isPresented: $showEditPersonalInfo) {
+                EditPersonalInfoView()
+                    .environmentObject(themeManager)
+                    .onDisappear { profileManager.fetchProfile(force: true); fetchUserEmail() }
+            }
+            // ✅ Health Profile 编辑
+            .sheet(isPresented: $showEditHealthProfile) {
+                EditHealthProfileView(
+                    existingProfile: savedHealthProfile,
+                    onComplete: { updatedProfile in
+                        self.savedHealthProfile = updatedProfile
                         profileManager.fetchProfile(force: true)
                     }
                 )
                 .environmentObject(themeManager)
-                .onDisappear { profileManager.fetchProfile(force: true) }
+                .onDisappear {
+                    profileManager.fetchProfile(force: true)
+                    HealthAPIManager.shared.fetchHealthProfile(userId: currentUserId) { profile in
+                        self.savedHealthProfile = profile
+                    }
+                }
             }
             .refreshable { await refreshProfile() }
         }
-    }
-
-    // ✅ 把 ProfileManager 的 UserProfile 转成 HealthProfile 用于预填充
-    func healthProfileFromUserProfile() -> HealthProfile? {
-        guard profileManager.userProfile != nil else { return nil }
-        let userId = session.userID.isEmpty
-            ? UserDefaults.standard.string(forKey: "user_id") ?? ""
-            : session.userID
-        // ✅ UserProfile 没有 height/weight/dietaryPreferences，用默认值
-        // HealthProfileView 打开后用户可以自行填写
-        return HealthProfile(
-            userId: userId,
-            heightCm: 170,
-            weightKg: 70,
-            age: profileManager.userProfile?.age ?? 25,
-            sex: profileManager.userProfile?.gender.lowercased() ?? "other",
-            systolicBP: nil, diastolicBP: nil,
-            fastingBloodSugar: nil, totalCholesterol: nil, triglycerides: nil,
-            dietaryPreferences: [],
-            allergens: []
-        )
     }
 
     // MARK: - Loading
@@ -107,7 +131,9 @@ struct ProfileView: View {
             ProgressView()
                 .progressViewStyle(CircularProgressViewStyle(tint: themeManager.current.primaryText))
                 .scaleEffect(1.3)
-            Text("Loading profile…").font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
+            Text("Loading profile…")
+                .font(.system(size: 14))
+                .foregroundColor(themeManager.current.secondaryText)
         }
     }
 
@@ -119,10 +145,8 @@ struct ProfileView: View {
                 avatarSection.padding(.top, 8)
                 if let profile = profileManager.userProfile {
                     statsSection(profile: profile)
-                    settingsSection(profile: profile)
-                } else {
-                    setupPrompt
                 }
+                settingsSection
                 accountSection
                 appInfo
             }
@@ -152,81 +176,44 @@ struct ProfileView: View {
     // MARK: - Avatar
 
     var avatarSection: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
             ZStack {
                 Circle()
                     .fill(themeManager.current.inputBackground)
-                    .frame(width: 100, height: 100)
+                    .frame(width: 96, height: 96)
                     .overlay(Circle().stroke(themeManager.current.cardBorder, lineWidth: 1.5))
                 Text(String(userName.prefix(1)).uppercased())
-                    .font(.system(size: 40, weight: .black, design: .rounded))
+                    .font(.system(size: 38, weight: .black, design: .rounded))
                     .foregroundColor(themeManager.current.primaryText)
             }
 
-            VStack(spacing: 8) {
-                if isEditingName {
-                    VStack(spacing: 10) {
-                        TextField("Enter new name", text: $editedName)
-                            .font(.system(size: 15)).foregroundColor(themeManager.current.primaryText)
-                            .padding(.horizontal, 14).padding(.vertical, 10)
-                            .background(themeManager.current.inputBackground).cornerRadius(12)
-                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(themeManager.current.cardBorder, lineWidth: 1))
+            VStack(spacing: 5) {
+                Text(userName)
+                    .font(.system(size: 22, weight: .black, design: .rounded))
+                    .foregroundColor(themeManager.current.primaryText)
 
-                        if !nameError.isEmpty {
-                            Text(nameError).font(.caption).foregroundColor(.red)
-                        }
-
-                        HStack(spacing: 12) {
-                            Button("Cancel") { isEditingName = false; nameError = "" }
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(themeManager.current.secondaryText)
-                                .padding(.horizontal, 16).padding(.vertical, 8)
-                                .background(themeManager.current.inputBackground).cornerRadius(10)
-
-                            Button(action: saveName) {
-                                Group {
-                                    if isSavingName {
-                                        ProgressView().progressViewStyle(CircularProgressViewStyle(
-                                            tint: themeManager.current == .dark ? .black : .white)).scaleEffect(0.8)
-                                    } else { Text("Save") }
-                                }
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(themeManager.current == .dark ? .black : .white)
-                                .padding(.horizontal, 20).padding(.vertical, 8)
-                                .background(themeManager.current == .dark ? Color.white : Color.black).cornerRadius(10)
-                            }
-                            .disabled(isSavingName)
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                } else {
-                    HStack(spacing: 8) {
-                        Text(userName)
-                            .font(.system(size: 22, weight: .black, design: .rounded))
-                            .foregroundColor(themeManager.current.primaryText)
-                        Button(action: { editedName = session.userName; nameError = ""; isEditingName = true }) {
-                            Image(systemName: "pencil")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(themeManager.current.secondaryText)
-                        }
-                    }
+                if !userEmail.isEmpty {
+                    Text(userEmail)
+                        .font(.system(size: 13))
+                        .foregroundColor(themeManager.current.secondaryText)
                 }
 
                 if let profile = profileManager.userProfile {
-                    Text("\(profile.age) years old • \(profile.gender)")
-                        .font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
+                    Text("\(profile.age) years old · \(profile.gender)")
+                        .font(.system(size: 13))
+                        .foregroundColor(themeManager.current.secondaryText.opacity(0.7))
                     if let lastSync = profileManager.lastSyncDate {
                         Text("Synced \(formatSyncDate(lastSync))")
-                            .font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText.opacity(0.6))
+                            .font(.system(size: 11))
+                            .foregroundColor(themeManager.current.secondaryText.opacity(0.45))
                     }
                 }
 
-                Button(action: { showEditProfile = true }) {
+                // Edit Profile 快捷按钮
+                Button(action: { showEditPersonalInfo = true }) {
                     HStack(spacing: 6) {
-                        Image(systemName: profileManager.userProfile != nil ? "pencil" : "person.fill.badge.plus")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text(profileManager.userProfile != nil ? "Edit Profile" : "Set Up Profile")
-                            .font(.system(size: 13, weight: .semibold))
+                        Image(systemName: "pencil").font(.system(size: 12, weight: .semibold))
+                        Text("Edit Profile").font(.system(size: 13, weight: .semibold))
                     }
                     .foregroundColor(themeManager.current == .dark ? .black : .white)
                     .padding(.horizontal, 18).padding(.vertical, 9)
@@ -268,24 +255,38 @@ struct ProfileView: View {
 
     // MARK: - Settings
 
-    func settingsSection(profile: UserProfile) -> some View {
+    var settingsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Settings")
             VStack(spacing: 0) {
-                profileRow(icon: "person.fill", label: "Personal Info",
-                           detail: "\(profile.age)y • \(profile.gender)") { showEditProfile = true }
+                // ✅ Personal Info - 分开的入口
+                profileRow(
+                    icon: "person.fill",
+                    label: "Personal Info",
+                    detail: personalInfoDetail
+                ) { showEditPersonalInfo = true }
+
                 rowDivider
-                profileRow(icon: "target", label: "Nutrition Goals",
-                           detail: "\(profile.calorieTarget) kcal") { showEditProfile = true }
+
+                // ✅ Health Profile - 分开的入口
+                profileRow(
+                    icon: "heart.text.square.fill",
+                    label: "Health Profile",
+                    detail: healthProfileDetail
+                ) { showEditHealthProfile = true }
+
                 rowDivider
-                profileRow(icon: "leaf.fill", label: "Dietary Preferences",
-                           detail: profile.dietaryPreferencesText.isEmpty ? "None" : profile.dietaryPreferencesText) { showEditProfile = true }
+
+                // ✅ 主题切换（三选一）
+                appearanceSection
+
                 rowDivider
-                appearanceRow
-                rowDivider
+
                 profileRow(icon: "star.fill", label: "Rate NutriCam",
                            detail: "Leave us a review") { rateApp() }
+
                 rowDivider
+
                 profileRow(icon: "questionmark.circle.fill", label: "Help & Support",
                            detail: "FAQ and contact") { showHelpSupport = true }
             }
@@ -294,38 +295,159 @@ struct ProfileView: View {
         }
     }
 
-    var appearanceRow: some View {
-        HStack(spacing: 14) {
-            Image(systemName: themeManager.current == .dark ? "moon.fill" : "sun.max.fill")
-                .font(.system(size: 16, weight: .semibold)).foregroundColor(themeManager.current.primaryText).frame(width: 22)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Appearance").font(.system(size: 15, weight: .medium)).foregroundColor(themeManager.current.primaryText)
-                Text(themeManager.current == .dark ? "Dark Mode" : "Light Mode")
-                    .font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
-            }
-            Spacer()
-            Button(action: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    themeManager.current = themeManager.current == .dark ? .light : .dark
-                }
-            }) {
-                ZStack {
-                    Capsule()
-                        .fill(themeManager.current == .dark ? Color.white.opacity(0.15) : Color.black.opacity(0.08))
-                        .frame(width: 52, height: 28)
-                        .overlay(Capsule().stroke(themeManager.current.cardBorder, lineWidth: 1))
-                    HStack {
-                        if themeManager.current == .light { Spacer() }
-                        Circle().fill(themeManager.current == .dark ? Color.white : Color.black)
-                            .frame(width: 22, height: 22).padding(3)
-                        if themeManager.current == .dark { Spacer() }
-                    }
-                    .frame(width: 52)
+    var personalInfoDetail: String {
+        var parts: [String] = []
+        if let p = profileManager.userProfile {
+            parts.append("\(p.age)y")
+            parts.append(p.gender)
+        }
+        if !userEmail.isEmpty { parts.append(userEmail) }
+        return parts.isEmpty ? "Tap to edit" : parts.joined(separator: " · ")
+    }
+
+    var healthProfileDetail: String {
+        if let hp = savedHealthProfile {
+            var parts: [String] = ["\(Int(hp.heightCm))cm", "\(Int(hp.weightKg))kg"]
+            if !hp.dietaryPreferences.isEmpty && !hp.dietaryPreferences.contains("no_restriction") {
+                if let first = hp.dietaryPreferences.first {
+                    parts.append(first.replacingOccurrences(of: "_", with: " ").capitalized)
                 }
             }
-            .buttonStyle(.plain)
+            return parts.joined(separator: " · ")
+        }
+        return "Tap to set up health data"
+    }
+
+    // ✅ 主题三选一（System / Light / Dark）带预览
+    var appearanceSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                Image(systemName: "paintpalette.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(themeManager.current.primaryText)
+                    .frame(width: 22)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Appearance")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(themeManager.current.primaryText)
+                    Text("Choose your preferred theme")
+                        .font(.system(size: 12))
+                        .foregroundColor(themeManager.current.secondaryText)
+                }
+            }
+
+            // 三个主题选项
+            HStack(spacing: 10) {
+                ForEach(ThemePreference.allCases, id: \.self) { pref in
+                    themeOptionCard(pref)
+                }
+            }
         }
         .padding(.horizontal, 16).padding(.vertical, 14)
+    }
+
+    func themeOptionCard(_ pref: ThemePreference) -> some View {
+        let isSelected = themePreference == pref
+
+        return Button(action: {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                themePreference = pref
+                applyTheme(pref)
+            }
+        }) {
+            VStack(spacing: 8) {
+                // 迷你预览图
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(previewBackground(pref))
+                        .frame(height: 52)
+                        .overlay(
+                            VStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(previewAccent(pref).opacity(0.8))
+                                    .frame(width: 36, height: 6)
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(previewAccent(pref).opacity(0.4))
+                                    .frame(width: 28, height: 4)
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(previewAccent(pref).opacity(0.2))
+                                    .frame(width: 22, height: 4)
+                            }
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(isSelected
+                                    ? (themeManager.current == .dark ? Color.white : Color.black)
+                                    : themeManager.current.cardBorder,
+                                        lineWidth: isSelected ? 2 : 1)
+                        )
+
+                    if isSelected {
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(themeManager.current == .dark ? Color.white : Color.black)
+                                    .background(Circle().fill(previewBackground(pref)).padding(1))
+                            }
+                            Spacer()
+                        }
+                        .padding(5)
+                    }
+                }
+
+                HStack(spacing: 4) {
+                    Image(systemName: pref.icon)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(isSelected
+                            ? (themeManager.current == .dark ? Color.white : Color.black)
+                            : themeManager.current.secondaryText)
+                    Text(pref.rawValue)
+                        .font(.system(size: 12, weight: isSelected ? .bold : .medium))
+                        .foregroundColor(isSelected
+                            ? (themeManager.current == .dark ? Color.white : Color.black)
+                            : themeManager.current.secondaryText)
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+    }
+
+    func previewBackground(_ pref: ThemePreference) -> Color {
+        switch pref {
+        case .system: return Color(UIColor.systemBackground)
+        case .light: return Color.white
+        case .dark: return Color.black
+        }
+    }
+
+    func previewAccent(_ pref: ThemePreference) -> Color {
+        switch pref {
+        case .system: return Color.gray
+        case .light: return Color.black
+        case .dark: return Color.white
+        }
+    }
+
+    func applyTheme(_ pref: ThemePreference) {
+        switch pref {
+        case .system:
+            // 跟随系统
+            let isDark = UITraitCollection.current.userInterfaceStyle == .dark
+            themeManager.current = isDark ? .dark : .light
+        case .light:
+            themeManager.current = .light
+        case .dark:
+            themeManager.current = .dark
+        }
+        UserDefaults.standard.set(pref.rawValue, forKey: "theme_preference")
+    }
+
+    func loadThemePreference() {
+        let saved = UserDefaults.standard.string(forKey: "theme_preference") ?? "System"
+        themePreference = ThemePreference(rawValue: saved) ?? .system
     }
 
     // MARK: - Account
@@ -380,31 +502,6 @@ struct ProfileView: View {
         .padding(.top, 8)
     }
 
-    var setupPrompt: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "person.crop.circle.badge.exclamationmark")
-                .font(.system(size: 44)).foregroundColor(themeManager.current.secondaryText.opacity(0.4))
-            VStack(spacing: 6) {
-                Text("Profile not set up").font(.system(size: 17, weight: .bold)).foregroundColor(themeManager.current.primaryText)
-                Text("Set up your profile to get personalized nutrition goals")
-                    .font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText).multilineTextAlignment(.center)
-            }
-            Button(action: { showEditProfile = true }) {
-                HStack(spacing: 6) {
-                    Image(systemName: "arrow.right.circle.fill")
-                    Text("Set Up Now")
-                }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(themeManager.current == .dark ? .black : .white)
-                .frame(maxWidth: .infinity).padding(.vertical, 14)
-                .background(themeManager.current == .dark ? Color.white : Color.black).cornerRadius(14)
-            }
-            .padding(.horizontal, 20)
-        }
-        .padding(24).background(themeManager.current.cardBackground).cornerRadius(18)
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
-    }
-
     var deletionOverlay: some View {
         Color.black.opacity(0.5).ignoresSafeArea()
             .overlay(VStack(spacing: 16) {
@@ -445,6 +542,18 @@ struct ProfileView: View {
 
     // MARK: - Actions
 
+    func fetchUserEmail() {
+        guard let token = session.getAuthToken(),
+              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/get-login-methods") else { return }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        URLSession.shared.dataTask(with: req) { data, _, _ in
+            guard let data = data,
+                  let json = try? JSONDecoder().decode([String: String].self, from: data) else { return }
+            DispatchQueue.main.async { self.userEmail = json["email"] ?? "" }
+        }.resume()
+    }
+
     func formatSyncDate(_ date: Date) -> String {
         let f = RelativeDateTimeFormatter(); f.unitsStyle = .short
         return f.localizedString(for: date, relativeTo: Date())
@@ -453,6 +562,10 @@ struct ProfileView: View {
     func refreshProfile() async {
         await withCheckedContinuation { continuation in
             profileManager.fetchProfile(force: true)
+            fetchUserEmail()
+            HealthAPIManager.shared.fetchHealthProfile(userId: currentUserId) { profile in
+                self.savedHealthProfile = profile
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { continuation.resume() }
         }
     }
@@ -480,26 +593,6 @@ struct ProfileView: View {
         }.resume()
     }
 
-    func saveName() {
-        let trimmed = editedName.trimmingCharacters(in: .whitespaces)
-        guard trimmed.count >= 2 else { nameError = "Name must be at least 2 characters"; return }
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/update_name") else { nameError = "Server error"; return }
-        isSavingName = true; nameError = ""
-        var request = URLRequest(url: url); request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let token = session.getAuthToken() { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
-        request.httpBody = try? JSONSerialization.data(withJSONObject: ["name": trimmed])
-        URLSession.shared.dataTask(with: request) { _, response, error in
-            DispatchQueue.main.async {
-                self.isSavingName = false
-                if error != nil { self.nameError = "Network error"; return }
-                if let http = response as? HTTPURLResponse, http.statusCode == 200 {
-                    self.session.userName = trimmed; self.isEditingName = false; self.profileManager.fetchProfile(force: true)
-                } else { self.nameError = "Failed to update name" }
-            }
-        }.resume()
-    }
-
     func openEmailSupport() {
         if let url = URL(string: "mailto:support@nutricam.com?subject=NutriCam%20Support%20Request") {
             UIApplication.shared.open(url)
@@ -518,17 +611,17 @@ struct ProfileView: View {
 extension UserProfile {
     func activityLevelShort() -> String {
         switch activityLevel.lowercased() {
-        case "sedentary":         return "Sedentary"
-        case "lightly_active":    return "Light"
+        case "sedentary": return "Sedentary"
+        case "lightly_active": return "Light"
         case "moderately_active": return "Moderate"
-        case "very_active":       return "Active"
-        case "extremely_active":  return "Extreme"
-        default:                  return activityLevelText()
+        case "very_active": return "Active"
+        case "extremely_active": return "Extreme"
+        default: return activityLevelText()
         }
     }
 }
 
-// MARK: - Supporting Views（保留，供其他地方使用）
+// MARK: - Supporting Views
 
 struct StatCard: View {
     @EnvironmentObject var themeManager: ThemeManager

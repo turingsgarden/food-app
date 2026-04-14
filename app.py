@@ -1245,6 +1245,313 @@ def internal_error(error):
 @app.errorhandler(413)
 def payload_too_large(error):
     return jsonify({"error": "Request payload too large"}), 413
+    
+    
+    
+
+
+@app.route("/ocr-health-report", methods=["POST"])
+@token_required
+def ocr_health_report():
+    """
+    两步流程：
+    Step 1 — Google Cloud Vision API (v1/images:annotate)
+             DOCUMENT_TEXT_DETECTION 识别图片中所有文字
+    Step 2 — Gemini 从识别文字中结构化提取健康数值
+    Fallback — Gemini 不可用时用正则兜底
+    """
+    try:
+        # ── 读入请求 ──────────────────────────────────────────────
+        data = request.get_json()
+        if not data or not data.get("image_base64"):
+            return jsonify({"error": "No image provided"}), 400
+
+        image_b64 = data["image_base64"]
+
+        vision_key = os.getenv("GOOGLE_VISION_API_KEY")
+        if not vision_key:
+            return jsonify({"error": "OCR service not configured on server"}), 503
+
+        # ── Step 1: Google Cloud Vision → 原始文字 ───────────────
+        # 官方端点：POST https://vision.googleapis.com/v1/images:annotate
+        vision_url = f"https://vision.googleapis.com/v1/images:annotate?key={vision_key}"
+
+        vision_payload = {
+            "requests": [
+                {
+                    "image": {
+                        "content": image_b64          # base64 编码图片，不加 data:// 前缀
+                    },
+                    "features": [
+                        {
+                            "type": "DOCUMENT_TEXT_DETECTION",  # 适合密集文字/表格
+                            "maxResults": 1
+                        }
+                    ],
+                    "imageContext": {
+                        "languageHints": ["en", "zh-Hans", "zh-Hant"]  # 英文 + 简繁中文
+                    }
+                }
+            ]
+        }
+
+        print(f"📤 Calling Google Vision API...")
+        vision_resp = requests.post(
+            vision_url,
+            json=vision_payload,
+            headers={"Content-Type": "application/json"},
+            timeout=20
+        )
+
+        # 处理 Vision API 错误
+        if vision_resp.status_code != 200:
+            err_body = vision_resp.text[:300]
+            print(f"❌ Google Vision API {vision_resp.status_code}: {err_body}")
+            return jsonify({
+                "error": f"OCR service error ({vision_resp.status_code}). Check API key or try again."
+            }), 502
+
+        vision_data = vision_resp.json()
+
+        # 检查 API 级别错误（即使 HTTP 200 也可能有 error 字段）
+        if "error" in vision_data.get("responses", [{}])[0]:
+            api_err = vision_data["responses"][0]["error"]
+            print(f"❌ Vision API response error: {api_err}")
+            return jsonify({"error": api_err.get("message", "OCR failed")}), 502
+
+        # 提取 fullTextAnnotation（最完整的文字结果）
+        try:
+            full_text = vision_data["responses"][0]["fullTextAnnotation"]["text"]
+        except (KeyError, IndexError):
+            # 降级：尝试 textAnnotations
+            try:
+                annotations = vision_data["responses"][0].get("textAnnotations", [])
+                full_text = annotations[0].get("description", "") if annotations else ""
+            except (KeyError, IndexError):
+                full_text = ""
+
+        if not full_text.strip():
+            print("⚠️ Vision OCR: no text detected")
+            return jsonify({
+                "systolic_bp": None, "diastolic_bp": None,
+                "blood_sugar": None, "cholesterol": None,
+                "triglycerides": None, "height_cm": None, "weight_kg": None,
+                "message": "No text detected. Make sure the image is clear and well-lit."
+            }), 200
+
+        print(f"📄 Vision OCR extracted {len(full_text)} chars:\n{full_text[:400]}")
+
+        # ── Step 2: Gemini 结构化提取 ────────────────────────────
+        if not gemini_model:
+            # Fallback：正则提取
+            print("⚠️ Gemini unavailable, falling back to regex extraction")
+            cleaned = _extract_health_values_regex(full_text)
+            return jsonify(cleaned), 200
+
+        extract_prompt = f"""You are a medical data extraction assistant.
+
+The following text was extracted via OCR from a medical lab report or health check document.
+Your job is to find specific health measurement values from this text.
+
+OCR TEXT:
+\"\"\"
+{full_text}
+\"\"\"
+
+Extract these values if present and clearly readable:
+
+1. Blood pressure — systolic (upper/first number) and diastolic (lower/second number) in mmHg
+   Common formats: "120/80", "BP 120/80", "SBP: 120, DBP: 80", "收缩压 120 舒张压 80"
+
+2. Fasting blood glucose / blood sugar — in mmol/L
+   If value appears to be in mg/dL (typically > 20), convert: mmol/L = mg/dL ÷ 18.0
+   Common labels: "Glucose", "GLU", "FBG", "Blood Sugar", "血糖", "空腹血糖"
+
+3. Total cholesterol — in mmol/L
+   If in mg/dL (typically > 10), convert: mmol/L = mg/dL ÷ 38.67
+   Common labels: "Total Cholesterol", "CHOL", "TC", "总胆固醇"
+
+4. Triglycerides — in mmol/L
+   If in mg/dL (typically > 10), convert: mmol/L = mg/dL ÷ 88.57
+   Common labels: "Triglycerides", "TG", "TRIG", "甘油三酯"
+
+5. Height — in cm
+   If in feet/inches (e.g. 5'8"), convert to cm (1 inch = 2.54 cm)
+   Common labels: "Height", "Ht", "身高"
+
+6. Weight — in kg
+   If in lbs, convert: kg = lbs ÷ 2.205
+   Common labels: "Weight", "Wt", "体重"
+
+IMPORTANT RULES:
+- Only extract values that are unambiguously present in the text
+- Use null if a value is missing, unclear, or out of physiological range
+- Do NOT invent, estimate, or guess values
+- Round blood values to 1 decimal place; BP to nearest integer; height to 1 decimal; weight to 1 decimal
+
+Respond with ONLY a valid JSON object. No explanation, no markdown, no code blocks:
+{{"systolic_bp": <integer or null>, "diastolic_bp": <integer or null>, "blood_sugar": <float or null>, "cholesterol": <float or null>, "triglycerides": <float or null>, "height_cm": <float or null>, "weight_kg": <float or null>}}"""
+
+        gemini_resp = gemini_model.generate_content(extract_prompt)
+        raw = gemini_resp.text.strip()
+
+        # 清理可能的 markdown fence
+        raw = raw.replace("```json", "").replace("```", "").strip()
+
+        # 找到 JSON 边界（防御性处理）
+        start = raw.find("{")
+        end = raw.rfind("}") + 1
+        if start >= 0 and end > start:
+            raw = raw[start:end]
+        else:
+            print(f"❌ Gemini returned non-JSON: {raw[:200]}")
+            cleaned = _extract_health_values_regex(full_text)
+            return jsonify(cleaned), 200
+
+        print(f"🤖 Gemini extraction result: {raw}")
+        result_json = json.loads(raw)
+
+        # ── Step 3: 范围验证 & 清理 ──────────────────────────────
+        cleaned = _validate_health_values(result_json)
+        has_any = any(v is not None for v in cleaned.values())
+        print(f"✅ OCR final: {cleaned} | detected={has_any}")
+
+        return jsonify(cleaned), 200
+
+    except json.JSONDecodeError as e:
+        print(f"❌ JSON parse error: {e}")
+        return jsonify({"error": "Could not parse scan results. Try a clearer image."}), 422
+    except requests.exceptions.Timeout:
+        print("❌ Vision API timeout")
+        return jsonify({"error": "OCR timed out. Please try again."}), 504
+    except requests.exceptions.ConnectionError as e:
+        print(f"❌ Vision API connection error: {e}")
+        return jsonify({"error": "Cannot reach OCR service. Check your connection."}), 503
+    except Exception as e:
+        print(f"❌ OCR unexpected error: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+def _validate_health_values(raw: dict) -> dict:
+    """验证健康数值范围，过滤掉不合理的值"""
+    def safe_int(val, lo, hi):
+        if val is None: return None
+        try:
+            v = int(round(float(val)))
+            return v if lo <= v <= hi else None
+        except: return None
+
+    def safe_float(val, lo, hi, dp=1):
+        if val is None: return None
+        try:
+            v = round(float(val), dp)
+            return v if lo <= v <= hi else None
+        except: return None
+
+    return {
+        "systolic_bp":   safe_int(raw.get("systolic_bp"),    60,  250),
+        "diastolic_bp":  safe_int(raw.get("diastolic_bp"),   30,  150),
+        "blood_sugar":   safe_float(raw.get("blood_sugar"),    2.0, 30.0),
+        "cholesterol":   safe_float(raw.get("cholesterol"),    1.0, 15.0),
+        "triglycerides": safe_float(raw.get("triglycerides"),  0.2, 10.0),
+        "height_cm":     safe_float(raw.get("height_cm"),    100.0, 230.0),
+        "weight_kg":     safe_float(raw.get("weight_kg"),     30.0, 300.0),
+    }
+
+
+def _extract_health_values_regex(text: str) -> dict:
+    """
+    Gemini 不可用时的正则兜底提取器
+    支持常见英文 + 中文标签
+    """
+    import re
+
+    result = {
+        "systolic_bp": None, "diastolic_bp": None,
+        "blood_sugar": None, "cholesterol": None,
+        "triglycerides": None, "height_cm": None, "weight_kg": None
+    }
+
+    # 血压：支持 "120/80", "120 / 80", "SBP 120 DBP 80", "收缩压120 舒张压80"
+    bp = re.search(
+        r'(?:BP|blood\s*pressure|收缩压|血压)?[:\s]*(\d{2,3})\s*/\s*(\d{2,3})',
+        text, re.IGNORECASE
+    )
+    if not bp:
+        bp = re.search(
+            r'(?:SBP|systolic)[:\s]*(\d{2,3}).*?(?:DBP|diastolic)[:\s]*(\d{2,3})',
+            text, re.IGNORECASE | re.DOTALL
+        )
+    if bp:
+        s, d = int(bp.group(1)), int(bp.group(2))
+        if 60 <= s <= 250 and 30 <= d <= 150:
+            result["systolic_bp"] = s
+            result["diastolic_bp"] = d
+
+    # 血糖
+    glucose = re.search(
+        r'(?:glucose|blood\s*sugar|FBG|GLU|空腹血糖|血糖)[^0-9]*(\d+\.?\d*)',
+        text, re.IGNORECASE
+    )
+    if glucose:
+        v = float(glucose.group(1))
+        if v > 30:  # 可能是 mg/dL，转换
+            v = round(v / 18.0, 1)
+        if 2.0 <= v <= 30.0:
+            result["blood_sugar"] = round(v, 1)
+
+    # 总胆固醇
+    chol = re.search(
+        r'(?:total\s*chol(?:esterol)?|CHOL|TC|总胆固醇)[^0-9]*(\d+\.?\d*)',
+        text, re.IGNORECASE
+    )
+    if chol:
+        v = float(chol.group(1))
+        if v > 20:  # mg/dL → mmol/L
+            v = round(v / 38.67, 1)
+        if 1.0 <= v <= 15.0:
+            result["cholesterol"] = round(v, 1)
+
+    # 甘油三酯
+    trig = re.search(
+        r'(?:triglyceride|TG|TRIG|甘油三酯)[^0-9]*(\d+\.?\d*)',
+        text, re.IGNORECASE
+    )
+    if trig:
+        v = float(trig.group(1))
+        if v > 15:  # mg/dL → mmol/L
+            v = round(v / 88.57, 1)
+        if 0.2 <= v <= 10.0:
+            result["triglycerides"] = round(v, 1)
+
+    # 身高（3位数，cm）
+    height = re.search(
+        r'(?:height|Ht|身高)[^0-9]*(\d{3}(?:\.\d)?)\s*(?:cm)?',
+        text, re.IGNORECASE
+    )
+    if height:
+        v = float(height.group(1))
+        if 100 <= v <= 230:
+            result["height_cm"] = v
+
+    # 体重
+    weight = re.search(
+        r'(?:weight|Wt|体重)[^0-9]*(\d{2,3}\.?\d*)\s*(?:kg)?',
+        text, re.IGNORECASE
+    )
+    if weight:
+        v = float(weight.group(1))
+        if 30 <= v <= 300:
+            result["weight_kg"] = round(v, 1)
+
+    return result
+    
+    
+    
+    
+
+    
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

@@ -1,159 +1,109 @@
-// DashboardVie// DashboardView.swift — 修复版
-// 核心修复：删除 fileprivate parseISO8601（已移至 DateHelpers.swift），
-//           解决 Diet Plan meals 因微秒时间格式无法在 Dashboard 显示的问题
-// 其余逻辑与 UI 完全不变
+// DashboardView.swift
+// 改动：
+// 1. Daily/Weekly/Monthly 切换移到右上角小胶囊，点击弹出选项
+// 2. 日期选择器改为横向滑动（只显示7天，左右滑）
+// 3. 修复 Nutrition 圆环 bug：改用 filteredMealsForDisplay 实时计算当天营养
 
 import SwiftUI
 import Charts
 import Foundation
 
-// ✅ 已删除 fileprivate func parseISO8601 — 现在统一用 DateHelpers.swift 里的全局版本
-
 struct DashboardView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var session = SessionManager.shared
     @ObservedObject var profileManager = ProfileManager.shared
+
     @State private var meals: [Meal] = []
     @State private var waterIntake: [WaterEntry] = []
     @State private var exerciseEntries: [ExerciseEntry] = []
     @State private var weightEntries: [WeightEntry] = []
     @State private var todayCalories: Int = 0
-    @State private var todayWater: Double = 0.0
-    @State private var todayExercise: Int = 0
-    @State private var currentWeight: Double = 0.0
     @State private var monthlyCalories: Int = 0
     @State private var monthlyAvgCalories: Int = 0
-    @State private var monthlyWater: Double = 0.0
-    @State private var monthlyExercise: Int = 0
     @State private var weeklyExercise: Int = 0
-    @State private var weeklyAvgWater: Double = 0.0
     @State private var weeklyMeals: Int = 0
     @State private var isLoading = false
-    @State private var scrollToLatest = false
     @State private var showMealHistory = false
     @State private var showUploadMeal = false
     @State private var showProfile = false
     @State private var showWaterTracking = false
     @State private var showExerciseTracking = false
     @State private var showWeightTracking = false
-    @State private var errorMessage = ""
     @State private var animateCalories = false
     @State private var calorieGoal: Int = 2000
     @State private var hasInitialized = false
     @State private var showNetworkAlert = false
     @State private var networkError: NetworkError?
-    @State private var showProfileAlert = false
     @State private var selectedMealForDetail: Meal?
-    @State private var selectedSummaryTab = 0
-    @State private var totalProtein: Int = 0
-    @State private var totalCarbs: Int = 0
-    @State private var totalFat: Int = 0
-    @State private var totalFiber: Int = 0
-    @State private var totalSugar: Int = 0
-    @State private var totalSodium: Int = 0
     @State private var currentStreak: Int = 0
-    @State private var weeklyGoalProgress: Double = 0.0
-    // ── 时间选择系统 ──
+    // 日期选择
     @State private var selectedDate: Date = Date()
-    @State private var selectedWeekStart: Date = {
-        Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-    }()
+    @State private var selectedWeekStart: Date = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
     @State private var selectedMonth: Date = Date()
     @State private var selectedTimeFilter: String = "Daily"
-    let timeFilters = ["Daily", "Weekly", "Monthly"]
-    // ── 动态统计 ──
-    @State private var weeklyCalories: Int = 0
-    @State private var weeklyProtein: Int = 0
-    @State private var weeklyCarbs: Int = 0
-    @State private var weeklyFat: Int = 0
+    // ✅ 右上角下拉菜单
+    @State private var showTimePicker = false
+    // 营养圆环翻页
+    @State private var nutritionPage: Int = 0
+    // ✅ 从 health_report 获取的每日卡路里目标
+    @State private var healthReportCalorieGoal: Int? = nil
+
+    // ✅ 实时从 filteredMealsForDisplay 算出来的营养数据（修复 bug）
+    var filteredNutrition: (protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
+        var p = 0, c = 0, f = 0, fi = 0, s = 0, so = 0
+        for meal in filteredMealsForDisplay {
+            let n = extractAllNutrients(from: meal.nutrition_info)
+            p += n.protein; c += n.carbs; f += n.fat
+            fi += n.fiber; s += n.sugar; so += n.sodium
+        }
+        return (p, c, f, fi, s, so)
+    }
 
     enum NetworkError: Identifiable {
-        case noInternet, serverError, profileSyncFailed, dataLoadFailed, sessionExpired
-        var id: String {
-            switch self {
-            case .noInternet: return "no_internet"
-            case .serverError: return "server_error"
-            case .profileSyncFailed: return "profile_sync_failed"
-            case .dataLoadFailed: return "data_load_failed"
-            case .sessionExpired: return "session_expired"
-            }
-        }
+        case noInternet, serverError, dataLoadFailed, sessionExpired
+        var id: String { "\(self)" }
         var title: String {
             switch self {
-            case .noInternet: return "No Internet Connection"
+            case .noInternet: return "No Internet"
             case .serverError: return "Server Error"
-            case .profileSyncFailed: return "Profile Sync Failed"
-            case .dataLoadFailed: return "Data Load Failed"
+            case .dataLoadFailed: return "Load Failed"
             case .sessionExpired: return "Session Expired"
             }
         }
         var message: String {
             switch self {
-            case .noInternet: return "Please check your internet connection and try again."
-            case .serverError: return "Our servers are experiencing issues. Please try again later."
-            case .profileSyncFailed: return "Unable to sync your profile. Some features may be limited."
-            case .dataLoadFailed: return "Failed to load your data. Pull to refresh to try again."
-            case .sessionExpired: return "Your session has expired. Please log in again."
+            case .noInternet: return "Check your internet connection."
+            case .serverError: return "Server issue. Try again later."
+            case .dataLoadFailed: return "Failed to load. Pull to refresh."
+            case .sessionExpired: return "Session expired. Please log in."
             }
         }
     }
 
     var greeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        switch hour {
-        case 0..<12: return "Good Morning ☀️"
-        case 12..<17: return "Good Afternoon 🌤"
-        default: return "Good Evening 🌙"
-        }
+        let h = Calendar.current.component(.hour, from: Date())
+        if h < 12 { return "Good Morning ☀️" }
+        if h < 17 { return "Good Afternoon 🌤" }
+        return "Good Evening 🌙"
     }
 
     var userName: String { session.userName.isEmpty ? "Friend" : session.userName }
-    var dynamicCalorieGoal: Int { profileManager.userProfile?.calorieTarget ?? calorieGoal }
-
-    var displayedCalories: Int {
-        // ✅ 用 DateHelpers.parseISO8601 支持微秒格式
-        let cal = Calendar.current
-        switch selectedTimeFilter {
-        case "Daily":
-            return meals.filter { m in
-                guard let s = m.saved_at, let d = parseISO8601(s) else { return false }
-                return cal.isDate(d, inSameDayAs: selectedDate)
-            }.reduce(0) { $0 + extractCaloriesInt(from: $1.nutrition_info) }
-        case "Weekly":
-            let end = cal.date(byAdding: .day, value: 7, to: selectedWeekStart) ?? selectedWeekStart
-            return meals.filter { m in
-                guard let s = m.saved_at, let d = parseISO8601(s) else { return false }
-                return d >= selectedWeekStart && d < end
-            }.reduce(0) { $0 + extractCaloriesInt(from: $1.nutrition_info) }
-        case "Monthly":
-            guard let interval = cal.dateInterval(of: .month, for: selectedMonth) else { return 0 }
-            return meals.filter { m in
-                guard let s = m.saved_at, let d = parseISO8601(s) else { return false }
-                return d >= interval.start && d < interval.end
-            }.reduce(0) { $0 + extractCaloriesInt(from: $1.nutrition_info) }
-        default: return todayCalories
-        }
+    var dynamicCalorieGoal: Int {
+        if let r = healthReportCalorieGoal { return r }
+        return profileManager.userProfile?.calorieTarget ?? calorieGoal
     }
 
+    var displayedCalories: Int { filteredMealsForDisplay.reduce(0) { $0 + extractCaloriesInt(from: $1.nutrition_info) } }
+
     var displayedGoal: Int {
-        let cal = Calendar.current
         switch selectedTimeFilter {
         case "Daily": return dynamicCalorieGoal
         case "Weekly": return dynamicCalorieGoal * 7
         case "Monthly":
-            let days = cal.range(of: .day, in: .month, for: selectedMonth)?.count ?? 30
+            let days = Calendar.current.range(of: .day, in: .month, for: selectedMonth)?.count ?? 30
             return dynamicCalorieGoal * days
         default: return dynamicCalorieGoal
         }
-    }
-
-    func extractCaloriesInt(from text: String) -> Int {
-        for line in text.components(separatedBy: .newlines) {
-            let parts = line.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
-            if parts.count >= 2, parts[0].lowercased().contains("calorie"),
-               let v = Float(parts[1].replacingOccurrences(of: ",", with: "")) { return Int(v) }
-        }
-        return 0
     }
 
     var calorieProgress: Double {
@@ -161,294 +111,11 @@ struct DashboardView: View {
         return min(Double(displayedCalories) / Double(displayedGoal), 1.0)
     }
 
-    var body: some View {
-        NavigationStack {
-            ZStack(alignment: .bottomTrailing) {
-                themeManager.current.background.ignoresSafeArea()
-
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        headerSection
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                            .padding(.bottom, 12)
-
-                        timeFilterSection
-                            .padding(.bottom, 12)
-
-                        periodSelectorSection
-                            .padding(.bottom, 16)
-
-                        VStack(spacing: 16) {
-                            if profileManager.isNewUser {
-                                WelcomeNewUserCard { showProfile = true }
-                            } else if profileManager.userProfile == nil && !profileManager.isLoading && profileManager.errorMessage != nil {
-                                if let err = profileManager.errorMessage { profileErrorSection(err) }
-                            }
-                            if let netErr = networkError { networkErrorSection(netErr) }
-                            else if profileManager.isLoading && profileManager.userProfile == nil && !profileManager.isNewUser {
-                                profileLoadingSection
-                            }
-
-                            calorieMainCard
-                            todayMealsSection
-                            if !meals.isEmpty { comprehensiveNutritionSection }
-
-                            Spacer(minLength: 100)
-                        }
-                        .padding(.horizontal, 16)
-                    }
-                }
-                .refreshable { await refreshDashboard() }
-
-                calStyleFloatingButton
-            }
-            .preferredColorScheme(themeManager.current.colorScheme)
-            .navigationBarHidden(true)
-            .onAppear { initializeDashboard() }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in
-                // ✅ Diet Plan 分析完成后也刷新 Dashboard
-                fetchAllData()
-                scrollToLatest = true
-            }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NutritionRecalculated"))) { notification in
-                guard let mealId = notification.userInfo?["mealId"] as? String,
-                      let nutritionInfo = notification.userInfo?["nutritionInfo"] as? String else { return }
-                if let index = meals.firstIndex(where: { $0._id == mealId }) {
-                    meals[index].nutrition_info = nutritionInfo
-                    if let imageDesc = notification.userInfo?["imageDescription"] as? String, !imageDesc.isEmpty {
-                        meals[index].image_description = imageDesc
-                    }
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { fetchAllData() }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("WaterAdded"))) { _ in fetchWaterData() }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ExerciseAdded"))) { _ in fetchExerciseData() }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("WeightAdded"))) { _ in fetchWeightData() }
-            .onReceive(profileManager.$userProfile) { newProfile in
-                if let profile = newProfile { withAnimation { calorieGoal = profile.calorieTarget } }
-            }
-            .sheet(isPresented: $showMealHistory) { MealHistoryView().environmentObject(themeManager) }
-            .sheet(isPresented: $showUploadMeal) { BatchUploadView().environmentObject(themeManager) }
-            .sheet(isPresented: $showProfile) {
-                ProfileView().environmentObject(themeManager).onDisappear { profileManager.fetchProfile(force: true) }
-            }
-            .sheet(isPresented: $showWaterTracking) { WaterTrackingView().environmentObject(themeManager) }
-            .sheet(isPresented: $showExerciseTracking) { ExerciseTrackingView().environmentObject(themeManager) }
-            .sheet(isPresented: $showWeightTracking) { WeightTrackingView().environmentObject(themeManager) }
-            .sheet(item: $selectedMealForDetail) { meal in
-                NavigationView { MealDetailView(meal: meal).environmentObject(themeManager) }
-            }
-            .alert("Complete Your Profile", isPresented: $showProfileAlert) {
-                Button("Complete Now") { showProfile = true }
-                Button("Later", role: .cancel) {}
-            } message: { Text("Set up your profile to get personalized nutrition goals and better tracking.") }
-            .alert(networkError?.title ?? "Error", isPresented: $showNetworkAlert) {
-                if networkError == .sessionExpired { Button("Login") { session.logout() } }
-                else { Button("Retry") { handleNetworkErrorRetry() } }
-                Button("Cancel", role: .cancel) { networkError = nil }
-            } message: { Text(networkError?.message ?? "An error occurred") }
-        }
-    }
-
-    // MARK: - Header
-
-    var headerSection: some View {
-        HStack(alignment: .center) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(greeting)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(themeManager.current.secondaryText)
-                Text(userName)
-                    .font(.system(size: 24, weight: .black, design: .rounded))
-                    .foregroundColor(themeManager.current.primaryText)
-            }
-            Spacer()
-            HStack(spacing: 10) {
-                if currentStreak > 0 {
-                    HStack(spacing: 4) {
-                        Text("🔥")
-                        Text("\(currentStreak)")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(themeManager.current.primaryText)
-                    }
-                    .padding(.horizontal, 12).padding(.vertical, 7)
-                    .background(themeManager.current.cardBackground)
-                    .cornerRadius(20)
-                    .overlay(RoundedRectangle(cornerRadius: 20)
-                        .stroke(themeManager.current.cardBorder, lineWidth: 1))
-                }
-                Button(action: { showProfile = true }) {
-                    ZStack(alignment: .topTrailing) {
-                        Circle()
-                            .fill(themeManager.current.inputBackground)
-                            .frame(width: 40, height: 40)
-                            .overlay(
-                                Text(String(userName.prefix(1)).uppercased())
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(themeManager.current.primaryText)
-                            )
-                        Circle()
-                            .fill(profileManager.isLoading ? Color.yellow
-                                  : profileManager.userProfile != nil ? Color.green
-                                  : profileManager.isNewUser ? Color.orange : Color.red)
-                            .frame(width: 10, height: 10)
-                            .offset(x: 2, y: -2)
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: - Time Filter Tab
-
-    var timeFilterSection: some View {
-        HStack(spacing: 0) {
-            ForEach(timeFilters, id: \.self) { filter in
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                        selectedTimeFilter = filter
-                    }
-                }) {
-                    Text(filter)
-                        .font(.system(size: 14, weight: selectedTimeFilter == filter ? .bold : .regular))
-                        .foregroundColor(selectedTimeFilter == filter
-                            ? (themeManager.current == .dark ? .black : .white)
-                            : themeManager.current.secondaryText)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(selectedTimeFilter == filter
-                                      ? (themeManager.current == .dark ? Color.white : Color.black)
-                                      : Color.clear)
-                        )
-                }
-            }
-        }
-        .padding(4)
-        .background(themeManager.current.inputBackground)
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
-        .padding(.horizontal, 20)
-    }
-
-    // MARK: - Period Selector
-
-    @ViewBuilder
-    var periodSelectorSection: some View {
-        switch selectedTimeFilter {
-        case "Daily":
-            DailyScrollSelector(selectedDate: $selectedDate)
-                .padding(.horizontal, 20)
-        case "Weekly":
-            WeeklyScrollSelector(selectedWeekStart: $selectedWeekStart)
-                .padding(.horizontal, 20)
-        case "Monthly":
-            MonthlyGridSelector(selectedMonth: $selectedMonth)
-                .padding(.horizontal, 20)
-        default:
-            EmptyView()
-        }
-    }
-
-    // MARK: - Calorie Card
-
-    var calorieMainCard: some View {
-        HStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(selectedTimeFilter == "Daily" ? "Daily Calories" : selectedTimeFilter == "Weekly" ? "Weekly Calories" : "Monthly Calories")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(themeManager.current.secondaryText)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Text("\(animateCalories ? displayedCalories : 0)")
-                        .font(.system(size: 28, weight: .black, design: .rounded))
-                        .minimumScaleFactor(0.6)
-                        .lineLimit(1)
-                        .foregroundColor(themeManager.current.primaryText)
-                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: displayedCalories)
-                    Text("/ \(displayedGoal) kcal")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(themeManager.current.secondaryText)
-                        .padding(.bottom, 4)
-                }
-
-                Text(getCalorieStatusMessage())
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(calorieProgressColor)
-
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.gray.opacity(0.12))
-                            .frame(height: 6)
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(calorieProgressColor)
-                            .frame(width: geo.size.width * (animateCalories ? calorieProgress : 0), height: 6)
-                            .animation(.easeOut(duration: 1.0), value: calorieProgress)
-                    }
-                }
-                .frame(height: 6)
-            }
-
-            Spacer()
-
-            ZStack {
-                Circle()
-                    .stroke(Color.gray.opacity(0.12), lineWidth: 10)
-                    .frame(width: 90, height: 90)
-                Circle()
-                    .trim(from: 0, to: animateCalories ? calorieProgress : 0)
-                    .stroke(calorieProgressColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                    .frame(width: 90, height: 90)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.easeOut(duration: 1.2), value: calorieProgress)
-                VStack(spacing: 2) {
-                    Text("\(Int(calorieProgress * 100))%")
-                        .font(.system(size: 17, weight: .black, design: .rounded))
-                        .foregroundColor(themeManager.current.primaryText)
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 10))
-                        .foregroundColor(calorieProgressColor)
-                }
-            }
-        }
-        .padding(20)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(22)
-        .overlay(RoundedRectangle(cornerRadius: 22).stroke(themeManager.current.cardBorder, lineWidth: 1))
-        .shadow(color: Color.black.opacity(themeManager.current == .dark ? 0.3 : 0.05), radius: 8, x: 0, y: 4)
-    }
-
-    var calorieProgressColor: Color {
-        if calorieProgress < 0.5 { return .green }
-        else if calorieProgress < 1.0 { return Color.orange }
-        else { return .red }
-    }
-
-    // MARK: - Macros Grid
-
-    var macrosGrid: some View {
-        HStack(spacing: 12) {
-            MacroCell(icon: "fork.knife", title: "Protein", current: totalProtein,
-                      goal: calculateProteinGoal(), unit: "g", color: Color(red: 0.93, green: 0.36, blue: 0.36))
-            MacroCell(icon: "leaf.fill", title: "Carbs", current: totalCarbs,
-                      goal: calculateCarbGoal(), unit: "g", color: Color(red: 0.95, green: 0.61, blue: 0.20))
-            MacroCell(icon: "drop.fill", title: "Fat", current: totalFat,
-                      goal: calculateFatGoal(), unit: "g", color: Color(red: 0.35, green: 0.62, blue: 0.93))
-        }
-    }
-
-    // MARK: - Meals Section
-
+    // ✅ 筛选当前时间段的 meals（所有营养计算都基于这个）
     var filteredMealsForDisplay: [Meal] {
         let cal = Calendar.current
         switch selectedTimeFilter {
         case "Daily":
-            // ✅ 使用 DateHelpers.parseISO8601，支持微秒格式
             return meals.filter { meal in
                 guard let s = meal.saved_at, let d = parseISO8601(s) else { return false }
                 return cal.isDate(d, inSameDayAs: selectedDate)
@@ -466,7 +133,10 @@ struct DashboardView: View {
                 return d >= interval.start && d < interval.end
             }
         default:
-            return meals.filter { isSameDay($0.saved_at) }
+            return meals.filter { meal in
+                guard let s = meal.saved_at, let d = parseISO8601(s) else { return false }
+                return Calendar.current.isDateInToday(d)
+            }
         }
     }
 
@@ -476,142 +146,503 @@ struct DashboardView: View {
         case "Daily":
             if cal.isDateInToday(selectedDate) { return "Today's Meals" }
             if cal.isDateInYesterday(selectedDate) { return "Yesterday's Meals" }
-            let f = DateFormatter(); f.dateFormat = "MMM d"
-            return f.string(from: selectedDate) + "'s Meals"
+            let f = DateFormatter(); f.dateFormat = "MMM d"; return f.string(from: selectedDate) + "'s Meals"
         case "Weekly":
             let end = cal.date(byAdding: .day, value: 6, to: selectedWeekStart) ?? selectedWeekStart
             let f = DateFormatter(); f.dateFormat = "MMM d"
             return f.string(from: selectedWeekStart) + " – " + f.string(from: end)
         case "Monthly":
-            let f = DateFormatter(); f.dateFormat = "MMMM yyyy"
-            return f.string(from: selectedMonth) + "'s Meals"
+            let f = DateFormatter(); f.dateFormat = "MMMM yyyy"; return f.string(from: selectedMonth) + "'s Meals"
         default: return "Today's Meals"
         }
     }
 
-    
+    // MARK: - Body
 
-    var todayMealsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(mealsSectionTitle)
-                    .font(.system(size: 17, weight: .bold))
-                    .foregroundColor(themeManager.current.primaryText)
-                Spacer()
-                Button(action: { showMealHistory = true }) {
-                    Text("See all")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(themeManager.current.secondaryText)
+    var body: some View {
+        NavigationStack {
+            ZStack(alignment: .bottomTrailing) {
+                themeManager.current.background.ignoresSafeArea()
+
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        // ✅ 新 header：右上角带时间切换
+                        headerSection
+                            .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 16)
+
+                        // ✅ 新日期选择器：横向滑动
+                        dateScrollSelector
+                            .padding(.bottom, 16)
+
+                        VStack(spacing: 16) {
+                            if profileManager.isNewUser { WelcomeNewUserCard { showProfile = true } }
+                            if let netErr = networkError { networkErrorSection(netErr) }
+                            else if profileManager.isLoading && profileManager.userProfile == nil && !profileManager.isNewUser {
+                                profileLoadingSection
+                            }
+
+                            calorieMainCard
+
+                            if !filteredMealsForDisplay.isEmpty { comprehensiveNutritionSection }
+
+                            todayMealsSection
+
+                            Spacer(minLength: 100)
+                        }
+                        .padding(.horizontal, 16)
+                    }
                 }
+                .refreshable { await refreshDashboard() }
+
+                calStyleFloatingButton
             }
-     
-            if filteredMealsForDisplay.isEmpty {
-                EmptyMealsStateCard()
-            } else {
-                // ✅ 最多显示3条
-                let displayMeals = Array(filteredMealsForDisplay.prefix(3))
-                ForEach(displayMeals) { meal in
-                    Button(action: { selectedMealForDetail = meal }) {
-                        MealListRow(meal: meal)
-                    }
-                    .buttonStyle(.plain)
+            .preferredColorScheme(themeManager.current.colorScheme)
+            .navigationBarHidden(true)
+            .onAppear { initializeDashboard() }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in fetchAllData() }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NutritionRecalculated"))) { notification in
+                guard let mealId = notification.userInfo?["mealId"] as? String,
+                      let nutritionInfo = notification.userInfo?["nutritionInfo"] as? String else { return }
+                if let index = meals.firstIndex(where: { $0._id == mealId }) {
+                    meals[index].nutrition_info = nutritionInfo
                 }
-                // 如果超过3条，显示"还有X条"提示
-                if filteredMealsForDisplay.count > 3 {
-                    Button(action: { showMealHistory = true }) {
-                        Text("+ \(filteredMealsForDisplay.count - 3) more meals")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(themeManager.current.secondaryText)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 10)
-                            .background(themeManager.current.inputBackground)
-                            .cornerRadius(12)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { fetchAllData() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("WaterAdded"))) { _ in fetchWaterData() }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ExerciseAdded"))) { _ in fetchExerciseData() }
+            .onReceive(profileManager.$userProfile) { newProfile in
+                if let profile = newProfile { withAnimation { calorieGoal = profile.calorieTarget } }
+            }
+            .sheet(isPresented: $showMealHistory) { MealHistoryView().environmentObject(themeManager) }
+            .sheet(isPresented: $showUploadMeal) { BatchUploadView().environmentObject(themeManager) }
+            .sheet(isPresented: $showProfile) {
+                ProfileView().environmentObject(themeManager)
+                    .onDisappear { profileManager.fetchProfile(force: true) }
+            }
+            .sheet(isPresented: $showWaterTracking) { WaterTrackingView().environmentObject(themeManager) }
+            .sheet(isPresented: $showExerciseTracking) { ExerciseTrackingView().environmentObject(themeManager) }
+            .sheet(isPresented: $showWeightTracking) { WeightTrackingView().environmentObject(themeManager) }
+            .sheet(item: $selectedMealForDetail) { meal in
+                NavigationView { MealDetailView(meal: meal).environmentObject(themeManager) }
+            }
+            .alert(networkError?.title ?? "Error", isPresented: $showNetworkAlert) {
+                if networkError == .sessionExpired { Button("Login") { session.logout() } }
+                else { Button("Retry") { handleNetworkErrorRetry() } }
+                Button("Cancel", role: .cancel) { networkError = nil }
+            } message: { Text(networkError?.message ?? "") }
+        }
+    }
+
+    // MARK: - ✅ Header（含右上角时间切换）
+
+    var headerSection: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(greeting).font(.system(size: 13, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText)
+                Text(userName).font(.system(size: 24, weight: .black, design: .rounded))
+                    .foregroundColor(themeManager.current.primaryText)
+            }
+            Spacer()
+            HStack(spacing: 10) {
+                if currentStreak > 0 {
+                    HStack(spacing: 4) {
+                        Text("🔥")
+                        Text("\(currentStreak)").font(.system(size: 14, weight: .bold))
+                            .foregroundColor(themeManager.current.primaryText)
+                    }
+                    .padding(.horizontal, 10).padding(.vertical, 6)
+                    .background(themeManager.current.cardBackground).cornerRadius(20)
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(themeManager.current.cardBorder, lineWidth: 1))
+                }
+
+                // ✅ 时间切换胶囊
+                ZStack(alignment: .topTrailing) {
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            showTimePicker.toggle()
+                        }
+                    }) {
+                        HStack(spacing: 5) {
+                            Text(selectedTimeFilter)
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(themeManager.current == .dark ? .black : .white)
+                            Image(systemName: showTimePicker ? "chevron.up" : "chevron.down")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(themeManager.current == .dark ? .black : .white)
+                        }
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(themeManager.current == .dark ? Color.white : Color.black)
+                        .cornerRadius(20)
                     }
                     .buttonStyle(.plain)
+
+                    // 下拉选项
+                    if showTimePicker {
+                        VStack(spacing: 0) {
+                            ForEach(["Daily", "Weekly", "Monthly"], id: \.self) { option in
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                        selectedTimeFilter = option
+                                        showTimePicker = false
+                                    }
+                                }) {
+                                    HStack {
+                                        Text(option)
+                                            .font(.system(size: 14, weight: selectedTimeFilter == option ? .bold : .regular))
+                                            .foregroundColor(selectedTimeFilter == option
+                                                ? (themeManager.current == .dark ? .black : .white)
+                                                : themeManager.current.primaryText)
+                                        Spacer()
+                                        if selectedTimeFilter == option {
+                                            Image(systemName: "checkmark")
+                                                .font(.system(size: 12, weight: .bold))
+                                                .foregroundColor(themeManager.current == .dark ? .black : .white)
+                                        }
+                                    }
+                                    .padding(.horizontal, 14).padding(.vertical, 10)
+                                    .background(selectedTimeFilter == option
+                                        ? (themeManager.current == .dark ? Color.white : Color.black)
+                                        : themeManager.current.cardBackground)
+                                }
+                                .buttonStyle(.plain)
+                                if option != "Monthly" {
+                                    Divider().background(themeManager.current.cardBorder)
+                                }
+                            }
+                        }
+                        .background(themeManager.current.cardBackground)
+                        .cornerRadius(14)
+                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(themeManager.current.cardBorder, lineWidth: 1))
+                        .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 6)
+                        .frame(width: 140)
+                        .offset(y: 38)
+                        .zIndex(100)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .top).combined(with: .opacity),
+                            removal: .move(edge: .top).combined(with: .opacity)
+                        ))
+                    }
+                }
+
+                // 头像
+                Button(action: { showProfile = true }) {
+                    ZStack(alignment: .topTrailing) {
+                        Circle().fill(themeManager.current.inputBackground).frame(width: 40, height: 40)
+                            .overlay(Text(String(userName.prefix(1)).uppercased())
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(themeManager.current.primaryText))
+                        Circle()
+                            .fill(profileManager.userProfile != nil ? Color.green : Color.orange)
+                            .frame(width: 10, height: 10).offset(x: 2, y: -2)
+                    }
                 }
             }
         }
+        // 点击其他地方关闭下拉
+        .onTapGesture {
+            if showTimePicker { withAnimation { showTimePicker = false } }
+        }
     }
-// MARK: - Nutrition Overview
+
+    // MARK: - ✅ 新日期选择器（横向滑动）
+
+    @ViewBuilder
+    var dateScrollSelector: some View {
+        switch selectedTimeFilter {
+        case "Daily":
+            DailyScrollPicker(selectedDate: $selectedDate)
+                .padding(.horizontal, 20)
+        case "Weekly":
+            WeeklyChipPicker(selectedWeekStart: $selectedWeekStart)
+                .padding(.horizontal, 20)
+        case "Monthly":
+            MonthChipPicker(selectedMonth: $selectedMonth)
+                .padding(.horizontal, 20)
+        default:
+            EmptyView()
+        }
+    }
+
+    // MARK: - Calorie Card
+
+    var calorieMainCard: some View {
+        HStack(spacing: 20) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(selectedTimeFilter == "Daily" ? "Daily Calories"
+                     : selectedTimeFilter == "Weekly" ? "Weekly Calories" : "Monthly Calories")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(themeManager.current.secondaryText)
+                    .textCase(.uppercase).tracking(0.5)
+
+                HStack(alignment: .lastTextBaseline, spacing: 4) {
+                    Text("\(animateCalories ? displayedCalories : 0)")
+                        .font(.system(size: 28, weight: .black, design: .rounded))
+                        .minimumScaleFactor(0.6).lineLimit(1)
+                        .foregroundColor(themeManager.current.primaryText)
+                        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: displayedCalories)
+                    Text("/ \(displayedGoal) kcal")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(themeManager.current.secondaryText).padding(.bottom, 4)
+                }
+
+                Text(getCalorieStatusMessage())
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(calorieProgressColor)
+
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 4).fill(Color.gray.opacity(0.12)).frame(height: 6)
+                        RoundedRectangle(cornerRadius: 4).fill(calorieProgressColor)
+                            .frame(width: geo.size.width * (animateCalories ? calorieProgress : 0), height: 6)
+                            .animation(.easeOut(duration: 1.0), value: calorieProgress)
+                    }
+                }
+                .frame(height: 6)
+            }
+            Spacer()
+            ZStack {
+                Circle().stroke(Color.gray.opacity(0.12), lineWidth: 10).frame(width: 90, height: 90)
+                Circle().trim(from: 0, to: animateCalories ? calorieProgress : 0)
+                    .stroke(calorieProgressColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .frame(width: 90, height: 90).rotationEffect(.degrees(-90))
+                    .animation(.easeOut(duration: 1.2), value: calorieProgress)
+                VStack(spacing: 2) {
+                    Text("\(Int(calorieProgress * 100))%")
+                        .font(.system(size: 17, weight: .black, design: .rounded))
+                        .foregroundColor(themeManager.current.primaryText)
+                    Image(systemName: "flame.fill").font(.system(size: 10)).foregroundColor(calorieProgressColor)
+                }
+            }
+        }
+        .padding(20).background(themeManager.current.cardBackground).cornerRadius(22)
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(themeManager.current == .dark ? 0.3 : 0.05), radius: 8, x: 0, y: 4)
+    }
+
+    var calorieProgressColor: Color {
+        if calorieProgress < 0.5 { return .green }
+        if calorieProgress < 1.0 { return .orange }
+        return .red
+    }
+
+    // MARK: - ✅ Nutrition Overview（修复 bug：用 filteredNutrition）
 
     var comprehensiveNutritionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Nutrition Overview")
                     .font(.system(size: 17, weight: .bold))
                     .foregroundColor(themeManager.current.primaryText)
                 Spacer()
-                Text(selectedTimeFilter == "Daily" ? "Daily" : selectedTimeFilter == "Weekly" ? "Weekly" : "Monthly")
+                Text(selectedTimeFilter)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(themeManager.current == .dark ? .black : .white)
-                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
                     .background(RoundedRectangle(cornerRadius: 10)
                         .fill(themeManager.current == .dark ? Color.white : Color.black))
             }
 
-            ZStack {
-                if selectedTimeFilter == "Daily" {
-                    todaysCircularNutritionView
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .leading).combined(with: .opacity),
-                            removal: .move(edge: .trailing).combined(with: .opacity)))
-                } else {
-                    WeeklyNutritionOverview(
-                        avgCalories: selectedTimeFilter == "Weekly"
-                            ? (filteredMealsForDisplay.count > 0 ? displayedCalories / max(1, filteredMealsForDisplay.count) : 0)
-                            : monthlyAvgCalories,
-                        targetCalories: dynamicCalorieGoal,
-                        mealsLogged: filteredMealsForDisplay.count,
-                        streak: currentStreak
-                    )
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .leading).combined(with: .opacity)))
-                }
+            if selectedTimeFilter == "Daily" {
+                dailyNutritionPager
+            } else {
+                weeklyNutritionOverview
             }
-            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: selectedTimeFilter)
         }
     }
 
-    var todaysCircularNutritionView: some View {
-        let todaysNutritionText = createTodaysNutritionText()
-        return Group {
-            if !todaysNutritionText.isEmpty {
-                VStack(spacing: 20) {
-                    HStack(spacing: 16) {
-                        TodaysNutrientCircle(title: "Protein", current: totalProtein, target: calculateProteinGoal(), unit: "g", color: Color(red: 0.93, green: 0.36, blue: 0.36), icon: "bolt.fill").environmentObject(themeManager)
-                        TodaysNutrientCircle(title: "Carbs", current: totalCarbs, target: calculateCarbGoal(), unit: "g", color: Color(red: 0.95, green: 0.61, blue: 0.20), icon: "leaf.fill").environmentObject(themeManager)
-                        TodaysNutrientCircle(title: "Fat", current: totalFat, target: calculateFatGoal(), unit: "g", color: Color(red: 0.35, green: 0.62, blue: 0.93), icon: "drop.fill").environmentObject(themeManager)
-                    }
-                    HStack(spacing: 16) {
-                        TodaysNutrientCircle(title: "Fiber", current: totalFiber, target: 25, unit: "g", color: .purple, icon: "circle.grid.2x2.fill").environmentObject(themeManager)
-                        TodaysNutrientCircle(title: "Sugar", current: totalSugar, target: 50, unit: "g", color: .pink, icon: "heart.fill").environmentObject(themeManager)
-                        TodaysNutrientCircle(title: "Sodium", current: totalSodium, target: 2300, unit: "mg", color: .red, icon: "triangle.fill").environmentObject(themeManager)
-                    }
+    var dailyNutritionPager: some View {
+        VStack(spacing: 10) {
+            TabView(selection: $nutritionPage) {
+                // ✅ Page 0: 6圆环，用 filteredNutrition 实时数据
+                unifiedNutritionCircles.tag(0)
+                // Page 1: 三圆环统计
+                dailySummaryCircles.tag(1)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 160)
+            .background(themeManager.current.cardBackground)
+            .cornerRadius(18)
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
+
+            HStack(spacing: 6) {
+                ForEach(0..<2, id: \.self) { i in
+                    Capsule()
+                        .fill(i == nutritionPage
+                              ? (themeManager.current == .dark ? Color.white : Color.black)
+                              : themeManager.current.cardBorder)
+                        .frame(width: i == nutritionPage ? 16 : 6, height: 6)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: nutritionPage)
                 }
-                .padding()
-                .background(RoundedRectangle(cornerRadius: 18)
-                    .fill(themeManager.current.cardBackground)
-                    .overlay(RoundedRectangle(cornerRadius: 18)
-                        .stroke(themeManager.current.cardBorder, lineWidth: 1)))
-            } else {
-                VStack(spacing: 12) {
-                    Image(systemName: "chart.pie").font(.system(size: 36))
-                        .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
-                    Text("No nutrition data today")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(themeManager.current.primaryText)
-                    Text("Add your first meal to see breakdown")
-                        .font(.caption)
+            }
+        }
+    }
+
+    // ✅ 修复：直接用 filteredNutrition（从 filteredMealsForDisplay 实时计算）
+    var unifiedNutritionCircles: some View {
+        let nut = filteredNutrition
+        let accentColor = Color(red: 0.95, green: 0.61, blue: 0.20)
+
+        return HStack(spacing: 0) {
+            ForEach([
+                ("Protein",  nut.protein,  calculateProteinGoal(), "g"),
+                ("Carbs",    nut.carbs,    calculateCarbGoal(),    "g"),
+                ("Fat",      nut.fat,      calculateFatGoal(),     "g"),
+                ("Fiber",    nut.fiber,    25,                     "g"),
+                ("Sugar",    nut.sugar,    50,                     "g"),
+                ("Sodium",   nut.sodium,   2300,                   "mg"),
+            ], id: \.0) { title, current, target, unit in
+                VStack(spacing: 4) {
+                    ZStack {
+                        Circle()
+                            .stroke(accentColor.opacity(0.15), lineWidth: 5)
+                            .frame(width: 46, height: 46)
+                        let progress = target > 0 ? min(Double(current) / Double(target), 1.0) : 0.0
+                        Circle()
+                            .trim(from: 0, to: progress)
+                            .stroke(
+                                progress >= 1.0 ? Color.red : accentColor,
+                                style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                            )
+                            .frame(width: 46, height: 46)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
+                        VStack(spacing: 0) {
+                            Text(current >= 1000 ? "\(current/1000)k" : "\(current)")
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .foregroundColor(themeManager.current.primaryText)
+                                .minimumScaleFactor(0.5).lineLimit(1)
+                            Text(unit)
+                                .font(.system(size: 7))
+                                .foregroundColor(themeManager.current.secondaryText)
+                        }
+                    }
+                    Text(title)
+                        .font(.system(size: 9, weight: .semibold))
                         .foregroundColor(themeManager.current.secondaryText)
-                        .multilineTextAlignment(.center)
+                        .lineLimit(1)
+                    Text("\(target)\(unit)")
+                        .font(.system(size: 8))
+                        .foregroundColor(themeManager.current.secondaryText.opacity(0.5))
                 }
-                .frame(maxWidth: .infinity).padding(.vertical, 40)
-                .background(RoundedRectangle(cornerRadius: 18)
-                    .fill(themeManager.current.cardBackground)
-                    .overlay(RoundedRectangle(cornerRadius: 18)
-                        .stroke(style: StrokeStyle(lineWidth: 1.5, dash: [8]))
-                        .foregroundColor(themeManager.current.cardBorder)))
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(.vertical, 14).padding(.horizontal, 4)
+    }
+
+    var dailySummaryCircles: some View {
+        HStack(spacing: 0) {
+            summaryCircle(title: "Calories", value: displayedCalories, target: dynamicCalorieGoal, unit: "kcal", color: .orange)
+            Divider().frame(height: 50).background(themeManager.current.cardBorder)
+            summaryCircle(title: "Meals", value: filteredMealsForDisplay.count, target: 5, unit: "today", color: Color(red: 0.35, green: 0.75, blue: 0.45))
+            Divider().frame(height: 50).background(themeManager.current.cardBorder)
+            summaryCircle(title: "Streak", value: currentStreak, target: 7, unit: "days", color: .purple)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity).padding(.horizontal, 8)
+    }
+
+    func summaryCircle(title: String, value: Int, target: Int, unit: String, color: Color) -> some View {
+        let progress = target > 0 ? min(Double(value) / Double(target), 1.0) : 0.0
+        return VStack(spacing: 8) {
+            ZStack {
+                Circle().stroke(color.opacity(0.15), lineWidth: 6).frame(width: 60, height: 60)
+                Circle().trim(from: 0, to: progress)
+                    .stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 60, height: 60).rotationEffect(.degrees(-90))
+                    .animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
+                Text("\(value)")
+                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundColor(themeManager.current.primaryText)
+                    .minimumScaleFactor(0.5).lineLimit(1).padding(.horizontal, 4)
+            }
+            VStack(spacing: 2) {
+                Text(title).font(.caption2).foregroundColor(themeManager.current.primaryText).fontWeight(.semibold)
+                Text(unit).font(.caption2).foregroundColor(themeManager.current.secondaryText)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    var weeklyNutritionOverview: some View {
+        let avgCal = selectedTimeFilter == "Weekly"
+            ? (filteredMealsForDisplay.isEmpty ? 0 : displayedCalories / max(1, filteredMealsForDisplay.count))
+            : monthlyAvgCalories
+
+        return VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                weeklyStatCircle(title: "Avg Cal", value: avgCal, target: dynamicCalorieGoal, unit: "kcal", color: .orange)
+                weeklyStatCircle(title: "Meals", value: filteredMealsForDisplay.count, target: selectedTimeFilter == "Weekly" ? 21 : 90, unit: "logged", color: Color(red: 0.35, green: 0.75, blue: 0.45))
+                weeklyStatCircle(title: "Streak", value: currentStreak, target: 7, unit: "days", color: .purple)
+            }
+            if filteredMealsForDisplay.count > 0 {
+                HStack(spacing: 8) {
+                    Circle().fill(Color(red: 0.35, green: 0.75, blue: 0.45).opacity(0.5)).frame(width: 6, height: 6)
+                    Text("You've logged \(filteredMealsForDisplay.count) meals \(selectedTimeFilter == "Weekly" ? "this week" : "this month")")
+                        .font(.caption).foregroundColor(themeManager.current.secondaryText)
+                    Spacer()
+                }
+                .padding(12).background(RoundedRectangle(cornerRadius: 12).fill(themeManager.current.inputBackground))
+            }
+        }
+        .padding()
+        .background(RoundedRectangle(cornerRadius: 18).fill(themeManager.current.cardBackground)
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1)))
+    }
+
+    func weeklyStatCircle(title: String, value: Int, target: Int, unit: String, color: Color) -> some View {
+        let progress = target > 0 ? min(Double(value) / Double(target), 1.0) : 0.0
+        return VStack(spacing: 8) {
+            ZStack {
+                Circle().stroke(color.opacity(0.15), lineWidth: 6).frame(width: 60, height: 60)
+                Circle().trim(from: 0, to: progress).stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
+                    .frame(width: 60, height: 60).rotationEffect(.degrees(-90))
+                    .animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
+                Text("\(value)").font(.system(size: 14, weight: .bold)).foregroundColor(themeManager.current.primaryText)
+            }
+            VStack(spacing: 2) {
+                Text(title).font(.caption2).foregroundColor(themeManager.current.primaryText).fontWeight(.medium)
+                Text(unit).font(.caption2).foregroundColor(themeManager.current.secondaryText)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Meals Section
+
+    var todayMealsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(mealsSectionTitle).font(.system(size: 17, weight: .bold))
+                    .foregroundColor(themeManager.current.primaryText)
+                Spacer()
+                Button(action: { showMealHistory = true }) {
+                    Text("See all").font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(themeManager.current.secondaryText)
+                }
+            }
+            if filteredMealsForDisplay.isEmpty {
+                EmptyMealsStateCard()
+            } else {
+                ForEach(Array(filteredMealsForDisplay.prefix(3))) { meal in
+                    Button(action: { selectedMealForDetail = meal }) {
+                        MealListRow(meal: meal)
+                    }
+                    .buttonStyle(.plain)
+                }
+                if filteredMealsForDisplay.count > 3 {
+                    Button(action: { showMealHistory = true }) {
+                        HStack(spacing: 5) {
+                            Text("+ \(filteredMealsForDisplay.count - 3) more meals")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(themeManager.current.secondaryText)
+                            Image(systemName: "chevron.right").font(.system(size: 11)).foregroundColor(themeManager.current.secondaryText.opacity(0.5))
+                        }
+                        .frame(maxWidth: .infinity).padding(.vertical, 10)
+                        .background(themeManager.current.inputBackground).cornerRadius(12)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
@@ -621,34 +652,27 @@ struct DashboardView: View {
     var calStyleFloatingButton: some View {
         Button(action: { withAnimation(.spring()) { showUploadMeal = true } }) {
             ZStack {
-                Circle()
-                    .fill(themeManager.current == .dark ? Color.white : Color.black)
+                Circle().fill(themeManager.current == .dark ? Color.white : Color.black)
                     .frame(width: 60, height: 60)
                     .shadow(color: Color.black.opacity(0.2), radius: 12, x: 0, y: 6)
-                Image(systemName: "plus")
-                    .font(.system(size: 22, weight: .bold))
+                Image(systemName: "plus").font(.system(size: 22, weight: .bold))
                     .foregroundColor(themeManager.current == .dark ? .black : .white)
             }
         }
-        .padding(.trailing, 20)
-        .padding(.bottom, 28)
+        .padding(.trailing, 20).padding(.bottom, 28)
     }
 
     // MARK: - Error States
 
     func networkErrorSection(_ error: NetworkError) -> some View {
         HStack {
-            Image(systemName: error == .sessionExpired ? "exclamationmark.lock.fill" : "wifi.exclamationmark")
-                .foregroundColor(.red).font(.caption)
+            Image(systemName: "wifi.exclamationmark").foregroundColor(.red).font(.caption)
             VStack(alignment: .leading, spacing: 2) {
                 Text(error.title).font(.caption).fontWeight(.semibold).foregroundColor(.red)
                 Text(error.message).font(.caption2).foregroundColor(themeManager.current.secondaryText)
             }
             Spacer()
-            Button(error == .sessionExpired ? "Login" : "Retry") {
-                if error == .sessionExpired { session.logout() } else { handleNetworkErrorRetry() }
-            }
-            .font(.caption).foregroundColor(.orange)
+            Button("Retry") { handleNetworkErrorRetry() }.font(.caption).foregroundColor(.orange)
         }
         .padding()
         .background(RoundedRectangle(cornerRadius: 12).fill(Color.red.opacity(0.08))
@@ -658,8 +682,7 @@ struct DashboardView: View {
     var profileLoadingSection: some View {
         HStack {
             ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .orange)).scaleEffect(0.8)
-            Text("Loading your profile...")
-                .font(.caption).foregroundColor(themeManager.current.secondaryText)
+            Text("Loading your profile...").font(.caption).foregroundColor(themeManager.current.secondaryText)
             Spacer()
         }
         .padding()
@@ -667,32 +690,15 @@ struct DashboardView: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.orange.opacity(0.2), lineWidth: 1)))
     }
 
-    func profileErrorSection(_ error: String) -> some View {
-        HStack {
-            Image(systemName: "exclamationmark.triangle.fill").foregroundColor(.red).font(.caption)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Profile Error").font(.caption).fontWeight(.semibold).foregroundColor(.red)
-                Text(error).font(.caption2).foregroundColor(themeManager.current.secondaryText)
-            }
-            Spacer()
-            Button("Retry") { profileManager.fetchProfile(force: true) }
-                .font(.caption).foregroundColor(.orange)
-        }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.red.opacity(0.08))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red.opacity(0.2), lineWidth: 1)))
-    }
-
     // MARK: - Data Logic
 
     func getCalorieStatusMessage() -> String {
-        if profileManager.isNewUser { return "Set up profile for personalized goals" }
         let period = selectedTimeFilter == "Daily" ? "today" : selectedTimeFilter == "Weekly" ? "this week" : "this month"
         if calorieProgress < 0.3 { return "Great start \(period)! 💪" }
-        else if calorieProgress < 0.7 { return "On track \(period) 🎯" }
-        else if calorieProgress < 1.0 { return "Almost at your goal!" }
-        else if calorieProgress < 1.2 { return "Goal reached! 🎉" }
-        else { return "Over goal - consider lighter options" }
+        if calorieProgress < 0.7 { return "On track \(period) 🎯" }
+        if calorieProgress < 1.0 { return "Almost at your goal!" }
+        if calorieProgress < 1.2 { return "Goal reached! 🎉" }
+        return "Over goal - consider lighter options"
     }
 
     func initializeDashboard() {
@@ -701,12 +707,26 @@ struct DashboardView: View {
         loadUserPreferences()
         if profileManager.userProfile == nil && !profileManager.isNewUser { profileManager.fetchProfile() }
         fetchAllData(); calculateStreak()
+        fetchHealthReportCalorieGoal()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             withAnimation(.easeOut(duration: 0.8)) { animateCalories = true }
         }
     }
 
-    func fetchAllData() { fetchMeals(); fetchWaterData(); fetchExerciseData(); fetchWeightData() }
+    func fetchHealthReportCalorieGoal() {
+        guard let token = SessionManager.shared.getAuthToken(),
+              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/get-health-report") else { return }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        URLSession.shared.dataTask(with: request) { data, _, _ in
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let dailyCal = json["daily_calories"] as? Int else { return }
+            DispatchQueue.main.async { self.healthReportCalorieGoal = dailyCal }
+        }.resume()
+    }
+
+    func fetchAllData() { fetchMeals(); fetchWaterData(); fetchExerciseData() }
 
     func loadUserPreferences() {
         if let profile = profileManager.userProfile { calorieGoal = profile.calorieTarget }
@@ -724,14 +744,12 @@ struct DashboardView: View {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async { self.isLoading = false }
-            if let error = error {
-                DispatchQueue.main.async { self.networkError = .dataLoadFailed; print("❌ \(error.localizedDescription)") }; return
-            }
+            if let _ = error { DispatchQueue.main.async { self.networkError = .dataLoadFailed }; return }
             guard let data = data else { DispatchQueue.main.async { self.networkError = .dataLoadFailed }; return }
-            if let httpResponse = response as? HTTPURLResponse {
-                if httpResponse.statusCode == 401 {
+            if let http = response as? HTTPURLResponse {
+                if http.statusCode == 401 {
                     DispatchQueue.main.async { self.networkError = .sessionExpired; self.showNetworkAlert = true }; return
-                } else if httpResponse.statusCode != 200 {
+                } else if http.statusCode != 200 {
                     DispatchQueue.main.async { self.networkError = .serverError }; return
                 }
             }
@@ -742,13 +760,13 @@ struct DashboardView: View {
                     for meal in decoded {
                         if !seenIds.contains(meal._id) { seenIds.insert(meal._id); uniqueMeals.append(meal) }
                     }
-                    // ✅ 用 DateHelpers.parseISO8601 排序，支持微秒格式
                     self.meals = uniqueMeals.sorted {
                         guard let d1 = parseISO8601($0.saved_at ?? ""),
                               let d2 = parseISO8601($1.saved_at ?? "") else { return false }
                         return d1 > d2
                     }
-                    self.calculateStats(); self.calculateWeeklyStats()
+                    self.calculateMonthlyStats()
+                    self.calculateWeeklyStats()
                 }
             } catch { DispatchQueue.main.async { self.networkError = .dataLoadFailed } }
         }.resume()
@@ -758,15 +776,11 @@ struct DashboardView: View {
         guard let userId = getCurrentUserId(), let token = SessionManager.shared.getAuthToken(),
               let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-water?user_id=\(userId)") else { return }
         var request = URLRequest(url: url); request.timeoutInterval = 30
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else { return }
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 401 {
-                DispatchQueue.main.async { self.networkError = .sessionExpired; self.showNetworkAlert = true }; return
-            }
+        URLSession.shared.dataTask(with: request) { data, _, _ in
+            guard let data = data else { return }
             if let decoded = try? JSONDecoder().decode([WaterEntry].self, from: data) {
-                DispatchQueue.main.async { self.waterIntake = decoded; self.calculateWaterStats() }
+                DispatchQueue.main.async { self.waterIntake = decoded }
             }
         }.resume()
     }
@@ -775,130 +789,30 @@ struct DashboardView: View {
         guard let userId = getCurrentUserId(), let token = SessionManager.shared.getAuthToken(),
               let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-exercise?user_id=\(userId)") else { return }
         var request = URLRequest(url: url); request.timeoutInterval = 30
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else { return }
+        URLSession.shared.dataTask(with: request) { data, _, _ in
+            guard let data = data else { return }
             if let decoded = try? JSONDecoder().decode([ExerciseEntry].self, from: data) {
-                DispatchQueue.main.async { self.exerciseEntries = decoded; self.calculateExerciseStats() }
+                DispatchQueue.main.async { self.exerciseEntries = decoded }
             }
         }.resume()
     }
 
-    func fetchWeightData() {
-        guard let userId = getCurrentUserId(), let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-weight?user_id=\(userId)") else { return }
-        var request = URLRequest(url: url); request.timeoutInterval = 30
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else { return }
-            if let decoded = try? JSONDecoder().decode([WeightEntry].self, from: data) {
-                DispatchQueue.main.async {
-                    self.weightEntries = decoded.sorted { $0.recorded_at > $1.recorded_at }
-                    self.calculateWeightStats()
-                }
-            }
-        }.resume()
-    }
-
-    func calculateStats() {
+    func calculateMonthlyStats() {
         let calendar = Calendar.current; let today = Date()
         let startOfMonth = calendar.dateInterval(of: .month, for: today)?.start ?? today
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
-        var todayCal = 0, todayProt = 0, todayCarb = 0, todayFt = 0, todayFib = 0, todaySug = 0, todaySod = 0
-        var weeklyCal = 0, weeklyProt = 0, weeklyCarb = 0, weeklyFt = 0
-        var monthlyCal = 0, monthlyDays = Set<String>()
+        var monthlyCal = 0; var monthlyDays = Set<String>()
         for meal in meals {
-            // ✅ 用 DateHelpers.parseISO8601，兼容微秒格式
             guard let savedAt = meal.saved_at, let validDate = parseISO8601(savedAt) else { continue }
             let n = extractAllNutrients(from: meal.nutrition_info)
-            if calendar.isDateInToday(validDate) {
-                todayCal += n.calories; todayProt += n.protein; todayCarb += n.carbs; todayFt += n.fat
-                todayFib += n.fiber; todaySug += n.sugar; todaySod += n.sodium
-            }
-            if validDate >= startOfWeek {
-                weeklyCal += n.calories; weeklyProt += n.protein; weeklyCarb += n.carbs; weeklyFt += n.fat
-            }
             if validDate >= startOfMonth {
                 monthlyCal += n.calories
                 let dc = calendar.dateComponents([.year, .month, .day], from: validDate)
                 monthlyDays.insert("\(dc.year!)-\(dc.month!)-\(dc.day!)")
             }
         }
-        withAnimation {
-            todayCalories = todayCal; totalProtein = todayProt; totalCarbs = todayCarb; totalFat = todayFt
-            totalFiber = todayFib; totalSugar = todaySug; totalSodium = todaySod
-            weeklyCalories = weeklyCal; weeklyProtein = weeklyProt; weeklyCarbs = weeklyCarb; weeklyFat = weeklyFt
-            monthlyCalories = monthlyCal
-            monthlyAvgCalories = monthlyDays.count > 0 ? monthlyCal / monthlyDays.count : 0
-        }
-    }
-
-    func extractAllNutrients(from text: String) -> (calories: Int, protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
-        var calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0, sugar = 0, sodium = 0
-        for line in text.components(separatedBy: .newlines) {
-            let parts = line.trimmingCharacters(in: .whitespaces).components(separatedBy: "|")
-                .map { $0.trimmingCharacters(in: .whitespaces) }
-            if parts.count >= 2,
-               let floatVal = Float(parts[1].replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")) {
-                let value = Int(floatVal.rounded()); let name = parts[0].lowercased()
-                if name.contains("calorie") || name.contains("kcal") { calories = value }
-                else if name.contains("protein") { protein = value }
-                else if name.contains("carb") { carbs = value }
-                else if (name.contains("fat") || name == "fats") && !name.contains("saturated") && !name.contains("trans") { fat = value }
-                else if name.contains("fiber") || name.contains("fibre") { fiber = value }
-                else if name.contains("sugar") && !name.contains("added") { sugar = value }
-                else if name.contains("sodium") || name.contains("salt") { sodium = value }
-            }
-        }
-        return (calories, protein, carbs, fat, fiber, sugar, sodium)
-    }
-
-    func createTodaysNutritionText() -> String {
-        let todaysMeals = filteredMealsForDisplay
-        if todaysMeals.isEmpty { return "" }
-        var totalCal = 0, totalProt = 0, totalCarb = 0, totalFt = 0, totalFib = 0, totalSug = 0, totalSod = 0
-        for meal in todaysMeals {
-            let n = extractAllNutrients(from: meal.nutrition_info)
-            totalCal += n.calories; totalProt += n.protein; totalCarb += n.carbs
-            totalFt += n.fat; totalFib += n.fiber; totalSug += n.sugar; totalSod += n.sodium
-        }
-        DispatchQueue.main.async {
-            self.totalProtein = totalProt; self.totalCarbs = totalCarb; self.totalFat = totalFt
-            self.totalFiber = totalFib; self.totalSugar = totalSug; self.totalSodium = totalSod
-        }
-        return "Calories|\(totalCal)|kcal\nProtein|\(totalProt)|g\nFat|\(totalFt)|g\nCarbohydrates|\(totalCarb)|g\nFiber|\(totalFib)|g\nSugar|\(totalSug)|g\nSodium|\(totalSod)|mg"
-    }
-
-    func calculateWaterStats() {
-        let calendar = Calendar.current; let today = calendar.startOfDay(for: Date())
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? today
-        var tw = 0.0; var ww: [Double] = []
-        for entry in waterIntake {
-            if let d = parseISO8601(entry.recorded_at) {
-                if calendar.isDate(d, inSameDayAs: today) { tw += entry.amount }
-                if d >= startOfWeek { ww.append(entry.amount) }
-            }
-        }
-        withAnimation { todayWater = tw; weeklyAvgWater = ww.isEmpty ? 0 : ww.reduce(0, +) / Double(ww.count) }
-    }
-
-    func calculateExerciseStats() {
-        let calendar = Calendar.current; let today = calendar.startOfDay(for: Date())
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: Date())?.start ?? today
-        var te = 0, we = 0
-        for entry in exerciseEntries {
-            if let d = parseISO8601(entry.recorded_at) {
-                if calendar.isDate(d, inSameDayAs: today) { te += entry.duration }
-                if d >= startOfWeek { we += entry.duration }
-            }
-        }
-        withAnimation { todayExercise = te; weeklyExercise = we }
-    }
-
-    func calculateWeightStats() {
-        if let latest = weightEntries.first { withAnimation { currentWeight = latest.weight } }
+        monthlyCalories = monthlyCal
+        monthlyAvgCalories = monthlyDays.count > 0 ? monthlyCal / monthlyDays.count : 0
     }
 
     func calculateWeeklyStats() {
@@ -910,35 +824,55 @@ struct DashboardView: View {
     }
 
     func calculateStreak() {
-        let calendar = Calendar.current; var streak = 0; var currentDate = calendar.startOfDay(for: Date())
+        let calendar = Calendar.current; var streak = 0; var checkDate = calendar.startOfDay(for: Date())
         for _ in 0..<30 {
             let hasM = meals.contains { meal in
                 guard let s = meal.saved_at, let d = parseISO8601(s) else { return false }
-                return calendar.isDate(d, inSameDayAs: currentDate)
+                return calendar.isDate(d, inSameDayAs: checkDate)
             }
-            if hasM { streak += 1; currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate }
+            if hasM { streak += 1; checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate) ?? checkDate }
             else { break }
         }
         withAnimation { currentStreak = streak }
     }
 
+    func extractAllNutrients(from text: String) -> (calories: Int, protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
+        var calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0, sugar = 0, sodium = 0
+        for line in text.components(separatedBy: .newlines) {
+            let parts = line.trimmingCharacters(in: .whitespaces).components(separatedBy: "|")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count >= 2,
+               let v = Float(parts[1].replacingOccurrences(of: ",", with: "").replacingOccurrences(of: " ", with: "")) {
+                let value = Int(v.rounded()); let name = parts[0].lowercased()
+                if name.contains("calorie") || name.contains("kcal") { calories = value }
+                else if name.contains("protein") { protein = value }
+                else if name.contains("carb") { carbs = value }
+                else if (name.contains("fat") || name == "fats") && !name.contains("saturated") { fat = value }
+                else if name.contains("fiber") || name.contains("fibre") { fiber = value }
+                else if name.contains("sugar") && !name.contains("added") { sugar = value }
+                else if name.contains("sodium") || name.contains("salt") { sodium = value }
+            }
+        }
+        return (calories, protein, carbs, fat, fiber, sugar, sodium)
+    }
+
+    func extractCaloriesInt(from text: String) -> Int {
+        for line in text.components(separatedBy: .newlines) {
+            let parts = line.components(separatedBy: "|").map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count >= 2, parts[0].lowercased().contains("calorie"),
+               let v = Float(parts[1].replacingOccurrences(of: ",", with: "")) { return Int(v) }
+        }
+        return 0
+    }
+
     func handleNetworkErrorRetry() { networkError = nil; fetchAllData(); profileManager.fetchProfile(force: true) }
-
-    func getCurrentUserId() -> String? {
-        session.userID.isEmpty ? UserDefaults.standard.string(forKey: "user_id") : session.userID
-    }
-
-    func isSameDay(_ dateString: String?) -> Bool {
-        guard let dateString = dateString else { return false }
-        // ✅ 用 DateHelpers.parseISO8601，兼容微秒格式
-        guard let mealDate = parseISO8601(dateString) else { return false }
-        return Calendar.current.isDateInToday(mealDate)
-    }
+    func getCurrentUserId() -> String? { session.userID.isEmpty ? UserDefaults.standard.string(forKey: "user_id") : session.userID }
 
     func refreshDashboard() async {
         await withCheckedContinuation { continuation in
             hasInitialized = false; networkError = nil
             profileManager.fetchProfile(force: true); fetchAllData(); calculateStreak()
+            fetchHealthReportCalorieGoal()
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) { continuation.resume() }
         }
     }
@@ -948,27 +882,26 @@ struct DashboardView: View {
     func calculateFatGoal() -> Int { Int(Double(dynamicCalorieGoal) * 0.3 / 9) }
 }
 
-// MARK: - Supporting Components（全部保留，不变）
+// MARK: - ✅ 新日期选择器：DailyScrollPicker（横向滑动，无折叠）
 
-struct DailyScrollSelector: View {
+struct DailyScrollPicker: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedDate: Date
-    @State private var displayWeekStart: Date = {
-        Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
-    }()
+    @State private var displayWeekStart: Date = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
 
     var daysInWeek: [Date] {
         (0..<7).compactMap { Calendar.current.date(byAdding: .day, value: $0, to: displayWeekStart) }
     }
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
+            // 周导航
             HStack {
                 Button(action: { shiftWeek(by: -1) }) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(themeManager.current.primaryText)
-                        .frame(width: 30, height: 30)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(themeManager.current.secondaryText)
+                        .frame(width: 28, height: 28)
                         .background(themeManager.current.inputBackground)
                         .cornerRadius(8)
                 }
@@ -979,113 +912,119 @@ struct DailyScrollSelector: View {
                 Spacer()
                 Button(action: { shiftWeek(by: 1) }) {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(isCurrentWeek ? themeManager.current.secondaryText.opacity(0.3) : themeManager.current.primaryText)
-                        .frame(width: 30, height: 30)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(isCurrentWeek
+                            ? themeManager.current.secondaryText.opacity(0.25)
+                            : themeManager.current.secondaryText)
+                        .frame(width: 28, height: 28)
                         .background(themeManager.current.inputBackground)
                         .cornerRadius(8)
                 }
                 .disabled(isCurrentWeek)
             }
+            .padding(.horizontal, 4)
+
+            // 7天横向滑动
             HStack(spacing: 6) {
                 ForEach(daysInWeek, id: \.self) { day in
                     let isSelected = Calendar.current.isDate(day, inSameDayAs: selectedDate)
                     let isToday = Calendar.current.isDateInToday(day)
                     let isFuture = day > Date()
                     Button(action: { guard !isFuture else { return }; selectedDate = day }) {
-                        VStack(spacing: 4) {
+                        VStack(spacing: 5) {
                             Text(shortDay(day))
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.system(size: 10, weight: .medium))
                                 .foregroundColor(isSelected
                                     ? (themeManager.current == .dark ? .black : .white)
-                                    : isFuture ? themeManager.current.secondaryText.opacity(0.25)
+                                    : isFuture ? themeManager.current.secondaryText.opacity(0.2)
                                     : themeManager.current.secondaryText)
-                            Text(dayNum(day))
-                                .font(.system(size: 16, weight: isSelected ? .black : .semibold))
-                                .foregroundColor(isSelected
-                                    ? (themeManager.current == .dark ? .black : .white)
-                                    : isFuture ? themeManager.current.primaryText.opacity(0.25)
-                                    : themeManager.current.primaryText)
+                            ZStack {
+                                Circle()
+                                    .fill(isSelected
+                                          ? (themeManager.current == .dark ? Color.white : Color.black)
+                                          : isToday ? themeManager.current.inputBackground : Color.clear)
+                                    .frame(width: 34, height: 34)
+                                    .overlay(Circle().stroke(
+                                        isToday && !isSelected ? themeManager.current.cardBorder : Color.clear,
+                                        lineWidth: 1.5))
+                                Text(dayNum(day))
+                                    .font(.system(size: 16, weight: isSelected ? .black : .semibold))
+                                    .foregroundColor(isSelected
+                                        ? (themeManager.current == .dark ? .black : .white)
+                                        : isFuture ? themeManager.current.primaryText.opacity(0.2)
+                                        : themeManager.current.primaryText)
+                            }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 6)
-                        .background(RoundedRectangle(cornerRadius: 12)
-                            .fill(isSelected
-                                  ? (themeManager.current == .dark ? Color.white : Color.black)
-                                  : isToday ? themeManager.current.inputBackground : Color.clear))
-                        .overlay(RoundedRectangle(cornerRadius: 12)
-                            .stroke(isToday && !isSelected ? themeManager.current.cardBorder : Color.clear, lineWidth: 1.5))
                     }
                     .buttonStyle(.plain)
                     .disabled(isFuture)
                 }
             }
         }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .background(themeManager.current.cardBackground)
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
     }
 
     var isCurrentWeek: Bool {
         guard let currentStart = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start else { return true }
         return Calendar.current.isDate(displayWeekStart, inSameDayAs: currentStart)
     }
-
     func shiftWeek(by delta: Int) {
-        if let newStart = Calendar.current.date(byAdding: .weekOfYear, value: delta, to: displayWeekStart) {
-            if delta > 0 && isCurrentWeek { return }
-            displayWeekStart = newStart
-        }
+        guard let newStart = Calendar.current.date(byAdding: .weekOfYear, value: delta, to: displayWeekStart) else { return }
+        if delta > 0 && isCurrentWeek { return }
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { displayWeekStart = newStart }
     }
-
     func weekRangeLabel() -> String {
         let end = Calendar.current.date(byAdding: .day, value: 6, to: displayWeekStart) ?? displayWeekStart
         let f = DateFormatter(); f.dateFormat = "MMM d"
         return f.string(from: displayWeekStart) + " – " + f.string(from: end)
     }
-
     func shortDay(_ d: Date) -> String { let f = DateFormatter(); f.dateFormat = "EEE"; return String(f.string(from: d).prefix(3)) }
     func dayNum(_ d: Date) -> String { let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: d) }
 }
 
-struct WeeklyScrollSelector: View {
+struct WeeklyChipPicker: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedWeekStart: Date
-
     var recentWeeks: [Date] {
-        (0..<12).compactMap {
+        (0..<8).compactMap {
             Calendar.current.date(byAdding: .weekOfYear, value: -$0, to:
                 Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date())
         }
     }
-
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 ForEach(recentWeeks, id: \.self) { weekStart in
                     let isSelected = Calendar.current.isDate(weekStart, inSameDayAs: selectedWeekStart)
-                    let isCurrentWeek = Calendar.current.isDate(weekStart,
+                    let isCurrent = Calendar.current.isDate(weekStart,
                         inSameDayAs: Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date())
                     Button(action: { selectedWeekStart = weekStart }) {
-                        VStack(spacing: 4) {
-                            if isCurrentWeek {
-                                Text("This Week").font(.system(size: 11, weight: .bold))
+                        HStack(spacing: 5) {
+                            if isCurrent {
+                                Text("This Week").font(.system(size: 12, weight: .bold))
                                     .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white) : .orange)
+                            } else {
+                                Text(weekLabel(weekStart))
+                                    .font(.system(size: 12, weight: isSelected ? .bold : .medium))
+                                    .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white) : themeManager.current.primaryText)
                             }
-                            Text(weekLabel(weekStart))
-                                .font(.system(size: 13, weight: isSelected ? .bold : .medium))
-                                .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white) : themeManager.current.primaryText)
                         }
-                        .padding(.horizontal, 14).padding(.vertical, 10)
-                        .background(RoundedRectangle(cornerRadius: 14)
+                        .padding(.horizontal, 14).padding(.vertical, 9)
+                        .background(RoundedRectangle(cornerRadius: 20)
                             .fill(isSelected ? (themeManager.current == .dark ? Color.white : Color.black) : themeManager.current.inputBackground))
-                        .overlay(RoundedRectangle(cornerRadius: 14)
-                            .stroke(isCurrentWeek && !isSelected ? Color.orange.opacity(0.4) : themeManager.current.cardBorder,
-                                    lineWidth: isCurrentWeek && !isSelected ? 1.5 : 1))
+                        .overlay(RoundedRectangle(cornerRadius: 20)
+                            .stroke(isCurrent && !isSelected ? Color.orange.opacity(0.5) : themeManager.current.cardBorder,
+                                    lineWidth: isCurrent && !isSelected ? 1.5 : 1))
                     }
                     .buttonStyle(.plain)
                 }
             }
         }
     }
-
     func weekLabel(_ start: Date) -> String {
         let end = Calendar.current.date(byAdding: .day, value: 6, to: start) ?? start
         let f = DateFormatter(); f.dateFormat = "MMM d"
@@ -1093,72 +1032,45 @@ struct WeeklyScrollSelector: View {
     }
 }
 
-struct MonthlyGridSelector: View {
+struct MonthChipPicker: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedMonth: Date
-    @State private var displayYear: Int = Calendar.current.component(.year, from: Date())
-
-    var currentYear: Int { Calendar.current.component(.year, from: Date()) }
-    var currentMonth: Int { Calendar.current.component(.month, from: Date()) }
-    var minYear: Int { currentYear - 2 }
-
-    var monthsInYear: [Date] {
-        (1...12).compactMap { month in
-            var comps = DateComponents(); comps.year = displayYear; comps.month = month; comps.day = 1
-            return Calendar.current.date(from: comps)
-        }
-    }
-
-    var body: some View {
-        VStack(spacing: 10) {
-            HStack {
-                Button(action: { if displayYear > minYear { withAnimation { displayYear -= 1 } } }) {
-                    Image(systemName: "chevron.left").font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(displayYear > minYear ? themeManager.current.primaryText : themeManager.current.secondaryText.opacity(0.3))
-                        .frame(width: 32, height: 32).background(themeManager.current.inputBackground).cornerRadius(8)
-                }.disabled(displayYear <= minYear)
-                Spacer()
-                Text("\(displayYear)").font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundColor(themeManager.current.primaryText)
-                Spacer()
-                Button(action: { if displayYear < currentYear { withAnimation { displayYear += 1 } } }) {
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(displayYear < currentYear ? themeManager.current.primaryText : themeManager.current.secondaryText.opacity(0.3))
-                        .frame(width: 32, height: 32).background(themeManager.current.inputBackground).cornerRadius(8)
-                }.disabled(displayYear >= currentYear)
+    var recentMonths: [Date] {
+        (0..<12).compactMap { Calendar.current.date(byAdding: .month, value: -$0, to: Date()) }
+            .compactMap { d -> Date? in
+                var comps = Calendar.current.dateComponents([.year, .month], from: d)
+                comps.day = 1
+                return Calendar.current.date(from: comps)
             }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(monthsInYear, id: \.self) { month in
-                        let cal = Calendar.current
-                        let mNum = cal.component(.month, from: month)
-                        let isSelected = cal.isDate(month, equalTo: selectedMonth, toGranularity: .month)
-                        let isCurrentMonth = displayYear == currentYear && mNum == currentMonth
-                        let isFuture = displayYear == currentYear && mNum > currentMonth
-                        Button(action: { guard !isFuture else { return }; selectedMonth = month }) {
-                            VStack(spacing: 3) {
-                                Text(monthAbbr(month))
-                                    .font(.system(size: 15, weight: isSelected ? .bold : .medium))
-                                    .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white)
-                                                    : isFuture ? themeManager.current.primaryText.opacity(0.25) : themeManager.current.primaryText)
-                                Circle().fill(isCurrentMonth && !isSelected ? Color.orange : Color.clear).frame(width: 4, height: 4)
-                            }
-                            .frame(width: 52, height: 52)
-                            .background(RoundedRectangle(cornerRadius: 14)
-                                .fill(isSelected ? (themeManager.current == .dark ? Color.white : Color.black)
-                                      : isCurrentMonth ? themeManager.current.inputBackground : Color.clear))
-                            .overlay(RoundedRectangle(cornerRadius: 14)
-                                .stroke(isCurrentMonth && !isSelected ? Color.orange.opacity(0.35) : Color.clear, lineWidth: 1.5))
-                        }
-                        .buttonStyle(.plain).disabled(isFuture)
+    }
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(recentMonths, id: \.self) { month in
+                    let isSelected = Calendar.current.isDate(month, equalTo: selectedMonth, toGranularity: .month)
+                    let isCurrent = Calendar.current.isDate(month, equalTo: Date(), toGranularity: .month)
+                    Button(action: { selectedMonth = month }) {
+                        Text(isCurrent ? "This Month" : monthLabel(month))
+                            .font(.system(size: 12, weight: isSelected ? .bold : .medium))
+                            .foregroundColor(isSelected ? (themeManager.current == .dark ? .black : .white) : themeManager.current.primaryText)
+                            .padding(.horizontal, 14).padding(.vertical, 9)
+                            .background(RoundedRectangle(cornerRadius: 20)
+                                .fill(isSelected ? (themeManager.current == .dark ? Color.white : Color.black) : themeManager.current.inputBackground))
+                            .overlay(RoundedRectangle(cornerRadius: 20)
+                                .stroke(isCurrent && !isSelected ? Color.orange.opacity(0.5) : themeManager.current.cardBorder,
+                                        lineWidth: isCurrent && !isSelected ? 1.5 : 1))
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }
     }
-
-    func monthAbbr(_ date: Date) -> String { let f = DateFormatter(); f.dateFormat = "MMM"; return f.string(from: date) }
+    func monthLabel(_ date: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "MMM yyyy"; return f.string(from: date)
+    }
 }
+
+// MARK: - Supporting Components（不变）
 
 struct MacroCell: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -1197,9 +1109,7 @@ struct MealListRow: View {
     }
     var mealTime: String {
         guard let s = meal.saved_at, let d = parseISO8601(s) else { return "" }
-        if Calendar.current.isDateInToday(d) {
-            let f = DateFormatter(); f.timeStyle = .short; return f.string(from: d)
-        }
+        if Calendar.current.isDateInToday(d) { let f = DateFormatter(); f.timeStyle = .short; return f.string(from: d) }
         let f = DateFormatter(); f.dateFormat = "MMM d"; return f.string(from: d)
     }
     var mealIcon: String {
@@ -1217,8 +1127,8 @@ struct MealListRow: View {
                    let data = Data(base64Encoded: base64), let image = UIImage(data: data) {
                     Image(uiImage: image).resizable().scaledToFill()
                 } else {
-                    themeManager.current.inputBackground.overlay(Image(systemName: "fork.knife")
-                        .foregroundColor(themeManager.current.secondaryText.opacity(0.5)))
+                    themeManager.current.inputBackground
+                        .overlay(Image(systemName: "fork.knife").foregroundColor(themeManager.current.secondaryText.opacity(0.5)))
                 }
             }
             .frame(width: 54, height: 54).clipShape(RoundedRectangle(cornerRadius: 14))
@@ -1230,7 +1140,6 @@ struct MealListRow: View {
                     Text(meal.meal_type?.capitalized ?? "Meal").font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
                     Text("·").foregroundColor(themeManager.current.secondaryText.opacity(0.5))
                     Text(mealTime).font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
-                    // ✅ Diet Plan 标记
                     if meal.from_diet_plan == true {
                         Text("Diet Plan").font(.system(size: 10, weight: .semibold)).foregroundColor(.purple)
                             .padding(.horizontal, 5).padding(.vertical, 2)
@@ -1278,89 +1187,6 @@ struct WelcomeNewUserCard: View {
     }
 }
 
-struct TodaysNutrientCircle: View {
-    @EnvironmentObject var themeManager: ThemeManager
-    let title: String; let current: Int; let target: Int; let unit: String; let color: Color; let icon: String
-    var progress: Double { guard target > 0 else { return 0 }; return min(Double(current) / Double(target), 1.0) }
-    var body: some View {
-        VStack(spacing: 10) {
-            ZStack {
-                Circle().stroke(color.opacity(0.2), lineWidth: 8).frame(width: 70, height: 70)
-                Circle().trim(from: 0, to: progress).stroke(color, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .frame(width: 70, height: 70).rotationEffect(.degrees(-90))
-                    .animation(.spring(response: 1.2, dampingFraction: 0.8), value: progress)
-                VStack(spacing: 1) {
-                    Text("\(current)").font(.system(size: 16, weight: .bold)).foregroundColor(themeManager.current.primaryText)
-                    Text("\(unit)").font(.system(size: 8)).foregroundColor(themeManager.current.secondaryText)
-                }
-            }
-            VStack(spacing: 4) {
-                Image(systemName: icon).font(.system(size: 12)).foregroundColor(color)
-                Text(title).font(.caption2).foregroundColor(themeManager.current.primaryText).fontWeight(.medium)
-                Text("\(target) \(unit)").font(.caption2).foregroundColor(themeManager.current.secondaryText)
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
-struct WeeklyNutritionOverview: View {
-    let avgCalories: Int; let targetCalories: Int; let mealsLogged: Int; let streak: Int
-    @EnvironmentObject var themeManager: ThemeManager
-    var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 16) {
-                WeeklyStatCircle(title: "Avg Cal", value: avgCalories, target: targetCalories, unit: "kcal", color: .orange)
-                WeeklyStatCircle(title: "Meals", value: mealsLogged, target: 21, unit: "logged", color: .green)
-                WeeklyStatCircle(title: "Streak", value: streak, target: 7, unit: "days", color: .purple)
-            }
-            if mealsLogged > 0 || streak > 0 {
-                VStack(alignment: .leading, spacing: 6) {
-                    if mealsLogged > 0 {
-                        HStack(spacing: 8) {
-                            Circle().fill(Color.green.opacity(0.4)).frame(width: 6, height: 6)
-                            Text("You've logged \(mealsLogged) meals this week").font(.caption).foregroundColor(themeManager.current.secondaryText)
-                            Spacer()
-                        }
-                    }
-                    if streak > 0 {
-                        HStack(spacing: 8) {
-                            Circle().fill(Color.orange.opacity(0.4)).frame(width: 6, height: 6)
-                            Text("Current tracking streak: \(streak) days").font(.caption).foregroundColor(themeManager.current.secondaryText)
-                            Spacer()
-                        }
-                    }
-                }
-                .padding(12).background(RoundedRectangle(cornerRadius: 12).fill(themeManager.current.inputBackground))
-            }
-        }
-        .padding()
-        .background(RoundedRectangle(cornerRadius: 18).fill(themeManager.current.cardBackground)
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1)))
-    }
-}
-
-struct WeeklyStatCircle: View {
-    @EnvironmentObject var themeManager: ThemeManager
-    let title: String; let value: Int; let target: Int; let unit: String; let color: Color
-    var progress: Double { guard target > 0 else { return 0 }; return min(Double(value) / Double(target), 1.0) }
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle().stroke(color.opacity(0.15), lineWidth: 6).frame(width: 60, height: 60)
-                Circle().trim(from: 0, to: progress).stroke(color, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                    .frame(width: 60, height: 60).rotationEffect(.degrees(-90)).animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
-                Text("\(value)").font(.system(size: 14, weight: .bold)).foregroundColor(themeManager.current.primaryText)
-            }
-            VStack(spacing: 2) {
-                Text(title).font(.caption2).foregroundColor(themeManager.current.primaryText).fontWeight(.medium)
-                Text(unit).font(.caption2).foregroundColor(themeManager.current.secondaryText)
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
 struct EmptyMealsStateCard: View {
     @EnvironmentObject var themeManager: ThemeManager
     var body: some View {
@@ -1373,5 +1199,28 @@ struct EmptyMealsStateCard: View {
         }
         .frame(maxWidth: .infinity).padding(.vertical, 36).background(themeManager.current.cardBackground).cornerRadius(18)
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(style: StrokeStyle(lineWidth: 1.5, dash: [6])).foregroundColor(themeManager.current.cardBorder))
+    }
+}
+
+struct SmallNutrientCircle: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    let title: String; let current: Int; let target: Int; let unit: String; let color: Color; let icon: String
+    var progress: Double { guard target > 0 else { return 0 }; return min(Double(current) / Double(target), 1.0) }
+    var body: some View {
+        VStack(spacing: 5) {
+            ZStack {
+                Circle().stroke(color.opacity(0.15), lineWidth: 5).frame(width: 48, height: 48)
+                Circle().trim(from: 0, to: progress).stroke(color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .frame(width: 48, height: 48).rotationEffect(.degrees(-90))
+                    .animation(.spring(response: 1.0, dampingFraction: 0.8), value: progress)
+                VStack(spacing: 0) {
+                    Text("\(current)").font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundColor(themeManager.current.primaryText).minimumScaleFactor(0.6).lineLimit(1)
+                    Text(unit).font(.system(size: 7)).foregroundColor(themeManager.current.secondaryText)
+                }
+            }
+            Text(title).font(.system(size: 9, weight: .semibold)).foregroundColor(themeManager.current.secondaryText).lineLimit(1)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
