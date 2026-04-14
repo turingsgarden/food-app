@@ -1,5 +1,6 @@
 # health_pipeline.py
 # Health Agent — AI 逻辑层
+# 新增：generate_health_report() — 基于健康档案生成报告 + 推荐食物 + 营养建议
 
 import google.generativeai as genai
 import os
@@ -21,7 +22,6 @@ else:
     _model = _flash_model = None
     print("⚠️ health_pipeline: GEMINI_API_KEY not set")
 
-# 保证每天饮食不同的多样化食材库
 VARIETY_HINTS = [
     "Use Asian cuisine: rice, tofu, miso, edamame, bok choy, sesame",
     "Use Mediterranean cuisine: olive oil, hummus, falafel, quinoa, feta, olives",
@@ -87,15 +87,131 @@ Respond ONLY with valid JSON, no markdown:
 
 
 # ════════════════════════════════════════════════════════════════
-# 2. 生成餐食计划（支持自定义天数和餐次）
+# 2. 生成健康报告（新增）
+# ════════════════════════════════════════════════════════════════
+
+def generate_health_report(profile: dict, goals: list, gemini_model=None) -> dict:
+    """
+    基于用户健康档案生成：
+    1. 整体健康评分（0-100）
+    2. 健康状态分析（2-3句话）
+    3. 需要关注的指标 + 具体建议
+    4. 每日营养目标
+    5. 推荐食物列表（每个食物附3道推荐菜肴）
+    6. 每周营养摄入建议
+    """
+    model = _get_model(gemini_model)
+    if not model:
+        raise Exception("Gemini model not available")
+
+    height_m = profile.get("height_cm", 170) / 100
+    weight   = profile.get("weight_kg", 70)
+    bmi      = round(weight / (height_m ** 2), 1)
+    age      = profile.get("age", 30)
+    sex      = profile.get("sex", "other")
+
+    # 构建临床指标描述
+    clinical = []
+    if profile.get("systolic_bp") and profile.get("diastolic_bp"):
+        clinical.append(f"BP: {profile['systolic_bp']}/{profile['diastolic_bp']} mmHg")
+    if profile.get("fasting_blood_sugar"):
+        clinical.append(f"Fasting glucose: {profile['fasting_blood_sugar']} mmol/L")
+    if profile.get("total_cholesterol"):
+        clinical.append(f"Cholesterol: {profile['total_cholesterol']} mmol/L")
+    if profile.get("triglycerides"):
+        clinical.append(f"Triglycerides: {profile['triglycerides']} mmol/L")
+    clinical_str = ", ".join(clinical) if clinical else "No clinical markers provided"
+
+    bmi_category = (
+        "Underweight" if bmi < 18.5
+        else "Normal" if bmi < 25
+        else "Overweight" if bmi < 30
+        else "Obese"
+    )
+
+    prompt = f"""You are a clinical dietitian and health coach. Analyze this patient's health profile and generate a comprehensive health report with personalized food recommendations.
+
+Patient Profile:
+- Age: {age} | Sex: {sex}
+- Height: {profile.get('height_cm')} cm | Weight: {weight} kg | BMI: {bmi} ({bmi_category})
+- Clinical markers: {clinical_str}
+- Dietary preferences: {', '.join(profile.get('dietary_preferences', ['no restriction']))}
+- Allergens to avoid: {', '.join(profile.get('allergens', ['none']))}
+- Health goals: {', '.join(goals) if goals else 'general health and wellness'}
+
+Generate a comprehensive health report. Respond ONLY with valid JSON, no markdown backticks:
+{{
+  "health_score": <integer 0-100>,
+  "health_summary": "<2-3 sentence overall health assessment based on BMI and clinical markers>",
+  "status_badge": "<one of: Excellent, Good, Fair, Needs Attention>",
+  "daily_calories": <integer>,
+  "protein_g": <integer>,
+  "carbs_g": <integer>,
+  "fat_g": <integer>,
+  "fiber_g": <integer>,
+  "sodium_mg": <integer>,
+  "weekly_calories": <integer daily_calories * 7>,
+  "attention_items": [
+    {{
+      "metric": "<metric name e.g. BMI, Blood Pressure, Cholesterol>",
+      "current_value": "<current value with unit>",
+      "status": "<one of: normal, borderline, high, low>",
+      "advice": "<1-2 sentence specific actionable advice>"
+    }}
+  ],
+  "recommended_foods": [
+    {{
+      "food": "<food name>",
+      "reason": "<brief reason why this food is good for them, 1 sentence>",
+      "dishes": ["<dish 1>", "<dish 2>", "<dish 3>"]
+    }}
+  ],
+  "foods_to_limit": ["<food1>", "<food2>", "<food3>"],
+  "lifestyle_tip": "<one practical daily habit tip>"
+}}
+
+Rules:
+- health_score: 85-100 for normal BMI + all normal markers; deduct points for each abnormal marker
+- attention_items: include BMI always; add clinical markers only if provided and abnormal or borderline
+- recommended_foods: provide exactly 6 foods tailored to their goals and restrictions
+- dishes: 3 specific dish names per food (real, common recipes)
+- All values must be real numbers, not placeholders"""
+
+    print(f"🏥 Generating health report | BMI={bmi} | goals={goals}")
+    response = model.generate_content(prompt)
+    text = response.text.strip().replace("```json", "").replace("```", "").strip()
+
+    # 处理可能的 JSON 截断
+    try:
+        result = json.loads(text)
+    except json.JSONDecodeError:
+        # 尝试修复截断的 JSON
+        if not text.endswith("}"):
+            text = text + '"}}'
+        result = json.loads(text)
+
+    # 确保必填字段存在
+    result.setdefault("health_score", 70)
+    result.setdefault("health_summary", "Based on your profile, here is your personalized health assessment.")
+    result.setdefault("status_badge", "Good")
+    result.setdefault("daily_calories", 2000)
+    result.setdefault("attention_items", [])
+    result.setdefault("recommended_foods", [])
+    result.setdefault("foods_to_limit", [])
+    result.setdefault("weekly_calories", result.get("daily_calories", 2000) * 7)
+    result.setdefault("lifestyle_tip", "Stay hydrated and aim for 7-8 hours of sleep each night.")
+
+    print(f"✅ Health report: score={result['health_score']} | {result['daily_calories']} kcal/day")
+    return result
+
+
+# ════════════════════════════════════════════════════════════════
+# 3. 生成餐食计划（保留原有）
 # ════════════════════════════════════════════════════════════════
 
 def _build_day_prompt(day_date, day_name, day_index, cal, prot, carbs, fat,
                        diet, allergy, meals_per_day, meal_types):
-    """每天用不同的菜系提示，保证多样性"""
     variety = VARIETY_HINTS[day_index % len(VARIETY_HINTS)]
-
-    # 按餐次分配卡路里
     if meals_per_day == 1:
         cal_split = f"All {cal} kcal in one meal"
     elif meals_per_day == 2:
@@ -105,7 +221,6 @@ def _build_day_prompt(day_date, day_name, day_index, cal, prot, carbs, fat,
         b = int(cal * 0.30); l = int(cal * 0.40); d = cal - b - l
         cal_split = f"Breakfast: ~{b} kcal, Lunch: ~{l} kcal, Dinner: ~{d} kcal"
 
-    # 构建 JSON 模板
     meal_jsons = []
     for mt in meal_types:
         meal_jsons.append(
@@ -119,45 +234,27 @@ def _build_day_prompt(day_date, day_name, day_index, cal, prot, carbs, fat,
         f"Targets: {cal} kcal | P{prot}g C{carbs}g F{fat}g | {cal_split}\n"
         f"Diet: {diet} | Avoid: {allergy}\n"
         f"IMPORTANT: Use ONLY {day_name}'s cuisine theme. Every meal must be COMPLETELY DIFFERENT from other days.\n\n"
-        f"Return ONLY this JSON (replace all placeholders with real unique food names and real numbers):\n"
+        f"Return ONLY this JSON:\n"
         f'{{"date":"{day_date}","day_name":"{day_name}",'
         + ",".join(meal_jsons) +
         f',"total_calories":<n>}}\n\n'
-        f"Rules: 2-3 items per meal. Real specific food names. All integers. No nulls. No placeholders."
+        f"Rules: 2-3 items per meal. Real specific food names. All integers. No nulls."
     )
 
 
-def generate_meal_plan(
-    nutrition_plan: dict,
-    health_profile: dict,
-    days: int = 7,
-    meals_per_day: int = 3,
-    gemini_model=None
-) -> dict:
-    """
-    生成餐食计划。
-    - days: 1-7天，从今天开始
-    - meals_per_day: 1-3餐
-    - 每天完全不同的菜系
-    - 并行生成
-    """
+def generate_meal_plan(nutrition_plan: dict, health_profile: dict, days: int = 7,
+                        meals_per_day: int = 3, gemini_model=None) -> dict:
     flash = _flash_model or genai.GenerativeModel('gemini-2.5-flash')
     days = max(1, min(7, days))
     meals_per_day = max(1, min(3, meals_per_day))
 
-    # 从今天开始
     today = datetime.now()
     day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     days_info = []
     for i in range(days):
         d = today + timedelta(days=i)
-        days_info.append({
-            "date": d.strftime("%Y-%m-%d"),
-            "day_name": day_names[d.weekday()],
-            "index": i
-        })
+        days_info.append({"date": d.strftime("%Y-%m-%d"), "day_name": day_names[d.weekday()], "index": i})
 
-    # 确定每天的餐次
     if meals_per_day == 1:
         meal_types = ["lunch"]
     elif meals_per_day == 2:
@@ -175,52 +272,40 @@ def generate_meal_plan(
     def generate_single_day(day: dict) -> dict:
         prompt = _build_day_prompt(
             day["date"], day["day_name"], day["index"],
-            cal, prot, carbs, fat, diet, allergy,
-            meals_per_day, meal_types
+            cal, prot, carbs, fat, diet, allergy, meals_per_day, meal_types
         )
-        print(f"  📅 {day['day_name']} {day['date']} (theme: {VARIETY_HINTS[day['index'] % len(VARIETY_HINTS)][:20]}...)")
         response = flash.generate_content(prompt)
         text = re.sub(r"```json|```", "", response.text).strip()
         result = json.loads(text)
-        # 确保所有餐次存在（补全缺失的）
         for mt in ["breakfast", "lunch", "dinner"]:
             if mt not in result:
                 result[mt] = None
-        print(f"  ✅ {day['day_name']} done")
         return result
 
     def fallback_day(day: dict) -> dict:
-        """生成失败时的兜底数据"""
         cuisines = ["Oatmeal", "Chicken Salad", "Grilled Fish", "Vegetable Stir Fry",
                     "Quinoa Bowl", "Lentil Soup", "Avocado Toast"]
         name = cuisines[day["index"] % len(cuisines)]
         base = {
             "date": day["date"], "day_name": day["day_name"],
             "breakfast": {"meal_type": "breakfast", "name": f"{name} Breakfast",
-                "items": [{"food": "Oatmeal", "amount_g": 80, "calories": 300, "protein": 10, "carbs": 55, "fat": 5},
-                           {"food": "Banana", "amount_g": 100, "calories": 90, "protein": 1, "carbs": 23, "fat": 0}],
-                "total_calories": 390, "total_protein": 11, "total_carbs": 78, "total_fat": 5},
+                "items": [{"food": "Oatmeal", "amount_g": 80, "calories": 300, "protein": 10, "carbs": 55, "fat": 5}],
+                "total_calories": 300, "total_protein": 10, "total_carbs": 55, "total_fat": 5},
             "lunch": {"meal_type": "lunch", "name": f"{name} Lunch",
-                "items": [{"food": "Grilled chicken breast", "amount_g": 150, "calories": 250, "protein": 40, "carbs": 0, "fat": 6},
-                           {"food": "Brown rice", "amount_g": 120, "calories": 200, "protein": 4, "carbs": 44, "fat": 2},
-                           {"food": "Steamed broccoli", "amount_g": 100, "calories": 35, "protein": 3, "carbs": 7, "fat": 0}],
+                "items": [{"food": "Grilled chicken breast", "amount_g": 150, "calories": 250, "protein": 40, "carbs": 0, "fat": 6}],
                 "total_calories": 485, "total_protein": 47, "total_carbs": 51, "total_fat": 8},
             "dinner": {"meal_type": "dinner", "name": f"{name} Dinner",
-                "items": [{"food": "Salmon fillet", "amount_g": 150, "calories": 300, "protein": 35, "carbs": 0, "fat": 15},
-                           {"food": "Sweet potato", "amount_g": 150, "calories": 130, "protein": 2, "carbs": 30, "fat": 0},
-                           {"food": "Mixed greens salad", "amount_g": 80, "calories": 20, "protein": 1, "carbs": 4, "fat": 0}],
+                "items": [{"food": "Salmon fillet", "amount_g": 150, "calories": 300, "protein": 35, "carbs": 0, "fat": 15}],
                 "total_calories": 450, "total_protein": 38, "total_carbs": 34, "total_fat": 15},
-            "total_calories": 1325
+            "total_calories": 1235
         }
-        # 如果不是3餐，清空不需要的
         for mt in ["breakfast", "lunch", "dinner"]:
             if mt not in meal_types:
                 base[mt] = None
         return base
 
-    print(f"🍽️ gemini-2.5-flash | {cal} kcal | {days} days from today | {meals_per_day} meals/day | parallel")
+    print(f"🍽️ Generating {days}-day meal plan | parallel")
     day_results = {}
-
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(days, 7)) as executor:
         futures = {executor.submit(generate_single_day, day): i for i, day in enumerate(days_info)}
         for future in concurrent.futures.as_completed(futures):
@@ -232,7 +317,6 @@ def generate_meal_plan(
                 day_results[i] = fallback_day(days_info[i])
 
     all_days = [day_results[i] for i in range(days)]
-    print(f"✅ Meal plan ready | {len(all_days)} days")
     return {
         "week_start_date": days_info[0]["date"],
         "days": all_days,
@@ -240,31 +324,22 @@ def generate_meal_plan(
     }
 
 
-# 保持向后兼容（旧代码调用 generate_weekly_meal_plan）
 def generate_weekly_meal_plan(nutrition_plan: dict, health_profile: dict, gemini_model=None,
                                days: int = 7, meals_per_day: int = 3) -> dict:
     return generate_meal_plan(nutrition_plan, health_profile, days, meals_per_day, gemini_model)
 
 
 # ════════════════════════════════════════════════════════════════
-# 3. 分析餐食照片 — 用 model_pipeline 做真实营养分析，再对比计划
+# 4. 分析餐食照片（保留原有）
 # ════════════════════════════════════════════════════════════════
 
 def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
                        gemini_model=None, user_id=None, today_logs=None):
-    """
-    Step 1: 用 model_pipeline.full_image_analysis 真实分析图片食物和营养
-    Step 2: 对比计划营养目标（±20% 为 acceptable range）
-    Step 3: 给个性化建议（钠太高、蛋白质不足、重复菜式等）
-    Step 4: 返回完整结果，包含可保存到 meal history 的数据
-    """
     import base64, tempfile, os
     from model_pipeline import full_image_analysis
 
-    # ── Step 1: 真实图片分析 ──
     print(f"📸 Starting full image analysis | meal_type={meal_type}")
     try:
-        # 把 base64 写成临时文件给 model_pipeline
         img_data = base64.b64decode(image_b64)
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as tmp:
             tmp.write(img_data)
@@ -274,7 +349,6 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
         try: os.remove(tmp_path)
         except: pass
 
-        # ✅ 检查 model_pipeline 是否成功
         if "error" in analysis or not analysis.get("nutrition_info"):
             raise Exception(f"model_pipeline failed: {analysis.get('error', 'empty nutrition_info')}")
 
@@ -282,9 +356,7 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
         visible_ingr   = analysis.get("image_description", "")
         hidden_ingr    = analysis.get("hidden_ingredients", "")
         nutrition_info = analysis.get("nutrition_info", "")
-        print(f"✅ model_pipeline success: {dish_name} | nutrition lines: {len(nutrition_info.splitlines())}")
 
-        # 解析营养数值
         def parse_nutrient(text, key):
             for line in text.split("\n"):
                 parts = [p.strip() for p in line.split("|")]
@@ -308,7 +380,6 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
 
     except Exception as e:
         print(f"❌ Image analysis failed: {e}, falling back to AI estimate")
-        # Fallback: 直接用 Gemini vision 估算
         model = _get_model(gemini_model)
         prompt = f"""Analyze this {meal_type} photo. Return ONLY JSON:
 {{"detected_foods":["<food ~Xg>"],"estimated_calories":<int>,"estimated_protein":<int>,"estimated_carbs":<int>,"estimated_fat":<int>,"sodium_mg":<int>,"sugar_g":<int>,"dish_name":"<name>","nutrition_info":"Calories|<n>|kcal\nProtein|<n>|g\nFat|<n>|g\nCarbohydrates|<n>|g\nFiber|<n>|g\nSugar|<n>|g\nSodium|<n>|mg"}}"""
@@ -326,11 +397,9 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
         visible_ingr = "\n".join(detected_foods)
         hidden_ingr = ""
 
-    # ── Step 2: 对比计划（按营养范围，不按食物一一匹配）──
+    # 对比计划
     planned_cal  = planned_meal.get("total_calories", 0) if planned_meal else 0
     planned_prot = planned_meal.get("total_protein", 0) if planned_meal else 0
-    planned_carbs = planned_meal.get("total_carbs", 0) if planned_meal else 0
-    planned_fat  = planned_meal.get("total_fat", 0) if planned_meal else 0
 
     def within_range(actual, target, tolerance=0.25):
         if target == 0: return True
@@ -343,30 +412,26 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
     if planned_prot > 0:
         scores.append(100 if within_range(actual_prot, planned_prot) else
                       max(0, 100 - int(abs(actual_prot - planned_prot) / planned_prot * 100)))
-    compliance_score = int(sum(scores) / len(scores)) if scores else 70  # 无计划时给默认70
+    compliance_score = int(sum(scores) / len(scores)) if scores else 70
 
-    # ── Step 3: 个性化建议 ──
     tips = []
     if actual_sodium > 1500:
-        tips.append(f"⚠️ High sodium ({actual_sodium}mg) — try to reduce salt in remaining meals today.")
+        tips.append(f"⚠️ High sodium ({actual_sodium}mg) — reduce salt in remaining meals.")
     if planned_prot > 0 and actual_prot < planned_prot * 0.6:
-        tips.append(f"💪 Low protein ({actual_prot}g vs {planned_prot}g planned) — add more protein in your next meal.")
+        tips.append(f"💪 Low protein — add more protein in your next meal.")
     if planned_cal > 0 and actual_cal > planned_cal * 1.3:
-        tips.append(f"🔥 Over calorie target by {actual_cal - planned_cal} kcal — consider lighter options later.")
-    if actual_sugar > 40:
-        tips.append(f"🍬 High sugar ({actual_sugar}g) — avoid sugary snacks for the rest of the day.")
+        tips.append(f"🔥 Over calorie target — consider lighter options later.")
 
-    # 对比反馈
     if planned_cal > 0:
         cal_diff = actual_cal - planned_cal
         if abs(cal_diff) <= planned_cal * 0.15:
-            feedback = f"Great match! Your meal is within the planned calorie range ({actual_cal} vs {planned_cal} kcal planned)."
+            feedback = f"Great match! Your meal is within the planned calorie range ({actual_cal} vs {planned_cal} kcal)."
         elif cal_diff > 0:
-            feedback = f"Meal is {cal_diff} kcal over plan. Protein is {'on track' if within_range(actual_prot, planned_prot) else 'below target'}."
+            feedback = f"Meal is {cal_diff} kcal over plan."
         else:
-            feedback = f"Meal is {abs(cal_diff)} kcal under plan. Consider a healthy snack to meet your daily target."
+            feedback = f"Meal is {abs(cal_diff)} kcal under plan."
     else:
-        feedback = f"Meal analyzed: {actual_cal} kcal, {actual_prot}g protein, {actual_carbs}g carbs, {actual_fat}g fat."
+        feedback = f"Meal analyzed: {actual_cal} kcal, {actual_prot}g protein."
 
     if tips:
         feedback += " " + tips[0]
@@ -377,14 +442,11 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
         short = planned_prot > 0 and actual_prot < planned_prot * 0.7
         over  = planned_cal > 0 and actual_cal > planned_cal * 1.2
         if short:
-            adjustment_note = f"To compensate for low protein, add an extra protein source (eggs, chicken, tofu) in your {remaining_days[0]} meals."
+            adjustment_note = f"Add extra protein in your {remaining_days[0]} meals."
         elif over:
-            adjustment_note = f"You're over calories today. For {remaining_days[0]}, reduce portion sizes by about 20% to stay on track."
-
-    print(f"✅ Photo analyzed | score={compliance_score}% | {actual_cal}kcal P{actual_prot}g")
+            adjustment_note = f"Reduce portion sizes by ~20% for {remaining_days[0]}."
 
     return {
-        # 分析结果（用于 Compliance 界面）
         "detected_foods": detected_foods,
         "estimated_calories": actual_cal,
         "estimated_protein": actual_prot,
@@ -393,7 +455,6 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
         "compliance_score": compliance_score,
         "compliance_feedback": feedback,
         "plan_adjustment_note": adjustment_note,
-        # 保存到 meal history 用的完整数据
         "dish_prediction": dish_name,
         "image_description": visible_ingr,
         "hidden_ingredients": hidden_ingr,

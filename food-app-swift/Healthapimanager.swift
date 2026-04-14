@@ -299,3 +299,58 @@ class HealthAPIManager {
         return data
     }
 }
+
+
+
+extension HealthAPIManager {
+ 
+    // MARK: - Fetch Existing Health Report
+ 
+    func fetchHealthReport(completion: @escaping (HealthReport?) -> Void) {
+        guard let url = URL(string: "\(base)/get-health-report"),
+              let token = token else { completion(nil); return }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = 30
+        URLSession.shared.dataTask(with: req) { data, resp, _ in
+            DispatchQueue.main.async {
+                guard let data = data,
+                      (resp as? HTTPURLResponse)?.statusCode == 200,
+                      let report = try? JSONDecoder().decode(HealthReport.self, from: data)
+                else { completion(nil); return }
+                completion(report)
+            }
+        }.resume()
+    }
+ 
+    // MARK: - Generate Health Report（从服务器生成并保存）
+ 
+    func generateHealthReport(
+        goals: [String] = [],
+        force: Bool = false,
+        completion: @escaping (HealthReport?, String?) -> Void
+    ) {
+        guard let url = URL(string: "\(base)/generate-health-report"),
+              let token = token else { completion(nil, "Auth error"); return }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = 90
+        req.httpBody = try? JSONSerialization.data(withJSONObject: ["goals": goals, "force": force])
+        URLSession.shared.dataTask(with: req) { data, resp, err in
+            DispatchQueue.main.async {
+                if let err = err { completion(nil, err.localizedDescription); return }
+                guard let data = data,
+                      (resp as? HTTPURLResponse)?.statusCode == 200,
+                      let report = try? JSONDecoder().decode(HealthReport.self, from: data)
+                else {
+                    completion(nil, "Failed to generate health report")
+                    return
+                }
+                completion(report, nil)
+            }
+        }.resume()
+    }
+}
+ 

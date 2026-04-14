@@ -920,6 +920,7 @@ def save_health_profile():
         data["user_id"] = request.user_id
         data["updated_at"] = datetime.now().isoformat()
         db["health_profiles"].update_one({"user_id": request.user_id}, {"$set": data}, upsert=True)
+        db["health_reports"].delete_many({"user_id": request.user_id})
         print(f"✅ Health profile saved for {request.user_id}")
         return jsonify({"success": True}), 200
     except Exception as e:
@@ -1044,6 +1045,7 @@ def get_meal_plan():
         print(f"❌ get_meal_plan: {e}")
         return jsonify({"error": str(e)}), 500
 
+get-meal-plan
 @app.route("/analyze-meal-photo", methods=["POST"])
 @token_required
 @db_required

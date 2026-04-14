@@ -290,3 +290,77 @@ struct BloodRange {
     static let cholesterol  = BloodRange(name: "Cholesterol",   unit: "mmol/L",normal: 0...5.2,   warning: 5.2...6.2)
     static let triglycerides = BloodRange(name: "Triglycerides",unit: "mmol/L",normal: 0...1.7,   warning: 1.7...2.3)
 }
+// MARK: - Health Report（新增）
+ 
+struct HealthReport: Codable {
+    var id: String?
+    var userId: String?
+    var healthScore: Int
+    var healthSummary: String
+    var statusBadge: String          // "Excellent" / "Good" / "Fair" / "Needs Attention"
+    var dailyCalories: Int
+    var proteinG: Int
+    var carbsG: Int
+    var fatG: Int
+    var fiberG: Int
+    var sodiumMg: Int
+    var weeklyCalories: Int
+    var attentionItems: [AttentionItem]
+    var recommendedFoods: [RecommendedFood]
+    var foodsToLimit: [String]
+    var lifestyleTip: String
+    var goals: [String]?
+    var createdAt: String?
+ 
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case userId = "user_id"
+        case healthScore = "health_score"
+        case healthSummary = "health_summary"
+        case statusBadge = "status_badge"
+        case dailyCalories = "daily_calories"
+        case proteinG = "protein_g"
+        case carbsG = "carbs_g"
+        case fatG = "fat_g"
+        case fiberG = "fiber_g"
+        case sodiumMg = "sodium_mg"
+        case weeklyCalories = "weekly_calories"
+        case attentionItems = "attention_items"
+        case recommendedFoods = "recommended_foods"
+        case foodsToLimit = "foods_to_limit"
+        case lifestyleTip = "lifestyle_tip"
+        case goals
+        case createdAt = "created_at"
+    }
+}
+ 
+struct AttentionItem: Codable, Identifiable {
+    var id: String { metric }
+    var metric: String
+    var currentValue: String
+    var status: String    // "normal" / "borderline" / "high" / "low"
+    var advice: String
+ 
+    enum CodingKeys: String, CodingKey {
+        case metric
+        case currentValue = "current_value"
+        case status, advice
+    }
+ 
+    var statusColor: String {
+        switch status {
+        case "normal":     return "green"
+        case "borderline": return "orange"
+        case "high", "low": return "red"
+        default:           return "gray"
+        }
+    }
+}
+ 
+struct RecommendedFood: Codable, Identifiable {
+    var id: String { food }
+    var food: String
+    var reason: String
+    var dishes: [String]
+}
+ 

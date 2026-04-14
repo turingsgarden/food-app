@@ -191,7 +191,6 @@ struct DashboardView: View {
                             }
 
                             calorieMainCard
-                            macrosGrid
                             todayMealsSection
                             if !meals.isEmpty { comprehensiveNutritionSection }
 
@@ -490,6 +489,8 @@ struct DashboardView: View {
         }
     }
 
+    
+
     var todayMealsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -503,24 +504,35 @@ struct DashboardView: View {
                         .foregroundColor(themeManager.current.secondaryText)
                 }
             }
-
+     
             if filteredMealsForDisplay.isEmpty {
                 EmptyMealsStateCard()
             } else {
-                let displayMeals = selectedTimeFilter == "Daily"
-                    ? Array(filteredMealsForDisplay.prefix(10))
-                    : Array(filteredMealsForDisplay.prefix(5))
+                // ✅ 最多显示3条
+                let displayMeals = Array(filteredMealsForDisplay.prefix(3))
                 ForEach(displayMeals) { meal in
                     Button(action: { selectedMealForDetail = meal }) {
                         MealListRow(meal: meal)
                     }
                     .buttonStyle(.plain)
                 }
+                // 如果超过3条，显示"还有X条"提示
+                if filteredMealsForDisplay.count > 3 {
+                    Button(action: { showMealHistory = true }) {
+                        Text("+ \(filteredMealsForDisplay.count - 3) more meals")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(themeManager.current.secondaryText)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(themeManager.current.inputBackground)
+                            .cornerRadius(12)
+                    }
+                    .buttonStyle(.plain)
+                }
             }
         }
     }
-
-    // MARK: - Nutrition Overview
+// MARK: - Nutrition Overview
 
     var comprehensiveNutritionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -962,7 +974,7 @@ struct DailyScrollSelector: View {
                 }
                 Spacer()
                 Text(weekRangeLabel())
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(themeManager.current.secondaryText)
                 Spacer()
                 Button(action: { shiftWeek(by: 1) }) {
@@ -996,7 +1008,7 @@ struct DailyScrollSelector: View {
                                     : themeManager.current.primaryText)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 9)
+                        .padding(.vertical, 6)
                         .background(RoundedRectangle(cornerRadius: 12)
                             .fill(isSelected
                                   ? (themeManager.current == .dark ? Color.white : Color.black)
