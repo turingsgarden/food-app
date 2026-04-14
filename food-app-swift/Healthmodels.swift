@@ -4,8 +4,6 @@
 //
 //  Created by Helen Tu on 4/9/26.
 //
-// HealthModels.swift
-// Health Agent — 所有数据模型
 
 import Foundation
 
@@ -13,21 +11,22 @@ import Foundation
 
 struct HealthProfile: Codable {
     var userId: String
-    // 基础体征
-    var heightCm: Double          // 身高 cm
-    var weightKg: Double          // 体重 kg
+
+    var heightCm: Double
+    var weightKg: Double
     var age: Int
-    var sex: String               // "male" / "female" / "other"
-    // 临床指标（可选）
-    var systolicBP: Int?          // 收缩压 mmHg
-    var diastolicBP: Int?         // 舒张压 mmHg
-    var fastingBloodSugar: Double? // 空腹血糖 mmol/L
-    var totalCholesterol: Double?  // 总胆固醇 mmol/L
-    var triglycerides: Double?     // 甘油三酯 mmol/L
-    // 饮食偏好
-    var dietaryPreferences: [String]  // ["vegan", "gluten_free", …]
-    // 过敏原
-    var allergens: [String]           // ["nuts", "dairy", "shellfish", …]
+    var sex: String
+
+  
+    var systolicBP: Int?
+    var diastolicBP: Int?
+    var fastingBloodSugar: Double?
+    var totalCholesterol: Double?
+    var triglycerides: Double?
+
+    var dietaryPreferences: [String]
+
+    var allergens: [String]
 
     var bmi: Double { weightKg / ((heightCm / 100) * (heightCm / 100)) }
 
@@ -39,7 +38,6 @@ struct HealthProfile: Codable {
         default: return "Obese"
         }
     }
-
     enum CodingKeys: String, CodingKey {
         case userId = "user_id"
         case heightCm = "height_cm"
@@ -105,9 +103,9 @@ struct NutritionPlan: Codable {
     var fiberG: Int
     var sodiumMg: Int
     var goals: [String]
-    var aiAdvice: String           // AI 生成的个性化建议
-    var foodsToEat: [String]       // 推荐食物
-    var foodsToAvoid: [String]     // 避免食物
+    var aiAdvice: String
+    var foodsToEat: [String]
+    var foodsToAvoid: [String]
     var createdAt: String?
 
     enum CodingKeys: String, CodingKey {
@@ -188,7 +186,7 @@ struct PlannedMeal: Codable, Identifiable {
 struct MealItem: Codable, Identifiable {
     var id = UUID().uuidString
     var food: String
-    var amountG: Double            // 克重
+    var amountG: Double
     var calories: Int
     var protein: Double
     var carbs: Double
@@ -210,7 +208,7 @@ struct MealLog: Codable, Identifiable {
     var mealType: String?
     var imageBase64: String?
     var plannedMeal: PlannedMeal?
-    // AI 分析结果
+
     var detectedFoods: [String]
     var estimatedCalories: Int
     var estimatedProtein: Int
@@ -290,7 +288,7 @@ struct BloodRange {
     static let cholesterol  = BloodRange(name: "Cholesterol",   unit: "mmol/L",normal: 0...5.2,   warning: 5.2...6.2)
     static let triglycerides = BloodRange(name: "Triglycerides",unit: "mmol/L",normal: 0...1.7,   warning: 1.7...2.3)
 }
-// MARK: - Health Report（新增）
+// MARK: - Health Report
  
 struct HealthReport: Codable {
     var id: String?

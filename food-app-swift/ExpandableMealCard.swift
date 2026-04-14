@@ -4,13 +4,7 @@
 //
 //  Created by Helen Tu on 4/12/26.
 //
-//
-//  ExpandableMealCard.swift
-//  food-app-swift
-//
-//  修复：加入 onViewResult 回调
-//  - 已分析过的 meal，点击分数徽章（紫色 "85%" 按钮）重新显示对比结果
-//  - 未分析的 meal，正常显示 Log 按钮拍照
+
 
 import SwiftUI
 import PhotosUI
@@ -22,7 +16,7 @@ struct ExpandableMealCard: View {
     let plan: WeeklyMealPlan
     let today: String
     var complianceScore: Int? = nil
-    var onViewResult: (() -> Void)? = nil      // ✅ 新增：点击已分析徽章时回调
+    var onViewResult: (() -> Void)? = nil
     var onPhotoSelected: ((Data) -> Void)?
 
     @State private var isExpanded = false
@@ -60,7 +54,7 @@ struct ExpandableMealCard: View {
                             .font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundColor(themeManager.current.primaryText)
 
-                        // ✅ 分数徽章 — 点击重新查看对比结果
+                       
                         if let score = complianceScore {
                             Button(action: { onViewResult?() }) {
                                 HStack(spacing: 3) {
@@ -131,7 +125,7 @@ struct ExpandableMealCard: View {
         }
         .background(
             themeManager.current.cardBackground
-                // ✅ 已分析的 meal 加一个细边框提示
+              
                 .overlay(
                     RoundedRectangle(cornerRadius: 18)
                         .stroke(isLogged ? scoreColor.opacity(0.3) : themeManager.current.cardBorder, lineWidth: isLogged ? 1.5 : 1)
@@ -173,7 +167,7 @@ struct ExpandableMealCard: View {
             Spacer()
 
             if isLogged {
-                // ✅ 已分析：显示"View Result"按钮
+             
                 Button(action: { onViewResult?() }) {
                     HStack(spacing: 4) {
                         Image(systemName: "chart.bar.fill")
@@ -187,7 +181,7 @@ struct ExpandableMealCard: View {
                     .cornerRadius(20)
                 }
             } else if canLog {
-                // 未分析：显示"Log"拍照按钮
+               
                 Button(action: { showImageSourceSheet = true }) {
                     HStack(spacing: 4) {
                         Image(systemName: "camera.fill")

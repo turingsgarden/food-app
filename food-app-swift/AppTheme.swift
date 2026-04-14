@@ -23,7 +23,7 @@ enum AppTheme: String, CaseIterable {
         }
     }
 
-    // ✅ 新增：方便 DashboardView / MealDetailView 判断当前是否 dark
+  
     var isDark: Bool { self == .dark }
 
     var background: Color {
@@ -36,7 +36,7 @@ enum AppTheme: String, CaseIterable {
     var cardBackground: Color {
         switch self {
         case .dark: return Color.white.opacity(0.06)
-        // ✅ light 改为纯白卡片（Cal AI 风格），而不是 secondarySystemBackground（略灰）
+       
         case .light: return Color(UIColor.systemBackground)
         }
     }
@@ -58,7 +58,7 @@ enum AppTheme: String, CaseIterable {
     var cardBorder: Color {
         switch self {
         case .dark: return Color.white.opacity(0.10)
-        // ✅ light 边框稍微清晰一点，Cal AI 卡片有明显细边线
+      
         case .light: return Color(UIColor.separator).opacity(0.5)
         }
     }
@@ -66,7 +66,7 @@ enum AppTheme: String, CaseIterable {
     var inputBackground: Color {
         switch self {
         case .dark: return Color.white.opacity(0.08)
-        // ✅ light 输入框用 secondarySystemBackground（浅灰），与纯白卡片区分
+       
         case .light: return Color(UIColor.secondarySystemBackground)
         }
     }
@@ -82,9 +82,7 @@ class ThemeManager: ObservableObject {
     }
 
     private init() {
-        // ✅ 关键修复：fallback 从 "dark" 改为 "light"
-        // 新用户第一次打开 → light mode（白色）
-        // 已有用户保留上次选择
+      
         let saved = UserDefaults.standard.string(forKey: "app_theme") ?? "light"
         self.current = AppTheme(rawValue: saved) ?? .light
     }

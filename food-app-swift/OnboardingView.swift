@@ -103,7 +103,7 @@ struct OnboardingView: View {
             .navigationDestination(isPresented: $navigateToLogin) {
                 LoginView()
                     .navigationBarBackButtonHidden(true)
-                    .environmentObject(themeManager)  // ✅ 关键：传给 LoginView
+                    .environmentObject(themeManager)  
             }
         }
     }

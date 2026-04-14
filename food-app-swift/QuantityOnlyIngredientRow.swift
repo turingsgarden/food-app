@@ -38,7 +38,7 @@ struct QuantityOnlyIngredientRow: View {
                         .stroke(Color.white.opacity(0.1), lineWidth: 0.5))
             )
 
-            // Quantity — 绑定 localQuantity，实时写回 ingredient.quantity
+            
             TextField("0", text: $localQuantity)
                 .font(.subheadline)
                 .foregroundColor(.white)
@@ -56,16 +56,16 @@ struct QuantityOnlyIngredientRow: View {
                 .onAppear {
                     localQuantity = ingredient.quantity
                 }
-                // ✅ 实时写回，不依赖失焦时序
+               
                 .onChange(of: localQuantity) { _, newValue in
                     let sanitized = sanitize(newValue)
-                    // 只在必要时写回，避免光标跳动
+                  
                     if sanitized != newValue {
                         localQuantity = sanitized
                     }
                     ingredient.quantity = sanitized.isEmpty ? "0" : sanitized
                 }
-                // ✅ 外部更新时同步本地值（仅在非编辑状态）
+          
                 .onChange(of: ingredient.quantity) { _, newValue in
                     if !isFocused && newValue != localQuantity {
                         localQuantity = newValue
@@ -87,7 +87,7 @@ struct QuantityOnlyIngredientRow: View {
         }
     }
 
-    // 过滤非法字符，只允许数字和小数点
+
     private func sanitize(_ value: String) -> String {
         let filtered = value.filter { $0.isNumber || $0 == "." }
         let parts = filtered.split(separator: ".", omittingEmptySubsequences: false)

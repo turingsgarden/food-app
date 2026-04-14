@@ -1,3 +1,7 @@
+//  LoginView.swift
+//  food-app-swift
+//
+//  Created by Helen Tu on 3/3/26.
 import SwiftUI
 import GoogleSignIn
 import GoogleSignInSwift

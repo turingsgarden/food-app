@@ -5,13 +5,11 @@
 //  Created by Helen Tu on 4/13/26.
 //
 // EditHealthProfileView.swift
-// ✅ 加入 OCR 功能：用 Gemini Vision 自动识别血压/血糖/胆固醇等数值
-// ✅ 无变化检测：没有改动不触发保存/重新生成
 
 import SwiftUI
 import PhotosUI
 
-// MARK: - OCR 识别结果
+
 
 struct OCRHealthResult {
     var systolicBP: Int?
@@ -59,7 +57,6 @@ struct EditHealthProfileView: View {
     @State private var errorMsg = ""
     @State private var showError = false
 
-    // ✅ OCR 相关状态
     @State private var showImagePicker = false
     @State private var showCamera = false
     @State private var showScanOptions = false
@@ -135,7 +132,7 @@ struct EditHealthProfileView: View {
                         // BMI Preview
                         bmiPreview.padding(.top, 12)
 
-                        // ✅ OCR 扫描入口横幅
+
                         scanBanner
                             .padding(.horizontal, 0)
 
@@ -156,7 +153,7 @@ struct EditHealthProfileView: View {
                         // Clinical Markers
                         sectionCard(title: "Clinical Markers", icon: "heart.fill") {
                             VStack(spacing: 12) {
-                                // ✅ 如果刚扫描了，显示识别徽章
+                         
                                 if showScanResult, let result = scanResult, result.hasAnyResult {
                                     ocrResultBadge(result: result)
                                 }
@@ -209,7 +206,7 @@ struct EditHealthProfileView: View {
                     .padding(.horizontal, 20).padding(.top, 12)
                 }
 
-                // ✅ 扫描中遮罩
+          
                 if isScanning {
                     scanningOverlay
                 }
@@ -226,21 +223,21 @@ struct EditHealthProfileView: View {
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
             } message: { Text(errorMsg) }
-            // ✅ 选择图片
+      
             .photosPicker(isPresented: $showImagePicker,
                           selection: $selectedPhotoItem,
                           matching: .images)
             .onChange(of: selectedPhotoItem) { newItem in
                 Task { await loadAndScanPhoto(item: newItem) }
             }
-            // ✅ 拍照
+       
             .sheet(isPresented: $showCamera) {
                 CameraPickerForOCR { image in
                     self.scannedImage = image
                     self.runOCR(on: image)
                 }
             }
-            // ✅ 选择来源 ActionSheet
+
             .confirmationDialog("Scan Medical Report", isPresented: $showScanOptions, titleVisibility: .visible) {
                 Button("Take Photo") { showCamera = true }
                 Button("Choose from Library") { showImagePicker = true }
@@ -251,7 +248,7 @@ struct EditHealthProfileView: View {
         }
     }
 
-    // MARK: - ✅ OCR 扫描横幅
+
 
     var scanBanner: some View {
         Button(action: { showScanOptions = true }) {
@@ -292,7 +289,7 @@ struct EditHealthProfileView: View {
         .buttonStyle(.plain)
     }
 
-    // ✅ OCR 识别结果徽章（显示识别到的值）
+
     func ocrResultBadge(result: OCRHealthResult) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
@@ -307,7 +304,6 @@ struct EditHealthProfileView: View {
                 }
             }
 
-            // 显示识别到的值
             let detectedItems = buildDetectedItems(result: result)
             if !detectedItems.isEmpty {
                 FlowLayout(items: detectedItems) { item in
@@ -342,7 +338,7 @@ struct EditHealthProfileView: View {
         return items
     }
 
-    // ✅ 扫描中遮罩
+
     var scanningOverlay: some View {
         ZStack {
             Color.black.opacity(0.45).ignoresSafeArea()
@@ -363,7 +359,7 @@ struct EditHealthProfileView: View {
                                 .font(.system(size: 13))
                                 .foregroundColor(themeManager.current.secondaryText)
                         }
-                        // 小动画点
+                     
                         HStack(spacing: 5) {
                             ForEach(0..<3, id: \.self) { i in
                                 Circle()
@@ -560,11 +556,11 @@ Respond with JSON only:
 """
 
         guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/ocr-health-report") else {
-            // ✅ Fallback：直接调 Gemini（通过后端代理）
+  
             callGeminiOCR(base64: base64, prompt: prompt)
             return
         }
-        // 先尝试后端 OCR 路由，失败则直接内嵌
+    
         callGeminiOCR(base64: base64, prompt: prompt)
     }
 
@@ -605,7 +601,7 @@ Respond with JSON only:
                     return
                 }
 
-                // ✅ 解析结果并填入表单
+                
                 let result = self.parseOCRResult(json: json)
 
                 if result.hasAnyResult {
@@ -647,7 +643,7 @@ Respond with JSON only:
         return result
     }
 
-    // ✅ 把识别结果填入表单 slider
+  
     func applyOCRResult(_ result: OCRHealthResult) {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
             if let h = result.heightCm, h >= 100 && h <= 220 { heightCm = h }
@@ -768,7 +764,7 @@ Respond with JSON only:
     }
 }
 
-// MARK: - ✅ Camera Picker for OCR
+
 
 struct CameraPickerForOCR: UIViewControllerRepresentable {
     let onCapture: (UIImage) -> Void
@@ -801,10 +797,7 @@ struct CameraPickerForOCR: UIViewControllerRepresentable {
     }
 }
 
-// MARK: - FlowLayout（如果 DietPlanView 和 EditHealthProfileView 同时编译，保留一个即可）
 
-// 注意：如果项目中已有 FlowLayout 定义（在 DietPlanView.swift），删除这里的，避免重复
-// 如果项目中没有全局 FlowLayout，保留下面这个
 
 private struct _FlowLayout<Item: Hashable, Content: View>: View {
     let items: [Item]

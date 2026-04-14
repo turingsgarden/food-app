@@ -1,8 +1,8 @@
-// DashboardView.swift
-// 改动：
-// 1. Daily/Weekly/Monthly 切换移到右上角小胶囊，点击弹出选项
-// 2. 日期选择器改为横向滑动（只显示7天，左右滑）
-// 3. 修复 Nutrition 圆环 bug：改用 filteredMealsForDisplay 实时计算当天营养
+//  BatchUploadView.swift
+//  food-app-swift
+//
+//  Created by Helen Tu on 4/8/26.
+//
 
 import SwiftUI
 import Charts
@@ -36,19 +36,15 @@ struct DashboardView: View {
     @State private var networkError: NetworkError?
     @State private var selectedMealForDetail: Meal?
     @State private var currentStreak: Int = 0
-    // 日期选择
     @State private var selectedDate: Date = Date()
     @State private var selectedWeekStart: Date = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
     @State private var selectedMonth: Date = Date()
     @State private var selectedTimeFilter: String = "Daily"
-    // ✅ 右上角下拉菜单
     @State private var showTimePicker = false
-    // 营养圆环翻页
     @State private var nutritionPage: Int = 0
-    // ✅ 从 health_report 获取的每日卡路里目标
     @State private var healthReportCalorieGoal: Int? = nil
 
-    // ✅ 实时从 filteredMealsForDisplay 算出来的营养数据（修复 bug）
+
     var filteredNutrition: (protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
         var p = 0, c = 0, f = 0, fi = 0, s = 0, so = 0
         for meal in filteredMealsForDisplay {
@@ -111,7 +107,7 @@ struct DashboardView: View {
         return min(Double(displayedCalories) / Double(displayedGoal), 1.0)
     }
 
-    // ✅ 筛选当前时间段的 meals（所有营养计算都基于这个）
+
     var filteredMealsForDisplay: [Meal] {
         let cal = Calendar.current
         switch selectedTimeFilter {
@@ -166,11 +162,27 @@ struct DashboardView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        // ✅ 新 header：右上角带时间切换
+                       
                         headerSection
-                            .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 16)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
+                            .padding(.bottom, 16)
+                           
+                            .overlay(alignment: .topTrailing) {
+                                if showTimePicker {
+                                    timePickerDropdown
+                                        
+                                        .offset(x: -20, y: 56)
+                                        .zIndex(999)
+                                        .transition(.asymmetric(
+                                            insertion: .move(edge: .top).combined(with: .opacity),
+                                            removal: .move(edge: .top).combined(with: .opacity)
+                                        ))
+                                }
+                            }
+                            .zIndex(showTimePicker ? 999 : 0)
 
-                        // ✅ 新日期选择器：横向滑动
+                        
                         dateScrollSelector
                             .padding(.bottom, 16)
 
@@ -233,7 +245,7 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - ✅ Header（含右上角时间切换）
+    // MARK: - Header
 
     var headerSection: some View {
         HStack(alignment: .top) {
@@ -256,76 +268,27 @@ struct DashboardView: View {
                     .overlay(RoundedRectangle(cornerRadius: 20).stroke(themeManager.current.cardBorder, lineWidth: 1))
                 }
 
-                // ✅ 时间切换胶囊
-                ZStack(alignment: .topTrailing) {
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            showTimePicker.toggle()
-                        }
-                    }) {
-                        HStack(spacing: 5) {
-                            Text(selectedTimeFilter)
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(themeManager.current == .dark ? .black : .white)
-                            Image(systemName: showTimePicker ? "chevron.up" : "chevron.down")
-                                .font(.system(size: 9, weight: .bold))
-                                .foregroundColor(themeManager.current == .dark ? .black : .white)
-                        }
-                        .padding(.horizontal, 12).padding(.vertical, 7)
-                        .background(themeManager.current == .dark ? Color.white : Color.black)
-                        .cornerRadius(20)
+              
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        showTimePicker.toggle()
                     }
-                    .buttonStyle(.plain)
-
-                    // 下拉选项
-                    if showTimePicker {
-                        VStack(spacing: 0) {
-                            ForEach(["Daily", "Weekly", "Monthly"], id: \.self) { option in
-                                Button(action: {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                        selectedTimeFilter = option
-                                        showTimePicker = false
-                                    }
-                                }) {
-                                    HStack {
-                                        Text(option)
-                                            .font(.system(size: 14, weight: selectedTimeFilter == option ? .bold : .regular))
-                                            .foregroundColor(selectedTimeFilter == option
-                                                ? (themeManager.current == .dark ? .black : .white)
-                                                : themeManager.current.primaryText)
-                                        Spacer()
-                                        if selectedTimeFilter == option {
-                                            Image(systemName: "checkmark")
-                                                .font(.system(size: 12, weight: .bold))
-                                                .foregroundColor(themeManager.current == .dark ? .black : .white)
-                                        }
-                                    }
-                                    .padding(.horizontal, 14).padding(.vertical, 10)
-                                    .background(selectedTimeFilter == option
-                                        ? (themeManager.current == .dark ? Color.white : Color.black)
-                                        : themeManager.current.cardBackground)
-                                }
-                                .buttonStyle(.plain)
-                                if option != "Monthly" {
-                                    Divider().background(themeManager.current.cardBorder)
-                                }
-                            }
-                        }
-                        .background(themeManager.current.cardBackground)
-                        .cornerRadius(14)
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(themeManager.current.cardBorder, lineWidth: 1))
-                        .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: 6)
-                        .frame(width: 140)
-                        .offset(y: 38)
-                        .zIndex(100)
-                        .transition(.asymmetric(
-                            insertion: .move(edge: .top).combined(with: .opacity),
-                            removal: .move(edge: .top).combined(with: .opacity)
-                        ))
+                }) {
+                    HStack(spacing: 5) {
+                        Text(selectedTimeFilter)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(themeManager.current == .dark ? .black : .white)
+                        Image(systemName: showTimePicker ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(themeManager.current == .dark ? .black : .white)
                     }
+                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .background(themeManager.current == .dark ? Color.white : Color.black)
+                    .cornerRadius(20)
                 }
+                .buttonStyle(.plain)
 
-                // 头像
+           
                 Button(action: { showProfile = true }) {
                     ZStack(alignment: .topTrailing) {
                         Circle().fill(themeManager.current.inputBackground).frame(width: 40, height: 40)
@@ -339,20 +302,69 @@ struct DashboardView: View {
                 }
             }
         }
-        // 点击其他地方关闭下拉
+        .contentShape(Rectangle())
         .onTapGesture {
             if showTimePicker { withAnimation { showTimePicker = false } }
         }
     }
 
-    // MARK: - ✅ 新日期选择器（横向滑动）
+    
+    var timePickerDropdown: some View {
+        VStack(spacing: 0) {
+            ForEach(["Daily", "Weekly", "Monthly"], id: \.self) { option in
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        selectedTimeFilter = option
+                        showTimePicker = false
+                    }
+                }) {
+                    HStack {
+                        Text(option)
+                            .font(.system(size: 14, weight: selectedTimeFilter == option ? .bold : .regular))
+                            .foregroundColor(selectedTimeFilter == option
+                                ? (themeManager.current == .dark ? .black : .white)
+                                : themeManager.current.primaryText)
+                        Spacer()
+                        if selectedTimeFilter == option {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(themeManager.current == .dark ? .black : .white)
+                        }
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 12)
+                    .background(selectedTimeFilter == option
+                        ? (themeManager.current == .dark ? Color.white : Color.black)
+                        : themeManager.current.cardBackground)
+                }
+                .buttonStyle(.plain)
+                if option != "Monthly" {
+                    Divider().background(themeManager.current.cardBorder)
+                }
+            }
+        }
+        .frame(width: 150)
+        .background(themeManager.current.cardBackground)
+        .cornerRadius(14)
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .shadow(color: Color.black.opacity(themeManager.current == .dark ? 0.4 : 0.12), radius: 16, x: 0, y: 8)
+    }
+
+
+
+
+    var datesWithMeals: Set<String> {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+        return Set(meals.compactMap { meal -> String? in
+            guard let s = meal.saved_at, let d = parseISO8601(s) else { return nil }
+            return f.string(from: d)
+        })
+    }
 
     @ViewBuilder
     var dateScrollSelector: some View {
         switch selectedTimeFilter {
         case "Daily":
-            DailyScrollPicker(selectedDate: $selectedDate)
-                .padding(.horizontal, 20)
+            DailyScrollPicker(selectedDate: $selectedDate, datesWithMeals: datesWithMeals)
         case "Weekly":
             WeeklyChipPicker(selectedWeekStart: $selectedWeekStart)
                 .padding(.horizontal, 20)
@@ -426,7 +438,7 @@ struct DashboardView: View {
         return .red
     }
 
-    // MARK: - ✅ Nutrition Overview（修复 bug：用 filteredNutrition）
+
 
     var comprehensiveNutritionSection: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -454,9 +466,9 @@ struct DashboardView: View {
     var dailyNutritionPager: some View {
         VStack(spacing: 10) {
             TabView(selection: $nutritionPage) {
-                // ✅ Page 0: 6圆环，用 filteredNutrition 实时数据
+                
                 unifiedNutritionCircles.tag(0)
-                // Page 1: 三圆环统计
+             
                 dailySummaryCircles.tag(1)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
@@ -478,7 +490,7 @@ struct DashboardView: View {
         }
     }
 
-    // ✅ 修复：直接用 filteredNutrition（从 filteredMealsForDisplay 实时计算）
+
     var unifiedNutritionCircles: some View {
         let nut = filteredNutrition
         let accentColor = Color(red: 0.95, green: 0.61, blue: 0.20)
@@ -882,11 +894,14 @@ struct DashboardView: View {
     func calculateFatGoal() -> Int { Int(Double(dynamicCalorieGoal) * 0.3 / 9) }
 }
 
-// MARK: - ✅ 新日期选择器：DailyScrollPicker（横向滑动，无折叠）
+
 
 struct DailyScrollPicker: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Binding var selectedDate: Date
+  
+    var datesWithMeals: Set<String> = []
+
     @State private var displayWeekStart: Date = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start ?? Date()
 
     var daysInWeek: [Date] {
@@ -894,65 +909,89 @@ struct DailyScrollPicker: View {
     }
 
     var body: some View {
-        VStack(spacing: 8) {
-            // 周导航
+        VStack(spacing: 10) {
+     
             HStack {
                 Button(action: { shiftWeek(by: -1) }) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(themeManager.current.secondaryText)
-                        .frame(width: 28, height: 28)
-                        .background(themeManager.current.inputBackground)
-                        .cornerRadius(8)
                 }
                 Spacer()
                 Text(weekRangeLabel())
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(themeManager.current.secondaryText)
                 Spacer()
                 Button(action: { shiftWeek(by: 1) }) {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(isCurrentWeek
-                            ? themeManager.current.secondaryText.opacity(0.25)
+                            ? themeManager.current.secondaryText.opacity(0.2)
                             : themeManager.current.secondaryText)
-                        .frame(width: 28, height: 28)
-                        .background(themeManager.current.inputBackground)
-                        .cornerRadius(8)
                 }
                 .disabled(isCurrentWeek)
             }
             .padding(.horizontal, 4)
 
-            // 7天横向滑动
-            HStack(spacing: 6) {
+     
+            HStack(spacing: 0) {
                 ForEach(daysInWeek, id: \.self) { day in
                     let isSelected = Calendar.current.isDate(day, inSameDayAs: selectedDate)
-                    let isToday = Calendar.current.isDateInToday(day)
-                    let isFuture = day > Date()
+                    let isToday    = Calendar.current.isDateInToday(day)
+                    let isFuture   = day > Date()
+                    let hasMeals   = datesWithMeals.contains(dayKey(day))
+
                     Button(action: { guard !isFuture else { return }; selectedDate = day }) {
-                        VStack(spacing: 5) {
+                        VStack(spacing: 6) {
+                            
                             Text(shortDay(day))
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(isSelected
-                                    ? (themeManager.current == .dark ? .black : .white)
-                                    : isFuture ? themeManager.current.secondaryText.opacity(0.2)
-                                    : themeManager.current.secondaryText)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(
+                                    isSelected ? (themeManager.current == .dark ? Color.black : Color.white)
+                                    : isFuture  ? themeManager.current.secondaryText.opacity(0.25)
+                                    : themeManager.current.secondaryText
+                                )
+
+                       
                             ZStack {
+                              
                                 Circle()
-                                    .fill(isSelected
-                                          ? (themeManager.current == .dark ? Color.white : Color.black)
-                                          : isToday ? themeManager.current.inputBackground : Color.clear)
-                                    .frame(width: 34, height: 34)
-                                    .overlay(Circle().stroke(
-                                        isToday && !isSelected ? themeManager.current.cardBorder : Color.clear,
-                                        lineWidth: 1.5))
+                                    .fill(
+                                        isSelected
+                                            ? (themeManager.current == .dark ? Color.white : Color.black)
+                                            : isToday
+                                                ? Color(UIColor.systemGray5)
+                                                : Color.clear
+                                    )
+                                    .frame(width: 36, height: 36)
+
+
+                                if hasMeals && !isSelected {
+                                    Circle()
+                                        .stroke(Color.orange, lineWidth: 2)
+                                        .frame(width: 36, height: 36)
+                                }
+
+
+                                if isFuture {
+                                    Circle()
+                                        .stroke(style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                                        .foregroundColor(themeManager.current.cardBorder)
+                                        .frame(width: 36, height: 36)
+                                }
+
+
                                 Text(dayNum(day))
-                                    .font(.system(size: 16, weight: isSelected ? .black : .semibold))
-                                    .foregroundColor(isSelected
-                                        ? (themeManager.current == .dark ? .black : .white)
-                                        : isFuture ? themeManager.current.primaryText.opacity(0.2)
-                                        : themeManager.current.primaryText)
+                                    .font(.system(size: 16, weight: isSelected || isToday ? .bold : .regular))
+                                    .foregroundColor(
+                                        isSelected
+                                            ? (themeManager.current == .dark ? Color.black : Color.white)
+                                            : isFuture
+                                                ? themeManager.current.primaryText.opacity(0.2)
+                                                : hasMeals
+                                                    ? Color.orange
+                                                    : themeManager.current.primaryText
+                                    )
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -962,28 +1001,39 @@ struct DailyScrollPicker: View {
                 }
             }
         }
-        .padding(.horizontal, 16).padding(.vertical, 12)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
+
+        .padding(.horizontal, 20)
     }
 
     var isCurrentWeek: Bool {
         guard let currentStart = Calendar.current.dateInterval(of: .weekOfYear, for: Date())?.start else { return true }
         return Calendar.current.isDate(displayWeekStart, inSameDayAs: currentStart)
     }
+
     func shiftWeek(by delta: Int) {
         guard let newStart = Calendar.current.date(byAdding: .weekOfYear, value: delta, to: displayWeekStart) else { return }
         if delta > 0 && isCurrentWeek { return }
         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { displayWeekStart = newStart }
     }
+
     func weekRangeLabel() -> String {
         let end = Calendar.current.date(byAdding: .day, value: 6, to: displayWeekStart) ?? displayWeekStart
         let f = DateFormatter(); f.dateFormat = "MMM d"
         return f.string(from: displayWeekStart) + " – " + f.string(from: end)
     }
-    func shortDay(_ d: Date) -> String { let f = DateFormatter(); f.dateFormat = "EEE"; return String(f.string(from: d).prefix(3)) }
-    func dayNum(_ d: Date) -> String { let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: d) }
+
+    func shortDay(_ d: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "EEE"
+        return String(f.string(from: d).prefix(3))
+    }
+
+    func dayNum(_ d: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "d"; return f.string(from: d)
+    }
+
+    func dayKey(_ d: Date) -> String {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f.string(from: d)
+    }
 }
 
 struct WeeklyChipPicker: View {
@@ -1070,7 +1120,7 @@ struct MonthChipPicker: View {
     }
 }
 
-// MARK: - Supporting Components（不变）
+// MARK: - Supporting Components
 
 struct MacroCell: View {
     @EnvironmentObject var themeManager: ThemeManager

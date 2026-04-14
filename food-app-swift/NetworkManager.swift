@@ -22,9 +22,9 @@ class NetworkManager {
     // OPTIMIZED: Faster session for login
     private lazy var fastSession: URLSession = {
         let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 90   // 冷启动需要60秒+处理时间
-        config.timeoutIntervalForResource = 120 // resource要比request长
-        config.waitsForConnectivity = true      // 等网络，不要直接失败
+        config.timeoutIntervalForRequest = 90
+        config.timeoutIntervalForResource = 120
+        config.waitsForConnectivity = true
         config.allowsCellularAccess = true
         config.httpAdditionalHeaders = ["Accept": "application/json"]
         return URLSession(configuration: config)
@@ -116,7 +116,7 @@ class NetworkManager {
         }
     }
     
-    // 唤醒服务器（用于冷启动）
+    
     func warmUpServer(completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "\(baseURL)/ping") else {
             completion(false)
@@ -124,8 +124,7 @@ class NetworkManager {
         }
         
         var request = URLRequest(url: url)
-        request.timeoutInterval = 90  // 给足够时间让服务器冷启动
-        
+        request.timeoutInterval = 90
         print("🔥 Warming up server...")
         
         URLSession.shared.dataTask(with: request) { _, response, _ in
@@ -287,7 +286,7 @@ class NetworkManager {
     func loginFast(email: String, password: String, completion: @escaping (Result<(userId: String, name: String, token: String), Error>) -> Void) {
         print("🚀 Login initiated for: \(email)")
         
-        // 先 ping 唤醒服务器，再登录
+ 
         warmUpServer { [weak self] _ in
             self?.performLogin(email: email, password: password, completion: completion)
         }
@@ -345,7 +344,7 @@ class NetworkManager {
         }.resume()
     }
     
-    // 获取登录方式
+
     func getLoginMethods(completion: @escaping (Result<[String], Error>) -> Void) {
         guard let url = URL(string: "\(baseURL)/get-login-methods") else {
             completion(.failure(NSError(domain: "NetworkManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -395,7 +394,7 @@ class NetworkManager {
             }
         }.resume()
     }
-    // 连接 Email/Password
+
     func linkEmailPassword(password: String, completion: @escaping (Bool, String?) -> Void) {
         guard let url = URL(string: "\(baseURL)/link-email-password") else {
             completion(false, "Invalid URL")
@@ -436,7 +435,7 @@ class NetworkManager {
                         print("✅ Email/password linked successfully")
                         completion(true, nil)
                     } else {
-                        // 尝试获取错误消息
+                   
                         if let data = data,
                            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                            let errorMsg = json["error"] as? String {
@@ -692,7 +691,7 @@ class NetworkManager {
         recalculateNutritionBackground(ingredients: ingredients, completion: completion)
     }
      
-    // MARK: - 新的后台版本，timeout 120秒
+ 
     func recalculateNutritionBackground(ingredients: String, completion: @escaping (Result<NutritionRecalculationResult, Error>) -> Void) {
         guard let url = URL(string: "\(baseURL)/recalculate-nutrition") else {
             completion(.failure(NSError(domain: "NetworkManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
@@ -709,9 +708,9 @@ class NetworkManager {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = jsonData
-        request.timeoutInterval = 120  // ← 关键：给 Gemini 足够时间
-     
-        // 用 fastSession（resource timeout 120s）
+        request.timeoutInterval = 120
+        
+        
         fastSession.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async {
                 if let error = error {

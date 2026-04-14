@@ -131,7 +131,6 @@ struct ErrorView: View {
     }
 }
 
-// MARK: - 食材表格
 
 struct IngredientTableView: View {
     @EnvironmentObject var themeManager: ThemeManager

@@ -1,5 +1,9 @@
-
-
+//
+//  MealHistoryView.swift
+//  food-app-swift
+//
+//  Created by Helen Tu on 3/17/26.
+//
 import SwiftUI
 
 struct MealHistoryView: View {
@@ -73,7 +77,7 @@ struct MealHistoryView: View {
                     }
                     .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 16)
 
-                    // ── 搜索栏 ──
+                 
                     HStack(spacing: 10) {
                         Image(systemName: "magnifyingglass")
                             .font(.system(size: 14, weight: .medium))
@@ -95,7 +99,7 @@ struct MealHistoryView: View {
                         .stroke(themeManager.current.cardBorder, lineWidth: 1))
                     .padding(.horizontal, 20).padding(.bottom, 14)
 
-                    // ── Filter 胶囊 ──
+               
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(filters, id: \.self) { filter in
@@ -121,7 +125,7 @@ struct MealHistoryView: View {
                     }
                     .padding(.bottom, 16)
 
-                    // ── 内容区 ──
+                 
                     if isLoading {
                         Spacer()
                         VStack(spacing: 12) {
@@ -182,9 +186,9 @@ struct MealHistoryView: View {
             }
             .preferredColorScheme(themeManager.current.colorScheme)
             .onAppear { fetchMeals() }
-            // ✅ 监听 Diet Plan 拍照分析完成后的通知（立即刷新）
+      
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in
-                // 稍微延迟确保后端已写入
+       
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { fetchMeals() }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealUpdated"))) { _ in
@@ -282,7 +286,7 @@ struct MealHistoryView: View {
     }
 }
 
-// MARK: - 餐食行（Cal AI 风格）
+
 
 struct HistoryMealRow: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -305,14 +309,14 @@ struct HistoryMealRow: View {
         return f.string(from: d)
     }
 
-    // ✅ 新增：Diet Plan 来源标记
+ 
     var isDietPlan: Bool {
         (meal as AnyObject).value(forKey: "from_diet_plan") as? Bool ?? false
     }
 
     var body: some View {
         HStack(spacing: 14) {
-            // 图片
+       
             Group {
                 if let base64 = meal.image_thumb ?? meal.image_full,
                    !base64.isEmpty,
@@ -331,7 +335,7 @@ struct HistoryMealRow: View {
             .frame(width: 60, height: 60)
             .clipShape(RoundedRectangle(cornerRadius: 14))
 
-            // 信息
+          
             VStack(alignment: .leading, spacing: 5) {
                 Text(meal.dish_prediction)
                     .font(.system(size: 15, weight: .semibold))
@@ -350,7 +354,7 @@ struct HistoryMealRow: View {
                         .font(.system(size: 12))
                         .foregroundColor(themeManager.current.secondaryText)
 
-                    // ✅ Diet Plan 来源标记
+                   
                     if let fromPlan = meal.from_diet_plan, fromPlan {
                         Text("Diet Plan")
                             .font(.system(size: 10, weight: .semibold))
@@ -364,7 +368,6 @@ struct HistoryMealRow: View {
 
             Spacer()
 
-            // 卡路里 + 箭头
             HStack(spacing: 6) {
                 if let cal = calories {
                     VStack(alignment: .trailing, spacing: 1) {
@@ -389,7 +392,7 @@ struct HistoryMealRow: View {
     }
 }
 
-// MARK: - 辅助 Views
+
 
 struct FilterPill: View {
     @EnvironmentObject var themeManager: ThemeManager

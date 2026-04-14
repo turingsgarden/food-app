@@ -1,10 +1,13 @@
 // Meal.swift
+//  food-app-swift
+//
+//  Created by Helen Tu on 4/8/26.
 
 import Foundation
 struct Meal: Identifiable, Codable {
     let _id: String
     var id: String { _id }
-    let user_id: String?          // 改成可选
+    let user_id: String?          
     var dish_prediction: String
     var image_description: String
     var hidden_ingredients: String?
@@ -13,8 +16,8 @@ struct Meal: Identifiable, Codable {
     let image_thumb: String?
     let saved_at: String?
     let meal_type: String?
-    let from_diet_plan: Bool?     // 新增，diet plan 来的会有这个
-    let compliance_score: Int?    // 新增
+    let from_diet_plan: Bool?
+    let compliance_score: Int?
 }
 struct GeminiResult: Codable {
     let image_description: String

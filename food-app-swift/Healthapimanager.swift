@@ -5,9 +5,7 @@
 //  Created by Helen Tu on 4/9/26.
 //
 
-// HealthAPIManager.swift
-// Health Agent — 所有网络请求
-// 包含：Keep-alive 防休眠 + 异步生成餐食计划（轮询）
+
 
 import Foundation
 import UIKit
@@ -19,7 +17,7 @@ class HealthAPIManager {
 
     private var token: String? { SessionManager.shared.getAuthToken() }
 
-    // MARK: - Keep-Alive（防止 Render 冷启动）
+  
 
     func startKeepAlive() {
         keepAliveTimer?.invalidate()
@@ -108,7 +106,7 @@ class HealthAPIManager {
         }.resume()
     }
 
-    // MARK: - Generate Weekly Meal Plan（异步提交 + 轮询）
+
 
     func generateWeeklyMealPlan(
         userId: String,
@@ -323,7 +321,7 @@ extension HealthAPIManager {
         }.resume()
     }
  
-    // MARK: - Generate Health Report（从服务器生成并保存）
+ 
  
     func generateHealthReport(
         goals: [String] = [],

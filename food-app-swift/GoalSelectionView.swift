@@ -5,8 +5,6 @@
 //  Created by Helen Tu on 4/9/26.
 //
 
-// GoalSelectionView.swift
-// Health Agent — 健康目标选择 + AI 营养计划生成
 
 import SwiftUI
 

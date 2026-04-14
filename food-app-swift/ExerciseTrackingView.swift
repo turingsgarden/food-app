@@ -95,7 +95,7 @@ struct ExerciseTrackingView: View {
         NavigationView {
             ZStack {
                 // Gradient background
-                // ✅ 改成
+    
                 themeManager.current.background
                     .ignoresSafeArea()
                 

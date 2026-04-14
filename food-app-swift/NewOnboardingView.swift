@@ -5,8 +5,7 @@
 //  Created by Helen Tu on 4/12/26.
 //
 
-// NewOnboardingView.swift
-// 全新登录页：直接显示 Health Profile，底部有 Skip / Already have an account
+
 
 import SwiftUI
 
@@ -16,7 +15,7 @@ struct NewOnboardingView: View {
     @State private var showLogin = false
     @State private var showHealthProfile = false
 
-    // Health Profile 快速填写（Step 1 only: height, weight, age, sex）
+    // Health Profile fill in（Step 1 only: height, weight, age, sex）
     @State private var heightCm: Double = 170
     @State private var weightKg: Double = 70
     @State private var age: Int = 25
@@ -165,15 +164,15 @@ struct NewOnboardingView: View {
             .preferredColorScheme(themeManager.current.colorScheme)
             .navigationBarHidden(true)
             .navigationDestination(isPresented: $showLogin) {
-                // 跳转到原有登录界面
+                
                 OnboardingView()
                     .navigationBarBackButtonHidden(true)
                     .environmentObject(themeManager)
             }
             .navigationDestination(isPresented: $showHealthProfile) {
-                // 进入完整的 Health Profile 设置
+                
                 HealthProfileView { profile in
-                    // 保存后继续
+                 
                 }
                 .environmentObject(themeManager)
             }
@@ -181,8 +180,7 @@ struct NewOnboardingView: View {
     }
 
     func startJourney() {
-        // 保存基础信息到 UserDefaults，然后进入 Health Profile 完整流程
-        // 这里可以直接保存并跳转到注册/登录
+
         showHealthProfile = true
     }
 

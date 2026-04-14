@@ -1,8 +1,11 @@
+//
+//  ProfileView.swift
+//  food-app-swift
+//
+//  Created by Helen Tu on 5/13/26.
+//
 // ProfileView.swift
-// 改动：
-// 1. Settings 拆分：Personal Info（username/email/dob/gender）和 My Health Profile（身高体重等）分开
-// 2. 主题切换改为 System / Light / Dark 三选一，带预览图
-// 3. 显示 email
+
 
 import SwiftUI
 import StoreKit
@@ -41,7 +44,7 @@ struct ProfileView: View {
     @State private var showHelpSupport = false
     @State private var savedHealthProfile: HealthProfile? = nil
     @State private var userEmail: String = ""
-    // ✅ 主题偏好（三选一）
+  
     @State private var themePreference: ThemePreference = .system
 
     var userName: String { session.userName.isEmpty ? "User" : session.userName }
@@ -97,13 +100,13 @@ struct ProfileView: View {
                 Button("Contact Support") { openEmailSupport() }
                 Button("Cancel", role: .cancel) {}
             } message: { Text("For support, contact us at support@nutricam.com") }
-            // ✅ Personal Info 编辑
+           
             .sheet(isPresented: $showEditPersonalInfo) {
                 EditPersonalInfoView()
                     .environmentObject(themeManager)
                     .onDisappear { profileManager.fetchProfile(force: true); fetchUserEmail() }
             }
-            // ✅ Health Profile 编辑
+
             .sheet(isPresented: $showEditHealthProfile) {
                 EditHealthProfileView(
                     existingProfile: savedHealthProfile,
@@ -209,18 +212,8 @@ struct ProfileView: View {
                     }
                 }
 
-                // Edit Profile 快捷按钮
-                Button(action: { showEditPersonalInfo = true }) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "pencil").font(.system(size: 12, weight: .semibold))
-                        Text("Edit Profile").font(.system(size: 13, weight: .semibold))
-                    }
-                    .foregroundColor(themeManager.current == .dark ? .black : .white)
-                    .padding(.horizontal, 18).padding(.vertical, 9)
-                    .background(themeManager.current == .dark ? Color.white : Color.black)
-                    .cornerRadius(20)
-                }
-                .padding(.top, 4)
+             
+                
             }
         }
     }
@@ -259,7 +252,7 @@ struct ProfileView: View {
         VStack(alignment: .leading, spacing: 12) {
             sectionHeader("Settings")
             VStack(spacing: 0) {
-                // ✅ Personal Info - 分开的入口
+               
                 profileRow(
                     icon: "person.fill",
                     label: "Personal Info",
@@ -268,7 +261,7 @@ struct ProfileView: View {
 
                 rowDivider
 
-                // ✅ Health Profile - 分开的入口
+               
                 profileRow(
                     icon: "heart.text.square.fill",
                     label: "Health Profile",
@@ -277,7 +270,7 @@ struct ProfileView: View {
 
                 rowDivider
 
-                // ✅ 主题切换（三选一）
+               
                 appearanceSection
 
                 rowDivider
@@ -318,7 +311,7 @@ struct ProfileView: View {
         return "Tap to set up health data"
     }
 
-    // ✅ 主题三选一（System / Light / Dark）带预览
+   
     var appearanceSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
@@ -336,7 +329,7 @@ struct ProfileView: View {
                 }
             }
 
-            // 三个主题选项
+            
             HStack(spacing: 10) {
                 ForEach(ThemePreference.allCases, id: \.self) { pref in
                     themeOptionCard(pref)
@@ -356,7 +349,7 @@ struct ProfileView: View {
             }
         }) {
             VStack(spacing: 8) {
-                // 迷你预览图
+               
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
                         .fill(previewBackground(pref))
@@ -434,7 +427,7 @@ struct ProfileView: View {
     func applyTheme(_ pref: ThemePreference) {
         switch pref {
         case .system:
-            // 跟随系统
+         
             let isDark = UITraitCollection.current.userInterfaceStyle == .dark
             themeManager.current = isDark ? .dark : .light
         case .light:

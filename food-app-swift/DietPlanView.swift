@@ -1,5 +1,8 @@
-// DietPlanView.swift
-// 新增：7天后弹出"要重新生成计划吗"的提示
+//  DietPlanView.swift
+//  food-app-swift
+//
+//  Created by Helen Tu on 4/8/26.
+//
 
 import SwiftUI
 
@@ -15,7 +18,7 @@ struct DietPlanView: View {
     @State private var showError = false
     @State private var showProfileSetup = false
     @State private var expandedFoodIndex: Int? = nil
-    // ✅ 7天更新提示
+
     @State private var showRefreshPrompt = false
 
     var currentUserId: String {
@@ -55,7 +58,7 @@ struct DietPlanView: View {
                 }
                 .environmentObject(themeManager)
             }
-            // ✅ 7天期限提示弹窗
+          
             .alert("Update Your Health Plan?", isPresented: $showRefreshPrompt) {
                 Button("Yes, Regenerate") { generateReport(force: true) }
                 Button("Keep Current Plan", role: .cancel) {}
@@ -85,7 +88,7 @@ struct DietPlanView: View {
                 self.isLoading = false
                 if let report = report {
                     self.healthReport = report
-                    // ✅ 检查是否超过7天
+                    
                     self.checkReportAge(report: report)
                 } else {
                     self.generateReport(force: false)
@@ -94,7 +97,7 @@ struct DietPlanView: View {
         }
     }
 
-    // ✅ 检查报告是否超过7天
+    
     func checkReportAge(report: HealthReport) {
         guard let createdAtStr = report.createdAt else { return }
         let f1 = ISO8601DateFormatter()
@@ -512,7 +515,7 @@ private struct HeightPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = .zero
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
-// HealthDashboardView.swift 内容追加到 DietPlanView.swift 末尾
+
 
 struct HealthDashboardView: View {
     @EnvironmentObject var themeManager: ThemeManager

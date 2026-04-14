@@ -4,8 +4,7 @@
 //
 //  Created by Helen Tu on 4/12/26.
 //
-// PlanSettingsView.swift
-// 让用户选择生成几天、每天几餐，然后生成计划
+
 
 import SwiftUI
 

@@ -29,7 +29,7 @@ struct EditPersonalInfoView: View {
                 themeManager.current.background.ignoresSafeArea()
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 0) {
-                        // ── 头像区 ──
+                        
                         VStack(spacing: 12) {
                             ZStack {
                                 Circle()
@@ -45,7 +45,7 @@ struct EditPersonalInfoView: View {
                         }
                         .padding(.top, 20).padding(.bottom, 28)
 
-                        // ── 表单 ──
+                        
                         VStack(spacing: 1) {
                             infoRow(icon: "person.fill", label: "Name") {
                                 TextField("Your name", text: $displayName)
@@ -66,7 +66,7 @@ struct EditPersonalInfoView: View {
                                     .colorScheme(themeManager.current == .dark ? .dark : .light)
                             }
 
-                            // Gender 选择
+                            
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack(spacing: 10) {
                                     Image(systemName: "person.2.fill")
@@ -108,7 +108,7 @@ struct EditPersonalInfoView: View {
                         .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
                         .padding(.horizontal, 20)
 
-                        // ── 保存按钮 ──
+                        
                         Button(action: save) {
                             HStack(spacing: 8) {
                                 if isSaving {
@@ -170,7 +170,7 @@ struct EditPersonalInfoView: View {
 
     func loadCurrentInfo() {
         displayName = session.userName
-        // 拉取 email
+
         guard let token = session.getAuthToken(),
               let url = URL(string: "https://food-app-swift-qb4k.onrender.com/get-login-methods") else { return }
         var req = URLRequest(url: url)
@@ -181,10 +181,10 @@ struct EditPersonalInfoView: View {
             DispatchQueue.main.async { self.email = json["email"] ?? "" }
         }.resume()
 
-        // 从 UserProfile 加载 gender / age
+       
         if let profile = ProfileManager.shared.userProfile {
             gender = profile.gender
-            // 从 age 推算大概生日
+        
             let approxBirth = Calendar.current.date(byAdding: .year, value: -profile.age, to: Date()) ?? Date()
             dateOfBirth = approxBirth
         }

@@ -4,9 +4,7 @@
 //
 //  Created by Helen Tu on 4/9/26.
 //
-// HealthProfileView.swift — 加预填充支持
-// 新增：init(existingProfile:onComplete:) 用于编辑已有档案
-// 其余 UI 逻辑完全不变
+
 
 import SwiftUI
 
@@ -47,18 +45,18 @@ struct HealthProfileView: View {
     @State private var errorMsg = ""
     @State private var showError = false
 
-    // ✅ 预填充用的初始值（init 时传入，onAppear 时应用）
+
     private let prefill: HealthProfile?
 
     // MARK: - Init
 
-    /// 新建模式（onboarding）
+
     init(onComplete: ((HealthProfile) -> Void)? = nil) {
         self.prefill = nil
         self.onComplete = onComplete
     }
 
-    /// ✅ 编辑模式（从 ProfileView 打开，预填充已有数据）
+    
     init(existingProfile: HealthProfile?, onComplete: ((HealthProfile) -> Void)? = nil) {
         self.prefill = existingProfile
         self.onComplete = onComplete
@@ -95,7 +93,7 @@ struct HealthProfileView: View {
             }
             .preferredColorScheme(themeManager.current.colorScheme)
             .navigationBarHidden(true)
-            // ✅ 打开时预填充已有数据
+        
             .onAppear { applyPrefill() }
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
@@ -103,7 +101,6 @@ struct HealthProfileView: View {
         }
     }
 
-    // ✅ 把 existingProfile 的数据映射到各 @State 变量
     func applyPrefill() {
         guard let p = prefill else { return }
         heightCm = p.heightCm
@@ -135,7 +132,7 @@ struct HealthProfileView: View {
             HStack {
                 Button(action: {
                     if currentStep > 0 { withAnimation(.spring()) { currentStep -= 1 } }
-                    else { dismiss() }   // ✅ 编辑模式第一步可以直接关闭
+                    else { dismiss() }
                 }) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 16, weight: .semibold))
@@ -442,7 +439,7 @@ struct HealthProfileView: View {
                                 ProgressView().progressViewStyle(CircularProgressViewStyle(
                                     tint: themeManager.current == .dark ? .black : .white))
                             }
-                            // ✅ 编辑模式显示"Save Changes"，新建模式显示"Save & Continue"
+                            
                             Text(isSaving ? "Saving…" : prefill != nil ? "Save Changes" : "Save & Continue")
                                 .font(.system(size: 16, weight: .bold))
                         }
@@ -584,7 +581,7 @@ struct HealthProfileView: View {
     }
 }
 
-// MARK: - MetricInputCard（滑块 + 直接输入）
+// MARK: - MetricInputCard
 
 struct MetricInputCard: View {
     @EnvironmentObject var themeManager: ThemeManager
