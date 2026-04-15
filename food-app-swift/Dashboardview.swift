@@ -1,4 +1,4 @@
-//  BatchUploadView.swift
+//  DashBoardView.swift
 //  food-app-swift
 //
 //  Created by Helen Tu on 4/8/26.
@@ -717,60 +717,106 @@ struct DashboardView: View {
         guard !hasInitialized else { return }
         hasInitialized = true
         loadUserPreferences()
-        if profileManager.userProfile == nil && !profileManager.isNewUser { profileManager.fetchProfile() }
-        fetchAllData(); calculateStreak()
-        fetchHealthReportCalorieGoal()
+     
+        // 1. Fetch profile if needed (fire-and-forget, fast)
+        if profileManager.userProfile == nil && !profileManager.isNewUser {
+            profileManager.fetchProfile()
+        }
+     
+        // 2. Fetch calorie goal first – when it returns, kick off the rest
+        fetchHealthReportCalorieGoal {
+            // 3. Now fetch meals + water + exercise together (server is warm)
+            self.fetchAllData()
+            self.calculateStreak()
+        }
+     
+        // 4. Animate after a short delay regardless
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation(.easeOut(duration: 0.8)) { animateCalories = true }
+            withAnimation(.easeOut(duration: 0.8)) { self.animateCalories = true }
         }
     }
 
-    func fetchHealthReportCalorieGoal() {
+    // Completion handler added so initializeDashboard() can chain off it
+    func fetchHealthReportCalorieGoal(completion: (() -> Void)? = nil) {
         guard let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/get-health-report") else { return }
+              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/get-health-report")
+        else {
+            completion?()   // still unblock the chain even on auth error
+            return
+        }
         var request = URLRequest(url: url)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 30
+     
         URLSession.shared.dataTask(with: request) { data, _, _ in
+            defer { DispatchQueue.main.async { completion?() } }   // always fires
             guard let data = data,
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let dailyCal = json["daily_calories"] as? Int else { return }
+                  let dailyCal = json["daily_calories"] as? Int
+            else { return }
             DispatchQueue.main.async { self.healthReportCalorieGoal = dailyCal }
         }.resume()
     }
-
-    func fetchAllData() { fetchMeals(); fetchWaterData(); fetchExerciseData() }
+    
+    
+    
+   // MARK: - Parallel data fetch (called after server is known to be warm)
+    
+   func fetchAllData() { fetchMeals(); fetchWaterData(); fetchExerciseData() }
+    
 
     func loadUserPreferences() {
         if let profile = profileManager.userProfile { calorieGoal = profile.calorieTarget }
         else if let saved = UserDefaults.standard.object(forKey: "calorie_target") as? Int { calorieGoal = saved }
     }
 
+    // MARK: - Individual fetches with tiered timeouts
+     
     func fetchMeals() {
-        guard let userId = getCurrentUserId(), let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-meals?user_id=\(userId)") else {
-            networkError = .noInternet; return
-        }
+        guard let userId = getCurrentUserId(),
+              let token = SessionManager.shared.getAuthToken(),
+              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-meals?user_id=\(userId)")
+        else { networkError = .noInternet; return }
+     
         isLoading = true
-        var request = URLRequest(url: url); request.timeoutInterval = 45
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 30          // server already warm at this point
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+     
         URLSession.shared.dataTask(with: request) { data, response, error in
             DispatchQueue.main.async { self.isLoading = false }
-            if let _ = error { DispatchQueue.main.async { self.networkError = .dataLoadFailed }; return }
-            guard let data = data else { DispatchQueue.main.async { self.networkError = .dataLoadFailed }; return }
+     
+            if error != nil {
+                DispatchQueue.main.async { self.networkError = .dataLoadFailed }
+                return
+            }
+            guard let data = data else {
+                DispatchQueue.main.async { self.networkError = .dataLoadFailed }
+                return
+            }
             if let http = response as? HTTPURLResponse {
                 if http.statusCode == 401 {
-                    DispatchQueue.main.async { self.networkError = .sessionExpired; self.showNetworkAlert = true }; return
+                    DispatchQueue.main.async {
+                        self.networkError = .sessionExpired
+                        self.showNetworkAlert = true
+                    }
+                    return
                 } else if http.statusCode != 200 {
-                    DispatchQueue.main.async { self.networkError = .serverError }; return
+                    DispatchQueue.main.async { self.networkError = .serverError }
+                    return
                 }
             }
             do {
                 let decoded = try JSONDecoder().decode([Meal].self, from: data)
                 DispatchQueue.main.async {
-                    var uniqueMeals: [Meal] = []; var seenIds: Set<String> = []
+                    var uniqueMeals: [Meal] = []
+                    var seenIds: Set<String> = []
                     for meal in decoded {
-                        if !seenIds.contains(meal._id) { seenIds.insert(meal._id); uniqueMeals.append(meal) }
+                        if !seenIds.contains(meal._id) {
+                            seenIds.insert(meal._id)
+                            uniqueMeals.append(meal)
+                        }
                     }
                     self.meals = uniqueMeals.sorted {
                         guard let d1 = parseISO8601($0.saved_at ?? ""),
@@ -780,36 +826,49 @@ struct DashboardView: View {
                     self.calculateMonthlyStats()
                     self.calculateWeeklyStats()
                 }
-            } catch { DispatchQueue.main.async { self.networkError = .dataLoadFailed } }
+            } catch {
+                DispatchQueue.main.async { self.networkError = .dataLoadFailed }
+            }
         }.resume()
     }
+     
 
+    
     func fetchWaterData() {
-        guard let userId = getCurrentUserId(), let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-water?user_id=\(userId)") else { return }
-        var request = URLRequest(url: url); request.timeoutInterval = 30
+        guard let userId = getCurrentUserId(),
+              let token = SessionManager.shared.getAuthToken(),
+              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-water?user_id=\(userId)")
+        else { return }
+     
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 15          // lightweight endpoint
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+     
         URLSession.shared.dataTask(with: request) { data, _, _ in
-            guard let data = data else { return }
-            if let decoded = try? JSONDecoder().decode([WaterEntry].self, from: data) {
-                DispatchQueue.main.async { self.waterIntake = decoded }
-            }
+            guard let data = data,
+                  let decoded = try? JSONDecoder().decode([WaterEntry].self, from: data)
+            else { return }
+            DispatchQueue.main.async { self.waterIntake = decoded }
         }.resume()
     }
-
+    
     func fetchExerciseData() {
-        guard let userId = getCurrentUserId(), let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-exercise?user_id=\(userId)") else { return }
-        var request = URLRequest(url: url); request.timeoutInterval = 30
+        guard let userId = getCurrentUserId(),
+              let token = SessionManager.shared.getAuthToken(),
+              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-exercise?user_id=\(userId)")
+        else { return }
+     
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 15          // lightweight endpoint
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+     
         URLSession.shared.dataTask(with: request) { data, _, _ in
-            guard let data = data else { return }
-            if let decoded = try? JSONDecoder().decode([ExerciseEntry].self, from: data) {
-                DispatchQueue.main.async { self.exerciseEntries = decoded }
-            }
+            guard let data = data,
+                  let decoded = try? JSONDecoder().decode([ExerciseEntry].self, from: data)
+            else { return }
+            DispatchQueue.main.async { self.exerciseEntries = decoded }
         }.resume()
     }
-
     func calculateMonthlyStats() {
         let calendar = Calendar.current; let today = Date()
         let startOfMonth = calendar.dateInterval(of: .month, for: today)?.start ?? today
@@ -879,16 +938,23 @@ struct DashboardView: View {
 
     func handleNetworkErrorRetry() { networkError = nil; fetchAllData(); profileManager.fetchProfile(force: true) }
     func getCurrentUserId() -> String? { session.userID.isEmpty ? UserDefaults.standard.string(forKey: "user_id") : session.userID }
-
+    // MARK: - Pull-to-refresh (serial, same pattern as init)
+     
     func refreshDashboard() async {
         await withCheckedContinuation { continuation in
-            hasInitialized = false; networkError = nil
-            profileManager.fetchProfile(force: true); fetchAllData(); calculateStreak()
-            fetchHealthReportCalorieGoal()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { continuation.resume() }
+            hasInitialized = false
+            networkError = nil
+            profileManager.fetchProfile(force: true)
+     
+            fetchHealthReportCalorieGoal {
+                self.fetchAllData()
+                self.calculateStreak()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                    continuation.resume()
+                }
+            }
         }
     }
-
     func calculateProteinGoal() -> Int { Int(Double(dynamicCalorieGoal) * 0.2 / 4) }
     func calculateCarbGoal() -> Int { Int(Double(dynamicCalorieGoal) * 0.5 / 4) }
     func calculateFatGoal() -> Int { Int(Double(dynamicCalorieGoal) * 0.3 / 9) }

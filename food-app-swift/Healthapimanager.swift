@@ -5,10 +5,16 @@
 //  Created by Helen Tu on 4/9/26.
 //
 
-
-
 import Foundation
 import UIKit
+
+// MARK: - Timeout constants (change in one place, applies everywhere)
+private enum Timeout {
+    static let short: TimeInterval   = 15   // water, exercise, profile reads
+    static let standard: TimeInterval = 30  // most reads/writes
+    static let long: TimeInterval    = 60   // generate-targets, generate-health-report
+    static let upload: TimeInterval  = 120  // analyze-meal-photo (Gemini heavy)
+}
 
 class HealthAPIManager {
     static let shared = HealthAPIManager()
@@ -17,7 +23,7 @@ class HealthAPIManager {
 
     private var token: String? { SessionManager.shared.getAuthToken() }
 
-  
+    // MARK: - Keep-Alive
 
     func startKeepAlive() {
         keepAliveTimer?.invalidate()
@@ -27,6 +33,7 @@ class HealthAPIManager {
                 print("🔄 Keep-alive ping sent")
             }.resume()
         }
+        // immediate ping on start
         if let url = URL(string: "\(base)/ping") {
             URLSession.shared.dataTask(with: url) { _, _, _ in
                 print("🔄 Initial ping to wake up server")
@@ -49,7 +56,7 @@ class HealthAPIManager {
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         req.httpBody = try? JSONEncoder().encode(profile)
-        req.timeoutInterval = 30
+        req.timeoutInterval = Timeout.standard
         URLSession.shared.dataTask(with: req) { _, resp, err in
             DispatchQueue.main.async {
                 if let err = err { completion(false, err.localizedDescription); return }
@@ -63,7 +70,7 @@ class HealthAPIManager {
               let token = token else { completion(nil); return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 30
+        req.timeoutInterval = Timeout.standard
         URLSession.shared.dataTask(with: req) { data, resp, _ in
             DispatchQueue.main.async {
                 guard let data = data,
@@ -88,7 +95,7 @@ class HealthAPIManager {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 60
+        req.timeoutInterval = Timeout.long
         let payload: [String: Any] = [
             "profile": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(profile))) ?? [:],
             "goals": goals
@@ -106,7 +113,7 @@ class HealthAPIManager {
         }.resume()
     }
 
-
+    // MARK: - Weekly Meal Plan
 
     func generateWeeklyMealPlan(
         userId: String,
@@ -124,7 +131,7 @@ class HealthAPIManager {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 30
+        req.timeoutInterval = Timeout.standard
 
         let payload: [String: Any] = [
             "nutrition_plan": (try? JSONSerialization.jsonObject(with: JSONEncoder().encode(nutritionPlan))) ?? [:],
@@ -168,7 +175,7 @@ class HealthAPIManager {
         guard let url = URL(string: "\(base)/meal-plan-status/\(jobId)") else { return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 15
+        req.timeoutInterval = Timeout.short
 
         URLSession.shared.dataTask(with: req) { data, _, _ in
             guard let data = data,
@@ -215,7 +222,7 @@ class HealthAPIManager {
               let token = token else { completion(nil); return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 30
+        req.timeoutInterval = Timeout.standard
         URLSession.shared.dataTask(with: req) { data, resp, _ in
             DispatchQueue.main.async {
                 guard let data = data,
@@ -227,7 +234,7 @@ class HealthAPIManager {
         }.resume()
     }
 
-    // MARK: - Analyze Meal Photo
+    // MARK: - Analyze Meal Photo (with retry)
 
     func analyzeMealPhoto(
         imageData: Data,
@@ -236,6 +243,7 @@ class HealthAPIManager {
         mealType: String,
         plannedMeal: PlannedMeal?,
         remainingPlan: [DayMealPlan],
+        retryCount: Int = 0,                          // ← internal retry counter
         completion: @escaping (MealLog?, String?) -> Void
     ) {
         guard let url = URL(string: "\(base)/analyze-meal-photo"),
@@ -244,7 +252,7 @@ class HealthAPIManager {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 90
+        req.timeoutInterval = Timeout.upload          // 120s – Gemini can be slow
 
         var payload: [String: Any] = [
             "date": date,
@@ -260,16 +268,37 @@ class HealthAPIManager {
            let remainingJSON = try? JSONSerialization.jsonObject(with: remainingData) {
             payload["remaining_plan"] = remainingJSON
         }
-
         req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
         URLSession.shared.dataTask(with: req) { data, resp, err in
-            DispatchQueue.main.async {
-                if let err = err { completion(nil, err.localizedDescription); return }
-                guard let data = data,
-                      (resp as? HTTPURLResponse)?.statusCode == 200,
-                      let log = try? JSONDecoder().decode(MealLog.self, from: data)
-                else { completion(nil, "Failed to analyze photo"); return }
-                completion(log, nil)
+            // --- success path ---
+            if let data = data,
+               (resp as? HTTPURLResponse)?.statusCode == 200,
+               let log = try? JSONDecoder().decode(MealLog.self, from: data) {
+                DispatchQueue.main.async { completion(log, nil) }
+                return
+            }
+
+            // --- failure path: retry once after 3 s ---
+            let maxRetries = 1
+            if retryCount < maxRetries {
+                let reason = err?.localizedDescription ?? "status \((resp as? HTTPURLResponse)?.statusCode ?? 0)"
+                print("⚠️ analyzeMealPhoto failed (\(reason)), retrying in 3 s… (attempt \(retryCount + 1)/\(maxRetries))")
+                DispatchQueue.global().asyncAfter(deadline: .now() + 3) {
+                    self.analyzeMealPhoto(
+                        imageData: imageData,
+                        userId: userId,
+                        date: date,
+                        mealType: mealType,
+                        plannedMeal: plannedMeal,
+                        remainingPlan: remainingPlan,
+                        retryCount: retryCount + 1,
+                        completion: completion
+                    )
+                }
+            } else {
+                let msg = err?.localizedDescription ?? "Failed to analyze photo"
+                DispatchQueue.main.async { completion(nil, msg) }
             }
         }.resume()
     }
@@ -298,18 +327,16 @@ class HealthAPIManager {
     }
 }
 
-
+// MARK: - Health Report
 
 extension HealthAPIManager {
- 
-    // MARK: - Fetch Existing Health Report
- 
+
     func fetchHealthReport(completion: @escaping (HealthReport?) -> Void) {
         guard let url = URL(string: "\(base)/get-health-report"),
               let token = token else { completion(nil); return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 30
+        req.timeoutInterval = Timeout.standard
         URLSession.shared.dataTask(with: req) { data, resp, _ in
             DispatchQueue.main.async {
                 guard let data = data,
@@ -320,9 +347,7 @@ extension HealthAPIManager {
             }
         }.resume()
     }
- 
- 
- 
+
     func generateHealthReport(
         goals: [String] = [],
         force: Bool = false,
@@ -334,7 +359,7 @@ extension HealthAPIManager {
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = 90
+        req.timeoutInterval = Timeout.long
         req.httpBody = try? JSONSerialization.data(withJSONObject: ["goals": goals, "force": force])
         URLSession.shared.dataTask(with: req) { data, resp, err in
             DispatchQueue.main.async {
@@ -351,4 +376,3 @@ extension HealthAPIManager {
         }.resume()
     }
 }
- 

@@ -269,72 +269,191 @@ struct BatchUploadView: View {
     // MARK: - Analyzing Stage
 
     var analyzingStage: some View {
-        VStack(spacing: 32) {
-            Spacer()
-           
-            ZStack {
-                Circle()
-                    .stroke(themeManager.current.cardBorder, lineWidth: 10)
-                    .frame(width: 120, height: 120)
-                Circle()
-                    .trim(from: 0, to: batchResults.isEmpty ? 0 : CGFloat(analysisProgress) / CGFloat(batchResults.count))
-                    .stroke(Color.orange, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                    .frame(width: 120, height: 120).rotationEffect(.degrees(-90))
-                    .animation(.easeInOut(duration: 0.4), value: analysisProgress)
-                VStack(spacing: 2) {
-                    Text("\(analysisProgress)")
-                        .font(.system(size: 36, weight: .black, design: .rounded))
+        ZStack {
+            themeManager.current.background.ignoresSafeArea()
+     
+            VStack(spacing: 0) {
+     
+                // ── Top label ──────────────────────────────────────────────────
+                VStack(spacing: 6) {
+                    Text("Analyzing")
+                        .font(.system(size: 28, weight: .black, design: .rounded))
                         .foregroundColor(themeManager.current.primaryText)
-                    Text("of \(batchResults.count)")
-                        .font(.caption).foregroundColor(themeManager.current.secondaryText)
+                    Text("\(analysisProgress) of \(batchResults.count) complete")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(themeManager.current.secondaryText)
                 }
-            }
-            Text("Analyzing photos...")
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(themeManager.current.primaryText)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(Array(batchResults.enumerated()), id: \.element.id) { _, result in
-                        ZStack {
-                            Image(uiImage: result.image)
-                                .resizable().scaledToFill()
-                                .frame(width: 64, height: 64).clipped().cornerRadius(10)
-                                .overlay(RoundedRectangle(cornerRadius: 10)
-                                    .fill(statusOverlayColor(result.status).opacity(0.45)))
-                            statusIcon(result.status)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 32)
+                .padding(.bottom, 36)
+     
+                // ── Big ring ───────────────────────────────────────────────────
+                ZStack {
+                    // Outer faint ring
+                    Circle()
+                        .stroke(Color.orange.opacity(0.08), lineWidth: 22)
+                        .frame(width: 180, height: 180)
+     
+                    // Track ring
+                    Circle()
+                        .stroke(themeManager.current.cardBorder, lineWidth: 14)
+                        .frame(width: 180, height: 180)
+     
+                    // Progress arc
+                    Circle()
+                        .trim(from: 0,
+                              to: batchResults.isEmpty ? 0
+                                  : CGFloat(analysisProgress) / CGFloat(batchResults.count))
+                        .stroke(
+                            LinearGradient(
+                                colors: [Color.orange, Color(red: 1, green: 0.55, blue: 0.1)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            style: StrokeStyle(lineWidth: 14, lineCap: .round)
+                        )
+                        .frame(width: 180, height: 180)
+                        .rotationEffect(.degrees(-90))
+                        .animation(.spring(response: 0.5, dampingFraction: 0.75), value: analysisProgress)
+     
+                    // Centre content
+                    VStack(spacing: 4) {
+                        Text("\(analysisProgress)")
+                            .font(.system(size: 52, weight: .black, design: .rounded))
+                            .foregroundColor(themeManager.current.primaryText)
+                            .contentTransition(.numericText())
+                            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: analysisProgress)
+     
+                        HStack(spacing: 3) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.orange)
+                            Text("of \(batchResults.count)")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(themeManager.current.secondaryText)
                         }
                     }
                 }
-                .padding(.horizontal, 20)
+                .padding(.bottom, 44)
+     
+                // ── Photo strip ────────────────────────────────────────────────
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(Array(batchResults.enumerated()), id: \.element.id) { _, result in
+                            analyzingPhotoTile(result: result)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 4)
+                }
+     
+                Spacer()
+     
+                // ── Tip card ───────────────────────────────────────────────────
+                HStack(spacing: 10) {
+                    Image(systemName: "wand.and.sparkles")
+                        .font(.system(size: 16))
+                        .foregroundColor(.orange)
+                    Text("AI is reading ingredients & calculating nutrition for each photo")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(themeManager.current.secondaryText)
+                        .multilineTextAlignment(.leading)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(themeManager.current.cardBackground)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.orange.opacity(0.18), lineWidth: 1)
+                        )
+                )
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
             }
-            Spacer()
         }
     }
+    
+    // Inline tile used in the photo strip above
+    private func analyzingPhotoTile(result: BatchMealResult) -> some View {
+        ZStack(alignment: .bottomTrailing) {
+            Image(uiImage: result.image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 72, height: 72)
+                .clipped()
+                .cornerRadius(14)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(statusOverlayColor(result.status).opacity(0.35))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(statusBorderColor(result.status), lineWidth: 2)
+                )
+     
+            // Badge bottom-right
+            ZStack {
+                Circle()
+                    .fill(themeManager.current.cardBackground)
+                    .frame(width: 24, height: 24)
+                statusIcon(result.status)
+            }
+            .offset(x: 4, y: 4)
+        }
+        .shadow(
+            color: statusBorderColor(result.status).opacity(0.25),
+            radius: 6, x: 0, y: 3
+        )
+    }
+     
+    
+   func statusOverlayColor(_ status: BatchMealResult.AnalysisStatus) -> Color {
+       switch status {
+       case .pending:   return Color.black
+       case .analyzing: return Color.orange
+       case .completed: return Color.clear
+       case .failed:    return Color.red
+       }
+   }
 
-    func statusOverlayColor(_ status: BatchMealResult.AnalysisStatus) -> Color {
+   
+    private func statusBorderColor(_ status: BatchMealResult.AnalysisStatus) -> Color {
         switch status {
-        case .pending: return .black
-        case .analyzing: return .orange
-        case .completed: return .clear
-        case .failed: return .red
+        case .pending:   return Color.clear
+        case .analyzing: return Color.orange
+        case .completed: return Color.green
+        case .failed:    return Color.red
         }
     }
-
+    
+    
+    
     @ViewBuilder
     func statusIcon(_ status: BatchMealResult.AnalysisStatus) -> some View {
         switch status {
         case .pending:
-            Image(systemName: "clock").foregroundColor(.white.opacity(0.7))
+            Image(systemName: "clock")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(themeManager.current.secondaryText)
+     
         case .analyzing:
-            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .orange)).scaleEffect(0.8)
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .orange))
+                .scaleEffect(0.6)
+     
         case .completed:
-            Image(systemName: "checkmark.circle.fill").foregroundColor(.green).font(.title3)
+            Image(systemName: "checkmark")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.green)
+     
         case .failed:
-            Image(systemName: "exclamationmark.circle.fill").foregroundColor(.red).font(.title3)
+            Image(systemName: "xmark")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.red)
         }
     }
-
     // MARK: - Results Stage
 
     var resultsStage: some View {
