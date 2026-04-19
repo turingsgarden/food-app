@@ -8,6 +8,7 @@ from model_pipeline import full_image_analysis, validate_image_for_analysis
 import base64
 import traceback
 import time
+import threading
 from io import BytesIO
 from PIL import Image
 from datetime import datetime, timedelta
