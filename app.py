@@ -22,7 +22,10 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
 import json
-import threading
+import io
+import re
+import fitz          # PyMuPDF  — pip install pymupdf
+import docx          # python-docx — pip install python-docximport threading
 from jwt import PyJWKClient
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
@@ -1548,8 +1551,173 @@ def _extract_health_values_regex(text: str) -> dict:
     return result
     
     
-    
-    
+# ── helper: extract raw text from PDF bytes ───────────────────────────────────
+def _extract_text_from_pdf(pdf_bytes: bytes) -> str:
+    text_pages = []
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
+        for page in doc:
+            text_pages.append(page.get_text())
+    return "\n".join(text_pages)
+ 
+# ── helper: extract raw text from DOCX bytes ─────────────────────────────────
+def _extract_text_from_docx(docx_bytes: bytes) -> str:
+    doc = docx.Document(io.BytesIO(docx_bytes))
+    return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
+ 
+# ── helper: ask Gemini to pull structured values from free text ───────────────
+def _extract_health_values_from_text(raw_text: str) -> dict:
+    prompt = f"""
+You are a medical document parser. Extract health values from the following text.
+ 
+Return ONLY a valid JSON object with these keys (use null if not found):
+{{
+  "systolic_bp": <int or null>,
+  "diastolic_bp": <int or null>,
+  "blood_sugar": <float mmol/L or null>,
+  "cholesterol": <float mmol/L or null>,
+  "triglycerides": <float mmol/L or null>,
+  "height_cm": <float or null>,
+  "weight_kg": <float or null>
+}}
+ 
+Conversion rules if units differ:
+- Blood glucose in mg/dL → divide by 18.0
+- Cholesterol in mg/dL → divide by 38.67
+- Triglycerides in mg/dL → divide by 88.57
+- Height in feet/inches → convert to cm
+- Weight in lbs → multiply by 0.4536
+ 
+Document text:
+\"\"\"
+{raw_text[:4000]}
+\"\"\"
+ 
+Respond with JSON only. No markdown, no explanation.
+"""
+    import google.generativeai as genai
+    import os, json
+ 
+    genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
+    model = genai.GenerativeModel("gemini-2.0-flash")
+    response = model.generate_content(prompt)
+    raw = response.text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+ 
+    try:
+        return json.loads(raw)
+    except Exception:
+        # Regex fallback
+        return _extract_health_values_regex(raw_text)
+ 
+# ── regex fallback (same logic as existing /ocr-health-report) ────────────────
+def _extract_health_values_regex(text: str) -> dict:
+    result = {
+        "systolic_bp": None, "diastolic_bp": None,
+        "blood_sugar": None, "cholesterol": None,
+        "triglycerides": None, "height_cm": None, "weight_kg": None
+    }
+    bp = re.search(r'(\d{2,3})\s*/\s*(\d{2,3})', text)
+    if bp:
+        result["systolic_bp"]  = int(bp.group(1))
+        result["diastolic_bp"] = int(bp.group(2))
+    bs = re.search(r'(?:glucose|blood sugar|fasting)[^\d]*(\d+\.?\d*)', text, re.I)
+    if bs:
+        v = float(bs.group(1))
+        result["blood_sugar"] = round(v / 18.0, 2) if v > 20 else v
+    ch = re.search(r'(?:total cholesterol|cholesterol)[^\d]*(\d+\.?\d*)', text, re.I)
+    if ch:
+        v = float(ch.group(1))
+        result["cholesterol"] = round(v / 38.67, 2) if v > 15 else v
+    tr = re.search(r'(?:triglycerides?)[^\d]*(\d+\.?\d*)', text, re.I)
+    if tr:
+        v = float(tr.group(1))
+        result["triglycerides"] = round(v / 88.57, 2) if v > 10 else v
+    ht = re.search(r'(?:height)[^\d]*(\d{2,3}(?:\.\d)?)\s*(?:cm)?', text, re.I)
+    if ht:
+        result["height_cm"] = float(ht.group(1))
+    wt = re.search(r'(?:weight)[^\d]*(\d{2,3}(?:\.\d)?)\s*(?:kg)?', text, re.I)
+    if wt:
+        result["weight_kg"] = float(wt.group(1))
+    return result
+ 
+ 
+# ── PASTE THIS ROUTE INTO app.py ──────────────────────────────────────────────
+"""
+@app.route('/ocr-document', methods=['POST'])
+@jwt_required()
+def ocr_document():
+    \"\"\"
+    Accept PDF, DOCX, or image (base64).
+    Extract health values and return same JSON as /ocr-health-report.
+    \"\"\"
+    import json as _json
+ 
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+ 
+    file_b64  = data.get("file_base64", "")
+    file_type = data.get("file_type", "image").lower()   # "pdf" | "docx" | "image"
+ 
+    if not file_b64:
+        return jsonify({"error": "file_base64 is required"}), 400
+ 
+    try:
+        file_bytes = base64.b64decode(file_b64)
+    except Exception:
+        return jsonify({"error": "Invalid base64 data"}), 400
+ 
+    # ── Route by file type ────────────────────────────────────────────────────
+    if file_type == "pdf":
+        raw_text = _extract_text_from_pdf(file_bytes)
+        if len(raw_text.strip()) < 20:
+            # Scanned PDF with no text layer → render page 0 as image and use Vision
+            with fitz.open(stream=file_bytes, filetype="pdf") as doc:
+                page  = doc[0]
+                pix   = page.get_pixmap(dpi=200)
+                img_bytes = pix.tobytes("jpeg")
+            img_b64 = base64.b64encode(img_bytes).decode()
+            # Fall through to existing Vision API logic by delegating internally
+            result = _ocr_via_vision_api(img_b64)
+        else:
+            result = _extract_health_values_from_text(raw_text)
+ 
+    elif file_type == "docx":
+        raw_text = _extract_text_from_docx(file_bytes)
+        result   = _extract_health_values_from_text(raw_text)
+ 
+    else:
+        # Treat as image — delegate to existing Vision + Gemini pipeline
+        result = _ocr_via_vision_api(file_b64)
+ 
+    return jsonify(result), 200
+ 
+ 
+def _ocr_via_vision_api(img_b64: str) -> dict:
+    \"\"\"
+    Thin wrapper that reuses your existing Vision + Gemini OCR logic.
+    Copy the body of your current /ocr-health-report here, or call a shared helper.
+    \"\"\"
+    import requests as _req, os, json as _json
+    vision_key = os.environ.get("GOOGLE_VISION_API_KEY", "")
+    vision_url = f"https://vision.googleapis.com/v1/images:annotate?key={vision_key}"
+    vision_payload = {
+        "requests": [{
+            "image": {"content": img_b64},
+            "features": [{"type": "DOCUMENT_TEXT_DETECTION"}],
+            "imageContext": {"languageHints": ["en", "zh-Hans", "zh-Hant"]}
+        }]
+    }
+    vision_resp = _req.post(vision_url, json=vision_payload, timeout=30)
+    raw_text = ""
+    if vision_resp.status_code == 200:
+        annotations = vision_resp.json().get("responses", [{}])[0]
+        raw_text = annotations.get("fullTextAnnotation", {}).get("text", "")
+    if not raw_text.strip():
+        return {k: None for k in
+                ["systolic_bp","diastolic_bp","blood_sugar","cholesterol","triglycerides","height_cm","weight_kg"]}
+    return _extract_health_values_from_text(raw_text)
+"""
+ 
 
     
 
