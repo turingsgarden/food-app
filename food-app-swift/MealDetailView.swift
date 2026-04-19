@@ -4,6 +4,10 @@
 //
 //  Created by Helen Tu on 3/17/26.
 //
+//
+//  MealDetailView.swift
+//  food-app-swift
+//
 import SwiftUI
 
 struct MealDetailView: View {
@@ -27,18 +31,16 @@ struct MealDetailView: View {
     var allEditedIngredients: [EditableIngredient] { editedVisibleIngredients + editedHiddenIngredients }
     var allDisplayIngredients: [EditableIngredient] {
         let visible = parseIngredientsToEditableFiltered(from: meal.image_description)
-        let hidden = parseIngredientsToEditableFiltered(from: meal.hidden_ingredients ?? "")
+        let hidden  = parseIngredientsToEditableFiltered(from: meal.hidden_ingredients ?? "")
         return visible + hidden
     }
 
     var body: some View {
         ZStack {
             themeManager.current.background.ignoresSafeArea()
-
             ScrollView {
                 VStack(spacing: 0) {
                     heroImage
-
                     VStack(alignment: .leading, spacing: 20) {
                         titleAndMeta
                         BeautifulNutritionView(nutritionText: updatedNutritionInfo.isEmpty ? meal.nutrition_info : updatedNutritionInfo)
@@ -57,7 +59,6 @@ struct MealDetailView: View {
             }
             .ignoresSafeArea(edges: .top)
 
-            // Toast
             if showSuccessToast {
                 VStack {
                     Spacer()
@@ -97,35 +98,25 @@ struct MealDetailView: View {
             let width = geo.size.width > 0 ? geo.size.width : UIScreen.main.bounds.width
             ZStack(alignment: .bottom) {
                 if let base64 = meal.image_full, let uiImage = decodeBase64ToUIImage(base64) {
-                    Image(uiImage: uiImage)
-                        .resizable().scaledToFill()
+                    Image(uiImage: uiImage).resizable().scaledToFill()
                         .frame(width: width, height: 300).clipped()
                 } else {
-                    Rectangle()
-                        .fill(themeManager.current.inputBackground)
+                    Rectangle().fill(themeManager.current.inputBackground)
                         .frame(width: width, height: 300)
-                        .overlay(Image(systemName: "photo")
-                            .font(.system(size: 48))
+                        .overlay(Image(systemName: "photo").font(.system(size: 48))
                             .foregroundColor(themeManager.current.secondaryText.opacity(0.3)))
                 }
-               
                 LinearGradient(
                     gradient: Gradient(colors: [.clear, themeManager.current.background.opacity(0.6), themeManager.current.background]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(width: width, height: 120)
+                    startPoint: .top, endPoint: .bottom
+                ).frame(width: width, height: 120)
             }
             .frame(width: width, height: 300)
             .overlay(alignment: .topTrailing) {
-                HStack(spacing: 10) {
-                    Button(action: { showShareSheet = true }) {
-                        Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                            .background(Circle().fill(Color.black.opacity(0.45)))
-                    }
+                Button(action: { showShareSheet = true }) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 14, weight: .semibold)).foregroundColor(.white)
+                        .frame(width: 36, height: 36).background(Circle().fill(Color.black.opacity(0.45)))
                 }
                 .padding(.trailing, 16).padding(.top, 56)
             }
@@ -133,7 +124,7 @@ struct MealDetailView: View {
         .frame(height: 300)
     }
 
-
+    // MARK: - Title & Meta
 
     var titleAndMeta: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -141,24 +132,16 @@ struct MealDetailView: View {
                 TextField("Dish name", text: $editedDishName)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(themeManager.current.primaryText)
-                    .padding(14)
-                    .background(themeManager.current.inputBackground)
-                    .cornerRadius(14)
-                    .overlay(RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.orange.opacity(0.3), lineWidth: 1))
+                    .padding(14).background(themeManager.current.inputBackground).cornerRadius(14)
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.orange.opacity(0.3), lineWidth: 1))
             } else {
-                Text(meal.dish_prediction)
-                    .font(.system(size: 22, weight: .bold))
+                Text(meal.dish_prediction).font(.system(size: 22, weight: .bold))
                     .foregroundColor(themeManager.current.primaryText)
             }
-
-            // Meta
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     if let savedAt = meal.saved_at, let date = ISO8601DateFormatter().date(from: savedAt) {
-                        MetaPill(icon: "calendar", text: formatDate(date),
-                                 bg: themeManager.current.inputBackground,
-                                 fg: themeManager.current.secondaryText)
+                        MetaPill(icon: "calendar", text: formatDate(date), bg: themeManager.current.inputBackground, fg: themeManager.current.secondaryText)
                     }
                     if let mealType = meal.meal_type {
                         MetaPill(icon: "fork.knife", text: mealType.capitalized,
@@ -166,9 +149,7 @@ struct MealDetailView: View {
                                  fg: themeManager.current.primaryText)
                     }
                     if let calories = extractCalories(from: updatedNutritionInfo.isEmpty ? meal.nutrition_info : updatedNutritionInfo) {
-                        MetaPill(icon: "flame.fill", text: "\(calories) kcal",
-                                 bg: Color.orange.opacity(0.12),
-                                 fg: .orange)
+                        MetaPill(icon: "flame.fill", text: "\(calories) kcal", bg: Color.orange.opacity(0.12), fg: .orange)
                     }
                 }
             }
@@ -183,74 +164,45 @@ struct MealDetailView: View {
             editingIngredientsView
         } else {
             if !allDisplayIngredients.isEmpty {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Ingredients")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(themeManager.current.primaryText)
-                    VStack(spacing: 10) {
-                        ForEach(allDisplayIngredients, id: \.id) { ing in
-                            HStack {
-                                Text(ing.name)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(themeManager.current.primaryText)
-                                Spacer()
-                                Text(ing.quantity + (!ing.unit.isEmpty ? " " + ing.unit : ""))
-                                    .font(.system(size: 13))
-                                    .foregroundColor(themeManager.current.secondaryText)
-                            }
-                            .padding(.horizontal, 14).padding(.vertical, 12)
-                            .background(themeManager.current.cardBackground)
-                            .cornerRadius(14)
-                            .overlay(RoundedRectangle(cornerRadius: 14)
-                                .stroke(themeManager.current.cardBorder, lineWidth: 1))
-                        }
-                    }
-                }
+                IngredientTable(ingredients: allDisplayIngredients, themeManager: themeManager)
             }
         }
     }
+
+    // MARK: - Editing View
 
     var editingIngredientsView: some View {
         VStack(alignment: .leading, spacing: 16) {
             if !editedVisibleIngredients.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("VISIBLE")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    Text("VISIBLE").font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(.orange.opacity(0.7)).kerning(2)
                     ForEach(editedVisibleIngredients, id: \.id) { ing in ingredientInputRow(ing: ing) }
                 }
             }
             if !editedHiddenIngredients.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("HIDDEN")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    Text("HIDDEN").font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(.orange.opacity(0.5)).kerning(2)
                     ForEach(editedHiddenIngredients, id: \.id) { ing in ingredientInputRow(ing: ing) }
                 }
             }
             HStack(spacing: 6) {
                 Image(systemName: "info.circle.fill").font(.caption).foregroundColor(.orange.opacity(0.8))
-                Text("Only quantities can be edited").font(.caption)
-                    .foregroundColor(themeManager.current.secondaryText)
+                Text("Only quantities can be edited").font(.caption).foregroundColor(themeManager.current.secondaryText)
                 Spacer()
             }
         }
-        .padding(16)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(18)
+        .padding(16).background(themeManager.current.cardBackground).cornerRadius(18)
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(themeManager.current.cardBorder, lineWidth: 1))
     }
 
     func ingredientInputRow(ing: EditableIngredient) -> some View {
         HStack(spacing: 10) {
-            Text(ing.name)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(themeManager.current.primaryText)
+            Text(ing.name).font(.system(size: 14, weight: .medium)).foregroundColor(themeManager.current.primaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 12).padding(.vertical, 10)
-                .background(themeManager.current.inputBackground)
-                .cornerRadius(10)
-
+                .background(themeManager.current.inputBackground).cornerRadius(10)
             TextField("0", text: Binding(
                 get: { quantityInputs[ing.id] ?? ing.quantity },
                 set: { quantityInputs[ing.id] = $0 }
@@ -258,102 +210,73 @@ struct MealDetailView: View {
             .font(.system(size: 14)).foregroundColor(themeManager.current.primaryText)
             .multilineTextAlignment(.center).frame(width: 60)
             .padding(.horizontal, 8).padding(.vertical, 10)
-            .background(Color.orange.opacity(0.08))
-            .cornerRadius(10)
+            .background(Color.orange.opacity(0.08)).cornerRadius(10)
             .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.orange.opacity(0.25), lineWidth: 1))
             .keyboardType(.decimalPad)
-
-            Text(displayUnit(for: ing))
-                .font(.system(size: 13)).foregroundColor(themeManager.current.secondaryText)
+            Text(displayUnit(for: ing)).font(.system(size: 13)).foregroundColor(themeManager.current.secondaryText)
                 .frame(width: 48).padding(.horizontal, 6).padding(.vertical, 10)
                 .background(themeManager.current.inputBackground).cornerRadius(10)
         }
     }
 
-   
+    // MARK: - Action Buttons
 
     @ViewBuilder
     var actionButtons: some View {
         if isEditing {
             HStack(spacing: 12) {
                 Button(action: cancelEditing) {
-                    Text("Cancel")
-                        .font(.system(size: 15, weight: .semibold))
+                    Text("Cancel").font(.system(size: 15, weight: .semibold))
                         .foregroundColor(themeManager.current.primaryText)
                         .frame(maxWidth: .infinity).padding(.vertical, 16)
-                        .background(themeManager.current.inputBackground)
-                        .cornerRadius(16)
+                        .background(themeManager.current.inputBackground).cornerRadius(16)
                         .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
-                }
-                .disabled(isSaving || isRecalculatingNutrition)
-
+                }.disabled(isSaving || isRecalculatingNutrition)
                 Button(action: saveChanges) {
                     HStack(spacing: 6) {
                         if isSaving || isRecalculatingNutrition {
                             ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)).scaleEffect(0.85)
                             Text(isRecalculatingNutrition ? "Calculating..." : "Saving...")
                         } else {
-                            Image(systemName: "checkmark")
-                            Text("Save")
+                            Image(systemName: "checkmark"); Text("Save")
                         }
                     }
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.white)
+                    .font(.system(size: 15, weight: .bold)).foregroundColor(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
                     .background(Color.green).cornerRadius(16)
-                }
-                .disabled(isSaving || isRecalculatingNutrition)
+                }.disabled(isSaving || isRecalculatingNutrition)
             }
         } else {
-            
             VStack(spacing: 10) {
                 HStack(spacing: 12) {
-              
                     Button(action: startEditing) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "sparkles")
-                            Text("Fix Issue")
-                        }
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(themeManager.current.primaryText)
-                        .frame(maxWidth: .infinity).padding(.vertical, 16)
-                        .background(themeManager.current.cardBackground)
-                        .cornerRadius(16)
-                        .overlay(RoundedRectangle(cornerRadius: 16)
-                            .stroke(themeManager.current.cardBorder, lineWidth: 1.5))
+                        HStack(spacing: 6) { Image(systemName: "sparkles"); Text("Fix Issue") }
+                            .font(.system(size: 15, weight: .semibold)).foregroundColor(themeManager.current.primaryText)
+                            .frame(maxWidth: .infinity).padding(.vertical, 16)
+                            .background(themeManager.current.cardBackground).cornerRadius(16)
+                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1.5))
                     }
-
-              
                     Button(action: { dismiss() }) {
-                        Text("Done")
-                            .font(.system(size: 15, weight: .bold))
+                        Text("Done").font(.system(size: 15, weight: .bold))
                             .foregroundColor(themeManager.current == .dark ? .black : .white)
                             .frame(maxWidth: .infinity).padding(.vertical, 16)
-                            .background(themeManager.current == .dark ? Color.white : Color.black)
-                            .cornerRadius(16)
+                            .background(themeManager.current == .dark ? Color.white : Color.black).cornerRadius(16)
                     }
                 }
-
-            
                 Button(action: { showDeleteAlert = true }) {
                     HStack(spacing: 6) {
-                        if isDeleting {
-                            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .red)).scaleEffect(0.8)
-                        } else {
-                            Image(systemName: "trash")
-                        }
+                        if isDeleting { ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .red)).scaleEffect(0.8) }
+                        else { Image(systemName: "trash") }
                         Text(isDeleting ? "Deleting..." : "Delete Meal")
                     }
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.red.opacity(0.8))
+                    .font(.system(size: 14, weight: .medium)).foregroundColor(.red.opacity(0.8))
                     .frame(maxWidth: .infinity).padding(.vertical, 12)
-                }
-                .disabled(isDeleting)
+                }.disabled(isDeleting)
             }
         }
     }
 
-
+    // MARK: - Helpers
 
     func formatDate(_ date: Date) -> String {
         let f = DateFormatter(); f.dateFormat = "MMM d, yyyy"; return f.string(from: date)
@@ -363,7 +286,7 @@ struct MealDetailView: View {
         isEditing = true
         editedDishName = meal.dish_prediction
         editedVisibleIngredients = parseIngredientsToEditableFiltered(from: meal.image_description)
-        editedHiddenIngredients = parseIngredientsToEditableFiltered(from: meal.hidden_ingredients ?? "")
+        editedHiddenIngredients  = parseIngredientsToEditableFiltered(from: meal.hidden_ingredients ?? "")
         updatedNutritionInfo = meal.nutrition_info
         quantityInputs = [:]
         for ing in editedVisibleIngredients + editedHiddenIngredients { quantityInputs[ing.id] = ing.quantity }
@@ -381,36 +304,24 @@ struct MealDetailView: View {
 
     private func executeSave() {
         let ingredientsList = (editedVisibleIngredients + editedHiddenIngredients).map { ing in
-            let qty = quantityInputs[ing.id] ?? ing.quantity
-            let unit = displayUnit(for: ing)
-            return "\(ing.name) | \(qty) | \(unit)"
+            "\(ing.name) | \(quantityInputs[ing.id] ?? ing.quantity) | \(displayUnit(for: ing))"
         }.joined(separator: "\n")
 
         meal.dish_prediction = editedDishName
         meal.image_description = editedVisibleIngredients.map { ing in
-            let qty = quantityInputs[ing.id] ?? ing.quantity
-            let unit = displayUnit(for: ing)
-            return "\(ing.name) | \(qty) | \(unit) | User edited"
+            "\(ing.name) | \(quantityInputs[ing.id] ?? ing.quantity) | \(displayUnit(for: ing)) | User edited"
         }.joined(separator: "\n")
-
         let hiddenStr = editedHiddenIngredients.map { ing in
-            let qty = quantityInputs[ing.id] ?? ing.quantity
-            let unit = displayUnit(for: ing)
-            return "\(ing.name) | \(qty) | \(unit) | User edited"
+            "\(ing.name) | \(quantityInputs[ing.id] ?? ing.quantity) | \(displayUnit(for: ing)) | User edited"
         }.joined(separator: "\n")
         meal.hidden_ingredients = hiddenStr
 
         let mealDataForUpdate: [String: Any] = [
-            "meal_id": meal._id,
-            "dish_prediction": meal.dish_prediction,
-            "image_description": meal.image_description,
-            "hidden_ingredients": hiddenStr,
-            "nutrition_info": meal.nutrition_info,
-            "meal_type": meal.meal_type ?? "LUNCH"
+            "meal_id": meal._id, "dish_prediction": meal.dish_prediction,
+            "image_description": meal.image_description, "hidden_ingredients": hiddenStr,
+            "nutrition_info": meal.nutrition_info, "meal_type": meal.meal_type ?? "LUNCH"
         ]
-
         isEditing = false; dismiss()
-
         RecalculationManager.shared.startRecalculation(
             mealId: meal._id, ingredients: ingredientsList, mealData: mealDataForUpdate
         ) { _ in
@@ -454,11 +365,9 @@ struct MealDetailView: View {
             var unit = ""
             for i in 2..<parts.count {
                 let p = parts[i]
-                if p.lowercased() == "user edited" { continue }
-                if Double(p) != nil { continue }
+                if p.lowercased() == "user edited" || Double(p) != nil { continue }
                 unit = p; break
             }
-
             if unit.isEmpty { unit = guessIngredientUnit(for: name) }
             guard !name.isEmpty else { return nil }
             return EditableIngredient(id: name, name: name, quantity: quantity, unit: unit)
@@ -504,6 +413,139 @@ struct MealDetailView: View {
     }
 }
 
+// MARK: - IngredientTable (numbered, three-column table style)
+
+struct IngredientTable: View {
+    let ingredients: [EditableIngredient]
+    let themeManager: ThemeManager
+
+    private let initialRows = 6
+    @State private var showAll = false
+
+    private var displayed: [EditableIngredient] {
+        showAll ? ingredients : Array(ingredients.prefix(initialRows))
+    }
+    private var hiddenCount: Int { max(0, ingredients.count - initialRows) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            // Header row
+            HStack(spacing: 0) {
+                Rectangle()
+                    .fill(themeManager.current.primaryText.opacity(0.25))
+                    .frame(width: 3, height: 16).cornerRadius(2)
+                    .padding(.trailing, 8)
+                Text("INGREDIENTS")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(themeManager.current.secondaryText)
+                    .tracking(1.2)
+                Spacer()
+                Text("\(ingredients.count) items")
+                    .font(.system(size: 12))
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+            .padding(.horizontal, 14)
+            .padding(.top, 14)
+            .padding(.bottom, 10)
+
+            // Column labels
+            HStack(spacing: 0) {
+                // Placeholder for number column
+                Color.clear.frame(width: 36)
+                    .padding(.leading, 14)
+                Text("NAME")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55))
+                    .tracking(0.8)
+                Spacer()
+                Text("QTY")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55))
+                    .tracking(0.8)
+                    .frame(width: 56, alignment: .trailing)
+                Text("UNIT")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55))
+                    .tracking(0.8)
+                    .frame(width: 44, alignment: .trailing)
+                    .padding(.trailing, 14)
+            }
+            .padding(.bottom, 6)
+
+            Divider().background(themeManager.current.cardBorder)
+
+            // Data rows
+            ForEach(Array(displayed.enumerated()), id: \.element.id) { idx, ing in
+                VStack(spacing: 0) {
+                    HStack(spacing: 0) {
+                        // Row number
+                        Text("\(idx + 1)")
+                            .font(.system(size: 12))
+                            .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
+                            .frame(width: 22, alignment: .leading)
+                            .padding(.leading, 14)
+
+                        // Name
+                        Text(ing.name)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(themeManager.current.primaryText)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.leading, 4)
+
+                        // Quantity (bold)
+                        Text(ing.quantity)
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundColor(themeManager.current.primaryText)
+                            .frame(width: 56, alignment: .trailing)
+
+                        // Unit (muted)
+                        Text(ing.unit.isEmpty ? "—" : ing.unit)
+                            .font(.system(size: 13))
+                            .foregroundColor(themeManager.current.secondaryText.opacity(0.5))
+                            .frame(width: 44, alignment: .trailing)
+                            .padding(.trailing, 14)
+                    }
+                    .frame(height: 46)
+
+                    // Divider — skip after last visible row only if no "show more" button
+                    let isLast = idx == displayed.count - 1
+                    let willShowButton = ingredients.count > initialRows
+                    if !isLast || (isLast && willShowButton) {
+                        Divider()
+                            .background(themeManager.current.cardBorder.opacity(0.6))
+                            .padding(.leading, 36)
+                    }
+                }
+            }
+
+            // Show more / less
+            if ingredients.count > initialRows {
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { showAll.toggle() }
+                }) {
+                    HStack(spacing: 5) {
+                        Text(showAll ? "Show less" : "Show \(hiddenCount) more")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(themeManager.current.secondaryText)
+                        Image(systemName: showAll ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(themeManager.current.secondaryText.opacity(0.7))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .background(themeManager.current.cardBackground)
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
+    }
+}
+
+// MARK: - Supporting Components
 
 struct MetaPill: View {
     let icon: String; let text: String; let bg: Color; let fg: Color
@@ -518,14 +560,12 @@ struct MetaPill: View {
     }
 }
 
-
 struct ActionButton: View {
     let icon: String; let action: () -> Void
     var body: some View {
         Button(action: action) {
             Image(systemName: icon).font(.title3).foregroundColor(.white)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(Color.black.opacity(0.45)))
+                .frame(width: 40, height: 40).background(Circle().fill(Color.black.opacity(0.45)))
         }
     }
 }
@@ -543,7 +583,6 @@ struct InfoPill: View {
             .overlay(Capsule().stroke(color.opacity(0.2), lineWidth: 1)))
     }
 }
-
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
     func makeUIViewController(context: Context) -> UIActivityViewController {
