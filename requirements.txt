@@ -11,3 +11,5 @@ PyJWT==2.8.0
 pyjwt[crypto]
 pydantic>=2.0.0
 griffe>=0.38.0
+pymupdf
+python-docx
