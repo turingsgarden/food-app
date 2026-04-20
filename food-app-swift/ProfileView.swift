@@ -99,7 +99,7 @@ struct ProfileView: View {
             .alert("Help & Support", isPresented: $showHelpSupport) {
                 Button("Contact Support") { openEmailSupport() }
                 Button("Cancel", role: .cancel) {}
-            } message: { Text("For support, contact us at support@nutricam.com") }
+            } message: { Text("For support, contact us at nutrisnapofficially@gmail.com") }
            
             .sheet(isPresented: $showEditPersonalInfo) {
                 EditPersonalInfoView()
@@ -587,7 +587,7 @@ struct ProfileView: View {
     }
 
     func openEmailSupport() {
-        if let url = URL(string: "mailto:support@nutricam.com?subject=NutriCam%20Support%20Request") {
+        if let url = URL(string: "mailto:nutrisnapofficially@gmail.com?subject=NutriCam%20Support%20Request") {
             UIApplication.shared.open(url)
         }
     }
@@ -665,7 +665,7 @@ struct FullPrivacyPolicyView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                Text("Privacy Policy for NutriSnap\n\nLast updated: August 01, 2025\n\nWe collect email, usage data, photos, and location (with permission) to provide and improve our service. Contact: support@nutricam.com")
+                Text("Privacy Policy for NutriSnap\n\nLast updated: August 01, 2025\n\nWe collect email, usage data, photos, and location (with permission) to provide and improve our service. Contact: nutrisnapofficially@gmail.com")
                     .font(.system(size: 14)).foregroundColor(.primary).padding()
             }
             .navigationTitle("Privacy Policy").navigationBarTitleDisplayMode(.inline)

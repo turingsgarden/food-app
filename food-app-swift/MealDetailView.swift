@@ -6,9 +6,231 @@
 //
 //
 //  MealDetailView.swift
-//  food-app-swift
+//  food-app-swift — v2: AI Meal Insight card
 //
 import SwiftUI
+
+// MARK: - AI Insight Models
+
+struct MealInsight: Codable {
+    var mealId: String?
+    var macroScore: MacroScore?
+    var highlights: [IngredientHighlight]
+    var warnings: [NutrientWarning]
+    var tip: String
+    var generatedAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case mealId = "meal_id"
+        case macroScore = "macro_score"
+        case highlights, warnings, tip
+        case generatedAt = "generated_at"
+    }
+}
+
+struct MacroScore: Codable {
+    var rating: String   // "Balanced" / "High Sodium" / "Good" etc.
+    var color: String    // "green" / "orange" / "red"
+    var summary: String
+}
+
+struct IngredientHighlight: Codable, Identifiable {
+    var id: String { ingredient }
+    var ingredient: String
+    var badge: String
+    var note: String
+}
+
+struct NutrientWarning: Codable, Identifiable {
+    var id: String { nutrient }
+    var nutrient: String
+    var value: String
+    var note: String
+}
+
+// MARK: - AI Insight Card View
+
+struct MealInsightCard: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    let insight: MealInsight
+
+    var ratingColor: Color {
+        switch insight.macroScore?.color {
+        case "green":  return .green
+        case "orange": return .orange
+        case "red":    return .red
+        default:       return .gray
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            // ── Header ──────────────────────────────────────────────────────
+            HStack(spacing: 8) {
+                // Animated waveform icon
+                HStack(alignment: .bottom, spacing: 2) {
+                    ForEach([6, 12, 9, 15, 7].indices, id: \.self) { i in
+                        InsightWaveBar(height: CGFloat([6, 12, 9, 15, 7][i]),
+                                       delay: Double(i) * 0.1)
+                    }
+                }
+                .frame(height: 18)
+
+                Text("AI Analysis")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(Color(red: 0.76, green: 0.32, blue: 0.04))
+
+                Spacer()
+
+                // Macro score badge
+                if let score = insight.macroScore {
+                    Text(score.rating)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(ratingColor)
+                        .padding(.horizontal, 9).padding(.vertical, 4)
+                        .background(ratingColor.opacity(0.10))
+                        .cornerRadius(20)
+                        .overlay(RoundedRectangle(cornerRadius: 20)
+                            .stroke(ratingColor.opacity(0.25), lineWidth: 1))
+                }
+            }
+            .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 8)
+
+            // ── Macro summary ────────────────────────────────────────────────
+            if let summary = insight.macroScore?.summary, !summary.isEmpty {
+                Text(summary)
+                    .font(.system(size: 13))
+                    .foregroundColor(themeManager.current.secondaryText)
+                    .lineSpacing(3)
+                    .padding(.horizontal, 14).padding(.bottom, 12)
+            }
+
+            // ── Highlights ───────────────────────────────────────────────────
+            if !insight.highlights.isEmpty {
+                Divider().background(themeManager.current.cardBorder)
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("What you ate well", systemImage: "star.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.green)
+                        .padding(.bottom, 2)
+
+                    ForEach(insight.highlights) { h in
+                        HStack(alignment: .top, spacing: 10) {
+                            // Green badge
+                            Text(h.badge)
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.green)
+                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .background(Color.green.opacity(0.10))
+                                .cornerRadius(8)
+                                .fixedSize()
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(h.ingredient)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(themeManager.current.primaryText)
+                                Text(h.note)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(themeManager.current.secondaryText)
+                                    .lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 14).padding(.vertical, 12)
+            }
+
+            // ── Warnings ─────────────────────────────────────────────────────
+            if !insight.warnings.isEmpty {
+                Divider().background(themeManager.current.cardBorder)
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Watch out for", systemImage: "exclamationmark.triangle.fill")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.orange)
+                        .padding(.bottom, 2)
+
+                    ForEach(insight.warnings) { w in
+                        HStack(alignment: .top, spacing: 10) {
+                            // Value pill
+                            Text(w.value)
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.orange)
+                                .padding(.horizontal, 7).padding(.vertical, 3)
+                                .background(Color.orange.opacity(0.10))
+                                .cornerRadius(8)
+                                .fixedSize()
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(w.nutrient)
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(themeManager.current.primaryText)
+                                Text(w.note)
+                                    .font(.system(size: 12))
+                                    .foregroundColor(themeManager.current.secondaryText)
+                                    .lineSpacing(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 14).padding(.vertical, 12)
+            }
+
+            // ── Personalised tip ─────────────────────────────────────────────
+            if !insight.tip.isEmpty {
+                Divider().background(themeManager.current.cardBorder)
+                HStack(alignment: .top, spacing: 10) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(red:0.95,green:0.75,blue:0.20).opacity(0.15))
+                            .frame(width: 30, height: 30)
+                        Image(systemName: "lightbulb.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(red:0.95,green:0.75,blue:0.20))
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Next time")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(Color(red:0.75,green:0.55,blue:0.0))
+                            .textCase(.uppercase).tracking(0.4)
+                        Text(insight.tip)
+                            .font(.system(size: 13))
+                            .foregroundColor(themeManager.current.primaryText)
+                            .lineSpacing(3)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(.horizontal, 14).padding(.vertical, 12)
+            }
+        }
+        .background(Color.orange.opacity(0.04))
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .stroke(Color.orange.opacity(0.18), lineWidth: 1))
+    }
+}
+
+struct InsightWaveBar: View {
+    let height: CGFloat
+    let delay: Double
+    @State private var animating = false
+    var body: some View {
+        RoundedRectangle(cornerRadius: 1.5)
+            .fill(Color.orange)
+            .frame(width: 2.5, height: animating ? max(3, height * 0.3) : height)
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+                    withAnimation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
+                        animating = true
+                    }
+                }
+            }
+    }
+}
+
+// MARK: - MealDetailView
 
 struct MealDetailView: View {
     @EnvironmentObject var themeManager: ThemeManager
@@ -26,6 +248,11 @@ struct MealDetailView: View {
     @State private var updatedNutritionInfo: String = ""
     @State private var showSuccessToast = false
     @State private var toastMessage = ""
+
+    // AI insight
+    @State private var insight: MealInsight? = nil
+    @State private var isLoadingInsight = false
+
     @Environment(\.dismiss) var dismiss
 
     var allEditedIngredients: [EditableIngredient] { editedVisibleIngredients + editedHiddenIngredients }
@@ -45,6 +272,10 @@ struct MealDetailView: View {
                         titleAndMeta
                         BeautifulNutritionView(nutritionText: updatedNutritionInfo.isEmpty ? meal.nutrition_info : updatedNutritionInfo)
                             .environmentObject(themeManager)
+
+                        // AI Insight card — shown between nutrition and ingredients
+                        insightSection
+
                         ingredientsSection
                         actionButtons
                     }
@@ -89,6 +320,83 @@ struct MealDetailView: View {
             Button("Delete", role: .destructive) { deleteMeal() }
         } message: { Text("Are you sure you want to delete this meal? This action cannot be undone.") }
         .sheet(isPresented: $showShareSheet) { ShareSheet(items: [generateShareText()]) }
+        .onAppear { loadInsight() }
+    }
+
+    // MARK: - AI Insight Section
+
+    @ViewBuilder
+    var insightSection: some View {
+        if isLoadingInsight {
+            // Skeleton loader
+            HStack(spacing: 10) {
+                HStack(alignment: .bottom, spacing: 2) {
+                    ForEach([6, 12, 9, 15, 7].indices, id: \.self) { i in
+                        InsightWaveBar(height: CGFloat([6, 12, 9, 15, 7][i]),
+                                       delay: Double(i) * 0.1)
+                    }
+                }.frame(height: 18)
+                Text("AI is analysing this meal…")
+                    .font(.system(size: 13))
+                    .foregroundColor(themeManager.current.secondaryText)
+                Spacer()
+            }
+            .padding(14)
+            .background(Color.orange.opacity(0.04))
+            .cornerRadius(16)
+            .overlay(RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.orange.opacity(0.15), lineWidth: 1))
+        } else if let insight = insight {
+            MealInsightCard(insight: insight).environmentObject(themeManager)
+        }
+        // If nil and not loading, show nothing (e.g. network failed silently)
+    }
+
+    // MARK: - Load Insight
+
+    func loadInsight() {
+        // 1. Check if insight already saved in meal object
+        if let existing = meal.aiInsight {
+            self.insight = existing
+            return
+        }
+        // 2. Otherwise fetch/generate from backend
+        guard let token = SessionManager.shared.getAuthToken(),
+              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/meal-insight")
+        else { return }
+
+        isLoadingInsight = true
+
+        // Build ingredients string
+        let ingredientStr = allDisplayIngredients
+            .map { "\($0.name) | \($0.quantity) | \($0.unit)" }
+            .joined(separator: "\n")
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.timeoutInterval = 60
+
+        let body: [String: Any] = [
+            "meal_id":        meal._id,
+            "nutrition_info": meal.nutrition_info,
+            "dish_name":      meal.dish_prediction,
+            "ingredients":    ingredientStr
+        ]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            DispatchQueue.main.async {
+                self.isLoadingInsight = false
+                guard let data = data, error == nil,
+                      let decoded = try? JSONDecoder().decode(MealInsight.self, from: data)
+                else { return }
+                withAnimation(.easeIn(duration: 0.3)) {
+                    self.insight = decoded
+                }
+            }
+        }.resume()
     }
 
     // MARK: - Hero Image
@@ -237,9 +545,7 @@ struct MealDetailView: View {
                         if isSaving || isRecalculatingNutrition {
                             ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .white)).scaleEffect(0.85)
                             Text(isRecalculatingNutrition ? "Calculating..." : "Saving...")
-                        } else {
-                            Image(systemName: "checkmark"); Text("Save")
-                        }
+                        } else { Image(systemName: "checkmark"); Text("Save") }
                     }
                     .font(.system(size: 15, weight: .bold)).foregroundColor(.white)
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
@@ -376,9 +682,9 @@ struct MealDetailView: View {
 
     func guessIngredientUnit(for name: String) -> String {
         let n = name.lowercased()
-        if n.contains("oil") || n.contains("sauce") || n.contains("milk") || n.contains("water") || n.contains("vinegar") { return "ml" }
-        if n.contains("salt") || n.contains("pepper") || n.contains("spice") || n.contains("powder") { return "tsp" }
-        if n.contains("bread") || n.contains("egg") || n.contains("slice") || n.contains("piece") { return "pcs" }
+        if n.contains("oil")||n.contains("sauce")||n.contains("milk")||n.contains("water")||n.contains("vinegar") { return "ml" }
+        if n.contains("salt")||n.contains("pepper")||n.contains("spice")||n.contains("powder") { return "tsp" }
+        if n.contains("bread")||n.contains("egg")||n.contains("slice")||n.contains("piece") { return "pcs" }
         return "g"
     }
 
@@ -398,9 +704,9 @@ struct MealDetailView: View {
 
     func guessUnit(for name: String) -> String {
         let n = name.lowercased()
-        if n.contains("bread") || n.contains("egg") || n.contains("slice") { return "pcs" }
-        if n.contains("salt") || n.contains("pepper") || n.contains("spice") { return "tsp" }
-        if n.contains("oil") || n.contains("sauce") || n.contains("milk") { return "ml" }
+        if n.contains("bread")||n.contains("egg")||n.contains("slice") { return "pcs" }
+        if n.contains("salt")||n.contains("pepper")||n.contains("spice") { return "tsp" }
+        if n.contains("oil")||n.contains("sauce")||n.contains("milk") { return "ml" }
         return "g"
     }
 
@@ -413,134 +719,80 @@ struct MealDetailView: View {
     }
 }
 
-// MARK: - IngredientTable (numbered, three-column table style)
+// MARK: - IngredientTable
 
 struct IngredientTable: View {
     let ingredients: [EditableIngredient]
     let themeManager: ThemeManager
-
     private let initialRows = 6
     @State private var showAll = false
-
-    private var displayed: [EditableIngredient] {
-        showAll ? ingredients : Array(ingredients.prefix(initialRows))
-    }
+    private var displayed: [EditableIngredient] { showAll ? ingredients : Array(ingredients.prefix(initialRows)) }
     private var hiddenCount: Int { max(0, ingredients.count - initialRows) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-
-            // Header row
             HStack(spacing: 0) {
-                Rectangle()
-                    .fill(themeManager.current.primaryText.opacity(0.25))
-                    .frame(width: 3, height: 16).cornerRadius(2)
-                    .padding(.trailing, 8)
-                Text("INGREDIENTS")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(themeManager.current.secondaryText)
-                    .tracking(1.2)
+                Rectangle().fill(themeManager.current.primaryText.opacity(0.25))
+                    .frame(width: 3, height: 16).cornerRadius(2).padding(.trailing, 8)
+                Text("INGREDIENTS").font(.system(size: 11, weight: .bold))
+                    .foregroundColor(themeManager.current.secondaryText).tracking(1.2)
                 Spacer()
-                Text("\(ingredients.count) items")
-                    .font(.system(size: 12))
+                Text("\(ingredients.count) items").font(.system(size: 12))
                     .foregroundColor(themeManager.current.secondaryText)
             }
-            .padding(.horizontal, 14)
-            .padding(.top, 14)
-            .padding(.bottom, 10)
+            .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 10)
 
-            // Column labels
             HStack(spacing: 0) {
-                // Placeholder for number column
-                Color.clear.frame(width: 36)
-                    .padding(.leading, 14)
-                Text("NAME")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55))
-                    .tracking(0.8)
+                Color.clear.frame(width: 36).padding(.leading, 14)
+                Text("NAME").font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55)).tracking(0.8)
                 Spacer()
-                Text("QTY")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55))
-                    .tracking(0.8)
+                Text("QTY").font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55)).tracking(0.8)
                     .frame(width: 56, alignment: .trailing)
-                Text("UNIT")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55))
-                    .tracking(0.8)
-                    .frame(width: 44, alignment: .trailing)
-                    .padding(.trailing, 14)
-            }
-            .padding(.bottom, 6)
+                Text("UNIT").font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(themeManager.current.secondaryText.opacity(0.55)).tracking(0.8)
+                    .frame(width: 44, alignment: .trailing).padding(.trailing, 14)
+            }.padding(.bottom, 6)
 
             Divider().background(themeManager.current.cardBorder)
 
-            // Data rows
             ForEach(Array(displayed.enumerated()), id: \.element.id) { idx, ing in
                 VStack(spacing: 0) {
                     HStack(spacing: 0) {
-                        // Row number
-                        Text("\(idx + 1)")
-                            .font(.system(size: 12))
+                        Text("\(idx + 1)").font(.system(size: 12))
                             .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
-                            .frame(width: 22, alignment: .leading)
-                            .padding(.leading, 14)
-
-                        // Name
-                        Text(ing.name)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(themeManager.current.primaryText)
-                            .lineLimit(1)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.leading, 4)
-
-                        // Quantity (bold)
-                        Text(ing.quantity)
-                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .frame(width: 22, alignment: .leading).padding(.leading, 14)
+                        Text(ing.name).font(.system(size: 14, weight: .medium))
+                            .foregroundColor(themeManager.current.primaryText).lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 4)
+                        Text(ing.quantity).font(.system(size: 14, weight: .bold, design: .rounded))
                             .foregroundColor(themeManager.current.primaryText)
                             .frame(width: 56, alignment: .trailing)
-
-                        // Unit (muted)
-                        Text(ing.unit.isEmpty ? "—" : ing.unit)
-                            .font(.system(size: 13))
+                        Text(ing.unit.isEmpty ? "—" : ing.unit).font(.system(size: 13))
                             .foregroundColor(themeManager.current.secondaryText.opacity(0.5))
-                            .frame(width: 44, alignment: .trailing)
-                            .padding(.trailing, 14)
-                    }
-                    .frame(height: 46)
-
-                    // Divider — skip after last visible row only if no "show more" button
+                            .frame(width: 44, alignment: .trailing).padding(.trailing, 14)
+                    }.frame(height: 46)
                     let isLast = idx == displayed.count - 1
-                    let willShowButton = ingredients.count > initialRows
-                    if !isLast || (isLast && willShowButton) {
-                        Divider()
-                            .background(themeManager.current.cardBorder.opacity(0.6))
-                            .padding(.leading, 36)
+                    if !isLast || (isLast && ingredients.count > initialRows) {
+                        Divider().background(themeManager.current.cardBorder.opacity(0.6)).padding(.leading, 36)
                     }
                 }
             }
 
-            // Show more / less
             if ingredients.count > initialRows {
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { showAll.toggle() }
-                }) {
+                Button(action: { withAnimation(.spring(response:0.3,dampingFraction:0.8)) { showAll.toggle() } }) {
                     HStack(spacing: 5) {
                         Text(showAll ? "Show less" : "Show \(hiddenCount) more")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(themeManager.current.secondaryText)
+                            .font(.system(size: 13, weight: .medium)).foregroundColor(themeManager.current.secondaryText)
                         Image(systemName: showAll ? "chevron.up" : "chevron.down")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundColor(themeManager.current.secondaryText.opacity(0.7))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                }
-                .buttonStyle(.plain)
+                    }.frame(maxWidth: .infinity).padding(.vertical, 12)
+                }.buttonStyle(.plain)
             }
         }
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(16)
+        .background(themeManager.current.cardBackground).cornerRadius(16)
         .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
     }
 }
@@ -554,8 +806,7 @@ struct MetaPill: View {
             Image(systemName: icon).font(.system(size: 11, weight: .medium))
             Text(text).font(.system(size: 12, weight: .medium))
         }
-        .foregroundColor(fg)
-        .padding(.horizontal, 10).padding(.vertical, 6)
+        .foregroundColor(fg).padding(.horizontal, 10).padding(.vertical, 6)
         .background(RoundedRectangle(cornerRadius: 20).fill(bg))
     }
 }
@@ -577,16 +828,16 @@ struct InfoPill: View {
             Image(systemName: icon).font(.caption)
             Text(text).font(.caption).fontWeight(.medium)
         }
-        .foregroundColor(color)
-        .padding(.horizontal, 10).padding(.vertical, 6)
+        .foregroundColor(color).padding(.horizontal, 10).padding(.vertical, 6)
         .background(Capsule().fill(color.opacity(0.12))
             .overlay(Capsule().stroke(color.opacity(0.2), lineWidth: 1)))
     }
 }
+
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
     func makeUIViewController(context: Context) -> UIActivityViewController {
         UIActivityViewController(activityItems: items, applicationActivities: nil)
     }
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+    func updateUIViewController(_ uvc: UIActivityViewController, context: Context) {}
 }
