@@ -1,8 +1,10 @@
-//  BatchUploadView.swift
-//  food-app-swift
+
+//  BeautifulNutritionView.swift
+//  food-app-swift — v2
 //
-//  Created by Helen Tu on 3/2/26.
-//
+//  MealInsight, InsightWaveBar, MacroPieChart, DonutSlice, CollapsibleInsightPanel
+//  are all defined in MealDetailView.swift — NOT repeated here.
+
 import SwiftUI
 
 struct BeautifulNutritionView: View {
@@ -140,10 +142,13 @@ struct BeautifulNutritionView: View {
 
 // MARK: - Range Popup
 
+
 struct NutrientRangePopup: View {
     @EnvironmentObject var themeManager: ThemeManager
     let item: NutritionItem
     let onDismiss: () -> Void
+
+    @State private var appeared = false
 
     var displayUnit: String {
         if Double(item.unit) != nil || item.unit.isEmpty {
@@ -209,9 +214,15 @@ struct NutrientRangePopup: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.6).ignoresSafeArea().onTapGesture { onDismiss() }
+            // ── 背景蒙层：淡入 ─────────────────────────────────────────────
+            Color.black
+                .opacity(appeared ? 0.55 : 0)
+                .ignoresSafeArea()
+                .onTapGesture { dismiss() }
 
+            // ── 弹窗主体：从下方弹入 ────────────────────────────────────────
             VStack(spacing: 0) {
+                // Header
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(label.uppercased())
@@ -222,7 +233,7 @@ struct NutrientRangePopup: View {
                             .foregroundColor(themeManager.current.secondaryText)
                     }
                     Spacer()
-                    Button(action: onDismiss) {
+                    Button(action: { dismiss() }) {
                         Image(systemName: "xmark.circle.fill").font(.title3)
                             .foregroundColor(themeManager.current.secondaryText)
                     }
@@ -231,6 +242,7 @@ struct NutrientRangePopup: View {
 
                 Divider().background(themeManager.current.cardBorder)
 
+                // MIN / EST / MAX
                 HStack(alignment: .bottom, spacing: 0) {
                     VStack(spacing: 4) {
                         Text("MIN").font(.system(size: 9, weight: .bold, design: .monospaced))
@@ -261,6 +273,7 @@ struct NutrientRangePopup: View {
                 }
                 .padding(.horizontal, 20).padding(.vertical, 20)
 
+                // Track
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
                         RoundedRectangle(cornerRadius: 4).fill(themeManager.current.inputBackground).frame(height: 6)
@@ -298,11 +311,27 @@ struct NutrientRangePopup: View {
                                 Color.white.opacity(0.08) :
                                 themeManager.current.cardBorder, lineWidth: 1))
             )
-            .padding(.horizontal, 24)
-            .shadow(color: .black.opacity(0.3), radius: 30)
-            .transition(.scale(scale: 0.9).combined(with: .opacity))
+            .padding(.horizontal, 28)
+            // 进场：从下方滑入 + 轻微缩放 + 淡入
+            .offset(y: appeared ? 0 : 60)
+            .scaleEffect(appeared ? 1 : 0.94, anchor: .bottom)
+            .opacity(appeared ? 1 : 0)
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: true)
+        .onAppear {
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.7)) {
+                appeared = true
+            }
+        }
+    }
+
+    private func dismiss() {
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.85)) {
+            appeared = false
+        }
+        // 等动画结束再回调
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
+            onDismiss()
+        }
     }
 }
 

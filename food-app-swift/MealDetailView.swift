@@ -5,8 +5,9 @@
 //  Created by Helen Tu on 3/17/26.
 //
 //
+//
 //  MealDetailView.swift
-//  food-app-swift — v2: AI Meal Insight card
+//  food-app-swift — v3: CollapsibleInsightPanel below ingredients
 //
 import SwiftUI
 
@@ -48,11 +49,150 @@ struct NutrientWarning: Codable, Identifiable {
     var note: String
 }
 
-// MARK: - AI Insight Card View
+// MARK: - Emoji Helper
 
-struct MealInsightCard: View {
+private func ingredientEmoji(for name: String) -> String {
+    let n = name.lowercased()
+    if n.contains("spinach") || n.contains("kale") || n.contains("lettuce") || n.contains("arugula") { return "🥬" }
+    if n.contains("broccoli") { return "🥦" }
+    if n.contains("carrot") { return "🥕" }
+    if n.contains("tomato") { return "🍅" }
+    if n.contains("avocado") { return "🥑" }
+    if n.contains("egg") { return "🥚" }
+    if n.contains("chicken") { return "🍗" }
+    if n.contains("beef") || n.contains("steak") { return "🥩" }
+    if n.contains("fish") || n.contains("salmon") || n.contains("tuna") { return "🐟" }
+    if n.contains("shrimp") || n.contains("prawn") { return "🍤" }
+    if n.contains("cheese") { return "🧀" }
+    if n.contains("milk") || n.contains("yogurt") { return "🥛" }
+    if n.contains("butter") { return "🧈" }
+    if n.contains("olive oil") || n.contains("oil") { return "🫒" }
+    if n.contains("garlic") { return "🧄" }
+    if n.contains("onion") { return "🧅" }
+    if n.contains("lemon") || n.contains("lime") { return "🍋" }
+    if n.contains("mushroom") { return "🍄" }
+    if n.contains("rice") { return "🍚" }
+    if n.contains("pasta") || n.contains("noodle") { return "🍝" }
+    if n.contains("bread") { return "🍞" }
+    if n.contains("potato") { return "🥔" }
+    if n.contains("corn") { return "🌽" }
+    if n.contains("pepper") || n.contains("chili") { return "🌶️" }
+    if n.contains("cucumber") { return "🥒" }
+    if n.contains("pea") || n.contains("bean") { return "🫛" }
+    if n.contains("nut") || n.contains("almond") || n.contains("walnut") { return "🥜" }
+    if n.contains("apple") { return "🍎" }
+    if n.contains("banana") { return "🍌" }
+    if n.contains("berry") || n.contains("strawberry") { return "🍓" }
+    if n.contains("salt") { return "🧂" }
+    if n.contains("sauce") || n.contains("vinegar") { return "🫙" }
+    if n.contains("herb") || n.contains("basil") || n.contains("parsley") { return "🌿" }
+    return "🥗"
+}
+
+// MARK: - Donut Chart
+
+struct MacroDonutChart: View {
+    let protein: Double
+    let carbs: Double
+    let fat: Double
+
+    private var total: Double { protein + carbs + fat }
+
+    private var slices: [(label: String, value: Double, color: Color)] {
+        [
+            ("Protein", protein * 4, Color(red: 0.3, green: 0.7, blue: 1.0)),
+            ("Carbs",   carbs  * 4, Color(red: 0.4, green: 0.9, blue: 0.5)),
+            ("Fat",     fat    * 9, Color(red: 1.0, green: 0.75, blue: 0.3))
+        ]
+    }
+
+    private var totalCals: Double { slices.reduce(0) { $0 + $1.value } }
+
+    var body: some View {
+        HStack(spacing: 20) {
+            ZStack {
+                DonutShape(slices: slices, totalCals: totalCals)
+                    .frame(width: 100, height: 100)
+                VStack(spacing: 1) {
+                    Text(totalCals > 0 ? "\(Int(totalCals))" : "—")
+                        .font(.system(size: 18, weight: .black, design: .rounded))
+                        .foregroundColor(.primary)
+                    Text("kcal")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.orange)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(slices.enumerated()), id: \.offset) { _, slice in
+                    HStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(slice.color)
+                            .frame(width: 10, height: 10)
+                        Text(slice.label)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.primary)
+                        Spacer()
+                        let grams: Double = slice.label == "Protein" ? protein
+                                          : slice.label == "Carbs"   ? carbs : fat
+                        Text("\(Int(grams))g")
+                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                        if totalCals > 0 {
+                            Text("(\(Int((slice.value / totalCals) * 100))%)")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct DonutShape: View {
+    let slices: [(label: String, value: Double, color: Color)]
+    let totalCals: Double
+
+    var body: some View {
+        Canvas { context, size in
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let outerR = min(size.width, size.height) / 2
+            let innerR = outerR * 0.55
+            var startAngle = Angle(degrees: -90)
+
+            for slice in slices {
+                guard totalCals > 0 else { continue }
+                let fraction = slice.value / totalCals
+                let endAngle = startAngle + Angle(degrees: fraction * 360)
+
+                var path = Path()
+                path.addArc(center: center, radius: outerR, startAngle: startAngle, endAngle: endAngle, clockwise: false)
+                path.addArc(center: center, radius: innerR, startAngle: endAngle, endAngle: startAngle, clockwise: true)
+                path.closeSubpath()
+
+                context.fill(path, with: .color(slice.color))
+                startAngle = endAngle
+            }
+
+            if totalCals == 0 {
+                var path = Path()
+                path.addArc(center: center, radius: outerR, startAngle: .degrees(-90), endAngle: .degrees(270), clockwise: false)
+                path.addArc(center: center, radius: innerR, startAngle: .degrees(270), endAngle: .degrees(-90), clockwise: true)
+                path.closeSubpath()
+                context.fill(path, with: .color(Color.gray.opacity(0.2)))
+            }
+        }
+    }
+}
+
+// MARK: - Collapsible Insight Panel
+
+struct CollapsibleInsightPanel: View {
     @EnvironmentObject var themeManager: ThemeManager
     let insight: MealInsight
+    @State private var isExpanded = false
 
     var ratingColor: Color {
         switch insight.macroScore?.color {
@@ -63,152 +203,227 @@ struct MealInsightCard: View {
         }
     }
 
+    // Parse macro grams from summary string (fallback to 0 if not found)
+    private func parseMacros() -> (protein: Double, carbs: Double, fat: Double) {
+        let summary = insight.macroScore?.summary ?? ""
+        func extract(_ keyword: String) -> Double {
+            let pattern = "(\\d+(?:\\.\\d+)?)\\s*g?\\s*\(keyword)"
+            if let r = summary.range(of: pattern, options: [.regularExpression, .caseInsensitive]) {
+                let match = String(summary[r])
+                let nums = match.components(separatedBy: CharacterSet.decimalDigits.inverted)
+                    .filter { !$0.isEmpty }
+                return Double(nums.first ?? "") ?? 0
+            }
+            return 0
+        }
+        return (extract("protein"), extract("carb"), extract("fat"))
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
 
-            // ── Header ──────────────────────────────────────────────────────
-            HStack(spacing: 8) {
-                // Animated waveform icon
-                HStack(alignment: .bottom, spacing: 2) {
-                    ForEach([6, 12, 9, 15, 7].indices, id: \.self) { i in
-                        InsightWaveBar(height: CGFloat([6, 12, 9, 15, 7][i]),
-                                       delay: Double(i) * 0.1)
-                    }
+            // ── Collapsed header (always visible) ────────────────────────────
+            Button(action: {
+                withAnimation(.spring(response: 0.38, dampingFraction: 0.82)) {
+                    isExpanded.toggle()
                 }
-                .frame(height: 18)
-
-                Text("AI Analysis")
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(Color(red: 0.76, green: 0.32, blue: 0.04))
-
-                Spacer()
-
-                // Macro score badge
-                if let score = insight.macroScore {
-                    Text(score.rating)
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(ratingColor)
-                        .padding(.horizontal, 9).padding(.vertical, 4)
-                        .background(ratingColor.opacity(0.10))
-                        .cornerRadius(20)
-                        .overlay(RoundedRectangle(cornerRadius: 20)
-                            .stroke(ratingColor.opacity(0.25), lineWidth: 1))
-                }
-            }
-            .padding(.horizontal, 14).padding(.top, 14).padding(.bottom, 8)
-
-            // ── Macro summary ────────────────────────────────────────────────
-            if let summary = insight.macroScore?.summary, !summary.isEmpty {
-                Text(summary)
-                    .font(.system(size: 13))
-                    .foregroundColor(themeManager.current.secondaryText)
-                    .lineSpacing(3)
-                    .padding(.horizontal, 14).padding(.bottom, 12)
-            }
-
-            // ── Highlights ───────────────────────────────────────────────────
-            if !insight.highlights.isEmpty {
-                Divider().background(themeManager.current.cardBorder)
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("What you ate well", systemImage: "star.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.green)
-                        .padding(.bottom, 2)
-
-                    ForEach(insight.highlights) { h in
-                        HStack(alignment: .top, spacing: 10) {
-                            // Green badge
-                            Text(h.badge)
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.green)
-                                .padding(.horizontal, 7).padding(.vertical, 3)
-                                .background(Color.green.opacity(0.10))
-                                .cornerRadius(8)
-                                .fixedSize()
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(h.ingredient)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(themeManager.current.primaryText)
-                                Text(h.note)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(themeManager.current.secondaryText)
-                                    .lineSpacing(2)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
+            }) {
+                HStack(spacing: 8) {
+                    // Animated waveform
+                    HStack(alignment: .bottom, spacing: 2) {
+                        ForEach([6, 12, 9, 15, 7].indices, id: \.self) { i in
+                            InsightWaveBar(height: CGFloat([6, 12, 9, 15, 7][i]),
+                                           delay: Double(i) * 0.1)
                         }
                     }
-                }
-                .padding(.horizontal, 14).padding(.vertical, 12)
-            }
+                    .frame(height: 18)
 
-            // ── Warnings ─────────────────────────────────────────────────────
-            if !insight.warnings.isEmpty {
-                Divider().background(themeManager.current.cardBorder)
-                VStack(alignment: .leading, spacing: 8) {
-                    Label("Watch out for", systemImage: "exclamationmark.triangle.fill")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundColor(.orange)
-                        .padding(.bottom, 2)
+                    Text("AI Analysis")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(Color(red: 0.76, green: 0.32, blue: 0.04))
 
-                    ForEach(insight.warnings) { w in
-                        HStack(alignment: .top, spacing: 10) {
-                            // Value pill
-                            Text(w.value)
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.orange)
-                                .padding(.horizontal, 7).padding(.vertical, 3)
-                                .background(Color.orange.opacity(0.10))
-                                .cornerRadius(8)
-                                .fixedSize()
+                    Spacer()
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(w.nutrient)
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundColor(themeManager.current.primaryText)
-                                Text(w.note)
-                                    .font(.system(size: 12))
-                                    .foregroundColor(themeManager.current.secondaryText)
-                                    .lineSpacing(2)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
+                    if let score = insight.macroScore {
+                        Text(score.rating)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(ratingColor)
+                            .padding(.horizontal, 9).padding(.vertical, 4)
+                            .background(ratingColor.opacity(0.10))
+                            .cornerRadius(20)
+                            .overlay(RoundedRectangle(cornerRadius: 20)
+                                .stroke(ratingColor.opacity(0.25), lineWidth: 1))
                     }
-                }
-                .padding(.horizontal, 14).padding(.vertical, 12)
-            }
 
-            // ── Personalised tip ─────────────────────────────────────────────
-            if !insight.tip.isEmpty {
-                Divider().background(themeManager.current.cardBorder)
-                HStack(alignment: .top, spacing: 10) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(red:0.95,green:0.75,blue:0.20).opacity(0.15))
-                            .frame(width: 30, height: 30)
-                        Image(systemName: "lightbulb.fill")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color(red:0.95,green:0.75,blue:0.20))
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Next time")
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(Color(red:0.75,green:0.55,blue:0.0))
-                            .textCase(.uppercase).tracking(0.4)
-                        Text(insight.tip)
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(Color(red: 0.76, green: 0.32, blue: 0.04).opacity(0.7))
+                }
+                .padding(.horizontal, 14).padding(.vertical, 13)
+            }
+            .buttonStyle(.plain)
+
+            // ── Expanded content ──────────────────────────────────────────────
+            if isExpanded {
+                Divider().background(Color.orange.opacity(0.15))
+
+                VStack(alignment: .leading, spacing: 0) {
+
+                    // Macro summary text
+                    if let summary = insight.macroScore?.summary, !summary.isEmpty {
+                        Text(summary)
                             .font(.system(size: 13))
-                            .foregroundColor(themeManager.current.primaryText)
+                            .foregroundColor(themeManager.current.secondaryText)
                             .lineSpacing(3)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 14).padding(.top, 12).padding(.bottom, 4)
+                    }
+
+                    // Donut chart
+                    let macros = parseMacros()
+                    if macros.protein > 0 || macros.carbs > 0 || macros.fat > 0 {
+                        MacroDonutChart(protein: macros.protein,
+                                        carbs:   macros.carbs,
+                                        fat:     macros.fat)
+                            .environmentObject(themeManager)
+                            .padding(.horizontal, 14).padding(.top, 8).padding(.bottom, 12)
+                    }
+
+                    // Highlights
+                    if !insight.highlights.isEmpty {
+                        Divider().background(Color.orange.opacity(0.12))
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("What you ate well", systemImage: "star.fill")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.green)
+                                .padding(.bottom, 2)
+
+                            ForEach(insight.highlights) { h in
+                                HStack(alignment: .top, spacing: 10) {
+                                    // Emoji + badge
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.green.opacity(0.10))
+                                            .frame(width: 36, height: 36)
+                                        VStack(spacing: 1) {
+                                            Text(ingredientEmoji(for: h.ingredient))
+                                                .font(.system(size: 14))
+                                            Text(h.badge)
+                                                .font(.system(size: 8, weight: .bold))
+                                                .foregroundColor(.green)
+                                        }
+                                    }
+                                    .fixedSize()
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(h.ingredient)
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(themeManager.current.primaryText)
+                                        Text(h.note)
+                                            .font(.system(size: 12))
+                                            .foregroundColor(themeManager.current.secondaryText)
+                                            .lineSpacing(2)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 14).padding(.vertical, 12)
+                    }
+
+                    // Warnings
+                    if !insight.warnings.isEmpty {
+                        Divider().background(Color.orange.opacity(0.12))
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label("Watch out for", systemImage: "exclamationmark.triangle.fill")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.orange)
+                                .padding(.bottom, 2)
+
+                            ForEach(insight.warnings) { w in
+                                HStack(alignment: .top, spacing: 10) {
+                                    Text(w.value)
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(.orange)
+                                        .padding(.horizontal, 7).padding(.vertical, 3)
+                                        .background(Color.orange.opacity(0.10))
+                                        .cornerRadius(8)
+                                        .fixedSize()
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(w.nutrient)
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundColor(themeManager.current.primaryText)
+                                        Text(w.note)
+                                            .font(.system(size: 12))
+                                            .foregroundColor(themeManager.current.secondaryText)
+                                            .lineSpacing(2)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 14).padding(.vertical, 12)
+                    }
+
+                    // Next time tip
+                    if !insight.tip.isEmpty {
+                        Divider().background(Color.orange.opacity(0.12))
+                        HStack(alignment: .top, spacing: 10) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(red: 0.95, green: 0.75, blue: 0.20).opacity(0.15))
+                                    .frame(width: 30, height: 30)
+                                Image(systemName: "lightbulb.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(Color(red: 0.95, green: 0.75, blue: 0.20))
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Next time")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(Color(red: 0.75, green: 0.55, blue: 0.0))
+                                    .textCase(.uppercase).tracking(0.4)
+                                Text(insight.tip)
+                                    .font(.system(size: 13))
+                                    .foregroundColor(themeManager.current.primaryText)
+                                    .lineSpacing(3)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .padding(.horizontal, 14).padding(.vertical, 12)
                     }
                 }
-                .padding(.horizontal, 14).padding(.vertical, 12)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .background(Color.orange.opacity(0.04))
         .cornerRadius(16)
         .overlay(RoundedRectangle(cornerRadius: 16)
             .stroke(Color.orange.opacity(0.18), lineWidth: 1))
+    }
+}
+
+// MARK: - Loading skeleton (reused from old insightSection)
+
+struct InsightLoadingRow: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    var body: some View {
+        HStack(spacing: 10) {
+            HStack(alignment: .bottom, spacing: 2) {
+                ForEach([6, 12, 9, 15, 7].indices, id: \.self) { i in
+                    InsightWaveBar(height: CGFloat([6, 12, 9, 15, 7][i]),
+                                   delay: Double(i) * 0.1)
+                }
+            }.frame(height: 18)
+            Text("AI is analysing this meal…")
+                .font(.system(size: 13))
+                .foregroundColor(themeManager.current.secondaryText)
+            Spacer()
+        }
+        .padding(14)
+        .background(Color.orange.opacity(0.04))
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .stroke(Color.orange.opacity(0.15), lineWidth: 1))
     }
 }
 
@@ -273,10 +488,12 @@ struct MealDetailView: View {
                         BeautifulNutritionView(nutritionText: updatedNutritionInfo.isEmpty ? meal.nutrition_info : updatedNutritionInfo)
                             .environmentObject(themeManager)
 
-                        // AI Insight card — shown between nutrition and ingredients
-                        insightSection
-
+                        // Ingredients table (no insight between nutrition and here)
                         ingredientsSection
+
+                        // AI Insight panel — below ingredients, collapsible
+                        aiInsightSection
+
                         actionButtons
                     }
                     .padding(.horizontal, 16)
@@ -323,51 +540,31 @@ struct MealDetailView: View {
         .onAppear { loadInsight() }
     }
 
-    // MARK: - AI Insight Section
+    // MARK: - AI Insight Section (below ingredients)
 
     @ViewBuilder
-    var insightSection: some View {
+    var aiInsightSection: some View {
         if isLoadingInsight {
-            // Skeleton loader
-            HStack(spacing: 10) {
-                HStack(alignment: .bottom, spacing: 2) {
-                    ForEach([6, 12, 9, 15, 7].indices, id: \.self) { i in
-                        InsightWaveBar(height: CGFloat([6, 12, 9, 15, 7][i]),
-                                       delay: Double(i) * 0.1)
-                    }
-                }.frame(height: 18)
-                Text("AI is analysing this meal…")
-                    .font(.system(size: 13))
-                    .foregroundColor(themeManager.current.secondaryText)
-                Spacer()
-            }
-            .padding(14)
-            .background(Color.orange.opacity(0.04))
-            .cornerRadius(16)
-            .overlay(RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.orange.opacity(0.15), lineWidth: 1))
+            InsightLoadingRow().environmentObject(themeManager)
         } else if let insight = insight {
-            MealInsightCard(insight: insight).environmentObject(themeManager)
+            CollapsibleInsightPanel(insight: insight).environmentObject(themeManager)
         }
-        // If nil and not loading, show nothing (e.g. network failed silently)
+        // If nil and not loading — show nothing, network failed silently
     }
 
     // MARK: - Load Insight
 
     func loadInsight() {
-        // 1. Check if insight already saved in meal object
         if let existing = meal.aiInsight {
             self.insight = existing
             return
         }
-        // 2. Otherwise fetch/generate from backend
         guard let token = SessionManager.shared.getAuthToken(),
               let url = URL(string: "https://food-app-swift-qb4k.onrender.com/meal-insight")
         else { return }
 
         isLoadingInsight = true
 
-        // Build ingredients string
         let ingredientStr = allDisplayIngredients
             .map { "\($0.name) | \($0.quantity) | \($0.unit)" }
             .joined(separator: "\n")
@@ -781,7 +978,7 @@ struct IngredientTable: View {
             }
 
             if ingredients.count > initialRows {
-                Button(action: { withAnimation(.spring(response:0.3,dampingFraction:0.8)) { showAll.toggle() } }) {
+                Button(action: { withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) { showAll.toggle() } }) {
                     HStack(spacing: 5) {
                         Text(showAll ? "Show less" : "Show \(hiddenCount) more")
                             .font(.system(size: 13, weight: .medium)).foregroundColor(themeManager.current.secondaryText)
