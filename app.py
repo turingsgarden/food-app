@@ -1723,38 +1723,16 @@ def _ocr_via_vision_api(img_b64: str) -> dict:
 #  Paste this route into app.py, after the /get-health-report endpoint
 #  Also add the helper function _generate_meal_insight_text() below the route
 # ─────────────────────────────────────────────────────────────────────────────
-
 @app.route("/meal-insight", methods=["POST"])
 @token_required
 @db_required
 def meal_insight():
-    """
-    Generate a personalised AI insight for a saved meal.
-    Called once when the meal is saved; result stored in meals.ai_insight.
-
-    Request JSON:
-      {
-        "meal_id":        "<mongo _id string>",
-        "nutrition_info": "<pipe-separated nutrition text>",
-        "dish_name":      "Kale Salad with Mozzarella",
-        "ingredients":    "<pipe-separated ingredient text>"   # optional
-      }
-
-    Response JSON:
-      {
-        "meal_id": "...",
-        "macro_score": { "rating": "Good"|"Fair"|"High Fat"|..., "color": "green"|"orange"|"red", "summary": "..." },
-        "highlights": [ { "ingredient": "Kale", "badge": "⭐ High Fiber", "note": "..." }, ... ],
-        "warnings":   [ { "nutrient": "Sodium", "value": "985 mg", "note": "..." }, ... ],
-        "tip":        "Personalised one-line actionable suggestion"
-      }
-    """
     try:
         data = request.get_json()
         if not data:
             return jsonify({"error": "Empty request"}), 400
 
-        meal_id       = data.get("meal_id", "")
+        meal_id        = data.get("meal_id", "")
         nutrition_info = data.get("nutrition_info", "")
         dish_name      = data.get("dish_name", "this meal")
         ingredients    = data.get("ingredients", "")
@@ -1762,13 +1740,11 @@ def meal_insight():
         if not nutrition_info:
             return jsonify({"error": "nutrition_info required"}), 400
 
-        # ── Fetch user health profile & report for personalisation ──────────
         health_profile = db["health_profiles"].find_one({"user_id": request.user_id}) or {}
         health_report  = db["health_reports"].find_one(
             {"user_id": request.user_id}, sort=[("created_at", -1)]
         ) or {}
 
-        # ── Call Gemini ──────────────────────────────────────────────────────
         if not gemini_model:
             return jsonify({"error": "AI service unavailable"}), 503
 
@@ -1781,10 +1757,9 @@ def meal_insight():
             gemini_model=gemini_model
         )
 
-        insight["meal_id"] = meal_id
+        insight["meal_id"]      = meal_id
         insight["generated_at"] = datetime.now().isoformat()
 
-        # ── Persist to meals collection ──────────────────────────────────────
         if meal_id:
             try:
                 meals_collection.update_one(
@@ -1805,13 +1780,9 @@ def meal_insight():
         return jsonify({"error": str(e)}), 500
 
 
-# ── Helper ────────────────────────────────────────────────────────────────────
-
 def _generate_meal_insight(dish_name, nutrition_info, ingredients,
                             health_profile, health_report, gemini_model):
-    """Ask Gemini to produce a structured meal insight JSON."""
 
-    # Build context strings
     profile_ctx = ""
     if health_profile:
         bmi   = health_profile.get("weight_kg", 0) / ((health_profile.get("height_cm", 170) / 100) ** 2)
@@ -1831,9 +1802,12 @@ def _generate_meal_insight(dish_name, nutrition_info, ingredients,
         profile_ctx = "; ".join(parts)
 
     goals_ctx = ""
+    daily_cal  = 0
+    daily_prot = 0
+    daily_sod  = 0
     if health_report:
-        goals = health_report.get("goals", [])
-        daily_cal = health_report.get("daily_calories", 0)
+        goals      = health_report.get("goals", [])
+        daily_cal  = health_report.get("daily_calories", 0)
         daily_prot = health_report.get("protein_g", 0)
         daily_sod  = health_report.get("sodium_mg", 0)
         goals_ctx  = (
@@ -1856,37 +1830,51 @@ USER HEALTH CONTEXT:
 
 USER GOALS & DAILY TARGETS:
 {goals_ctx if goals_ctx else "No targets set"}
+Daily calorie target: {daily_cal or "unknown"} kcal
+Daily protein target: {daily_prot or "unknown"} g
+Daily sodium target:  {daily_sod or "2000"} mg
 
 Return ONLY a valid JSON object with EXACTLY this structure (no markdown, no extra keys):
 {{
   "macro_score": {{
     "rating": "<one of: Balanced / High Sodium / High Fat / Low Protein / High Calorie / Good>",
     "color":  "<one of: green / orange / red>",
-    "summary": "<1 sentence, e.g. 'Good macro balance but sodium is above your daily target.'>"
+    "summary": "<1 sentence overall summary>"
   }},
   "highlights": [
     {{
       "ingredient": "<ingredient name>",
-      "badge": "<short badge, e.g. 'High Fiber' / 'Good Protein' / 'Rich in Omega-3'>",
-      "note": "<1 sentence why it's good for this user specifically>"
+      "badge": "<short badge e.g. High Fiber / Good Protein / Rich in Omega-3>",
+      "note": "<1 sentence why it is good for this specific user>"
     }}
   ],
   "warnings": [
     {{
       "nutrient": "<nutrient name>",
-      "value": "<value with unit, e.g. '985 mg'>",
+      "value": "<value with unit e.g. 985 mg>",
       "note": "<1 sentence actionable advice>"
     }}
   ],
-  "tip": "<1 personalised actionable sentence for next time, max 20 words>"
+  "tip": "<1 personalised actionable sentence for next time, max 20 words>",
+  "nutrient_insights": {{
+    "calories":  {{ "status": "<ok|high|low>", "insight": "<1 sentence about this nutrient for this user>", "suggestion": "<1 concrete actionable sentence>" }},
+    "protein":   {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
+    "fat":       {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
+    "carbs":     {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
+    "fiber":     {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
+    "sugar":     {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
+    "sodium":    {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }}
+  }}
 }}
 
 Rules:
-- highlights: 1-3 items, only genuinely positive ingredients worth praising
+- highlights: 1-3 items, genuinely positive ingredients only
 - warnings: 0-2 items, only if a nutrient clearly exceeds healthy limits or the user's specific condition
-- If the user has high blood pressure, flag high sodium; if diabetic risk, flag high sugar
+- nutrient_insights: fill ALL 7 keys. status is "ok" unless clearly high or low vs daily targets or standard limits
+- If user has high blood pressure, be extra strict on sodium
+- If diabetic risk, be extra strict on sugar
 - tip must be specific to this user's goals, not generic
-- Keep all text concise and friendly"""
+- All text concise and friendly, no jargon"""
 
     resp = gemini_model.generate_content(prompt)
     raw  = resp.text.strip().replace("```json", "").replace("```", "").strip()
@@ -1898,11 +1886,17 @@ Rules:
 
     result = json.loads(raw)
 
-    # Sanitise structure
     result.setdefault("macro_score", {"rating": "N/A", "color": "gray", "summary": ""})
     result.setdefault("highlights", [])
     result.setdefault("warnings",   [])
     result.setdefault("tip", "")
+
+    # Ensure all 7 nutrient keys exist with safe defaults
+    default_ni = {"status": "ok", "insight": "", "suggestion": ""}
+    ni = result.setdefault("nutrient_insights", {})
+    for key in ["calories", "protein", "fat", "carbs", "fiber", "sugar", "sodium"]:
+        ni.setdefault(key, default_ni.copy())
+
     return result
 
 
@@ -1911,7 +1905,6 @@ def _bmi_category(bmi):
     if bmi < 25:   return "Normal"
     if bmi < 30:   return "Overweight"
     return "Obese"
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Starting on port {port}")

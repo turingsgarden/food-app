@@ -266,7 +266,7 @@ struct EditHealthProfileView: View {
                         .foregroundColor(.blue)
                 }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Scan Lab Report")
+                    Text("Scan Your Health Report")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundColor(themeManager.current.primaryText)
                     Text("Auto-fill values from a photo, PDF, or Word document")  // ← updated subtitle
