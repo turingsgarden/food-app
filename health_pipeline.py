@@ -1,6 +1,4 @@
 # health_pipeline.py
-# Health Agent — AI 逻辑层
-# 新增：generate_health_report() — 基于健康档案生成报告 + 推荐食物 + 营养建议
 
 import google.generativeai as genai
 import os
@@ -10,6 +8,7 @@ import traceback
 import concurrent.futures
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from meal_analyzer import analyze_meal_history
 
 load_dotenv()
 
@@ -471,3 +470,184 @@ def calculate_bmi(height_cm: float, weight_kg: float) -> dict:
     elif bmi < 30:   cat = "Overweight"
     else:            cat = "Obese"
     return {"bmi": bmi, "category": cat}
+
+
+
+
+
+
+def generate_health_report(profile: dict, goals: list, gemini_model,
+                           meal_history: list = None) -> dict:
+    """
+    Generate a personalized health report.
+ 
+    Integrates meal_analyzer's 3-tier weighted time window analysis so that
+    food recommendations are grounded in the user's actual eating patterns,
+    not just their clinical markers.
+ 
+    Parameters:
+        profile:      HealthProfile dict (height, weight, BP, glucose, etc.)
+        goals:        List of health goal strings
+        gemini_model: Gemini model instance
+        meal_history: List of meal dicts from the last 90 days (optional).
+                      Fetched in app.py before calling this function.
+ 
+    Returns:
+        dict matching the HealthReport Swift model, plus meal_analysis_meta.
+    """
+    import json
+    from meal_analyzer import analyze_meal_history
+ 
+    # Analyze meal history using 3-tier weighted windows
+    meal_analysis    = analyze_meal_history(meal_history or [])
+    meal_summary     = meal_analysis["summary_text"]
+    has_meal_data    = len(meal_analysis["frequent_foods"]) > 0
+ 
+    # Basic derived metrics
+    height_m = profile.get("height_cm", 170) / 100
+    weight   = profile.get("weight_kg", 70)
+    bmi      = round(weight / (height_m ** 2), 1) if height_m > 0 else 0
+ 
+    dietary_prefs = ", ".join(profile.get("dietary_preferences", [])) or "None"
+    allergens     = ", ".join(profile.get("allergens", [])) or "None"
+ 
+    # Nutrient gap shorthand for use inside the prompt
+    recent_nutrients = meal_analysis["nutrient_averages"].get("recent", {})
+    avg_protein      = recent_nutrients.get("protein", "unknown")
+    avg_sodium       = recent_nutrients.get("sodium",  "unknown")
+ 
+    prompt = f"""You are a professional nutritionist. Generate a personalized health report.
+ 
+=== USER HEALTH PROFILE ===
+Age: {profile.get("age", 25)}, Sex: {profile.get("sex", "unknown")}
+Height: {profile.get("height_cm", 170)}cm, Weight: {weight}kg, BMI: {bmi}
+Blood Pressure: {profile.get("systolic_bp", "N/A")}/{profile.get("diastolic_bp", "N/A")} mmHg
+Fasting Blood Sugar: {profile.get("fasting_blood_sugar", "N/A")} mmol/L
+Total Cholesterol: {profile.get("total_cholesterol", "N/A")} mmol/L
+Triglycerides: {profile.get("triglycerides", "N/A")} mmol/L
+Health Goals: {", ".join(goals) if goals else "General wellness"}
+Dietary Preferences: {dietary_prefs}
+Allergens to avoid: {allergens}
+ 
+=== MEAL HISTORY ANALYSIS (3-tier weighted: 7d/30d/90d) ===
+{meal_summary}
+ 
+=== YOUR TASK ===
+ 
+Follow these four steps explicitly in your reasoning:
+ 
+STEP 1 — INTERPRET MEAL DATA:
+- What does this user actually eat regularly?
+- What cooking styles do they prefer?
+- Which nutrients are consistently low (deficient) or high (excessive)?
+- Is their recent diet better or worse than their long-term baseline?
+ 
+STEP 2 — IDENTIFY HEALTH PRIORITIES:
+- Which clinical markers need attention?
+- What dietary changes would have the highest impact?
+- What must be excluded due to allergens or dietary preferences?
+ 
+STEP 3 — GENERATE FOOD RECOMMENDATIONS (most important step):
+Rules for the 6 recommendations:
+- At least 3 must directly address identified nutrient deficiencies or excesses.
+- Foods should fit the user's existing taste profile where possible.
+  Example: if they eat a lot of chicken, suggest a healthier chicken preparation
+  rather than asking them to switch to a completely unfamiliar protein.
+- If a food category is completely absent from their history, suggest an
+  approachable entry point for that category.
+- Each "reason" field MUST be specific — never generic.
+  BAD:  "Rich in protein, which is important for health."
+  GOOD: "Your recent meals average only {avg_protein}g protein/day (reference: 50g).
+         Adding edamame to your stir-fry dishes — which you already cook regularly —
+         would boost protein without changing your preferred cooking style."
+  GOOD: "Your sodium intake is running high ({avg_sodium}mg/day vs. 2300mg reference).
+         Replacing regular soy sauce with low-sodium versions in your frequent
+         stir-fry meals could reduce sodium by ~30% with minimal taste change."
+ 
+STEP 4 — FOODS TO LIMIT:
+Base this on what the user actually eats frequently, not generic advice.
+ 
+Respond ONLY with valid JSON — no markdown, no explanation:
+{{
+  "health_score": <integer 0-100>,
+  "health_summary": "<2-3 sentences referencing the user's ACTUAL eating patterns>",
+  "status_badge": "<Excellent|Good|Fair|Needs Attention>",
+  "daily_calories": <integer>,
+  "protein_g": <integer>,
+  "carbs_g": <integer>,
+  "fat_g": <integer>,
+  "fiber_g": <integer>,
+  "sodium_mg": <integer>,
+  "weekly_calories": <integer>,
+  "attention_items": [
+    {{
+      "metric": "<metric name>",
+      "current_value": "<value with unit>",
+      "status": "<normal|borderline|high|low>",
+      "advice": "<specific, actionable advice>"
+    }}
+  ],
+  "recommended_foods": [
+    {{
+      "food": "<food name>",
+      "reason": "<specific reason referencing meal data or clinical marker — see STEP 3>",
+      "analysis_basis": "<meal_history_pattern|clinical_marker|dietary_preference|general_health>",
+      "dishes": ["<dish idea 1>", "<dish idea 2>", "<dish idea 3>"]
+    }}
+  ],
+  "foods_to_limit": ["<food 1>", "<food 2>", "<food 3>"],
+  "lifestyle_tip": "<specific tip based on the user's actual patterns>"
+}}
+ 
+Constraints:
+- recommended_foods: exactly 6 items
+- attention_items: 2-5 items (omit metrics with N/A data)
+- All recommendations must respect allergens and dietary preferences
+- If meal data coverage is below 30%, acknowledge the limited data in health_summary
+"""
+ 
+    response = gemini_model.generate_content(prompt)
+    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
+ 
+    # Extract JSON safely (defensive against Gemini adding surrounding text)
+    start = raw.find("{")
+    end   = raw.rfind("}") + 1
+    if start >= 0 and end > start:
+        raw = raw[start:end]
+ 
+    result = json.loads(raw)
+ 
+    # Fill in defaults for any missing fields
+    defaults = {
+        "health_score":    70,
+        "health_summary":  "Health analysis complete.",
+        "status_badge":    "Good",
+        "daily_calories":  2000,
+        "protein_g":       100,
+        "carbs_g":         250,
+        "fat_g":           65,
+        "fiber_g":         25,
+        "sodium_mg":       2300,
+        "attention_items":    [],
+        "recommended_foods":  [],
+        "foods_to_limit":     [],
+        "lifestyle_tip":   "Stay consistent with your healthy habits.",
+    }
+    for key, value in defaults.items():
+        result.setdefault(key, value)
+ 
+    result["weekly_calories"] = result.get(
+        "weekly_calories", result["daily_calories"] * 7
+    )
+ 
+    # Attach analysis metadata for transparency (optionally displayed in iOS)
+    result["meal_analysis_meta"] = {
+        "has_meal_data": has_meal_data,
+        "data_coverage": meal_analysis["data_coverage"],
+        "top_foods":     [f["food"] for f in meal_analysis["frequent_foods"][:5]],
+        "nutrient_gaps": meal_analysis["nutrient_gaps"],
+    }
+ 
+    return result
+ 
+ 
