@@ -1174,11 +1174,38 @@ def generate_health_report_route():
             if plan:
                 goals = plan.get("goals", [])
 
+
+        # Fetch last 90 days of meals for personalized recommendations
+        meal_history = list(db["meals"].find(
+            {
+                "user_id": request.user_id,
+                "saved_at": {
+                    "$gte": (datetime.now() - timedelta(days=90)).isoformat()
+                }
+            },
+            {
+                "dish_prediction":   1,
+                "image_description": 1,
+                "nutrition_info":    1,
+                "meal_type":         1,
+                "saved_at":          1,
+            },
+            sort=[("saved_at", -1)]
+        ))
+        for m in meal_history:
+            m.pop("_id", None)
+
+
+
+
+        
+
         # 生成报告
         result = generate_health_report(
             profile=profile,
             goals=goals,
-            gemini_model=gemini_model
+            gemini_model=gemini_model,
+            meal_history=meal_history,
         )
 
         result["user_id"] = request.user_id
