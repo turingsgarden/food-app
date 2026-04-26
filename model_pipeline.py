@@ -11,7 +11,7 @@ from io import BytesIO
 import traceback
 
 # Load environment variables
-load_dotenv()
+load_dotenv(dotenv_path="/scratch/ht2604/food-app/.env")
 
 # Gemini API Setup
 GEN_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -19,7 +19,7 @@ if not GEN_API_KEY:
     raise ValueError("GEMINI_API_KEY is not set in environment variables.")
 
 genai.configure(api_key=GEN_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-1.5-flash')
+gemini_model = genai.GenerativeModel('gemini-2.5-flash')
 
 # MongoDB Setup
 mongo_uri = os.getenv("MONGO_URI")
