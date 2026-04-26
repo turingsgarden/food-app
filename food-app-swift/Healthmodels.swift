@@ -357,8 +357,13 @@ struct AttentionItem: Codable, Identifiable {
  
 struct RecommendedFood: Codable, Identifiable {
     var id: String { food }
-    var food: String
-    var reason: String
-    var dishes: [String]
+    let food:          String
+    let reason:        String
+    let dishes:        [String]
+    let analysisBasis: String?
+
+    enum CodingKeys: String, CodingKey {
+        case food, reason, dishes
+        case analysisBasis = "analysis_basis"
+    }
 }
- 
