@@ -3,8 +3,6 @@
 //
 //  Created by Helen Tu on 4/8/26.
 
-
-
 import SwiftUI
 
 struct DietPlanView: View {
@@ -22,7 +20,6 @@ struct DietPlanView: View {
     @State private var showError = false
     @State private var showProfileSetup = false
     @State private var expandedFoodIndex: Int? = nil
-    // ✅ 7天更新提示
     @State private var showRefreshPrompt = false
 
     var currentUserId: String {
@@ -55,17 +52,17 @@ struct DietPlanView: View {
                 Button("OK", role: .cancel) {}
             } message: { Text(errorMsg) }
             .sheet(isPresented: $showProfileSetup) {
-                    EditHealthProfileView(
-                        existingProfile: healthProfile,
-                        onComplete: { [self] profile in
-                            DispatchQueue.main.async {
-                                self.healthProfile = profile
-                                self.generateReport(force: true)
-                            }
+                EditHealthProfileView(
+                    existingProfile: healthProfile,
+                    onComplete: { [self] profile in
+                        DispatchQueue.main.async {
+                            self.healthProfile = profile
+                            self.generateReport(force: true)
                         }
-                    )
-                    .environmentObject(themeManager)
-                }
+                    }
+                )
+                .environmentObject(themeManager)
+            }
             .sheet(isPresented: $showShareSheet) {
                 ShareSheet(items: shareItems)
             }
@@ -75,9 +72,6 @@ struct DietPlanView: View {
                     .presentationDragIndicator(.hidden)
                     .environmentObject(themeManager)
             }
-            .sheet(isPresented: $showShareSheet) {
-                ShareSheet(items: shareItems)
-            }            // ✅ 7天期限提示弹窗
             .alert("Update Your Health Plan?", isPresented: $showRefreshPrompt) {
                 Button("Yes, Regenerate") { generateReport(force: true) }
                 Button("Keep Current Plan", role: .cancel) {}
@@ -107,7 +101,6 @@ struct DietPlanView: View {
                 self.isLoading = false
                 if let report = report {
                     self.healthReport = report
-                    // ✅ 检查是否超过7天
                     self.checkReportAge(report: report)
                 } else {
                     self.generateReport(force: false)
@@ -116,7 +109,6 @@ struct DietPlanView: View {
         }
     }
 
-    // ✅ 检查报告是否超过7天
     func checkReportAge(report: HealthReport) {
         guard let createdAtStr = report.createdAt else { return }
         let f1 = ISO8601DateFormatter()
@@ -152,41 +144,33 @@ struct DietPlanView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
 
-                // ── Header ──────────────────────────────────────────────────
                 reportHeader(report: report)
                     .padding(.horizontal, 20).padding(.top, 16).padding(.bottom, 20)
 
-                // ── Score + Summary (no card border, just background fill) ──
                 healthScoreSection(report: report)
                     .padding(.horizontal, 20).padding(.bottom, 24)
 
-                // ── Nutrition (no box, just inline rows with dividers) ───────
                 nutritionSection(report: report)
                     .padding(.bottom, 24)
 
-                // ── Health Indicators (no individual boxes, unified list) ───
                 if !report.attentionItems.isEmpty {
                     attentionSection(items: report.attentionItems)
                         .padding(.horizontal, 20).padding(.bottom, 24)
                 }
 
-                // ── Recommended Foods (horizontal scroll cards) ─────────────
                 if !report.recommendedFoods.isEmpty {
                     recommendedFoodsSection(foods: report.recommendedFoods)
                         .padding(.bottom, 24)
                 }
 
-                // ── Foods to Limit (inline tags, no box) ────────────────────
                 if !report.foodsToLimit.isEmpty {
                     foodsToLimitSection(foods: report.foodsToLimit)
                         .padding(.horizontal, 20).padding(.bottom, 24)
                 }
 
-                // ── Lifestyle Tip (subtle, no border) ───────────────────────
                 lifestyleTipCard(tip: report.lifestyleTip)
                     .padding(.horizontal, 20).padding(.bottom, 20)
 
-                // ── Update button ────────────────────────────────────────────
                 Button(action: { generateReport(force: true) }) {
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.clockwise")
@@ -204,11 +188,10 @@ struct DietPlanView: View {
         }
     }
 
-    // MARK: - Health Score Section (no card border)
+    // MARK: - Health Score Section
 
     func healthScoreSection(report: HealthReport) -> some View {
         HStack(spacing: 20) {
-            // Score ring
             ZStack {
                 Circle().stroke(Color.gray.opacity(0.1), lineWidth: 10).frame(width: 90, height: 90)
                 Circle().trim(from: 0, to: CGFloat(report.healthScore) / 100.0)
@@ -244,11 +227,10 @@ struct DietPlanView: View {
             .stroke(scoreColor(report.healthScore).opacity(0.2), lineWidth: 1.5))
     }
 
-    // MARK: - Nutrition Section (clean, no inner boxes)
+    // MARK: - Nutrition Section
 
     func nutritionSection(report: HealthReport) -> some View {
         VStack(spacing: 0) {
-            // Header row
             HStack(alignment: .center) {
                 Text("Daily Nutrition")
                     .padding(.leading, 20)
@@ -263,11 +245,9 @@ struct DietPlanView: View {
                         .font(.system(size: 12))
                         .foregroundColor(themeManager.current.secondaryText)
                 }
-                .padding(.trailing, 0)
             }
             .padding(.horizontal, 20).padding(.bottom, 12)
 
-            // Donut + legend
             HStack(spacing: 16) {
                 macroDonut(
                     protein: report.proteinG,
@@ -294,15 +274,14 @@ struct DietPlanView: View {
 
                 Spacer()
             }
-            .padding(.leading, 60)   // ← 这一行把整个 donut+legend 往右推
+            .padding(.leading, 60)
             .padding(.trailing, 20)
             .padding(.bottom, 12)
 
             Divider().padding(.horizontal, 20).padding(.bottom, 10)
 
-            // Fiber & Sodium
             HStack(spacing: 0) {
-                microRow("Fiber",  value: "\(report.fiberG)g",   color: Color(red: 0.35, green: 0.75, blue: 0.45))
+                microRow("Fiber",  value: "\(report.fiberG)g",    color: Color(red: 0.35, green: 0.75, blue: 0.45))
                 Divider().frame(height: 28)
                 microRow("Sodium", value: "\(report.sodiumMg)mg", color: Color(red: 0.75, green: 0.35, blue: 0.85))
             }
@@ -310,7 +289,6 @@ struct DietPlanView: View {
         }
     }
 
-    // Macro donut using Canvas for a clean pie chart
     func macroDonut(protein: Int, carbs: Int, fat: Int, total: Int) -> some View {
         let proteinCal = Double(protein * 4)
         let carbsCal   = Double(carbs * 4)
@@ -374,7 +352,7 @@ struct DietPlanView: View {
         .frame(maxWidth: .infinity).padding(.horizontal, 12)
     }
 
-    // MARK: - Attention Section (unified card, no individual boxes)
+    // MARK: - Attention Section
 
     func attentionSection(items: [AttentionItem]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -388,9 +366,7 @@ struct DietPlanView: View {
                     let color: Color = item.status == "normal" ? .green
                         : item.status == "borderline" ? .orange : .red
                     HStack(spacing: 12) {
-                        // Status dot
-                        Circle().fill(color).frame(width: 8, height: 8)
-                            .padding(.top, 2)
+                        Circle().fill(color).frame(width: 8, height: 8).padding(.top, 2)
                         VStack(alignment: .leading, spacing: 3) {
                             HStack {
                                 Text(item.metric)
@@ -422,11 +398,12 @@ struct DietPlanView: View {
         }
     }
 
-    // MARK: - Recommended Foods (horizontal scroll, expandable cards)
+    // MARK: - Recommended Foods
 
     func recommendedFoodsSection(foods: [RecommendedFood]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header
+
+            // ── Header ──────────────────────────────────────────────────────
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Recommended Foods")
@@ -445,12 +422,24 @@ struct DietPlanView: View {
             }
             .padding(.horizontal, 20)
 
-            // AI source banner (slim)
+            // ── Legend row：解释 badge 含义 ──────────────────────────────────
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    legendPill(label: "❤️ Clinical",  color: .red,    desc: "Clinical marker")
+                    legendPill(label: "⚡ Nutrient",  color: .orange, desc: "Nutrition gap")
+                    legendPill(label: "🍽 Meals",     color: .blue,   desc: "Meal pattern")
+                    legendPill(label: "🌿 Diet",      color: .green,  desc: "Dietary pref")
+                    legendPill(label: "✅ Balance",   color: .teal,   desc: "General health")
+                }
+                .padding(.horizontal, 20)
+            }
+
+            // ── AI source banner ─────────────────────────────────────────────
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(.purple)
-                Text("Based on your meal history tracking and health profile")
+                Text("Based on your meal history, nutrition gaps & clinical markers")
                     .font(.system(size: 12))
                     .foregroundColor(themeManager.current.secondaryText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -460,7 +449,7 @@ struct DietPlanView: View {
             .cornerRadius(10)
             .padding(.horizontal, 20)
 
-            // Horizontal scroll
+            // ── Cards ────────────────────────────────────────────────────────
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: 12) {
                     ForEach(Array(foods.enumerated()), id: \.offset) { idx, food in
@@ -471,6 +460,19 @@ struct DietPlanView: View {
                 .padding(.vertical, 4)
             }
         }
+    }
+
+    // ── Legend pill（新增，解释每个 badge 的含义）────────────────────────────
+    func legendPill(label: String, color: Color, desc: String) -> some View {
+        HStack(spacing: 4) {
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(color)
+        }
+        .padding(.horizontal, 8).padding(.vertical, 4)
+        .background(color.opacity(0.08))
+        .cornerRadius(20)
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(color.opacity(0.2), lineWidth: 1))
     }
 
     func expandableFoodCard(food: RecommendedFood, idx: Int) -> some View {
@@ -484,7 +486,8 @@ struct DietPlanView: View {
                 }
             }) {
                 VStack(alignment: .leading, spacing: 10) {
-                    // Emoji tile + basis badge
+
+                    // ── Emoji + basis badge ──────────────────────────────────
                     HStack(alignment: .top) {
                         Text(foodEmoji(food.food))
                             .font(.system(size: 28))
@@ -497,14 +500,14 @@ struct DietPlanView: View {
                         }
                     }
 
-                    // Food name
+                    // ── Food name ────────────────────────────────────────────
                     Text(food.food)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(themeManager.current.primaryText)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    // Reason — collapsed: 3 lines; expanded: full text
+                    // ── Reason ───────────────────────────────────────────────
                     Text(food.reason)
                         .font(.system(size: 11))
                         .foregroundColor(themeManager.current.secondaryText)
@@ -512,7 +515,7 @@ struct DietPlanView: View {
                         .lineLimit(isExpanded ? nil : 3)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    // Expand hint
+                    // ── Expand hint ──────────────────────────────────────────
                     HStack(spacing: 4) {
                         Text(isExpanded ? "Hide dishes" : "Try these")
                             .font(.system(size: 11, weight: .semibold))
@@ -526,7 +529,7 @@ struct DietPlanView: View {
             }
             .buttonStyle(.plain)
 
-            // Expanded: dish ideas
+            // ── Expanded: dish ideas ─────────────────────────────────────────
             if isExpanded {
                 Divider().background(themeManager.current.cardBorder).padding(.horizontal, 14)
                 VStack(alignment: .leading, spacing: 8) {
@@ -550,30 +553,46 @@ struct DietPlanView: View {
         .frame(width: cardWidth)
         .background(themeManager.current.cardBackground)
         .cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(themeManager.current.cardBorder, lineWidth: 1))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(basisBorderColor(food.analysisBasis), lineWidth: 1.5)  // ← 新增：border 颜色跟 badge 一致
+        )
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isExpanded)
     }
 
-    // Analysis basis badge
+    // ── 修改后的 basisBadge：新增 nutrition_gap 和 general_health ────────────
     @ViewBuilder
     func basisBadge(_ basis: String) -> some View {
         let config: (String, Color) = {
             switch basis {
-            case "meal_history_pattern": return ("🍽 Meals", .blue)
-            case "clinical_marker":      return ("❤️ Health", .red)
-            case "dietary_preference":   return ("🌿 Pref", .green)
-            default:                     return ("✨", .gray)
+            case "clinical_marker":      return ("❤️ Clinical",  .red)
+            case "nutrition_gap":        return ("⚡ Nutrient",   .orange)
+            case "meal_history_pattern": return ("🍽 Meals",      .blue)
+            case "dietary_preference":   return ("🌿 Diet",       .green)
+            case "general_health":       return ("✅ Balance",    .teal)
+            default:                     return ("✨ Tip",        .gray)
             }
         }()
         Text(config.0)
             .font(.system(size: 10, weight: .semibold))
             .foregroundColor(config.1)
             .padding(.horizontal, 6).padding(.vertical, 3)
-            .background(config.1.opacity(0.1))
+            .background(config.1.opacity(0.12))
             .cornerRadius(6)
     }
 
-    // MARK: - Foods to Limit (no box, just inline section)
+    // ── 新增：card border 颜色跟 badge 对应，优先级越高颜色越鲜明 ─────────────
+    func basisBorderColor(_ basis: String?) -> Color {
+        switch basis {
+        case "clinical_marker":      return Color.red.opacity(0.3)
+        case "nutrition_gap":        return Color.orange.opacity(0.3)
+        case "meal_history_pattern": return Color.blue.opacity(0.2)
+        case "dietary_preference":   return Color.green.opacity(0.2)
+        default:                     return themeManager.current.cardBorder
+        }
+    }
+
+    // MARK: - Foods to Limit
 
     func foodsToLimitSection(foods: [String]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -596,9 +615,10 @@ struct DietPlanView: View {
         }
     }
 
+    // MARK: - Header
+
     func reportHeader(report: HealthReport) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            // 标题行
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Health Report")
@@ -612,9 +632,7 @@ struct DietPlanView: View {
                 }
                 Spacer()
 
-                // 右上角按钮组
                 HStack(spacing: 8) {
-                    // Edit Profile
                     Button(action: { showProfileSetup = true }) {
                         HStack(spacing: 4) {
                             Image(systemName: "pencil")
@@ -628,7 +646,6 @@ struct DietPlanView: View {
                         .cornerRadius(20)
                     }
 
-                    // "..." Menu
                     Menu {
                         Button(action: {
                             if let r = healthReport {
@@ -638,15 +655,10 @@ struct DietPlanView: View {
                         }) {
                             Label("Share as Text", systemImage: "square.and.arrow.up")
                         }
-
-                        Button(action: {
-                            exportReportAsPDF(report: report)
-                        }) {
+                        Button(action: { exportReportAsPDF(report: report) }) {
                             Label("Export as PDF", systemImage: "arrow.down.doc.fill")
                         }
-
                         Divider()
-
                         Button(action: { generateReport(force: true) }) {
                             Label("Generate New Plan", systemImage: "arrow.clockwise")
                         }
@@ -662,6 +674,9 @@ struct DietPlanView: View {
             }
         }
     }
+
+    // MARK: - Menu Sheet
+
     var menuSheet: some View {
         VStack(spacing: 0) {
             Capsule()
@@ -710,39 +725,32 @@ struct DietPlanView: View {
         }
         .buttonStyle(.plain)
     }
-    
-    
-    
+
+    // MARK: - PDF Export
+
     @MainActor
     func exportReportAsPDF(report: HealthReport) {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else { return }
-
-        // 渲染整个 report 为图片
+              let _ = windowScene.windows.first else { return }
         let renderer = ImageRenderer(
             content: reportView(report: report)
                 .frame(width: 390)
                 .environmentObject(themeManager)
         )
         renderer.scale = UIScreen.main.scale
-
         guard let uiImage = renderer.uiImage else { return }
-
-        // 图片转 PDF data
         let pdfRenderer = UIGraphicsPDFRenderer(bounds: CGRect(origin: .zero, size: uiImage.size))
         let pdfData = pdfRenderer.pdfData { ctx in
             ctx.beginPage()
             uiImage.draw(at: .zero)
         }
-
-        // 存临时文件
         let tmpURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("HealthReport.pdf")
         try? pdfData.write(to: tmpURL)
-
         shareItems = [tmpURL]
         showShareSheet = true
     }
+
     func buildShareText(_ report: HealthReport) -> String {
         var t = "📊 My Health Report\nUpdated: \(report.createdAt.map { formatDate($0) } ?? "Today")\n\n"
         t += "Score: \(report.healthScore)/100 — \(report.statusBadge)\n\(report.healthSummary)\n\n"
@@ -756,7 +764,9 @@ struct DietPlanView: View {
         t += "\n💡 \(report.lifestyleTip)\n\n— NutriSnap"
         return t
     }
-    
+
+    // MARK: - Helpers
+
     func scoreColor(_ score: Int) -> Color {
         if score >= 80 { return .green }
         if score >= 60 { return .orange }
@@ -791,30 +801,49 @@ struct DietPlanView: View {
             Image(systemName: "lightbulb.fill").font(.system(size: 20))
                 .foregroundColor(Color(red: 0.95, green: 0.75, blue: 0.20))
             VStack(alignment: .leading, spacing: 4) {
-                Text("Daily Habit Tip").font(.system(size: 12, weight: .bold)).foregroundColor(themeManager.current.secondaryText)
+                Text("Daily Habit Tip")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(themeManager.current.secondaryText)
                     .textCase(.uppercase).tracking(0.4)
-                Text(tip).font(.system(size: 14)).foregroundColor(themeManager.current.primaryText)
+                Text(tip)
+                    .font(.system(size: 14))
+                    .foregroundColor(themeManager.current.primaryText)
                     .lineSpacing(3).fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(16).background(Color(red: 0.95, green: 0.75, blue: 0.20).opacity(0.08)).cornerRadius(16)
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color(red: 0.95, green: 0.75, blue: 0.20).opacity(0.2), lineWidth: 1))
+        .padding(16)
+        .background(Color(red: 0.95, green: 0.75, blue: 0.20).opacity(0.08))
+        .cornerRadius(16)
+        .overlay(RoundedRectangle(cornerRadius: 16)
+            .stroke(Color(red: 0.95, green: 0.75, blue: 0.20).opacity(0.2), lineWidth: 1))
     }
+
+    // MARK: - State Views
 
     var loadingView: some View {
         VStack(spacing: 16) {
-            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: themeManager.current.primaryText)).scaleEffect(1.3)
-            Text("Loading your health report…").font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: themeManager.current.primaryText))
+                .scaleEffect(1.3)
+            Text("Loading your health report…")
+                .font(.system(size: 14))
+                .foregroundColor(themeManager.current.secondaryText)
         }
     }
 
     var generatingView: some View {
         VStack(spacing: 24) {
             Spacer()
-            ProgressView().progressViewStyle(CircularProgressViewStyle(tint: themeManager.current.primaryText)).scaleEffect(1.5)
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: themeManager.current.primaryText))
+                .scaleEffect(1.5)
             VStack(spacing: 8) {
-                Text("Analysing your health profile…").font(.system(size: 17, weight: .semibold)).foregroundColor(themeManager.current.primaryText)
-                Text("This usually takes 10–20 seconds").font(.system(size: 13)).foregroundColor(themeManager.current.secondaryText)
+                Text("Analysing your health profile…")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(themeManager.current.primaryText)
+                Text("This usually takes 10–20 seconds")
+                    .font(.system(size: 13))
+                    .foregroundColor(themeManager.current.secondaryText)
             }
             Spacer()
         }
@@ -823,19 +852,25 @@ struct DietPlanView: View {
     var noProfileView: some View {
         VStack(spacing: 24) {
             Spacer()
-            Image(systemName: "person.crop.circle.badge.plus").font(.system(size: 60))
+            Image(systemName: "person.crop.circle.badge.plus")
+                .font(.system(size: 60))
                 .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
             VStack(spacing: 8) {
-                Text("Set Up Your Health Profile").font(.system(size: 20, weight: .bold)).foregroundColor(themeManager.current.primaryText)
+                Text("Set Up Your Health Profile")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(themeManager.current.primaryText)
                 Text("We'll analyze your health data and create a personalized nutrition and food plan")
-                    .font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
+                    .font(.system(size: 14))
+                    .foregroundColor(themeManager.current.secondaryText)
                     .multilineTextAlignment(.center).padding(.horizontal, 40)
             }
             Button(action: { showProfileSetup = true }) {
-                Text("Set Up Profile").font(.system(size: 16, weight: .bold))
+                Text("Set Up Profile")
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(themeManager.current == .dark ? .black : .white)
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
-                    .background(themeManager.current == .dark ? Color.white : Color.black).cornerRadius(16)
+                    .background(themeManager.current == .dark ? Color.white : Color.black)
+                    .cornerRadius(16)
             }
             .padding(.horizontal, 40)
             Spacer()
@@ -845,19 +880,25 @@ struct DietPlanView: View {
     var generatePromptView: some View {
         VStack(spacing: 24) {
             Spacer()
-            Image(systemName: "waveform.path.ecg.rectangle").font(.system(size: 56))
+            Image(systemName: "waveform.path.ecg.rectangle")
+                .font(.system(size: 56))
                 .foregroundColor(themeManager.current.secondaryText.opacity(0.4))
             VStack(spacing: 8) {
-                Text("Generate Your Health Report").font(.system(size: 20, weight: .bold)).foregroundColor(themeManager.current.primaryText)
+                Text("Generate Your Health Report")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(themeManager.current.primaryText)
                 Text("Get AI-powered analysis of your health profile with personalized food recommendations")
-                    .font(.system(size: 14)).foregroundColor(themeManager.current.secondaryText)
+                    .font(.system(size: 14))
+                    .foregroundColor(themeManager.current.secondaryText)
                     .multilineTextAlignment(.center).padding(.horizontal, 40)
             }
             Button(action: { generateReport(force: true) }) {
-                Text("Generate Report").font(.system(size: 16, weight: .bold))
+                Text("Generate Report")
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(themeManager.current == .dark ? .black : .white)
                     .frame(maxWidth: .infinity).padding(.vertical, 16)
-                    .background(themeManager.current == .dark ? Color.white : Color.black).cornerRadius(16)
+                    .background(themeManager.current == .dark ? Color.white : Color.black)
+                    .cornerRadius(16)
             }
             .padding(.horizontal, 40)
             Spacer()
@@ -921,6 +962,9 @@ private struct HeightPreferenceKey: PreferenceKey {
     static var defaultValue: CGFloat = .zero
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
+
+// MARK: - Dashboard Container
+
 struct HealthDashboardView: View {
     @EnvironmentObject var themeManager: ThemeManager
     let nutritionPlan: NutritionPlan
