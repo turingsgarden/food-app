@@ -86,12 +86,28 @@ Respond ONLY with valid JSON, no markdown:
 
 
 # ════════════════════════════════════════════════════════════════
-# 2. 生成健康报告（新增）
+# 2. 生成健康报告
 # ════════════════════════════════════════════════════════════════
+
 def generate_health_report(profile: dict, goals: list, gemini_model,
                            meal_history: list = None) -> dict:
-    from meal_analyzer import analyze_meal_history
+    """
+    Generate a personalized health report.
 
+    Integrates meal_analyzer's 3-tier weighted time window analysis so that
+    food recommendations are grounded in the user's actual eating patterns,
+    not just their clinical markers.
+
+    Parameters:
+        profile:      HealthProfile dict (height, weight, BP, glucose, etc.)
+        goals:        List of health goal strings
+        gemini_model: Gemini model instance
+        meal_history: List of meal dicts from the last 90 days (optional).
+                      Fetched in app.py before calling this function.
+
+    Returns:
+        dict matching the HealthReport Swift model, plus meal_analysis_meta.
+    """
     meal_analysis = analyze_meal_history(meal_history or [])
     meal_summary  = meal_analysis["summary_text"]
     has_meal_data = len(meal_analysis["frequent_foods"]) > 0
@@ -103,7 +119,7 @@ def generate_health_report(profile: dict, goals: list, gemini_model,
     dietary_prefs = ", ".join(profile.get("dietary_preferences", [])) or "None"
     allergens     = ", ".join(profile.get("allergens", [])) or "None"
 
-    # ── 新增：把结构化缺口数据直接格式化成字符串 ──────────────────────
+    # ── 结构化缺口数据 ─────────────────────────────────────────────────────
     gaps          = meal_analysis["nutrient_gaps"]
     deficient     = gaps.get("deficient", [])
     excessive     = gaps.get("excessive", [])
@@ -111,7 +127,6 @@ def generate_health_report(profile: dict, goals: list, gemini_model,
     top_foods     = [f["food"] for f in meal_analysis["frequent_foods"][:6]]
     cooking_prefs = meal_analysis["cooking_style_prefs"]
 
-    # 格式化缺口：给 AI 提供精确数字
     def fmt_gaps(gap_list):
         if not gap_list:
             return "None detected"
@@ -121,11 +136,10 @@ def generate_health_report(profile: dict, goals: list, gemini_model,
             for g in gap_list
         ])
 
-    # 格式化烹饪风格：给 AI 推荐 dish 时参考
     top_cooking = sorted(cooking_prefs.items(), key=lambda x: x[1], reverse=True)[:2]
     cooking_str = ", ".join([f"{s}({int(p*100)}%)" for s, p in top_cooking]) or "unknown"
 
-    # 临床 flags：结构化判断，不依赖 AI 自己推断
+    # ── 临床 flags：Python 预判断，不依赖 AI 自己推断 ──────────────────────
     clinical_flags = []
     sys_bp = profile.get("systolic_bp")
     dia_bp = profile.get("diastolic_bp")
@@ -169,23 +183,23 @@ def generate_health_report(profile: dict, goals: list, gemini_model,
 
     if bmi >= 30:
         clinical_flags.append(
-            f"OBESE (BMI {bmi}) → "
-            f"recommend HIGH-SATIETY LOW-CALORIE-DENSITY foods"
+            f"OBESE (BMI {bmi}) → recommend HIGH-SATIETY LOW-CALORIE-DENSITY foods"
         )
     elif bmi >= 25:
         clinical_flags.append(
-            f"OVERWEIGHT (BMI {bmi}) → "
-            f"recommend lean protein and fiber-rich foods for satiety"
+            f"OVERWEIGHT (BMI {bmi}) → recommend lean protein and fiber-rich foods for satiety"
         )
     elif bmi < 18.5:
         clinical_flags.append(
-            f"UNDERWEIGHT (BMI {bmi}) → "
-            f"recommend calorie-dense nutrient-rich foods"
+            f"UNDERWEIGHT (BMI {bmi}) → recommend calorie-dense nutrient-rich foods"
         )
 
-    clinical_str = "\n".join([f"  • {f}" for f in clinical_flags]) if clinical_flags else "  • All clinical markers within normal range"
+    clinical_str = (
+        "\n".join([f"  • {f}" for f in clinical_flags])
+        if clinical_flags else "  • All clinical markers within normal range"
+    )
 
-    # ── 改进后的 Prompt ────────────────────────────────────────────────────
+    # ── Prompt ─────────────────────────────────────────────────────────────
     prompt = f"""You are a clinical nutritionist. Generate a personalized health report.
 
 === HARD CONSTRAINTS (never violate) ===
@@ -289,19 +303,19 @@ Constraints:
     result = json.loads(raw)
 
     defaults = {
-        "health_score": 70,
-        "health_summary": "Health analysis complete.",
-        "status_badge": "Good",
-        "daily_calories": 2000,
-        "protein_g": 100,
-        "carbs_g": 250,
-        "fat_g": 65,
-        "fiber_g": 25,
-        "sodium_mg": 2300,
-        "attention_items": [],
+        "health_score":      70,
+        "health_summary":    "Health analysis complete.",
+        "status_badge":      "Good",
+        "daily_calories":    2000,
+        "protein_g":         100,
+        "carbs_g":           250,
+        "fat_g":             65,
+        "fiber_g":           25,
+        "sodium_mg":         2300,
+        "attention_items":   [],
         "recommended_foods": [],
-        "foods_to_limit": [],
-        "lifestyle_tip": "Stay consistent with your healthy habits.",
+        "foods_to_limit":    [],
+        "lifestyle_tip":     "Stay consistent with your healthy habits.",
     }
     for key, value in defaults.items():
         result.setdefault(key, value)
@@ -310,16 +324,18 @@ Constraints:
         "weekly_calories", result["daily_calories"] * 7
     )
     result["meal_analysis_meta"] = {
-        "has_meal_data":  has_meal_data,
-        "data_coverage":  meal_analysis["data_coverage"],
-        "top_foods":      top_foods,
-        "nutrient_gaps":  meal_analysis["nutrient_gaps"],
+        "has_meal_data": has_meal_data,
+        "data_coverage": meal_analysis["data_coverage"],
+        "top_foods":     top_foods,
+        "nutrient_gaps": meal_analysis["nutrient_gaps"],
     }
 
+    print(f"✅ Health report generated | score={result.get('health_score')} | {result.get('daily_calories')} kcal/day")
     return result
 
+
 # ════════════════════════════════════════════════════════════════
-# 3. 生成餐食计划（保留原有）
+# 3. 生成餐食计划
 # ════════════════════════════════════════════════════════════════
 
 def _build_day_prompt(day_date, day_name, day_index, cal, prot, carbs, fat,
@@ -443,7 +459,7 @@ def generate_weekly_meal_plan(nutrition_plan: dict, health_profile: dict, gemini
 
 
 # ════════════════════════════════════════════════════════════════
-# 4. 分析餐食照片（保留原有）
+# 4. 分析餐食照片
 # ════════════════════════════════════════════════════════════════
 
 def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
@@ -474,14 +490,14 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
             for line in text.split("\n"):
                 parts = [p.strip() for p in line.split("|")]
                 if len(parts) >= 2 and key.lower() in parts[0].lower():
-                    try: return int(float(parts[1].replace(",","")))
+                    try: return int(float(parts[1].replace(",", "")))
                     except: pass
             return 0
 
-        actual_cal   = parse_nutrient(nutrition_info, "calorie")
-        actual_prot  = parse_nutrient(nutrition_info, "protein")
-        actual_carbs = parse_nutrient(nutrition_info, "carb")
-        actual_fat   = parse_nutrient(nutrition_info, "fat")
+        actual_cal    = parse_nutrient(nutrition_info, "calorie")
+        actual_prot   = parse_nutrient(nutrition_info, "protein")
+        actual_carbs  = parse_nutrient(nutrition_info, "carb")
+        actual_fat    = parse_nutrient(nutrition_info, "fat")
         actual_sodium = parse_nutrient(nutrition_info, "sodium")
         actual_sugar  = parse_nutrient(nutrition_info, "sugar")
 
@@ -497,22 +513,25 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
         prompt = f"""Analyze this {meal_type} photo. Return ONLY JSON:
 {{"detected_foods":["<food ~Xg>"],"estimated_calories":<int>,"estimated_protein":<int>,"estimated_carbs":<int>,"estimated_fat":<int>,"sodium_mg":<int>,"sugar_g":<int>,"dish_name":"<name>","nutrition_info":"Calories|<n>|kcal\nProtein|<n>|g\nFat|<n>|g\nCarbohydrates|<n>|g\nFiber|<n>|g\nSugar|<n>|g\nSodium|<n>|mg"}}"""
         response = model.generate_content([prompt, {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}}])
-        fb = json.loads(response.text.strip().replace("```json","").replace("```","").strip())
-        dish_name = fb.get("dish_name", "Unknown")
+        fb = json.loads(response.text.strip().replace("```json", "").replace("```", "").strip())
+        dish_name      = fb.get("dish_name", "Unknown")
         detected_foods = fb.get("detected_foods", [])
-        actual_cal   = fb.get("estimated_calories", 0)
-        actual_prot  = fb.get("estimated_protein", 0)
-        actual_carbs = fb.get("estimated_carbs", 0)
-        actual_fat   = fb.get("estimated_fat", 0)
-        actual_sodium = fb.get("sodium_mg", 0)
-        actual_sugar  = fb.get("sugar_g", 0)
-        nutrition_info = fb.get("nutrition_info", f"Calories|{actual_cal}|kcal\nProtein|{actual_prot}|g\nFat|{actual_fat}|g\nCarbohydrates|{actual_carbs}|g\nFiber|0|g\nSugar|{actual_sugar}|g\nSodium|{actual_sodium}|mg")
+        actual_cal     = fb.get("estimated_calories", 0)
+        actual_prot    = fb.get("estimated_protein", 0)
+        actual_carbs   = fb.get("estimated_carbs", 0)
+        actual_fat     = fb.get("estimated_fat", 0)
+        actual_sodium  = fb.get("sodium_mg", 0)
+        actual_sugar   = fb.get("sugar_g", 0)
+        nutrition_info = fb.get("nutrition_info",
+            f"Calories|{actual_cal}|kcal\nProtein|{actual_prot}|g\n"
+            f"Fat|{actual_fat}|g\nCarbohydrates|{actual_carbs}|g\n"
+            f"Fiber|0|g\nSugar|{actual_sugar}|g\nSodium|{actual_sodium}|mg")
         visible_ingr = "\n".join(detected_foods)
-        hidden_ingr = ""
+        hidden_ingr  = ""
 
     # 对比计划
     planned_cal  = planned_meal.get("total_calories", 0) if planned_meal else 0
-    planned_prot = planned_meal.get("total_protein", 0) if planned_meal else 0
+    planned_prot = planned_meal.get("total_protein", 0)  if planned_meal else 0
 
     def within_range(actual, target, tolerance=0.25):
         if target == 0: return True
@@ -549,219 +568,42 @@ def analyze_meal_photo(image_b64, meal_type, planned_meal, remaining_plan,
     if tips:
         feedback += " " + tips[0]
 
-    remaining_days = [d.get("day_name", "") for d in remaining_plan if d]
+    remaining_days  = [d.get("day_name", "") for d in remaining_plan if d]
     adjustment_note = None
     if compliance_score < 60 and remaining_days:
         short = planned_prot > 0 and actual_prot < planned_prot * 0.7
-        over  = planned_cal > 0 and actual_cal > planned_cal * 1.2
+        over  = planned_cal  > 0 and actual_cal  > planned_cal  * 1.2
         if short:
             adjustment_note = f"Add extra protein in your {remaining_days[0]} meals."
         elif over:
             adjustment_note = f"Reduce portion sizes by ~20% for {remaining_days[0]}."
 
     return {
-        "detected_foods": detected_foods,
-        "estimated_calories": actual_cal,
-        "estimated_protein": actual_prot,
-        "estimated_carbs": actual_carbs,
-        "estimated_fat": actual_fat,
-        "compliance_score": compliance_score,
-        "compliance_feedback": feedback,
+        "detected_foods":       detected_foods,
+        "estimated_calories":   actual_cal,
+        "estimated_protein":    actual_prot,
+        "estimated_carbs":      actual_carbs,
+        "estimated_fat":        actual_fat,
+        "compliance_score":     compliance_score,
+        "compliance_feedback":  feedback,
         "plan_adjustment_note": adjustment_note,
-        "dish_prediction": dish_name,
-        "image_description": visible_ingr,
-        "hidden_ingredients": hidden_ingr,
-        "nutrition_info": nutrition_info,
-        "meal_type": meal_type,
+        "dish_prediction":      dish_name,
+        "image_description":    visible_ingr,
+        "hidden_ingredients":   hidden_ingr,
+        "nutrition_info":       nutrition_info,
+        "meal_type":            meal_type,
     }
 
 
+# ════════════════════════════════════════════════════════════════
+# 5. BMI 计算工具
+# ════════════════════════════════════════════════════════════════
+
 def calculate_bmi(height_cm: float, weight_kg: float) -> dict:
-    h = height_cm / 100
+    h   = height_cm / 100
     bmi = round(weight_kg / (h * h), 1)
     if bmi < 18.5:   cat = "Underweight"
     elif bmi < 25:   cat = "Normal"
     elif bmi < 30:   cat = "Overweight"
     else:            cat = "Obese"
     return {"bmi": bmi, "category": cat}
-
-
-
-
-
-
-def generate_health_report(profile: dict, goals: list, gemini_model,
-                           meal_history: list = None) -> dict:
-    """
-    Generate a personalized health report.
- 
-    Integrates meal_analyzer's 3-tier weighted time window analysis so that
-    food recommendations are grounded in the user's actual eating patterns,
-    not just their clinical markers.
- 
-    Parameters:
-        profile:      HealthProfile dict (height, weight, BP, glucose, etc.)
-        goals:        List of health goal strings
-        gemini_model: Gemini model instance
-        meal_history: List of meal dicts from the last 90 days (optional).
-                      Fetched in app.py before calling this function.
- 
-    Returns:
-        dict matching the HealthReport Swift model, plus meal_analysis_meta.
-    """
-    import json
-    from meal_analyzer import analyze_meal_history
- 
-    # Analyze meal history using 3-tier weighted windows
-    meal_analysis    = analyze_meal_history(meal_history or [])
-    meal_summary     = meal_analysis["summary_text"]
-    has_meal_data    = len(meal_analysis["frequent_foods"]) > 0
- 
-    # Basic derived metrics
-    height_m = profile.get("height_cm", 170) / 100
-    weight   = profile.get("weight_kg", 70)
-    bmi      = round(weight / (height_m ** 2), 1) if height_m > 0 else 0
- 
-    dietary_prefs = ", ".join(profile.get("dietary_preferences", [])) or "None"
-    allergens     = ", ".join(profile.get("allergens", [])) or "None"
- 
-    # Nutrient gap shorthand for use inside the prompt
-    recent_nutrients = meal_analysis["nutrient_averages"].get("recent", {})
-    avg_protein      = recent_nutrients.get("protein", "unknown")
-    avg_sodium       = recent_nutrients.get("sodium",  "unknown")
- 
-    prompt = f"""You are a professional nutritionist. Generate a personalized health report.
- 
-=== USER HEALTH PROFILE ===
-Age: {profile.get("age", 25)}, Sex: {profile.get("sex", "unknown")}
-Height: {profile.get("height_cm", 170)}cm, Weight: {weight}kg, BMI: {bmi}
-Blood Pressure: {profile.get("systolic_bp", "N/A")}/{profile.get("diastolic_bp", "N/A")} mmHg
-Fasting Blood Sugar: {profile.get("fasting_blood_sugar", "N/A")} mmol/L
-Total Cholesterol: {profile.get("total_cholesterol", "N/A")} mmol/L
-Triglycerides: {profile.get("triglycerides", "N/A")} mmol/L
-Health Goals: {", ".join(goals) if goals else "General wellness"}
-Dietary Preferences: {dietary_prefs}
-Allergens to avoid: {allergens}
- 
-=== MEAL HISTORY ANALYSIS (3-tier weighted: 7d/30d/90d) ===
-{meal_summary}
- 
-=== YOUR TASK ===
- 
-Follow these four steps explicitly in your reasoning:
- 
-STEP 1 — INTERPRET MEAL DATA:
-- What does this user actually eat regularly?
-- What cooking styles do they prefer?
-- Which nutrients are consistently low (deficient) or high (excessive)?
-- Is their recent diet better or worse than their long-term baseline?
- 
-STEP 2 — IDENTIFY HEALTH PRIORITIES:
-- Which clinical markers need attention?
-- What dietary changes would have the highest impact?
-- What must be excluded due to allergens or dietary preferences?
- 
-STEP 3 — GENERATE FOOD RECOMMENDATIONS (most important step):
-Rules for the 6 recommendations:
-- At least 3 must directly address identified nutrient deficiencies or excesses.
-- Foods should fit the user's existing taste profile where possible.
-  Example: if they eat a lot of chicken, suggest a healthier chicken preparation
-  rather than asking them to switch to a completely unfamiliar protein.
-- If a food category is completely absent from their history, suggest an
-  approachable entry point for that category.
-- Each "reason" field MUST be specific — never generic.
-  BAD:  "Rich in protein, which is important for health."
-  GOOD: "Your recent meals average only {avg_protein}g protein/day (reference: 50g).
-         Adding edamame to your stir-fry dishes — which you already cook regularly —
-         would boost protein without changing your preferred cooking style."
-  GOOD: "Your sodium intake is running high ({avg_sodium}mg/day vs. 2300mg reference).
-         Replacing regular soy sauce with low-sodium versions in your frequent
-         stir-fry meals could reduce sodium by ~30% with minimal taste change."
- 
-STEP 4 — FOODS TO LIMIT:
-Base this on what the user actually eats frequently, not generic advice.
- 
-Respond ONLY with valid JSON — no markdown, no explanation:
-{{
-  "health_score": <integer 0-100>,
-  "health_summary": "<2-3 sentences referencing the user's ACTUAL eating patterns>",
-  "status_badge": "<Excellent|Good|Fair|Needs Attention>",
-  "daily_calories": <integer>,
-  "protein_g": <integer>,
-  "carbs_g": <integer>,
-  "fat_g": <integer>,
-  "fiber_g": <integer>,
-  "sodium_mg": <integer>,
-  "weekly_calories": <integer>,
-  "attention_items": [
-    {{
-      "metric": "<metric name>",
-      "current_value": "<value with unit>",
-      "status": "<normal|borderline|high|low>",
-      "advice": "<specific, actionable advice>"
-    }}
-  ],
-  "recommended_foods": [
-    {{
-      "food": "<food name>",
-      "reason": "<specific reason referencing meal data or clinical marker — see STEP 3>",
-      "analysis_basis": "<meal_history_pattern|clinical_marker|dietary_preference|general_health>",
-      "dishes": ["<dish idea 1>", "<dish idea 2>", "<dish idea 3>"]
-    }}
-  ],
-  "foods_to_limit": ["<food 1>", "<food 2>", "<food 3>"],
-  "lifestyle_tip": "<specific tip based on the user's actual patterns>"
-}}
- 
-Constraints:
-- recommended_foods: exactly 6 items
-- attention_items: 2-5 items (omit metrics with N/A data)
-- All recommendations must respect allergens and dietary preferences
-- If meal data coverage is below 30%, acknowledge the limited data in health_summary
-"""
- 
-    response = gemini_model.generate_content(prompt)
-    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
- 
-    # Extract JSON safely (defensive against Gemini adding surrounding text)
-    start = raw.find("{")
-    end   = raw.rfind("}") + 1
-    if start >= 0 and end > start:
-        raw = raw[start:end]
- 
-    result = json.loads(raw)
- 
-    # Fill in defaults for any missing fields
-    defaults = {
-        "health_score":    70,
-        "health_summary":  "Health analysis complete.",
-        "status_badge":    "Good",
-        "daily_calories":  2000,
-        "protein_g":       100,
-        "carbs_g":         250,
-        "fat_g":           65,
-        "fiber_g":         25,
-        "sodium_mg":       2300,
-        "attention_items":    [],
-        "recommended_foods":  [],
-        "foods_to_limit":     [],
-        "lifestyle_tip":   "Stay consistent with your healthy habits.",
-    }
-    for key, value in defaults.items():
-        result.setdefault(key, value)
- 
-    result["weekly_calories"] = result.get(
-        "weekly_calories", result["daily_calories"] * 7
-    )
- 
-    # Attach analysis metadata for transparency (optionally displayed in iOS)
-    result["meal_analysis_meta"] = {
-        "has_meal_data": has_meal_data,
-        "data_coverage": meal_analysis["data_coverage"],
-        "top_foods":     [f["food"] for f in meal_analysis["frequent_foods"][:5]],
-        "nutrient_gaps": meal_analysis["nutrient_gaps"],
-    }
- 
-    return result
- 
- 
