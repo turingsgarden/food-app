@@ -88,121 +88,235 @@ Respond ONLY with valid JSON, no markdown:
 # ════════════════════════════════════════════════════════════════
 # 2. 生成健康报告（新增）
 # ════════════════════════════════════════════════════════════════
+def generate_health_report(profile: dict, goals: list, gemini_model,
+                           meal_history: list = None) -> dict:
+    from meal_analyzer import analyze_meal_history
 
-def generate_health_report(profile: dict, goals: list, gemini_model=None) -> dict:
-    """
-    基于用户健康档案生成：
-    1. 整体健康评分（0-100）
-    2. 健康状态分析（2-3句话）
-    3. 需要关注的指标 + 具体建议
-    4. 每日营养目标
-    5. 推荐食物列表（每个食物附3道推荐菜肴）
-    6. 每周营养摄入建议
-    """
-    model = _get_model(gemini_model)
-    if not model:
-        raise Exception("Gemini model not available")
+    meal_analysis = analyze_meal_history(meal_history or [])
+    meal_summary  = meal_analysis["summary_text"]
+    has_meal_data = len(meal_analysis["frequent_foods"]) > 0
 
     height_m = profile.get("height_cm", 170) / 100
     weight   = profile.get("weight_kg", 70)
-    bmi      = round(weight / (height_m ** 2), 1)
-    age      = profile.get("age", 30)
-    sex      = profile.get("sex", "other")
+    bmi      = round(weight / (height_m ** 2), 1) if height_m > 0 else 0
 
-    # 构建临床指标描述
-    clinical = []
-    if profile.get("systolic_bp") and profile.get("diastolic_bp"):
-        clinical.append(f"BP: {profile['systolic_bp']}/{profile['diastolic_bp']} mmHg")
-    if profile.get("fasting_blood_sugar"):
-        clinical.append(f"Fasting glucose: {profile['fasting_blood_sugar']} mmol/L")
-    if profile.get("total_cholesterol"):
-        clinical.append(f"Cholesterol: {profile['total_cholesterol']} mmol/L")
-    if profile.get("triglycerides"):
-        clinical.append(f"Triglycerides: {profile['triglycerides']} mmol/L")
-    clinical_str = ", ".join(clinical) if clinical else "No clinical markers provided"
+    dietary_prefs = ", ".join(profile.get("dietary_preferences", [])) or "None"
+    allergens     = ", ".join(profile.get("allergens", [])) or "None"
 
-    bmi_category = (
-        "Underweight" if bmi < 18.5
-        else "Normal" if bmi < 25
-        else "Overweight" if bmi < 30
-        else "Obese"
-    )
+    # ── 新增：把结构化缺口数据直接格式化成字符串 ──────────────────────
+    gaps          = meal_analysis["nutrient_gaps"]
+    deficient     = gaps.get("deficient", [])
+    excessive     = gaps.get("excessive", [])
+    recent_avgs   = meal_analysis["nutrient_averages"].get("recent", {})
+    top_foods     = [f["food"] for f in meal_analysis["frequent_foods"][:6]]
+    cooking_prefs = meal_analysis["cooking_style_prefs"]
 
-    prompt = f"""You are a clinical dietitian and health coach. Analyze this patient's health profile and generate a comprehensive health report with personalized food recommendations.
+    # 格式化缺口：给 AI 提供精确数字
+    def fmt_gaps(gap_list):
+        if not gap_list:
+            return "None detected"
+        return "\n".join([
+            f"  - {g['nutrient'].upper()}: avg {g['avg_daily']} "
+            f"(reference {g['reference']}, only {int(g['ratio']*100)}% of target)"
+            for g in gap_list
+        ])
 
-Patient Profile:
-- Age: {age} | Sex: {sex}
-- Height: {profile.get('height_cm')} cm | Weight: {weight} kg | BMI: {bmi} ({bmi_category})
-- Clinical markers: {clinical_str}
-- Dietary preferences: {', '.join(profile.get('dietary_preferences', ['no restriction']))}
-- Allergens to avoid: {', '.join(profile.get('allergens', ['none']))}
-- Health goals: {', '.join(goals) if goals else 'general health and wellness'}
+    # 格式化烹饪风格：给 AI 推荐 dish 时参考
+    top_cooking = sorted(cooking_prefs.items(), key=lambda x: x[1], reverse=True)[:2]
+    cooking_str = ", ".join([f"{s}({int(p*100)}%)" for s, p in top_cooking]) or "unknown"
 
-Generate a comprehensive health report. Respond ONLY with valid JSON, no markdown backticks:
+    # 临床 flags：结构化判断，不依赖 AI 自己推断
+    clinical_flags = []
+    sys_bp = profile.get("systolic_bp")
+    dia_bp = profile.get("diastolic_bp")
+    if sys_bp and dia_bp:
+        if sys_bp >= 140 or dia_bp >= 90:
+            clinical_flags.append(
+                f"HIGH BLOOD PRESSURE ({sys_bp}/{dia_bp} mmHg) → "
+                f"recommend LOW-SODIUM (<1500mg/day) and HIGH-POTASSIUM foods"
+            )
+        elif sys_bp >= 130:
+            clinical_flags.append(
+                f"BORDERLINE BP ({sys_bp}/{dia_bp} mmHg) → "
+                f"recommend DASH-diet foods: leafy greens, berries, whole grains"
+            )
+
+    bgs = profile.get("fasting_blood_sugar")
+    if bgs:
+        if bgs >= 7.0:
+            clinical_flags.append(
+                f"HIGH FASTING BLOOD SUGAR ({bgs} mmol/L) → "
+                f"recommend LOW-GI foods only: legumes, non-starchy vegetables, whole oats"
+            )
+        elif bgs >= 5.6:
+            clinical_flags.append(
+                f"BORDERLINE BLOOD SUGAR ({bgs} mmol/L) → "
+                f"reduce refined carbs, recommend fiber-rich foods"
+            )
+
+    chol = profile.get("total_cholesterol")
+    if chol:
+        if chol >= 6.2:
+            clinical_flags.append(
+                f"HIGH CHOLESTEROL ({chol} mmol/L) → "
+                f"recommend Omega-3 rich foods, avoid saturated fats"
+            )
+        elif chol >= 5.2:
+            clinical_flags.append(
+                f"BORDERLINE CHOLESTEROL ({chol} mmol/L) → "
+                f"recommend oats, avocado, fatty fish"
+            )
+
+    if bmi >= 30:
+        clinical_flags.append(
+            f"OBESE (BMI {bmi}) → "
+            f"recommend HIGH-SATIETY LOW-CALORIE-DENSITY foods"
+        )
+    elif bmi >= 25:
+        clinical_flags.append(
+            f"OVERWEIGHT (BMI {bmi}) → "
+            f"recommend lean protein and fiber-rich foods for satiety"
+        )
+    elif bmi < 18.5:
+        clinical_flags.append(
+            f"UNDERWEIGHT (BMI {bmi}) → "
+            f"recommend calorie-dense nutrient-rich foods"
+        )
+
+    clinical_str = "\n".join([f"  • {f}" for f in clinical_flags]) if clinical_flags else "  • All clinical markers within normal range"
+
+    # ── 改进后的 Prompt ────────────────────────────────────────────────────
+    prompt = f"""You are a clinical nutritionist. Generate a personalized health report.
+
+=== HARD CONSTRAINTS (never violate) ===
+Allergens to EXCLUDE: {allergens}
+Dietary preference: {dietary_prefs}
+→ Every recommended food MUST comply with these. No exceptions.
+
+=== CLINICAL FLAGS (pre-analyzed — trust these) ===
+{clinical_str}
+
+=== MEAL HISTORY (3-tier weighted analysis) ===
+{meal_summary}
+
+=== STRUCTURED NUTRIENT GAPS (use these exact numbers in your reasons) ===
+DEFICIENCIES (below 70% of daily reference):
+{fmt_gaps(deficient)}
+
+EXCESSES (above 130% of daily reference):
+{fmt_gaps(excessive)}
+
+Recent daily averages: calories={recent_avgs.get('calories','N/A')} kcal | protein={recent_avgs.get('protein','N/A')}g | fiber={recent_avgs.get('fiber','N/A')}g | sodium={recent_avgs.get('sodium','N/A')}mg
+
+=== USER CONTEXT ===
+Age: {profile.get('age')} | Sex: {profile.get('sex')} | BMI: {bmi}
+Goals: {', '.join(goals) if goals else 'general wellness'}
+Top frequent foods: {', '.join(top_foods) if top_foods else 'no data'}
+Preferred cooking styles: {cooking_str}
+
+=== FOOD RECOMMENDATION RULES (strictly follow priority order) ===
+
+PRIORITY 1 — Clinical flags (if any flagged above):
+→ At least 1 food per clinical flag. Must directly address the flagged condition.
+→ Use the specific value in the reason: e.g. "Your BP is 145/92 mmHg..."
+
+PRIORITY 2 — Nutrient deficiencies (if any flagged above):
+→ At least 1 food per deficiency. Reference the exact numbers.
+→ e.g. "Your recent protein avg is only 32g/day vs. 50g reference (64%)..."
+
+PRIORITY 3 — Fit user's existing taste/cooking style:
+→ If user frequently eats stir-fries, suggest stir-fry-friendly ingredients.
+→ If user frequently eats a specific protein, suggest a healthier variant.
+→ Dish ideas must match cooking style: {cooking_str}
+
+PRIORITY 4 — Fill remaining slots with balance foods.
+
+REASON QUALITY RULES:
+✅ GOOD: "Your fiber avg is only 8g/day (29% of 28g reference). Adding edamame to your frequent stir-fry meals adds 5g fiber per serving."
+✅ GOOD: "Your sodium is running at 3100mg/day (135% of 2300mg limit). Replacing regular soy sauce with low-sodium versions cuts sodium by ~40%."
+❌ BAD: "Rich in protein, which supports muscle health."
+❌ BAD: "A great source of vitamins and minerals."
+
+=== OUTPUT ===
+Return ONLY valid JSON, no markdown:
 {{
   "health_score": <integer 0-100>,
-  "health_summary": "<2-3 sentence overall health assessment based on BMI and clinical markers>",
-  "status_badge": "<one of: Excellent, Good, Fair, Needs Attention>",
+  "health_summary": "<2-3 sentences referencing actual eating patterns and specific numbers>",
+  "status_badge": "<Excellent|Good|Fair|Needs Attention>",
   "daily_calories": <integer>,
   "protein_g": <integer>,
   "carbs_g": <integer>,
   "fat_g": <integer>,
   "fiber_g": <integer>,
   "sodium_mg": <integer>,
-  "weekly_calories": <integer daily_calories * 7>,
+  "weekly_calories": <integer>,
   "attention_items": [
     {{
-      "metric": "<metric name e.g. BMI, Blood Pressure, Cholesterol>",
-      "current_value": "<current value with unit>",
-      "status": "<one of: normal, borderline, high, low>",
-      "advice": "<1-2 sentence specific actionable advice>"
+      "metric": "<name>",
+      "current_value": "<value with unit>",
+      "status": "<normal|borderline|high|low>",
+      "advice": "<specific actionable advice with numbers>"
     }}
   ],
   "recommended_foods": [
     {{
       "food": "<food name>",
-      "reason": "<brief reason why this food is good for them, 1 sentence>",
+      "reason": "<specific reason with actual numbers from above data>",
+      "analysis_basis": "<clinical_marker|nutrition_gap|meal_history_pattern|general_health>",
       "dishes": ["<dish 1>", "<dish 2>", "<dish 3>"]
     }}
   ],
-  "foods_to_limit": ["<food1>", "<food2>", "<food3>"],
-  "lifestyle_tip": "<one practical daily habit tip>"
+  "foods_to_limit": ["<food 1>", "<food 2>", "<food 3>"],
+  "lifestyle_tip": "<specific tip based on user's actual patterns, not generic>"
 }}
 
-Rules:
-- health_score: 85-100 for normal BMI + all normal markers; deduct points for each abnormal marker
-- attention_items: include BMI always; add clinical markers only if provided and abnormal or borderline
-- recommended_foods: provide exactly 6 foods tailored to their goals and restrictions
-- dishes: 3 specific dish names per food (real, common recipes)
-- All values must be real numbers, not placeholders"""
+Constraints:
+- recommended_foods: exactly 6 items, ordered by priority (clinical first, then gaps, then balance)
+- attention_items: 2-5 items, omit metrics with N/A data
+- dishes: must suit user's preferred cooking style ({cooking_str})
+- foods_to_limit: based on what user actually eats frequently, not generic advice
+- If meal data coverage < 30%, acknowledge limited data in health_summary
+"""
 
-    print(f"🏥 Generating health report | BMI={bmi} | goals={goals}")
-    response = model.generate_content(prompt)
-    text = response.text.strip().replace("```json", "").replace("```", "").strip()
+    response = gemini_model.generate_content(prompt)
+    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
 
-    # 处理可能的 JSON 截断
-    try:
-        result = json.loads(text)
-    except json.JSONDecodeError:
-        # 尝试修复截断的 JSON
-        if not text.endswith("}"):
-            text = text + '"}}'
-        result = json.loads(text)
+    start = raw.find("{")
+    end   = raw.rfind("}") + 1
+    if start >= 0 and end > start:
+        raw = raw[start:end]
 
-    # 确保必填字段存在
-    result.setdefault("health_score", 70)
-    result.setdefault("health_summary", "Based on your profile, here is your personalized health assessment.")
-    result.setdefault("status_badge", "Good")
-    result.setdefault("daily_calories", 2000)
-    result.setdefault("attention_items", [])
-    result.setdefault("recommended_foods", [])
-    result.setdefault("foods_to_limit", [])
-    result.setdefault("weekly_calories", result.get("daily_calories", 2000) * 7)
-    result.setdefault("lifestyle_tip", "Stay hydrated and aim for 7-8 hours of sleep each night.")
+    result = json.loads(raw)
 
-    print(f"✅ Health report: score={result['health_score']} | {result['daily_calories']} kcal/day")
+    defaults = {
+        "health_score": 70,
+        "health_summary": "Health analysis complete.",
+        "status_badge": "Good",
+        "daily_calories": 2000,
+        "protein_g": 100,
+        "carbs_g": 250,
+        "fat_g": 65,
+        "fiber_g": 25,
+        "sodium_mg": 2300,
+        "attention_items": [],
+        "recommended_foods": [],
+        "foods_to_limit": [],
+        "lifestyle_tip": "Stay consistent with your healthy habits.",
+    }
+    for key, value in defaults.items():
+        result.setdefault(key, value)
+
+    result["weekly_calories"] = result.get(
+        "weekly_calories", result["daily_calories"] * 7
+    )
+    result["meal_analysis_meta"] = {
+        "has_meal_data":  has_meal_data,
+        "data_coverage":  meal_analysis["data_coverage"],
+        "top_foods":      top_foods,
+        "nutrient_gaps":  meal_analysis["nutrient_gaps"],
+    }
+
     return result
-
 
 # ════════════════════════════════════════════════════════════════
 # 3. 生成餐食计划（保留原有）
