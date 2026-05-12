@@ -26,7 +26,8 @@ import json
 import io
 import re
 import fitz          # PyMuPDF  — pip install pymupdf
-import docx          # python-docx — pip install python-docximport threading
+import docx          # python-docx — pip install python-docx
+import threading
 from jwt import PyJWKClient
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
@@ -927,7 +928,6 @@ def save_health_profile():
         data["user_id"] = request.user_id
         data["updated_at"] = datetime.now().isoformat()
         db["health_profiles"].update_one({"user_id": request.user_id}, {"$set": data}, upsert=True)
-        # 用户更新档案后删除旧报告，下次打开 Health Tab 时重新生成
         db["health_reports"].delete_many({"user_id": request.user_id})
         print(f"✅ Health profile saved for {request.user_id}")
         return jsonify({"success": True}), 200
@@ -1142,8 +1142,10 @@ def analyze_meal_photo_route():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-# ✅ 新增：Health Report Endpoints
 
+# ── Health Report Endpoints ──────────────────────────────────────────────────
+
+# ── 修改2 + 修改3：补全 meal_history 查询 + 7天缓存有效期 ──────────────────
 @app.route("/generate-health-report", methods=["POST"])
 @token_required
 @db_required
@@ -1152,30 +1154,43 @@ def generate_health_report_route():
         data = request.get_json()
         force_regenerate = data.get("force", False) if data else False
 
-        # 如果不强制重新生成，先查缓存
+        # ── 缓存检查：7天内且非强制 → 直接返回缓存 ──────────────────────────
         if not force_regenerate:
             existing = db["health_reports"].find_one(
                 {"user_id": request.user_id},
                 sort=[("created_at", -1)]
             )
             if existing:
-                existing["_id"] = str(existing["_id"])
-                print(f"📋 Returning cached health report for {request.user_id}")
-                return jsonify(existing), 200
+                cache_valid = False
+                try:
+                    created_at = datetime.fromisoformat(existing.get("created_at", ""))
+                    cache_age_days = (datetime.now() - created_at).days
+                    cache_valid = cache_age_days < 7
+                except Exception:
+                    pass  # 解析失败则视为过期，重新生成
 
-        # 获取健康档案
+                if cache_valid:
+                    existing["_id"] = str(existing["_id"])
+                    print(f"📋 Returning cached health report for {request.user_id} "
+                          f"(age: {cache_age_days}d)")
+                    return jsonify(existing), 200
+                else:
+                    print(f"♻️ Cache expired ({cache_age_days}d), regenerating report")
+
+        # ── 获取健康档案 ───────────────────────────────────────────────────
         profile = db["health_profiles"].find_one({"user_id": request.user_id})
         if not profile:
             return jsonify({"error": "Health profile not found"}), 404
+        profile.pop("_id", None)
 
+        # ── 获取健康目标 ───────────────────────────────────────────────────
         goals = data.get("goals", []) if data else []
         if not goals:
             plan = db["nutrition_plans"].find_one({"user_id": request.user_id})
             if plan:
                 goals = plan.get("goals", [])
 
-
-        # Fetch last 90 days of meals for personalized recommendations
+        # ── 修改2：补全 meal_history 查询字段 + limit ──────────────────────
         meal_history = list(db["meals"].find(
             {
                 "user_id": request.user_id,
@@ -1184,23 +1199,19 @@ def generate_health_report_route():
                 }
             },
             {
-                "dish_prediction":   1,
-                "image_description": 1,
-                "nutrition_info":    1,
-                "meal_type":         1,
-                "saved_at":          1,
-            },
-            sort=[("saved_at", -1)]
-        ))
-        for m in meal_history:
-            m.pop("_id", None)
+                "dish_prediction":    1,
+                "image_description":  1,
+                "nutrition_info":     1,
+                "hidden_ingredients": 1,  # ← 补上，meal_analyzer 会用到
+                "meal_type":          1,
+                "saved_at":           1,
+                "_id":                0,  # ← 直接在查询里排除，省掉循环 pop
+            }
+        ).sort("saved_at", -1).limit(200))  # ← 加 limit，防止数据量过大
 
+        print(f"📊 Loaded {len(meal_history)} meals for health report analysis")
 
-
-
-        
-
-        # 生成报告
+        # ── 生成报告 ───────────────────────────────────────────────────────
         result = generate_health_report(
             profile=profile,
             goals=goals,
@@ -1208,10 +1219,11 @@ def generate_health_report_route():
             meal_history=meal_history,
         )
 
-        result["user_id"] = request.user_id
-        result["goals"] = goals
+        result["user_id"]   = request.user_id
+        result["goals"]     = goals
         result["created_at"] = datetime.now().isoformat()
 
+        # 存储报告（upsert：每个用户只保留最新一份）
         db["health_reports"].update_one(
             {"user_id": request.user_id},
             {"$set": result},
@@ -1222,20 +1234,22 @@ def generate_health_report_route():
         db["nutrition_plans"].update_one(
             {"user_id": request.user_id},
             {"$set": {
-                "user_id": request.user_id,
+                "user_id":       request.user_id,
                 "daily_calories": result.get("daily_calories", 2000),
-                "protein_g": result.get("protein_g", 100),
-                "carbs_g": result.get("carbs_g", 250),
-                "fat_g": result.get("fat_g", 65),
-                "fiber_g": result.get("fiber_g", 25),
-                "sodium_mg": result.get("sodium_mg", 2300),
-                "goals": goals,
-                "updated_at": datetime.now().isoformat()
+                "protein_g":     result.get("protein_g", 100),
+                "carbs_g":       result.get("carbs_g", 250),
+                "fat_g":         result.get("fat_g", 65),
+                "fiber_g":       result.get("fiber_g", 25),
+                "sodium_mg":     result.get("sodium_mg", 2300),
+                "goals":         goals,
+                "updated_at":    datetime.now().isoformat()
             }},
             upsert=True
         )
 
-        print(f"✅ Health report generated | score={result.get('health_score')} | {result.get('daily_calories')} kcal/day")
+        print(f"✅ Health report generated | score={result.get('health_score')} "
+              f"| {result.get('daily_calories')} kcal/day "
+              f"| foods={len(result.get('recommended_foods', []))}")
         return jsonify(result), 200
 
     except json.JSONDecodeError:
@@ -1276,85 +1290,47 @@ def internal_error(error):
 @app.errorhandler(413)
 def payload_too_large(error):
     return jsonify({"error": "Request payload too large"}), 413
-    
-    
-    
 
 
 @app.route("/ocr-health-report", methods=["POST"])
 @token_required
 def ocr_health_report():
-    """
-    两步流程：
-    Step 1 — Google Cloud Vision API (v1/images:annotate)
-             DOCUMENT_TEXT_DETECTION 识别图片中所有文字
-    Step 2 — Gemini 从识别文字中结构化提取健康数值
-    Fallback — Gemini 不可用时用正则兜底
-    """
     try:
-        # ── 读入请求 ──────────────────────────────────────────────
         data = request.get_json()
         if not data or not data.get("image_base64"):
             return jsonify({"error": "No image provided"}), 400
 
         image_b64 = data["image_base64"]
-
         vision_key = os.getenv("GOOGLE_VISION_API_KEY")
         if not vision_key:
             return jsonify({"error": "OCR service not configured on server"}), 503
 
-        # ── Step 1: Google Cloud Vision → 原始文字 ───────────────
-        # 官方端点：POST https://vision.googleapis.com/v1/images:annotate
         vision_url = f"https://vision.googleapis.com/v1/images:annotate?key={vision_key}"
-
         vision_payload = {
-            "requests": [
-                {
-                    "image": {
-                        "content": image_b64          # base64 编码图片，不加 data:// 前缀
-                    },
-                    "features": [
-                        {
-                            "type": "DOCUMENT_TEXT_DETECTION",  # 适合密集文字/表格
-                            "maxResults": 1
-                        }
-                    ],
-                    "imageContext": {
-                        "languageHints": ["en", "zh-Hans", "zh-Hant"]  # 英文 + 简繁中文
-                    }
-                }
-            ]
+            "requests": [{
+                "image": {"content": image_b64},
+                "features": [{"type": "DOCUMENT_TEXT_DETECTION", "maxResults": 1}],
+                "imageContext": {"languageHints": ["en", "zh-Hans", "zh-Hant"]}
+            }]
         }
 
         print(f"📤 Calling Google Vision API...")
-        vision_resp = requests.post(
-            vision_url,
-            json=vision_payload,
-            headers={"Content-Type": "application/json"},
-            timeout=20
-        )
+        vision_resp = requests.post(vision_url, json=vision_payload,
+                                    headers={"Content-Type": "application/json"}, timeout=20)
 
-        # 处理 Vision API 错误
         if vision_resp.status_code != 200:
             err_body = vision_resp.text[:300]
             print(f"❌ Google Vision API {vision_resp.status_code}: {err_body}")
-            return jsonify({
-                "error": f"OCR service error ({vision_resp.status_code}). Check API key or try again."
-            }), 502
+            return jsonify({"error": f"OCR service error ({vision_resp.status_code})."}), 502
 
         vision_data = vision_resp.json()
-
-        # 检查 API 级别错误（即使 HTTP 200 也可能有 error 字段）
         if "error" in vision_data.get("responses", [{}])[0]:
             api_err = vision_data["responses"][0]["error"]
-            print(f"❌ Vision API response error: {api_err}")
             return jsonify({"error": api_err.get("message", "OCR failed")}), 502
 
-        # 提取 fullTextAnnotation（最完整的文字结果）
         try:
             full_text = vision_data["responses"][0]["fullTextAnnotation"]["text"]
         except (KeyError, IndexError):
-            # 降级：尝试 textAnnotations
             try:
                 annotations = vision_data["responses"][0].get("textAnnotations", [])
                 full_text = annotations[0].get("description", "") if annotations else ""
@@ -1362,7 +1338,6 @@ def ocr_health_report():
                 full_text = ""
 
         if not full_text.strip():
-            print("⚠️ Vision OCR: no text detected")
             return jsonify({
                 "systolic_bp": None, "diastolic_bp": None,
                 "blood_sugar": None, "cholesterol": None,
@@ -1370,93 +1345,39 @@ def ocr_health_report():
                 "message": "No text detected. Make sure the image is clear and well-lit."
             }), 200
 
-        print(f"📄 Vision OCR extracted {len(full_text)} chars:\n{full_text[:400]}")
+        print(f"📄 Vision OCR extracted {len(full_text)} chars")
 
-        # ── Step 2: Gemini 结构化提取 ────────────────────────────
         if not gemini_model:
-            # Fallback：正则提取
-            print("⚠️ Gemini unavailable, falling back to regex extraction")
-            cleaned = _extract_health_values_regex(full_text)
-            return jsonify(cleaned), 200
+            return jsonify(_extract_health_values_regex(full_text)), 200
 
         extract_prompt = f"""You are a medical data extraction assistant.
+Extract health values from this OCR text. Return ONLY valid JSON, no markdown:
+{{"systolic_bp": <int or null>, "diastolic_bp": <int or null>, "blood_sugar": <float mmol/L or null>, "cholesterol": <float mmol/L or null>, "triglycerides": <float mmol/L or null>, "height_cm": <float or null>, "weight_kg": <float or null>}}
 
-The following text was extracted via OCR from a medical lab report or health check document.
-Your job is to find specific health measurement values from this text.
+Rules: only extract clearly readable values. Use null if missing or ambiguous.
+If mg/dL: glucose÷18, cholesterol÷38.67, triglycerides÷88.57.
 
 OCR TEXT:
-\"\"\"
-{full_text}
-\"\"\"
-
-Extract these values if present and clearly readable:
-
-1. Blood pressure — systolic (upper/first number) and diastolic (lower/second number) in mmHg
-   Common formats: "120/80", "BP 120/80", "SBP: 120, DBP: 80", "收缩压 120 舒张压 80"
-
-2. Fasting blood glucose / blood sugar — in mmol/L
-   If value appears to be in mg/dL (typically > 20), convert: mmol/L = mg/dL ÷ 18.0
-   Common labels: "Glucose", "GLU", "FBG", "Blood Sugar", "血糖", "空腹血糖"
-
-3. Total cholesterol — in mmol/L
-   If in mg/dL (typically > 10), convert: mmol/L = mg/dL ÷ 38.67
-   Common labels: "Total Cholesterol", "CHOL", "TC", "总胆固醇"
-
-4. Triglycerides — in mmol/L
-   If in mg/dL (typically > 10), convert: mmol/L = mg/dL ÷ 88.57
-   Common labels: "Triglycerides", "TG", "TRIG", "甘油三酯"
-
-5. Height — in cm
-   If in feet/inches (e.g. 5'8"), convert to cm (1 inch = 2.54 cm)
-   Common labels: "Height", "Ht", "身高"
-
-6. Weight — in kg
-   If in lbs, convert: kg = lbs ÷ 2.205
-   Common labels: "Weight", "Wt", "体重"
-
-IMPORTANT RULES:
-- Only extract values that are unambiguously present in the text
-- Use null if a value is missing, unclear, or out of physiological range
-- Do NOT invent, estimate, or guess values
-- Round blood values to 1 decimal place; BP to nearest integer; height to 1 decimal; weight to 1 decimal
-
-Respond with ONLY a valid JSON object. No explanation, no markdown, no code blocks:
-{{"systolic_bp": <integer or null>, "diastolic_bp": <integer or null>, "blood_sugar": <float or null>, "cholesterol": <float or null>, "triglycerides": <float or null>, "height_cm": <float or null>, "weight_kg": <float or null>}}"""
-
+\"\"\"{full_text}\"\"\"
+"""
         gemini_resp = gemini_model.generate_content(extract_prompt)
-        raw = gemini_resp.text.strip()
-
-        # 清理可能的 markdown fence
-        raw = raw.replace("```json", "").replace("```", "").strip()
-
-        # 找到 JSON 边界（防御性处理）
-        start = raw.find("{")
-        end = raw.rfind("}") + 1
+        raw = gemini_resp.text.strip().replace("```json", "").replace("```", "").strip()
+        start = raw.find("{"); end = raw.rfind("}") + 1
         if start >= 0 and end > start:
             raw = raw[start:end]
         else:
-            print(f"❌ Gemini returned non-JSON: {raw[:200]}")
-            cleaned = _extract_health_values_regex(full_text)
-            return jsonify(cleaned), 200
+            return jsonify(_extract_health_values_regex(full_text)), 200
 
-        print(f"🤖 Gemini extraction result: {raw}")
         result_json = json.loads(raw)
-
-        # ── Step 3: 范围验证 & 清理 ──────────────────────────────
         cleaned = _validate_health_values(result_json)
-        has_any = any(v is not None for v in cleaned.values())
-        print(f"✅ OCR final: {cleaned} | detected={has_any}")
-
+        print(f"✅ OCR final: {cleaned}")
         return jsonify(cleaned), 200
 
-    except json.JSONDecodeError as e:
-        print(f"❌ JSON parse error: {e}")
+    except json.JSONDecodeError:
         return jsonify({"error": "Could not parse scan results. Try a clearer image."}), 422
     except requests.exceptions.Timeout:
-        print("❌ Vision API timeout")
         return jsonify({"error": "OCR timed out. Please try again."}), 504
-    except requests.exceptions.ConnectionError as e:
-        print(f"❌ Vision API connection error: {e}")
+    except requests.exceptions.ConnectionError:
         return jsonify({"error": "Cannot reach OCR service. Check your connection."}), 503
     except Exception as e:
         print(f"❌ OCR unexpected error: {e}")
@@ -1465,7 +1386,6 @@ Respond with ONLY a valid JSON object. No explanation, no markdown, no code bloc
 
 
 def _validate_health_values(raw: dict) -> dict:
-    """验证健康数值范围，过滤掉不合理的值"""
     def safe_int(val, lo, hi):
         if val is None: return None
         try:
@@ -1492,264 +1412,74 @@ def _validate_health_values(raw: dict) -> dict:
 
 
 def _extract_health_values_regex(text: str) -> dict:
-    """
-    Gemini 不可用时的正则兜底提取器
-    支持常见英文 + 中文标签
-    """
-    import re
-
     result = {
         "systolic_bp": None, "diastolic_bp": None,
         "blood_sugar": None, "cholesterol": None,
         "triglycerides": None, "height_cm": None, "weight_kg": None
     }
-
-    # 血压：支持 "120/80", "120 / 80", "SBP 120 DBP 80", "收缩压120 舒张压80"
-    bp = re.search(
-        r'(?:BP|blood\s*pressure|收缩压|血压)?[:\s]*(\d{2,3})\s*/\s*(\d{2,3})',
-        text, re.IGNORECASE
-    )
+    bp = re.search(r'(?:BP|blood\s*pressure|收缩压|血压)?[:\s]*(\d{2,3})\s*/\s*(\d{2,3})', text, re.IGNORECASE)
     if not bp:
-        bp = re.search(
-            r'(?:SBP|systolic)[:\s]*(\d{2,3}).*?(?:DBP|diastolic)[:\s]*(\d{2,3})',
-            text, re.IGNORECASE | re.DOTALL
-        )
+        bp = re.search(r'(?:SBP|systolic)[:\s]*(\d{2,3}).*?(?:DBP|diastolic)[:\s]*(\d{2,3})', text, re.IGNORECASE | re.DOTALL)
     if bp:
         s, d = int(bp.group(1)), int(bp.group(2))
         if 60 <= s <= 250 and 30 <= d <= 150:
             result["systolic_bp"] = s
             result["diastolic_bp"] = d
-
-    # 血糖
-    glucose = re.search(
-        r'(?:glucose|blood\s*sugar|FBG|GLU|空腹血糖|血糖)[^0-9]*(\d+\.?\d*)',
-        text, re.IGNORECASE
-    )
+    glucose = re.search(r'(?:glucose|blood\s*sugar|FBG|GLU|空腹血糖|血糖)[^0-9]*(\d+\.?\d*)', text, re.IGNORECASE)
     if glucose:
         v = float(glucose.group(1))
-        if v > 30:  # 可能是 mg/dL，转换
-            v = round(v / 18.0, 1)
-        if 2.0 <= v <= 30.0:
-            result["blood_sugar"] = round(v, 1)
-
-    # 总胆固醇
-    chol = re.search(
-        r'(?:total\s*chol(?:esterol)?|CHOL|TC|总胆固醇)[^0-9]*(\d+\.?\d*)',
-        text, re.IGNORECASE
-    )
+        if v > 30: v = round(v / 18.0, 1)
+        if 2.0 <= v <= 30.0: result["blood_sugar"] = round(v, 1)
+    chol = re.search(r'(?:total\s*chol(?:esterol)?|CHOL|TC|总胆固醇)[^0-9]*(\d+\.?\d*)', text, re.IGNORECASE)
     if chol:
         v = float(chol.group(1))
-        if v > 20:  # mg/dL → mmol/L
-            v = round(v / 38.67, 1)
-        if 1.0 <= v <= 15.0:
-            result["cholesterol"] = round(v, 1)
-
-    # 甘油三酯
-    trig = re.search(
-        r'(?:triglyceride|TG|TRIG|甘油三酯)[^0-9]*(\d+\.?\d*)',
-        text, re.IGNORECASE
-    )
+        if v > 20: v = round(v / 38.67, 1)
+        if 1.0 <= v <= 15.0: result["cholesterol"] = round(v, 1)
+    trig = re.search(r'(?:triglyceride|TG|TRIG|甘油三酯)[^0-9]*(\d+\.?\d*)', text, re.IGNORECASE)
     if trig:
         v = float(trig.group(1))
-        if v > 15:  # mg/dL → mmol/L
-            v = round(v / 88.57, 1)
-        if 0.2 <= v <= 10.0:
-            result["triglycerides"] = round(v, 1)
-
-    # 身高（3位数，cm）
-    height = re.search(
-        r'(?:height|Ht|身高)[^0-9]*(\d{3}(?:\.\d)?)\s*(?:cm)?',
-        text, re.IGNORECASE
-    )
+        if v > 15: v = round(v / 88.57, 1)
+        if 0.2 <= v <= 10.0: result["triglycerides"] = round(v, 1)
+    height = re.search(r'(?:height|Ht|身高)[^0-9]*(\d{3}(?:\.\d)?)\s*(?:cm)?', text, re.IGNORECASE)
     if height:
         v = float(height.group(1))
-        if 100 <= v <= 230:
-            result["height_cm"] = v
-
-    # 体重
-    weight = re.search(
-        r'(?:weight|Wt|体重)[^0-9]*(\d{2,3}\.?\d*)\s*(?:kg)?',
-        text, re.IGNORECASE
-    )
+        if 100 <= v <= 230: result["height_cm"] = v
+    weight = re.search(r'(?:weight|Wt|体重)[^0-9]*(\d{2,3}\.?\d*)\s*(?:kg)?', text, re.IGNORECASE)
     if weight:
         v = float(weight.group(1))
-        if 30 <= v <= 300:
-            result["weight_kg"] = round(v, 1)
-
+        if 30 <= v <= 300: result["weight_kg"] = round(v, 1)
     return result
-    
-    
-# ── helper: extract raw text from PDF bytes ───────────────────────────────────
+
+
 def _extract_text_from_pdf(pdf_bytes: bytes) -> str:
     text_pages = []
     with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
         for page in doc:
             text_pages.append(page.get_text())
     return "\n".join(text_pages)
- 
-# ── helper: extract raw text from DOCX bytes ─────────────────────────────────
+
 def _extract_text_from_docx(docx_bytes: bytes) -> str:
     doc = docx.Document(io.BytesIO(docx_bytes))
     return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
- 
-# ── helper: ask Gemini to pull structured values from free text ───────────────
+
 def _extract_health_values_from_text(raw_text: str) -> dict:
-    prompt = f"""
-You are a medical document parser. Extract health values from the following text.
- 
+    prompt = f"""You are a medical document parser. Extract health values from the following text.
 Return ONLY a valid JSON object with these keys (use null if not found):
-{{
-  "systolic_bp": <int or null>,
-  "diastolic_bp": <int or null>,
-  "blood_sugar": <float mmol/L or null>,
-  "cholesterol": <float mmol/L or null>,
-  "triglycerides": <float mmol/L or null>,
-  "height_cm": <float or null>,
-  "weight_kg": <float or null>
-}}
- 
-Conversion rules if units differ:
-- Blood glucose in mg/dL → divide by 18.0
-- Cholesterol in mg/dL → divide by 38.67
-- Triglycerides in mg/dL → divide by 88.57
-- Height in feet/inches → convert to cm
-- Weight in lbs → multiply by 0.4536
- 
-Document text:
-\"\"\"
-{raw_text[:4000]}
-\"\"\"
- 
-Respond with JSON only. No markdown, no explanation.
-"""
+{{"systolic_bp": <int or null>, "diastolic_bp": <int or null>, "blood_sugar": <float mmol/L or null>, "cholesterol": <float mmol/L or null>, "triglycerides": <float mmol/L or null>, "height_cm": <float or null>, "weight_kg": <float or null>}}
+Conversion: glucose mg/dL÷18, cholesterol mg/dL÷38.67, triglycerides mg/dL÷88.57, weight lbs×0.4536.
+Document text:\"\"\"{raw_text[:4000]}\"\"\"
+Respond with JSON only."""
     import google.generativeai as genai
-    import os, json
- 
     genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
     model = genai.GenerativeModel("gemini-2.0-flash")
     response = model.generate_content(prompt)
     raw = response.text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
- 
     try:
         return json.loads(raw)
     except Exception:
-        # Regex fallback
         return _extract_health_values_regex(raw_text)
- 
-# ── regex fallback (same logic as existing /ocr-health-report) ────────────────
-def _extract_health_values_regex(text: str) -> dict:
-    result = {
-        "systolic_bp": None, "diastolic_bp": None,
-        "blood_sugar": None, "cholesterol": None,
-        "triglycerides": None, "height_cm": None, "weight_kg": None
-    }
-    bp = re.search(r'(\d{2,3})\s*/\s*(\d{2,3})', text)
-    if bp:
-        result["systolic_bp"]  = int(bp.group(1))
-        result["diastolic_bp"] = int(bp.group(2))
-    bs = re.search(r'(?:glucose|blood sugar|fasting)[^\d]*(\d+\.?\d*)', text, re.I)
-    if bs:
-        v = float(bs.group(1))
-        result["blood_sugar"] = round(v / 18.0, 2) if v > 20 else v
-    ch = re.search(r'(?:total cholesterol|cholesterol)[^\d]*(\d+\.?\d*)', text, re.I)
-    if ch:
-        v = float(ch.group(1))
-        result["cholesterol"] = round(v / 38.67, 2) if v > 15 else v
-    tr = re.search(r'(?:triglycerides?)[^\d]*(\d+\.?\d*)', text, re.I)
-    if tr:
-        v = float(tr.group(1))
-        result["triglycerides"] = round(v / 88.57, 2) if v > 10 else v
-    ht = re.search(r'(?:height)[^\d]*(\d{2,3}(?:\.\d)?)\s*(?:cm)?', text, re.I)
-    if ht:
-        result["height_cm"] = float(ht.group(1))
-    wt = re.search(r'(?:weight)[^\d]*(\d{2,3}(?:\.\d)?)\s*(?:kg)?', text, re.I)
-    if wt:
-        result["weight_kg"] = float(wt.group(1))
-    return result
- 
- 
-# ── PASTE THIS ROUTE INTO app.py ──────────────────────────────────────────────
-"""
-@app.route('/ocr-document', methods=['POST'])
-@jwt_required()
-def ocr_document():
-    \"\"\"
-    Accept PDF, DOCX, or image (base64).
-    Extract health values and return same JSON as /ocr-health-report.
-    \"\"\"
-    import json as _json
- 
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "No data provided"}), 400
- 
-    file_b64  = data.get("file_base64", "")
-    file_type = data.get("file_type", "image").lower()   # "pdf" | "docx" | "image"
- 
-    if not file_b64:
-        return jsonify({"error": "file_base64 is required"}), 400
- 
-    try:
-        file_bytes = base64.b64decode(file_b64)
-    except Exception:
-        return jsonify({"error": "Invalid base64 data"}), 400
- 
-    # ── Route by file type ────────────────────────────────────────────────────
-    if file_type == "pdf":
-        raw_text = _extract_text_from_pdf(file_bytes)
-        if len(raw_text.strip()) < 20:
-            # Scanned PDF with no text layer → render page 0 as image and use Vision
-            with fitz.open(stream=file_bytes, filetype="pdf") as doc:
-                page  = doc[0]
-                pix   = page.get_pixmap(dpi=200)
-                img_bytes = pix.tobytes("jpeg")
-            img_b64 = base64.b64encode(img_bytes).decode()
-            # Fall through to existing Vision API logic by delegating internally
-            result = _ocr_via_vision_api(img_b64)
-        else:
-            result = _extract_health_values_from_text(raw_text)
- 
-    elif file_type == "docx":
-        raw_text = _extract_text_from_docx(file_bytes)
-        result   = _extract_health_values_from_text(raw_text)
- 
-    else:
-        # Treat as image — delegate to existing Vision + Gemini pipeline
-        result = _ocr_via_vision_api(file_b64)
- 
-    return jsonify(result), 200
- 
- 
-def _ocr_via_vision_api(img_b64: str) -> dict:
-    \"\"\"
-    Thin wrapper that reuses your existing Vision + Gemini OCR logic.
-    Copy the body of your current /ocr-health-report here, or call a shared helper.
-    \"\"\"
-    import requests as _req, os, json as _json
-    vision_key = os.environ.get("GOOGLE_VISION_API_KEY", "")
-    vision_url = f"https://vision.googleapis.com/v1/images:annotate?key={vision_key}"
-    vision_payload = {
-        "requests": [{
-            "image": {"content": img_b64},
-            "features": [{"type": "DOCUMENT_TEXT_DETECTION"}],
-            "imageContext": {"languageHints": ["en", "zh-Hans", "zh-Hant"]}
-        }]
-    }
-    vision_resp = _req.post(vision_url, json=vision_payload, timeout=30)
-    raw_text = ""
-    if vision_resp.status_code == 200:
-        annotations = vision_resp.json().get("responses", [{}])[0]
-        raw_text = annotations.get("fullTextAnnotation", {}).get("text", "")
-    if not raw_text.strip():
-        return {k: None for k in
-                ["systolic_bp","diastolic_bp","blood_sugar","cholesterol","triglycerides","height_cm","weight_kg"]}
-    return _extract_health_values_from_text(raw_text)
-"""
- 
-# ─────────────────────────────────────────────────────────────────────────────
-#  Paste this route into app.py, after the /get-health-report endpoint
-#  Also add the helper function _generate_meal_insight_text() below the route
-# ─────────────────────────────────────────────────────────────────────────────
+
+
 @app.route("/meal-insight", methods=["POST"])
 @token_required
 @db_required
@@ -1758,47 +1488,29 @@ def meal_insight():
         data = request.get_json()
         if not data:
             return jsonify({"error": "Empty request"}), 400
-
         meal_id        = data.get("meal_id", "")
         nutrition_info = data.get("nutrition_info", "")
         dish_name      = data.get("dish_name", "this meal")
         ingredients    = data.get("ingredients", "")
-
         if not nutrition_info:
             return jsonify({"error": "nutrition_info required"}), 400
-
         health_profile = db["health_profiles"].find_one({"user_id": request.user_id}) or {}
         health_report  = db["health_reports"].find_one(
-            {"user_id": request.user_id}, sort=[("created_at", -1)]
-        ) or {}
-
+            {"user_id": request.user_id}, sort=[("created_at", -1)]) or {}
         if not gemini_model:
             return jsonify({"error": "AI service unavailable"}), 503
-
         insight = _generate_meal_insight(
-            dish_name=dish_name,
-            nutrition_info=nutrition_info,
-            ingredients=ingredients,
-            health_profile=health_profile,
-            health_report=health_report,
-            gemini_model=gemini_model
-        )
-
+            dish_name=dish_name, nutrition_info=nutrition_info, ingredients=ingredients,
+            health_profile=health_profile, health_report=health_report, gemini_model=gemini_model)
         insight["meal_id"]      = meal_id
         insight["generated_at"] = datetime.now().isoformat()
-
         if meal_id:
             try:
-                meals_collection.update_one(
-                    {"_id": ObjectId(meal_id)},
-                    {"$set": {"ai_insight": insight}}
-                )
+                meals_collection.update_one({"_id": ObjectId(meal_id)}, {"$set": {"ai_insight": insight}})
                 print(f"✅ AI insight saved for meal {meal_id}")
             except Exception as e:
                 print(f"⚠️ Could not persist insight: {e}")
-
         return jsonify(insight), 200
-
     except json.JSONDecodeError:
         return jsonify({"error": "AI returned invalid format"}), 500
     except Exception as e:
@@ -1809,7 +1521,6 @@ def meal_insight():
 
 def _generate_meal_insight(dish_name, nutrition_info, ingredients,
                             health_profile, health_report, gemini_model):
-
     profile_ctx = ""
     if health_profile:
         bmi   = health_profile.get("weight_kg", 0) / ((health_profile.get("height_cm", 170) / 100) ** 2)
@@ -1828,102 +1539,40 @@ def _generate_meal_insight(dish_name, nutrition_info, ingredients,
             parts.append(f"Diet: {', '.join(prefs)}")
         profile_ctx = "; ".join(parts)
 
-    goals_ctx = ""
-    daily_cal  = 0
-    daily_prot = 0
-    daily_sod  = 0
+    goals_ctx = ""; daily_cal = 0; daily_prot = 0; daily_sod = 0
     if health_report:
         goals      = health_report.get("goals", [])
         daily_cal  = health_report.get("daily_calories", 0)
         daily_prot = health_report.get("protein_g", 0)
         daily_sod  = health_report.get("sodium_mg", 0)
-        goals_ctx  = (
-            f"Daily targets: {daily_cal} kcal, {daily_prot}g protein, {daily_sod}mg sodium. "
-            f"Health goals: {', '.join(goals) if goals else 'general wellness'}."
-        )
+        goals_ctx  = (f"Daily targets: {daily_cal} kcal, {daily_prot}g protein, {daily_sod}mg sodium. "
+                      f"Health goals: {', '.join(goals) if goals else 'general wellness'}.")
 
     prompt = f"""You are NutriCam AI, a personal nutrition coach. Analyse this meal and return a JSON insight.
-
 MEAL: {dish_name}
+NUTRITION (pipe-separated): {nutrition_info}
+INGREDIENTS: {ingredients if ingredients else "(not provided)"}
+USER HEALTH CONTEXT: {profile_ctx if profile_ctx else "No profile available"}
+USER GOALS & DAILY TARGETS: {goals_ctx if goals_ctx else "No targets set"}
+Daily calorie target: {daily_cal or "unknown"} kcal | protein: {daily_prot or "unknown"} g | sodium: {daily_sod or "2000"} mg
 
-NUTRITION (pipe-separated, name|value|unit):
-{nutrition_info}
-
-INGREDIENTS:
-{ingredients if ingredients else "(not provided)"}
-
-USER HEALTH CONTEXT:
-{profile_ctx if profile_ctx else "No profile available"}
-
-USER GOALS & DAILY TARGETS:
-{goals_ctx if goals_ctx else "No targets set"}
-Daily calorie target: {daily_cal or "unknown"} kcal
-Daily protein target: {daily_prot or "unknown"} g
-Daily sodium target:  {daily_sod or "2000"} mg
-
-Return ONLY a valid JSON object with EXACTLY this structure (no markdown, no extra keys):
-{{
-  "macro_score": {{
-    "rating": "<one of: Balanced / High Sodium / High Fat / Low Protein / High Calorie / Good>",
-    "color":  "<one of: green / orange / red>",
-    "summary": "<1 sentence overall summary>"
-  }},
-  "highlights": [
-    {{
-      "ingredient": "<ingredient name>",
-      "badge": "<short badge e.g. High Fiber / Good Protein / Rich in Omega-3>",
-      "note": "<1 sentence why it is good for this specific user>"
-    }}
-  ],
-  "warnings": [
-    {{
-      "nutrient": "<nutrient name>",
-      "value": "<value with unit e.g. 985 mg>",
-      "note": "<1 sentence actionable advice>"
-    }}
-  ],
-  "tip": "<1 personalised actionable sentence for next time, max 20 words>",
-  "nutrient_insights": {{
-    "calories":  {{ "status": "<ok|high|low>", "insight": "<1 sentence about this nutrient for this user>", "suggestion": "<1 concrete actionable sentence>" }},
-    "protein":   {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
-    "fat":       {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
-    "carbs":     {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
-    "fiber":     {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
-    "sugar":     {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }},
-    "sodium":    {{ "status": "<ok|high|low>", "insight": "<1 sentence>", "suggestion": "<1 sentence>" }}
-  }}
-}}
-
-Rules:
-- highlights: 1-3 items, genuinely positive ingredients only
-- warnings: 0-2 items, only if a nutrient clearly exceeds healthy limits or the user's specific condition
-- nutrient_insights: fill ALL 7 keys. status is "ok" unless clearly high or low vs daily targets or standard limits
-- If user has high blood pressure, be extra strict on sodium
-- If diabetic risk, be extra strict on sugar
-- tip must be specific to this user's goals, not generic
-- All text concise and friendly, no jargon"""
+Return ONLY valid JSON with EXACTLY this structure:
+{{"macro_score":{{"rating":"<Balanced/High Sodium/High Fat/Low Protein/High Calorie/Good>","color":"<green/orange/red>","summary":"<1 sentence>"}},"highlights":[{{"ingredient":"<name>","badge":"<badge>","note":"<1 sentence>"}}],"warnings":[{{"nutrient":"<name>","value":"<value with unit>","note":"<1 sentence>"}}],"tip":"<1 sentence max 20 words>","nutrient_insights":{{"calories":{{"status":"<ok|high|low>","insight":"<1 sentence>","suggestion":"<1 sentence>"}},"protein":{{"status":"<ok|high|low>","insight":"<1 sentence>","suggestion":"<1 sentence>"}},"fat":{{"status":"<ok|high|low>","insight":"<1 sentence>","suggestion":"<1 sentence>"}},"carbs":{{"status":"<ok|high|low>","insight":"<1 sentence>","suggestion":"<1 sentence>"}},"fiber":{{"status":"<ok|high|low>","insight":"<1 sentence>","suggestion":"<1 sentence>"}},"sugar":{{"status":"<ok|high|low>","insight":"<1 sentence>","suggestion":"<1 sentence>"}},"sodium":{{"status":"<ok|high|low>","insight":"<1 sentence>","suggestion":"<1 sentence>"}}}}}}"""
 
     resp = gemini_model.generate_content(prompt)
     raw  = resp.text.strip().replace("```json", "").replace("```", "").strip()
-
-    start = raw.find("{")
-    end   = raw.rfind("}") + 1
+    start = raw.find("{"); end = raw.rfind("}") + 1
     if start >= 0 and end > start:
         raw = raw[start:end]
-
     result = json.loads(raw)
-
     result.setdefault("macro_score", {"rating": "N/A", "color": "gray", "summary": ""})
     result.setdefault("highlights", [])
     result.setdefault("warnings",   [])
     result.setdefault("tip", "")
-
-    # Ensure all 7 nutrient keys exist with safe defaults
     default_ni = {"status": "ok", "insight": "", "suggestion": ""}
     ni = result.setdefault("nutrient_insights", {})
     for key in ["calories", "protein", "fat", "carbs", "fiber", "sugar", "sodium"]:
         ni.setdefault(key, default_ni.copy())
-
     return result
 
 
@@ -1932,6 +1581,8 @@ def _bmi_category(bmi):
     if bmi < 25:   return "Normal"
     if bmi < 30:   return "Overweight"
     return "Obese"
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"🚀 Starting on port {port}")
