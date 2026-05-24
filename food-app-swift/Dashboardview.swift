@@ -193,6 +193,8 @@ struct DashboardView: View {
                                 profileLoadingSection
                             }
 
+                            DailyHealthBanner()
+
                             calorieMainCard
 
                             if !filteredMealsForDisplay.isEmpty { comprehensiveNutritionSection }
