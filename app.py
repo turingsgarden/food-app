@@ -103,7 +103,7 @@ try:
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key:
         genai.configure(api_key=gemini_api_key)
-        gemini_model = genai.GenerativeModel('gemini-2.5-pro')
+        gemini_model = genai.GenerativeModel('gemini-2.5-flash')
         print("✅ Gemini configured")
     else:
         print("⚠️ GEMINI_API_KEY not found")
