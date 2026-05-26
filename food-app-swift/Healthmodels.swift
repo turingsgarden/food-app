@@ -152,12 +152,20 @@ struct DayMealPlan: Codable, Identifiable {
     var id: String { date }
     var date: String
     var dayName: String
-    var breakfast: PlannedMeal
-    var lunch: PlannedMeal
-    var dinner: PlannedMeal
+    var breakfast: PlannedMeal?
+    var lunch: PlannedMeal?
+    var dinner: PlannedMeal?
     var totalCalories: Int
 
-    var meals: [PlannedMeal] { [breakfast, lunch, dinner] }
+    /// Non-null meal slots with a name (backend omits unused slots as null).
+    var activeMeals: [PlannedMeal] {
+        [breakfast, lunch, dinner].compactMap { meal in
+            guard let meal, let name = meal.name, !name.isEmpty else { return nil }
+            return meal
+        }
+    }
+
+    var meals: [PlannedMeal] { activeMeals }
 
     enum CodingKeys: String, CodingKey {
         case date

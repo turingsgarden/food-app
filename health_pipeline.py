@@ -106,8 +106,74 @@ def generate_health_report(profile: dict, goals: list, gemini_model,
 # 3. 生成餐食计划
 # ════════════════════════════════════════════════════════════════
 
+def _meal_history_context(meal_history: list | None) -> dict | None:
+    """Build prompt context from meal history; None if no usable data."""
+    if not meal_history:
+        return None
+
+    from meal_analyzer import analyze_meal_history, _parse_date
+
+    cutoff = datetime.now() - timedelta(days=30)
+    meals_30 = []
+    for meal in meal_history:
+        meal_date = _parse_date(meal.get("saved_at", ""))
+        if meal_date and meal_date >= cutoff:
+            meals_30.append(meal)
+
+    if not meals_30:
+        return None
+
+    analysis_30 = analyze_meal_history(meals_30)
+    analysis_full = analyze_meal_history(meal_history)
+    top_foods = [f["food"] for f in analysis_30.get("food_preferences", [])[:8]]
+    gaps = analysis_full.get("nutrient_gaps") or {}
+
+    if not top_foods and not gaps.get("deficient") and not gaps.get("excessive"):
+        return None
+
+    return {
+        "top_foods": top_foods,
+        "nutrient_deficiencies": gaps.get("deficient") or [],
+        "nutrient_excesses": gaps.get("excessive") or [],
+        "cooking_style_preferences": analysis_full.get("cooking_style_prefs") or {},
+    }
+
+
+def _format_gap_list(gap_list: list) -> str:
+    if not gap_list:
+        return "None identified"
+    return ", ".join(
+        f"{g['nutrient']} (avg {g['avg_daily']}, ref {g['reference']})" for g in gap_list
+    )
+
+
+def _format_cooking_styles(cooking_prefs: dict) -> str:
+    if not cooking_prefs:
+        return "unknown"
+    top = sorted(cooking_prefs.items(), key=lambda item: item[1], reverse=True)[:3]
+    return ", ".join(f"{style} ({int(pct * 100)}%)" for style, pct in top)
+
+
+def _build_meal_history_section(meal_context: dict | None, plan_days: int) -> str:
+    if not meal_context:
+        return ""
+
+    top_foods = ", ".join(meal_context["top_foods"]) if meal_context["top_foods"] else "None logged"
+    return (
+        f"\nRecent eating patterns (last 30 days):\n"
+        f"- Frequent foods (vary away from these): {top_foods}\n"
+        f"- Cooking styles preferred: {_format_cooking_styles(meal_context['cooking_style_preferences'])}\n"
+        f"- Nutrient gaps to address: {_format_gap_list(meal_context['nutrient_deficiencies'])}\n"
+        f"- Nutrients to limit: {_format_gap_list(meal_context['nutrient_excesses'])}\n"
+        f"\nIMPORTANT: Do not repeat the frequent foods above more than once "
+        f"across the entire {plan_days}-day plan. Prioritize foods that address "
+        f"the nutrient gaps listed.\n"
+    )
+
+
 def _build_day_prompt(day_date, day_name, day_index, cal, prot, carbs, fat,
-                       diet, allergy, meals_per_day, meal_types):
+                       diet, allergy, meals_per_day, meal_types,
+                       meal_history_context=None, plan_days=7):
     variety = VARIETY_HINTS[day_index % len(VARIETY_HINTS)]
     if meals_per_day == 1:
         cal_split = f"All {cal} kcal in one meal"
@@ -124,12 +190,15 @@ def _build_day_prompt(day_date, day_name, day_index, cal, prot, carbs, fat,
             f'"{mt}":{{"meal_type":"{mt}","name":"<unique {mt} name>","items":[{{"food":"<specific food>","amount_g":<n>,"calories":<n>,"protein":<n>,"carbs":<n>,"fat":<n>}}],"total_calories":<n>,"total_protein":<n>,"total_carbs":<n>,"total_fat":<n>}}'
         )
 
+    history_section = _build_meal_history_section(meal_history_context, plan_days)
+
     return (
         f"You are a dietitian. Create a UNIQUE ONE-DAY meal plan. Return JSON only, no markdown.\n"
         f"Day: {day_name} {day_date} (Day {day_index + 1})\n"
         f"TODAY'S CUISINE THEME: {variety}\n"
         f"Targets: {cal} kcal | P{prot}g C{carbs}g F{fat}g | {cal_split}\n"
         f"Diet: {diet} | Avoid: {allergy}\n"
+        f"{history_section}"
         f"IMPORTANT: Use ONLY {day_name}'s cuisine theme. Every meal must be COMPLETELY DIFFERENT from other days.\n\n"
         f"Return ONLY this JSON:\n"
         f'{{"date":"{day_date}","day_name":"{day_name}",'
@@ -140,10 +209,14 @@ def _build_day_prompt(day_date, day_name, day_index, cal, prot, carbs, fat,
 
 
 def generate_meal_plan(nutrition_plan: dict, health_profile: dict, days: int = 7,
-                        meals_per_day: int = 3, gemini_model=None) -> dict:
+                        meals_per_day: int = 3, gemini_model=None,
+                        meal_history: list | None = None) -> dict:
     flash = _flash_model or genai.GenerativeModel('gemini-2.5-flash')
     days = max(1, min(7, days))
     meals_per_day = max(1, min(3, meals_per_day))
+    meal_history_context = _meal_history_context(meal_history)
+    if meal_history_context:
+        print(f"🍽️ Meal plan using history: top_foods={len(meal_history_context['top_foods'])}")
 
     today = datetime.now()
     day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -169,7 +242,9 @@ def generate_meal_plan(nutrition_plan: dict, health_profile: dict, days: int = 7
     def generate_single_day(day: dict) -> dict:
         prompt = _build_day_prompt(
             day["date"], day["day_name"], day["index"],
-            cal, prot, carbs, fat, diet, allergy, meals_per_day, meal_types
+            cal, prot, carbs, fat, diet, allergy, meals_per_day, meal_types,
+            meal_history_context=meal_history_context,
+            plan_days=days,
         )
         response = flash.generate_content(prompt)
         text = re.sub(r"```json|```", "", response.text).strip()
@@ -222,8 +297,12 @@ def generate_meal_plan(nutrition_plan: dict, health_profile: dict, days: int = 7
 
 
 def generate_weekly_meal_plan(nutrition_plan: dict, health_profile: dict, gemini_model=None,
-                               days: int = 7, meals_per_day: int = 3) -> dict:
-    return generate_meal_plan(nutrition_plan, health_profile, days, meals_per_day, gemini_model)
+                               days: int = 7, meals_per_day: int = 3,
+                               meal_history: list | None = None) -> dict:
+    return generate_meal_plan(
+        nutrition_plan, health_profile, days, meals_per_day, gemini_model,
+        meal_history=meal_history,
+    )
 
 
 # ════════════════════════════════════════════════════════════════

@@ -19,8 +19,32 @@ from health_pipeline import (
     generate_nutrition_targets,
     generate_weekly_meal_plan,
 )
+from daily_banner import build_daily_banner_message
 
 health_bp = Blueprint("health", __name__)
+
+
+def _fetch_user_meal_history(user_id: str, days: int = 90, limit: int = 200) -> list:
+    return list(
+        db["meals"]
+        .find(
+            {
+                "user_id": user_id,
+                "saved_at": {"$gte": (datetime.now() - timedelta(days=days)).isoformat()},
+            },
+            {
+                "dish_prediction": 1,
+                "image_description": 1,
+                "nutrition_info": 1,
+                "hidden_ingredients": 1,
+                "meal_type": 1,
+                "saved_at": 1,
+                "_id": 0,
+            },
+        )
+        .sort("saved_at", -1)
+        .limit(limit)
+    )
 
 
 @health_bp.route("/save-health-profile", methods=["POST"])
@@ -54,6 +78,21 @@ def get_health_profile():
         return jsonify(profile), 200
     except Exception as e:
         print(f"❌ get_health_profile: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@health_bp.route("/daily-banner-message", methods=["GET"])
+@token_required
+@db_required
+def daily_banner_message():
+    try:
+        profile = db["health_profiles"].find_one({"user_id": request.user_id})
+        if profile:
+            profile.pop("_id", None)
+        message = build_daily_banner_message(profile, meals_collection, request.user_id)
+        return jsonify({"message": message, "generated_at": datetime.now().isoformat()}), 200
+    except Exception as e:
+        print(f"❌ daily_banner_message: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -91,10 +130,13 @@ def generate_meal_plan_route():
         data = request.get_json()
         if not data:
             return jsonify({"error": "Empty request"}), 400
+        meal_history = _fetch_user_meal_history(request.user_id)
+        print(f"📊 Loaded {len(meal_history)} meals for meal plan generation")
         result = generate_weekly_meal_plan(
             nutrition_plan=data.get("nutrition_plan", {}),
             health_profile=data.get("health_profile", {}),
             gemini_model=gemini_model,
+            meal_history=meal_history,
         )
         result["user_id"] = request.user_id
         result["created_at"] = datetime.now().isoformat()
@@ -123,12 +165,15 @@ def generate_meal_plan_async():
         def run_generation():
             try:
                 print(f"🍽️ Background job {job_id} started")
+                meal_history = _fetch_user_meal_history(user_id)
+                print(f"📊 Loaded {len(meal_history)} meals for async meal plan")
                 result = generate_weekly_meal_plan(
                     nutrition_plan=data.get("nutrition_plan", {}),
                     health_profile=data.get("health_profile", {}),
                     days=data.get("days", 7),
                     meals_per_day=data.get("meals_per_day", 3),
                     gemini_model=gemini_model,
+                    meal_history=meal_history,
                 )
                 result["user_id"] = user_id
                 result["created_at"] = datetime.now().isoformat()
@@ -306,26 +351,7 @@ def generate_health_report_route():
             if plan:
                 goals = plan.get("goals", [])
 
-        meal_history = list(
-            db["meals"]
-            .find(
-                {
-                    "user_id": request.user_id,
-                    "saved_at": {"$gte": (datetime.now() - timedelta(days=90)).isoformat()},
-                },
-                {
-                    "dish_prediction": 1,
-                    "image_description": 1,
-                    "nutrition_info": 1,
-                    "hidden_ingredients": 1,
-                    "meal_type": 1,
-                    "saved_at": 1,
-                    "_id": 0,
-                },
-            )
-            .sort("saved_at", -1)
-            .limit(200)
-        )
+        meal_history = _fetch_user_meal_history(request.user_id)
 
         print(f"📊 Loaded {len(meal_history)} meals for health report analysis")
 

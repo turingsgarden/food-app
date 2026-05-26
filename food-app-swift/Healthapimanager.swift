@@ -388,6 +388,33 @@ class HealthAPIManager {
         return data
     }
 
+    // MARK: - Daily Banner Message
+
+    func fetchDailyBannerMessage(completion: @escaping (String?) -> Void) {
+        guard let url = URL(string: "\(base)/daily-banner-message"),
+              let token = token else {
+            completion(nil)
+            return
+        }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = Timeout.short
+        URLSession.shared.dataTask(with: req) { data, resp, _ in
+            DispatchQueue.main.async {
+                guard let data = data,
+                      (resp as? HTTPURLResponse)?.statusCode == 200,
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let message = json["message"] as? String,
+                      !message.isEmpty
+                else {
+                    completion(nil)
+                    return
+                }
+                completion(message)
+            }
+        }.resume()
+    }
+
     // MARK: - Execution Trace
 
     func fetchTrace(

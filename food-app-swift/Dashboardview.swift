@@ -43,6 +43,10 @@ struct DashboardView: View {
     @State private var showTimePicker = false
     @State private var nutritionPage: Int = 0
     @State private var healthReportCalorieGoal: Int? = nil
+    @State private var dailyBannerMessage: String = DashboardView.defaultDailyBannerMessage
+
+    private static let defaultDailyBannerMessage =
+        "I noticed your sodium intake yesterday was a bit high. Let's start today with a low-sodium breakfast — maybe oatmeal with berries instead of bacon and eggs?"
 
 
     var filteredNutrition: (protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
@@ -193,7 +197,7 @@ struct DashboardView: View {
                                 profileLoadingSection
                             }
 
-                            DailyHealthBanner()
+                            DailyHealthBanner(message: dailyBannerMessage)
 
                             calorieMainCard
 
@@ -719,6 +723,7 @@ struct DashboardView: View {
         guard !hasInitialized else { return }
         hasInitialized = true
         loadUserPreferences()
+        loadDailyBannerMessage()
      
         // 1. Fetch profile if needed (fire-and-forget, fast)
         if profileManager.userProfile == nil && !profileManager.isNewUser {
@@ -770,6 +775,30 @@ struct DashboardView: View {
     func loadUserPreferences() {
         if let profile = profileManager.userProfile { calorieGoal = profile.calorieTarget }
         else if let saved = UserDefaults.standard.object(forKey: "calorie_target") as? Int { calorieGoal = saved }
+    }
+
+    func loadDailyBannerMessage() {
+        let userId = getCurrentUserId()
+        guard !userId.isEmpty else { return }
+
+        let dateKey = dailyBannerCacheDateKey()
+        let cacheKey = "daily_banner_message_\(userId)_\(dateKey)"
+        if let cached = UserDefaults.standard.string(forKey: cacheKey), !cached.isEmpty {
+            dailyBannerMessage = cached
+            return
+        }
+
+        HealthAPIManager.shared.fetchDailyBannerMessage { message in
+            guard let message, !message.isEmpty else { return }
+            dailyBannerMessage = message
+            UserDefaults.standard.set(message, forKey: cacheKey)
+        }
+    }
+
+    private func dailyBannerCacheDateKey() -> String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: Date())
     }
 
     // MARK: - Individual fetches with tiered timeouts

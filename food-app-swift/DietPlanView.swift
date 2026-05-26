@@ -8,12 +8,17 @@ import SwiftUI
 struct DietPlanView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @ObservedObject var session = SessionManager.shared
+    let nutritionPlan: NutritionPlan
+    let bundledHealthProfile: HealthProfile
+
     @State private var showMenuSheet  = false
     @State private var showShareSheet  = false
     @State private var shareItems: [Any] = []
     @State private var isRenderingPDF  = false
     @State private var healthReport: HealthReport?
     @State private var healthProfile: HealthProfile?
+    @State private var weeklyMealPlan: WeeklyMealPlan?
+    @State private var showPlanGenerator = false
     @State private var isLoading = false
     @State private var isGenerating = false
     @State private var errorMsg = ""
@@ -47,7 +52,11 @@ struct DietPlanView: View {
             }
             .preferredColorScheme(themeManager.current.colorScheme)
             .navigationBarHidden(true)
-            .onAppear { loadData() }
+            .onAppear {
+                if healthProfile == nil { healthProfile = bundledHealthProfile }
+                loadData()
+                loadWeeklyMealPlan()
+            }
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
             } message: { Text(errorMsg) }
@@ -77,6 +86,17 @@ struct DietPlanView: View {
                 Button("Keep Current Plan", role: .cancel) {}
             } message: {
                 Text("It's been over 7 days since your health plan was last generated. Would you like to refresh it with your latest profile?")
+            }
+            .fullScreenCover(isPresented: $showPlanGenerator, onDismiss: { loadWeeklyMealPlan() }) {
+                PlanGeneratorView(
+                    nutritionPlan: nutritionPlan,
+                    healthProfile: healthProfile ?? bundledHealthProfile,
+                    onGenerated: { plan in
+                        weeklyMealPlan = plan
+                        showPlanGenerator = false
+                    }
+                )
+                .environmentObject(themeManager)
             }
         }
     }
@@ -138,6 +158,18 @@ struct DietPlanView: View {
         }
     }
 
+    func loadWeeklyMealPlan() {
+        HealthAPIManager.shared.fetchCurrentWeekPlan(userId: currentUserId) { plan in
+            self.weeklyMealPlan = plan
+        }
+    }
+
+    private var todayDateString: String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: Date())
+    }
+
     // MARK: - Report View
 
     func reportView(report: HealthReport) -> some View {
@@ -170,6 +202,9 @@ struct DietPlanView: View {
 
                 lifestyleTipCard(tip: report.lifestyleTip)
                     .padding(.horizontal, 20).padding(.bottom, 20)
+
+                weeklyMealPlanSection
+                    .padding(.horizontal, 20).padding(.bottom, 24)
 
                 Button(action: { generateReport(force: true) }) {
                     HStack(spacing: 6) {
@@ -818,6 +853,68 @@ struct DietPlanView: View {
             .stroke(Color(red: 0.95, green: 0.75, blue: 0.20).opacity(0.2), lineWidth: 1))
     }
 
+    // MARK: - Weekly Meal Plan
+
+    @ViewBuilder
+    var weeklyMealPlanSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .center) {
+                Text("My Weekly Meal Plan")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(themeManager.current.primaryText)
+                Spacer()
+                Button(action: { showPlanGenerator = true }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: weeklyMealPlan == nil ? "plus" : "arrow.clockwise")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(weeklyMealPlan == nil ? "Create" : "New Plan")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundColor(themeManager.current.secondaryText)
+                    .padding(.horizontal, 16).padding(.vertical, 9)
+                    .background(themeManager.current.inputBackground)
+                    .cornerRadius(20)
+                }
+            }
+
+            if let plan = weeklyMealPlan {
+                VStack(spacing: 16) {
+                    ForEach(plan.days) { day in
+                        if !day.activeMeals.isEmpty {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("\(day.dayName) · \(day.date)")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundColor(themeManager.current.secondaryText)
+                                ForEach(day.activeMeals) { meal in
+                                    ExpandableMealCard(
+                                        meal: meal,
+                                        day: day,
+                                        plan: plan,
+                                        today: todayDateString
+                                    )
+                                    .environmentObject(themeManager)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Button(action: { showPlanGenerator = true }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "calendar")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("My Weekly Meal Plan")
+                            .font(.system(size: 13, weight: .semibold))
+                    }
+                    .foregroundColor(themeManager.current.secondaryText)
+                    .padding(.horizontal, 16).padding(.vertical, 9)
+                    .background(themeManager.current.inputBackground)
+                    .cornerRadius(20)
+                }
+            }
+        }
+    }
+
     // MARK: - State Views
 
     var loadingView: some View {
@@ -981,7 +1078,7 @@ struct HealthDashboardView: View {
                 }
                 .tag(0)
 
-            DietPlanView()
+            DietPlanView(nutritionPlan: nutritionPlan, bundledHealthProfile: healthProfile)
                 .environmentObject(themeManager)
                 .tabItem {
                     Image(systemName: selectedTab == 1 ? "heart.text.square.fill" : "heart.text.square")
