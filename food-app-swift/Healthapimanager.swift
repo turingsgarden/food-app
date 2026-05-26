@@ -16,6 +16,11 @@ private enum Timeout {
     static let upload: TimeInterval  = 120  // analyze-meal-photo (Gemini heavy)
 }
 
+private struct TraceResponse: Codable {
+    let request_id: String
+    let steps: [TraceStep]
+}
+
 class HealthAPIManager {
     static let shared = HealthAPIManager()
     private let base = "https://food-app-swift-qb4k.onrender.com"
@@ -48,6 +53,54 @@ class HealthAPIManager {
 
     // MARK: - Health Profile
 
+    enum HealthProfileFetchOutcome {
+        case found(HealthProfile)
+        case notFound
+        case failure(String)
+    }
+
+    func fetchHealthProfileOutcome(
+        userId: String,
+        completion: @escaping (HealthProfileFetchOutcome) -> Void
+    ) {
+        guard let url = URL(string: "\(base)/get-health-profile"),
+              let token = token else {
+            completion(.failure("Authentication required"))
+            return
+        }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = Timeout.standard
+        URLSession.shared.dataTask(with: req) { data, resp, err in
+            DispatchQueue.main.async {
+                if let err = err {
+                    completion(.failure(err.localizedDescription))
+                    return
+                }
+                guard let http = resp as? HTTPURLResponse else {
+                    completion(.failure("Invalid response"))
+                    return
+                }
+                switch http.statusCode {
+                case 200:
+                    guard let data = data,
+                          let profile = try? JSONDecoder().decode(HealthProfile.self, from: data)
+                    else {
+                        completion(.failure("Failed to parse health profile"))
+                        return
+                    }
+                    completion(.found(profile))
+                case 404:
+                    completion(.notFound)
+                case 401:
+                    completion(.failure("Session expired - please log in again"))
+                default:
+                    completion(.failure("Server error (\(http.statusCode))"))
+                }
+            }
+        }.resume()
+    }
+
     func saveHealthProfile(_ profile: HealthProfile, completion: @escaping (Bool, String?) -> Void) {
         guard let url = URL(string: "\(base)/save-health-profile"),
               let token = token else { completion(false, "Auth error"); return }
@@ -57,29 +110,38 @@ class HealthAPIManager {
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         req.httpBody = try? JSONEncoder().encode(profile)
         req.timeoutInterval = Timeout.standard
-        URLSession.shared.dataTask(with: req) { _, resp, err in
+        URLSession.shared.dataTask(with: req) { data, resp, err in
             DispatchQueue.main.async {
                 if let err = err { completion(false, err.localizedDescription); return }
-                completion((resp as? HTTPURLResponse)?.statusCode == 200, nil)
+                guard let http = resp as? HTTPURLResponse else {
+                    completion(false, "No response from server")
+                    return
+                }
+                if http.statusCode == 200 {
+                    completion(true, nil)
+                    return
+                }
+                var message = "Failed to save health profile"
+                if let data = data,
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let error = json["error"] as? String {
+                    message = error
+                } else if http.statusCode == 401 {
+                    message = "Session expired - please log in again"
+                }
+                completion(false, message)
             }
         }.resume()
     }
 
     func fetchHealthProfile(userId: String, completion: @escaping (HealthProfile?) -> Void) {
-        guard let url = URL(string: "\(base)/get-health-profile"),
-              let token = token else { completion(nil); return }
-        var req = URLRequest(url: url)
-        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.timeoutInterval = Timeout.standard
-        URLSession.shared.dataTask(with: req) { data, resp, _ in
-            DispatchQueue.main.async {
-                guard let data = data,
-                      (resp as? HTTPURLResponse)?.statusCode == 200,
-                      let profile = try? JSONDecoder().decode(HealthProfile.self, from: data)
-                else { completion(nil); return }
+        fetchHealthProfileOutcome(userId: userId) { outcome in
+            if case .found(let profile) = outcome {
                 completion(profile)
+            } else {
+                completion(nil)
             }
-        }.resume()
+        }
     }
 
     // MARK: - Generate Nutrition Targets
@@ -324,6 +386,49 @@ class HealthAPIManager {
             data = resized.jpegData(compressionQuality: compression)
         }
         return data
+    }
+
+    // MARK: - Execution Trace
+
+    func fetchTrace(
+        requestId: String,
+        completion: @escaping (Result<[TraceStep], Error>) -> Void
+    ) {
+        guard let url = URL(string: "\(base)/trace/\(requestId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? requestId)")
+        else {
+            completion(.failure(NSError(domain: "HealthAPIManager", code: -1,
+                                        userInfo: [NSLocalizedDescriptionKey: "Invalid URL"])))
+            return
+        }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = Timeout.short
+        URLSession.shared.dataTask(with: req) { data, resp, err in
+            DispatchQueue.main.async {
+                if let err = err {
+                    completion(.failure(err))
+                    return
+                }
+                guard let http = resp as? HTTPURLResponse else {
+                    completion(.failure(NSError(domain: "HealthAPIManager", code: -2,
+                                                userInfo: [NSLocalizedDescriptionKey: "Invalid response"])))
+                    return
+                }
+                if http.statusCode == 404 {
+                    completion(.failure(NSError(domain: "HealthAPIManager", code: 404,
+                                                userInfo: [NSLocalizedDescriptionKey: "Trace not found"])))
+                    return
+                }
+                guard http.statusCode == 200,
+                      let data = data,
+                      let trace = try? JSONDecoder().decode(TraceResponse.self, from: data)
+                else {
+                    completion(.failure(NSError(domain: "HealthAPIManager", code: http.statusCode,
+                                                userInfo: [NSLocalizedDescriptionKey: "Failed to load trace"])))
+                    return
+                }
+                completion(.success(trace.steps))
+            }
+        }.resume()
     }
 }
 

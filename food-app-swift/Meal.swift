@@ -20,6 +20,7 @@ struct Meal: Identifiable, Codable {
     let from_diet_plan: Bool?
     let compliance_score: Int?
     var aiInsight: MealInsight?          // ← AI meal analysis, saved once on creation
+    let request_id: String?
 
     enum CodingKeys: String, CodingKey {
         case _id, user_id, dish_prediction, image_description
@@ -27,6 +28,7 @@ struct Meal: Identifiable, Codable {
         case image_full, image_thumb, saved_at, meal_type
         case from_diet_plan, compliance_score
         case aiInsight = "ai_insight"
+        case request_id
     }
 }
 
@@ -35,6 +37,12 @@ struct GeminiResult: Codable {
     let dish_prediction: String
     let hidden_ingredients: String?
     let nutrition_info: String
+    let requestId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case image_description, dish_prediction, hidden_ingredients, nutrition_info
+        case requestId = "request_id"
+    }
 }
 
 struct NutritionRecalculationResult: Codable {

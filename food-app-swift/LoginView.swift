@@ -251,13 +251,30 @@ struct LoginView: View {
         }
     }
     
+    private func knownAccountEmail() -> String? {
+        let session = SessionManager.shared
+        guard session.isLoggedIn else { return nil }
+        let email = session.userEmail.trimmingCharacters(in: .whitespacesAndNewlines)
+        return email.isEmpty ? nil : email
+    }
+
     private func attemptAppleLogin(email: String, token: String) {
         isLoading = true; loginFailed = false
-        NetworkManager.shared.appleLogin(email: email, identityToken: token) { result in
+        NetworkManager.shared.appleLogin(
+            email: email,
+            identityToken: token,
+            knownEmail: knownAccountEmail()
+        ) { result in
             self.isLoading = false
             switch result {
-            case .success(let (userId, name, jwtToken)):
-                SessionManager.shared.login(id: userId, name: name, email: email, token: jwtToken, loginMethod: "apple")
+            case .success(let (userId, name, responseEmail, jwtToken)):
+                SessionManager.shared.login(
+                    id: userId,
+                    name: name,
+                    email: responseEmail,
+                    token: jwtToken,
+                    loginMethod: "apple"
+                )
                 withAnimation(.spring()) { self.navigateToDashboard = true }
             case .failure:
                 self.loginFailed = true
@@ -265,42 +282,48 @@ struct LoginView: View {
             }
         }
     }
-    
+
     private func handleGoogleLogin() {
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let rootVC = windowScene.windows.first?.rootViewController else { return }
         GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
             guard let user = result?.user, let idToken = user.idToken?.tokenString else { return }
-            self.sendGoogleTokenToBackend(idToken: idToken, email: user.profile?.email ?? "")
+            self.sendGoogleTokenToBackend(
+                idToken: idToken,
+                email: user.profile?.email ?? "",
+                name: user.profile?.name ?? ""
+            )
         }
     }
-    
-    private func sendGoogleTokenToBackend(idToken: String, email: String) {
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/google_login") else { return }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"; request.timeoutInterval = 90
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: ["idToken": idToken, "email": email])
+
+    private func sendGoogleTokenToBackend(idToken: String, email: String, name: String) {
         DispatchQueue.main.async { self.isLoading = true }
-        URLSession.shared.dataTask(with: request) { data, _, error in
+        NetworkManager.shared.googleLogin(
+            idToken: idToken,
+            email: email,
+            name: name,
+            knownEmail: knownAccountEmail()
+        ) { result in
             DispatchQueue.main.async { self.isLoading = false }
-            if error != nil {
-                DispatchQueue.main.async { self.loginFailed = true; self.loginErrorMessage = "Google login failed, please retry" }
-                return
-            }
-            if let data = data,
-               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let userId = json["user_id"] as? String,
-               let name = json["name"] as? String,
-               let token = json["token"] as? String {
+            switch result {
+            case .success(let (userId, responseName, responseEmail, token)):
                 DispatchQueue.main.async {
-                    SessionManager.shared.login(id: userId, name: name, email: email, token: token, loginMethod: "google")
+                    SessionManager.shared.login(
+                        id: userId,
+                        name: responseName,
+                        email: responseEmail,
+                        token: token,
+                        loginMethod: "google"
+                    )
                     withAnimation(.spring()) { self.navigateToDashboard = true }
                 }
-            } else {
-                DispatchQueue.main.async { self.loginFailed = true; self.loginErrorMessage = "Google login failed, please retry" }
+            case .failure:
+                DispatchQueue.main.async {
+                    self.loginFailed = true
+                    self.loginErrorMessage = "Google login failed, please retry"
+                }
             }
-        }.resume()
+        }
     }
     
     private func attemptLogin() {

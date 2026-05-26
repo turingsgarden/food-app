@@ -244,9 +244,19 @@ struct RegisterView: View {
             DispatchQueue.main.async {
                 self.isLoading = false
                 switch result {
-                case .success(let (userId, userName, jwtToken)):
+                case .success(let (userId, userName, responseEmail, jwtToken)):
                     let finalName = name.isEmpty ? userName : name
-                    withAnimation(.spring()) { self.session.login(id: userId, name: finalName, token: jwtToken, isNewUser: true); self.navigateToDashboard = true }
+                    withAnimation(.spring()) {
+                        self.session.login(
+                            id: userId,
+                            name: finalName,
+                            email: responseEmail,
+                            token: jwtToken,
+                            loginMethod: "apple",
+                            isNewUser: true
+                        )
+                        self.navigateToDashboard = true
+                    }
                 case .failure:
                     self.registrationFailed = true; self.registrationError = "Apple sign-up failed. Please try again."
                 }
@@ -259,32 +269,36 @@ struct RegisterView: View {
               let rootVC = windowScene.windows.first?.rootViewController else { return }
         GIDSignIn.sharedInstance.signIn(withPresenting: rootVC) { result, error in
             guard let user = result?.user, let idToken = user.idToken?.tokenString else { return }
-            self.sendGoogleTokenToBackend(idToken: idToken, email: user.profile?.email ?? "")
+            self.sendGoogleTokenToBackend(
+                idToken: idToken,
+                email: user.profile?.email ?? "",
+                name: user.profile?.name ?? ""
+            )
         }
     }
 
-    private func sendGoogleTokenToBackend(idToken: String, email: String) {
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/google_login") else { return }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"; request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try? JSONSerialization.data(withJSONObject: ["idToken": idToken, "email": email])
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            if error != nil {
-                DispatchQueue.main.async { self.registrationFailed = true; self.registrationError = "Network error. Please try again." }
-                return
-            }
-            if let data = data,
-               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let userId = json["user_id"] as? String,
-               let name = json["name"] as? String,
-               let token = json["token"] as? String {
-                DispatchQueue.main.async {
-                    withAnimation(.spring()) { self.session.login(id: userId, name: name, token: token, isNewUser: true); self.navigateToDashboard = true }
+    private func sendGoogleTokenToBackend(idToken: String, email: String, name: String = "") {
+        NetworkManager.shared.googleLogin(idToken: idToken, email: email, name: name) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let (userId, responseName, responseEmail, token)):
+                    withAnimation(.spring()) {
+                        self.session.login(
+                            id: userId,
+                            name: responseName,
+                            email: responseEmail,
+                            token: token,
+                            loginMethod: "google",
+                            isNewUser: true
+                        )
+                        self.navigateToDashboard = true
+                    }
+                case .failure:
+                    self.registrationFailed = true
+                    self.registrationError = "Registration failed. Please try again."
                 }
-            } else {
-                DispatchQueue.main.async { self.registrationFailed = true; self.registrationError = "Registration failed. Please try again." }
             }
-        }.resume()
+        }
     }
 }
 
