@@ -1,7 +1,7 @@
 """
 Rule-based daily health coach banner message (no Gemini).
 
-Priority: clinical flags → meal logging gap → diet tip → default fallback.
+Priority: clinical flags → diet tip → default fallback.
 """
 
 from __future__ import annotations
@@ -122,7 +122,6 @@ def build_daily_banner_message(profile: dict | None, meals_collection, user_id: 
     if clinical:
         return clinical
 
-<<<<<<< HEAD
     diet_tip = _diet_tip_message(profile)
     if diet_tip:
         return diet_tip
