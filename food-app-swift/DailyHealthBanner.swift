@@ -1,18 +1,3 @@
-//
-//  DailyHealthBanner.swift
-//  food-app-swift
-//
-//  "Health Coach" style daily banner shown on the Dashboard.
-//  Designed to feel like a personal message from a health agent,
-//  in line with the project direction of evolving from a passive
-//  food tracker into a proactive health agent.
-//
-//  Phase 1: static persona-driven copy + compact CTAs.
-//  Phase 2 (next): drive `message` from rule-based logic on the
-//                  user's HealthProfile (BP, blood sugar, BMI...).
-//  Phase 3 (later): replace with LLM-generated suggestion from backend.
-//
-
 import SwiftUI
 
 struct DailyHealthBanner: View {
@@ -20,12 +5,11 @@ struct DailyHealthBanner: View {
     @ObservedObject private var session = SessionManager.shared
 
     var coachName: String = "Your Health Coach"
-    var message: String = "I noticed your sodium intake yesterday was a bit high. Let's start today with a low-sodium breakfast — maybe oatmeal with berries instead of bacon and eggs?"
+    var shortTip: String = "Try oatmeal this morning. It can help support healthy cholesterol levels."
 
     var onAcknowledge: (() -> Void)? = nil
     var onLearnMore: (() -> Void)? = nil
 
-    // Lets previews override the clock so we can showcase morning / afternoon / evening variants.
     var nowOverride: Date? = nil
 
     private var now: Date { nowOverride ?? Date() }
@@ -53,6 +37,10 @@ struct DailyHealthBanner: View {
         return "\(greetingPrefix), \(name) \(greetingEmoji)"
     }
 
+    private var cardBackground: Color {
+        themeManager.current.isDark ? Color.white.opacity(0.05) : .white
+    }
+
     private var formattedDate: String {
         let f = DateFormatter()
         f.dateFormat = "EEEE · MMM d"
@@ -60,16 +48,19 @@ struct DailyHealthBanner: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 10) {
             headerRow
+
             Text(personalGreeting)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
+                .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundColor(themeManager.current.primaryText)
 
-            Text(message)
-                .font(.system(size: 14, weight: .regular))
-                .foregroundColor(themeManager.current.primaryText.opacity(0.85))
-                .lineSpacing(3)
+            // Keep homepage message short and scannable.
+            Text(shortTip)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(themeManager.current.primaryText.opacity(0.95))
+                .lineSpacing(1)
+                .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 10) {
@@ -86,7 +77,7 @@ struct DailyHealthBanner: View {
                     .background(
                         Capsule().fill(
                             LinearGradient(
-                                colors: [Color.teal, Color.blue.opacity(0.85)],
+                                colors: [Color.orange, Color.orange.opacity(0.85)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -98,12 +89,12 @@ struct DailyHealthBanner: View {
                 Button(action: { onLearnMore?() }) {
                     Text("Tell me more")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(themeManager.current.primaryText)
+                        .foregroundColor(themeManager.current.isDark ? .white : .orange)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .overlay(
                             Capsule()
-                                .stroke(themeManager.current.cardBorder, lineWidth: 1)
+                                .stroke(themeManager.current.isDark ? Color.white.opacity(0.25) : Color.orange.opacity(0.4), lineWidth: 1)
                         )
                 }
                 .buttonStyle(.plain)
@@ -111,24 +102,18 @@ struct DailyHealthBanner: View {
                 Spacer(minLength: 0)
             }
         }
-        .padding(16)
+        .padding(14)
         .background(
             ZStack {
-                themeManager.current.cardBackground
-                LinearGradient(
-                    colors: [
-                        Color.teal.opacity(themeManager.current.isDark ? 0.18 : 0.10),
-                        Color.blue.opacity(themeManager.current.isDark ? 0.10 : 0.05)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+                cardBackground
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(themeManager.current.isDark ? Color.white.opacity(0.02) : Color.orange.opacity(0.05))
             }
         )
-        .cornerRadius(20)
+        .cornerRadius(16)
         .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(themeManager.current.cardBorder, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(themeManager.current.isDark ? Color.white.opacity(0.12) : Color.orange.opacity(0.18), lineWidth: 1)
         )
     }
 
@@ -144,9 +129,16 @@ struct DailyHealthBanner: View {
                     .foregroundColor(themeManager.current.secondaryText)
             }
             Spacer(minLength: 0)
-            Image(systemName: "sparkles")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(Color.teal.opacity(0.8))
+            Text("Daily Tip")
+                .font(.system(size: 11, weight: .bold))
+                .foregroundColor(themeManager.current.isDark ? .white.opacity(0.8) : .orange)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule().fill(
+                        themeManager.current.isDark ? Color.white.opacity(0.08) : Color.orange.opacity(0.10)
+                    )
+                )
         }
     }
 
@@ -155,25 +147,58 @@ struct DailyHealthBanner: View {
             Circle()
                 .fill(
                     LinearGradient(
-                        colors: [Color.teal, Color.blue.opacity(0.9)],
+                        colors: [Color.orange, Color.orange.opacity(0.75)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
-                .frame(width: 38, height: 38)
-            Image(systemName: "stethoscope")
-                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 34, height: 34)
+            Image(systemName: "heart.text.square.fill")
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(.white)
-            Circle()
-                .fill(Color.green)
-                .frame(width: 10, height: 10)
-                .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                .offset(x: 14, y: 14)
         }
     }
 }
 
-// MARK: - Previews
+struct DailyTipDetailSheetView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+
+    let title: String
+    let analysisText: String
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Today’s tip")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(themeManager.current.isDark ? .white.opacity(0.8) : .orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            Capsule().fill(
+                                themeManager.current.isDark ? Color.white.opacity(0.08) : Color.orange.opacity(0.10)
+                            )
+                        )
+
+                    Text(title)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundColor(themeManager.current.primaryText)
+
+                    Text(analysisText)
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundColor(themeManager.current.primaryText.opacity(0.9))
+                        .lineSpacing(4)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+            }
+            .background(themeManager.current.background.ignoresSafeArea())
+            .navigationTitle("Tip details")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
 
 private func previewDate(hour: Int) -> Date {
     var c = Calendar.current.dateComponents([.year, .month, .day], from: Date())
@@ -184,7 +209,10 @@ private func previewDate(hour: Int) -> Date {
 
 #Preview("Morning (Light)") {
     VStack {
-        DailyHealthBanner(nowOverride: previewDate(hour: 8))
+        DailyHealthBanner(
+            shortTip: "Morning Bella! Try oatmeal — it helps support healthy cholesterol.",
+            nowOverride: previewDate(hour: 8)
+        )
             .padding()
         Spacer()
     }
@@ -196,7 +224,7 @@ private func previewDate(hour: Int) -> Date {
 #Preview("Afternoon (Light)") {
     VStack {
         DailyHealthBanner(
-            message: "Nice work on hitting your protein goal yesterday. For lunch today, try adding a side of leafy greens to balance your micronutrients.",
+            shortTip: "Keep lunch simple today: one lean protein + one green vegetable.",
             nowOverride: previewDate(hour: 14)
         )
         .padding()
@@ -210,7 +238,7 @@ private func previewDate(hour: Int) -> Date {
 #Preview("Evening (Dark)") {
     VStack {
         DailyHealthBanner(
-            message: "Your blood pressure trend this week is slightly elevated. A 20-minute walk after dinner could really help — want to log one tonight?",
+            shortTip: "Try a light dinner tonight and keep sodium lower than yesterday.",
             nowOverride: previewDate(hour: 19)
         )
         .padding()
@@ -224,7 +252,7 @@ private func previewDate(hour: Int) -> Date {
 #Preview("Long message") {
     VStack {
         DailyHealthBanner(
-            message: "I've been tracking your meals this week and noticed your average sodium intake is around 2,800mg — a bit above the 2,300mg recommended for adults. Since your last reading showed slightly elevated blood pressure, let's aim lower today. Try swapping processed snacks for fresh fruit, and go easy on soy sauce at dinner.",
+            shortTip: "Small change today: swap one processed snack for fruit.",
             nowOverride: previewDate(hour: 9)
         )
         .padding()
