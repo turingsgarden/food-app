@@ -13,3 +13,5 @@ pydantic>=2.0.0
 griffe>=0.38.0
 pymupdf
 python-docx
+langgraph>=0.2.0
+langfuse>=2.0.0

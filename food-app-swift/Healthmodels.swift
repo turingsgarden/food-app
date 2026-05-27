@@ -28,6 +28,10 @@ struct HealthProfile: Codable {
 
     var allergens: [String]
 
+    /// Onboarding fields stored alongside clinical data (ProfileManager round-trip).
+    var activityLevel: String? = nil
+    var calorieTarget: Int? = nil
+
     var bmi: Double { weightKg / ((heightCm / 100) * (heightCm / 100)) }
 
     var bmiCategory: String {
@@ -50,6 +54,8 @@ struct HealthProfile: Codable {
         case triglycerides
         case dietaryPreferences = "dietary_preferences"
         case allergens
+        case activityLevel = "activity_level"
+        case calorieTarget = "calorie_target"
     }
 }
 
@@ -146,12 +152,20 @@ struct DayMealPlan: Codable, Identifiable {
     var id: String { date }
     var date: String
     var dayName: String
-    var breakfast: PlannedMeal
-    var lunch: PlannedMeal
-    var dinner: PlannedMeal
+    var breakfast: PlannedMeal?
+    var lunch: PlannedMeal?
+    var dinner: PlannedMeal?
     var totalCalories: Int
 
-    var meals: [PlannedMeal] { [breakfast, lunch, dinner] }
+    /// Non-null meal slots with a name (backend omits unused slots as null).
+    var activeMeals: [PlannedMeal] {
+        [breakfast, lunch, dinner].compactMap { meal in
+            guard let meal, let name = meal.name, !name.isEmpty else { return nil }
+            return meal
+        }
+    }
+
+    var meals: [PlannedMeal] { activeMeals }
 
     enum CodingKeys: String, CodingKey {
         case date
@@ -366,4 +380,15 @@ struct RecommendedFood: Codable, Identifiable {
         case food, reason, dishes
         case analysisBasis = "analysis_basis"
     }
+}
+
+// MARK: - Execution Trace (LangGraph pipeline steps)
+
+struct TraceStep: Codable, Identifiable {
+    let name: String
+    let status: String
+    let duration_ms: Int
+    let output_summary: String?
+
+    var id: String { "\(name)-\(duration_ms)" }
 }

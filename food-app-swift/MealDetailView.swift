@@ -331,6 +331,10 @@ struct MealDetailView: View {
     @State private var toastMessage = ""
     @State private var insight: MealInsight? = nil
     @State private var isLoadingInsight = false
+    @State private var showTraceButton = false
+    @State private var showTraceSheet = false
+    @State private var traceSteps: [TraceStep] = []
+    @State private var isLoadingTrace = false
 
     @Environment(\.dismiss) var dismiss
 
@@ -356,6 +360,7 @@ struct MealDetailView: View {
                         .environmentObject(themeManager)
                         ingredientsSection
                         aiInsightSection
+                        traceAnalysisSection
                         actionButtons
                     }
                     .padding(.horizontal, 16)
@@ -399,7 +404,55 @@ struct MealDetailView: View {
             Button("Delete", role: .destructive) { deleteMeal() }
         } message: { Text("Are you sure you want to delete this meal? This action cannot be undone.") }
         .sheet(isPresented: $showShareSheet) { ShareSheet(items: [generateShareText()]) }
-        .onAppear { loadInsight() }
+        .sheet(isPresented: $showTraceSheet) {
+            TraceStepsSheet(steps: traceSteps)
+                .environmentObject(themeManager)
+        }
+        .onAppear {
+            loadInsight()
+            checkTraceAvailability()
+        }
+    }
+
+    @ViewBuilder
+    var traceAnalysisSection: some View {
+        if showTraceButton {
+            Button(action: { showTraceSheet = true }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "list.bullet.rectangle")
+                    Text("View Analysis Steps")
+                        .font(.system(size: 14, weight: .semibold))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundColor(themeManager.current.primaryText)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(themeManager.current.cardBackground)
+                .cornerRadius(14)
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(themeManager.current.cardBorder, lineWidth: 1))
+            }
+            .disabled(isLoadingTrace)
+        }
+    }
+
+    func checkTraceAvailability() {
+        guard let requestId = meal.request_id, !requestId.isEmpty else {
+            showTraceButton = false
+            return
+        }
+        isLoadingTrace = true
+        HealthAPIManager.shared.fetchTrace(requestId: requestId) { result in
+            isLoadingTrace = false
+            switch result {
+            case .success(let steps) where !steps.isEmpty:
+                traceSteps = steps
+                showTraceButton = true
+            default:
+                showTraceButton = false
+            }
+        }
     }
 
     @ViewBuilder
@@ -874,4 +927,55 @@ struct ShareSheet: UIViewControllerRepresentable {
         UIActivityViewController(activityItems: items, applicationActivities: nil)
     }
     func updateUIViewController(_ uvc: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - Trace Steps Sheet
+
+struct TraceStepsSheet: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    @Environment(\.dismiss) private var dismiss
+    let steps: [TraceStep]
+
+    var body: some View {
+        NavigationStack {
+            List(steps) { step in
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text(step.name.replacingOccurrences(of: "_", with: " ").capitalized)
+                            .font(.system(size: 15, weight: .semibold))
+                        Spacer()
+                        Text("\(step.duration_ms) ms")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(themeManager.current.secondaryText)
+                    }
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(step.status == "ok" ? Color.green : Color.red)
+                            .frame(width: 8, height: 8)
+                        Text(step.status.uppercased())
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(themeManager.current.secondaryText)
+                    }
+                    if let summary = step.output_summary, !summary.isEmpty {
+                        Text(summary)
+                            .font(.system(size: 13))
+                            .foregroundColor(themeManager.current.secondaryText)
+                            .lineLimit(3)
+                    }
+                }
+                .padding(.vertical, 4)
+                .listRowBackground(themeManager.current.cardBackground)
+            }
+            .scrollContentBackground(.hidden)
+            .background(themeManager.current.background)
+            .navigationTitle("Analysis Steps")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .preferredColorScheme(themeManager.current.colorScheme)
+    }
 }

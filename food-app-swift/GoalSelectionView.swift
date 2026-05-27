@@ -19,6 +19,8 @@ struct GoalSelectionView: View {
     @State private var isGenerating = false
     @State private var generatedPlan: NutritionPlan?
     @State private var showPlan = false
+    @State private var showPlanGenerator = false
+    @State private var nutritionPlanForGenerator: NutritionPlan?
     @State private var errorMsg = ""
     @State private var showError = false
     @State private var generatingStep = 0
@@ -47,7 +49,23 @@ struct GoalSelectionView: View {
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
             } message: { Text(errorMsg) }
+            .fullScreenCover(isPresented: $showPlanGenerator, onDismiss: completeOnboardingIfNeeded) {
+                if let plan = nutritionPlanForGenerator {
+                    PlanGeneratorView(
+                        nutritionPlan: plan,
+                        healthProfile: healthProfile,
+                        onGenerated: { _ in showPlanGenerator = false }
+                    )
+                    .environmentObject(themeManager)
+                }
+            }
         }
+    }
+
+    private func completeOnboardingIfNeeded() {
+        guard let plan = nutritionPlanForGenerator else { return }
+        onComplete?(plan)
+        dismiss()
     }
 
     // MARK: - Goal Picker
@@ -224,8 +242,8 @@ struct GoalSelectionView: View {
             VStack(spacing: 0) {
                 Divider().background(themeManager.current.cardBorder)
                 Button(action: {
-                    onComplete?(plan)
-                    dismiss()
+                    nutritionPlanForGenerator = plan
+                    showPlanGenerator = true
                 }) {
                     Text("Create My Weekly Meal Plan →")
                         .font(.system(size: 16, weight: .bold))

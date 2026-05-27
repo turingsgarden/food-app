@@ -30,6 +30,7 @@ struct UploadMealView: View {
     @State private var cameraPermissionStatus: AVAuthorizationStatus = .notDetermined
     @State private var showColdStartLoading = false
     @State private var currentError: AppError?
+    @State private var analysisRequestId: String?
 
     let mealTypes = ["Breakfast", "Lunch", "Evening Snacks", "Dinner"]
     @Environment(\.dismiss) var dismiss
@@ -382,6 +383,7 @@ struct UploadMealView: View {
             switch result {
             case .success(let geminiResult):
                 withAnimation(.spring()) {
+                    self.analysisRequestId = geminiResult.requestId
                     self.detectedDish = geminiResult.dish_prediction
                     self.editableDishName = geminiResult.dish_prediction
                     self.visibleIngredients = self.parseIngredientsToEditable(from: geminiResult.image_description)
@@ -420,6 +422,9 @@ struct UploadMealView: View {
             "image_thumb": thumbnailBase64, "meal_type": selectedMealType,
             "saved_at": ISO8601DateFormatter().string(from: selectedDate)
         ]
+        if let requestId = analysisRequestId, !requestId.isEmpty {
+            payload["request_id"] = requestId
+        }
         NetworkManager.shared.saveMeal(payload) { success, error in
             DispatchQueue.main.async {
                 self.isLoading = false

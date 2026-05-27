@@ -252,8 +252,8 @@ class NetworkManager {
 
     // MARK: - Apple Login  ← timeout fixed 15→90s
 
-    func appleLogin(email: String, identityToken: String,
-                    completion: @escaping (Result<(userId: String, name: String, token: String), Error>) -> Void) {
+    func appleLogin(email: String, identityToken: String, knownEmail: String? = nil,
+                    completion: @escaping (Result<(userId: String, name: String, email: String, token: String), Error>) -> Void) {
         print("🍎 Apple login initiated for: \(email)")
         guard let url = URL(string: "\(baseURL)/apple_login") else {
             completion(.failure(nsErr(-1, "Invalid URL"))); return
@@ -261,8 +261,12 @@ class NetworkManager {
         var req = URLRequest(url: url)
         req.httpMethod      = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.timeoutInterval = NMTimeout.login   // was 15 s – far too short for cold start
-        req.httpBody = try? JSONSerialization.data(withJSONObject: ["email": email, "identityToken": identityToken])
+        req.timeoutInterval = NMTimeout.login
+        var body: [String: Any] = ["email": email, "identityToken": identityToken]
+        if let knownEmail = knownEmail?.trimmingCharacters(in: .whitespacesAndNewlines), !knownEmail.isEmpty {
+            body["known_email"] = knownEmail
+        }
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
         fastSession.dataTask(with: req) { data, response, error in
             DispatchQueue.main.async {
@@ -274,10 +278,47 @@ class NetworkManager {
                 }
                 guard let userId = json?["user_id"] as? String,
                       let name   = json?["name"]    as? String,
-                      let token  = json?["token"]   as? String
+                      let token  = json?["token"]   as? String,
+                      let responseEmail = json?["email"] as? String
                 else { completion(.failure(self.nsErr(-3, "Invalid response format"))); return }
                 self.saveToken(token)
-                completion(.success((userId, name, token)))
+                completion(.success((userId, name, responseEmail, token)))
+            }
+        }.resume()
+    }
+
+    func googleLogin(idToken: String, email: String, name: String = "", knownEmail: String? = nil,
+                     completion: @escaping (Result<(userId: String, name: String, email: String, token: String), Error>) -> Void) {
+        print("🔵 Google login initiated for: \(email)")
+        guard let url = URL(string: "\(baseURL)/google_login") else {
+            completion(.failure(nsErr(-1, "Invalid URL"))); return
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod      = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.timeoutInterval = NMTimeout.login
+        var body: [String: Any] = ["idToken": idToken, "email": email]
+        if !name.isEmpty { body["name"] = name }
+        if let knownEmail = knownEmail?.trimmingCharacters(in: .whitespacesAndNewlines), !knownEmail.isEmpty {
+            body["known_email"] = knownEmail
+        }
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        fastSession.dataTask(with: req) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error { completion(.failure(error)); return }
+                guard let data = data else { completion(.failure(self.nsErr(-2, "No data"))); return }
+                let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+                if let http = response as? HTTPURLResponse, http.statusCode != 200 {
+                    completion(.failure(self.nsErr(http.statusCode, json?["error"] as? String ?? "Google login failed"))); return
+                }
+                guard let userId = json?["user_id"] as? String,
+                      let responseName = json?["name"] as? String,
+                      let token = json?["token"] as? String,
+                      let responseEmail = json?["email"] as? String
+                else { completion(.failure(self.nsErr(-3, "Invalid response format"))); return }
+                self.saveToken(token)
+                completion(.success((userId, responseName, responseEmail, token)))
             }
         }.resume()
     }
