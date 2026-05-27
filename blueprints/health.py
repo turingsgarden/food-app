@@ -4,6 +4,7 @@ import json
 import os
 import re
 import threading
+import time
 import traceback
 from datetime import datetime, timedelta
 from io import BytesIO
@@ -19,9 +20,12 @@ from health_pipeline import (
     generate_nutrition_targets,
     generate_weekly_meal_plan,
 )
-from daily_banner import build_daily_banner_message
+from daily_banner import get_daily_banner_message
 
 health_bp = Blueprint("health", __name__)
+_daily_banner_cache: dict[str, dict[str, Any]] = {}
+_daily_banner_cache_lock = threading.Lock()
+_BANNER_CACHE_TTL_SECONDS = 24 * 60 * 60
 
 
 def _fetch_user_meal_history(user_id: str, days: int = 90, limit: int = 200) -> list:
@@ -86,11 +90,45 @@ def get_health_profile():
 @db_required
 def daily_banner_message():
     try:
+        user_id = request.user_id
+        date_key = datetime.now().strftime("%Y-%m-%d")
+        cache_key = f"{user_id}_{date_key}"
+        now_ts = time.time()
+
+        with _daily_banner_cache_lock:
+            stale_keys = [
+                key
+                for key, value in _daily_banner_cache.items()
+                if now_ts - float(value.get("created_at_ts", 0)) > _BANNER_CACHE_TTL_SECONDS
+            ]
+            for key in stale_keys:
+                _daily_banner_cache.pop(key, None)
+            cached = _daily_banner_cache.get(cache_key)
+            if cached and cached.get("message"):
+                return (
+                    jsonify(
+                        {
+                            "message": cached["message"],
+                            "generated_at": cached.get("generated_at") or datetime.now().isoformat(),
+                        }
+                    ),
+                    200,
+                )
+
         profile = db["health_profiles"].find_one({"user_id": request.user_id})
         if profile:
             profile.pop("_id", None)
-        message = build_daily_banner_message(profile, meals_collection, request.user_id)
-        return jsonify({"message": message, "generated_at": datetime.now().isoformat()}), 200
+        message = get_daily_banner_message(user_id, profile, meals_collection)
+        generated_at = datetime.now().isoformat()
+
+        with _daily_banner_cache_lock:
+            _daily_banner_cache[cache_key] = {
+                "message": message,
+                "generated_at": generated_at,
+                "created_at_ts": now_ts,
+            }
+
+        return jsonify({"message": message, "generated_at": generated_at}), 200
     except Exception as e:
         print(f"❌ daily_banner_message: {e}")
         return jsonify({"error": str(e)}), 500

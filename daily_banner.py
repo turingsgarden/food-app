@@ -122,15 +122,30 @@ def build_daily_banner_message(profile: dict | None, meals_collection, user_id: 
     if clinical:
         return clinical
 
-    total_meals = _meals_logged_last_7_days(meals_collection, user_id)
-    if 0 < total_meals < 3:
-        return (
-            "Logging more meals helps your health coach give better advice. "
-            "Try snapping your next meal!"
-        )
-
+<<<<<<< HEAD
     diet_tip = _diet_tip_message(profile)
     if diet_tip:
         return diet_tip
 
     return DEFAULT_BANNER_MESSAGE
+
+
+def get_daily_banner_message(user_id: str, profile: dict | None, meals_collection) -> str:
+    """
+    AI-first banner message generation with safe rule-based fallback.
+    """
+    try:
+        from daily_banner_graph import run_daily_banner_pipeline
+
+        result = run_daily_banner_pipeline(
+            user_id=user_id,
+            profile=profile or {},
+            meals_collection=meals_collection,
+        )
+        message = str(result.get("final_message") or "").strip()
+        if message:
+            return message
+    except Exception:
+        pass
+
+    return build_daily_banner_message(profile, meals_collection, user_id)

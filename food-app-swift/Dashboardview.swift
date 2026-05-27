@@ -778,9 +778,8 @@ struct DashboardView: View {
     }
 
     func loadDailyBannerMessage() {
-        let userId = getCurrentUserId()
-        guard !userId.isEmpty else { return }
-
+        guard let userId = getCurrentUserId(), !userId.isEmpty else { return }
+        
         let dateKey = dailyBannerCacheDateKey()
         let cacheKey = "daily_banner_message_\(userId)_\(dateKey)"
         if let cached = UserDefaults.standard.string(forKey: cacheKey), !cached.isEmpty {

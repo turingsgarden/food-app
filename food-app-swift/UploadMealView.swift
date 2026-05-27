@@ -415,7 +415,7 @@ struct UploadMealView: View {
         let thumbnailBase64 = thumbnailData?.base64EncodedString() ?? ""
         let visibleIngredientsString = visibleIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit) | User edited" }.joined(separator: "\n")
         let hiddenIngredientsString = hiddenIngredients.map { "\($0.name) | \($0.quantity) | \($0.unit) | User edited" }.joined(separator: "\n")
-        let payload: [String: Any] = [
+        var payload: [String: Any] = [
             "user_id": userId, "dish_prediction": editableDishName,
             "image_description": visibleIngredientsString, "hidden_ingredients": hiddenIngredientsString,
             "nutrition_info": rawNutritionInfo, "image_full": fullImageBase64,
