@@ -122,7 +122,8 @@ def build_daily_banner_message(profile: dict | None, meals_collection, user_id: 
     if clinical:
         return clinical
 
-    if _meals_logged_last_7_days(meals_collection, user_id) < 3:
+    total_meals = _meals_logged_last_7_days(meals_collection, user_id)
+    if 0 < total_meals < 3:
         return (
             "Logging more meals helps your health coach give better advice. "
             "Try snapping your next meal!"
