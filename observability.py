@@ -15,7 +15,7 @@ from typing import Any, Callable, Optional, TypeVar, cast
 
 logger = logging.getLogger(__name__)
 
-GEMINI_MODEL_NAME = "gemini-2.5-pro"
+GEMINI_MODEL_NAME = "gemini-2.5-flash"
 
 _langfuse_client: Any | None = None
 _trace_id_var: ContextVar[Optional[str]] = ContextVar("langfuse_trace_id", default=None)
