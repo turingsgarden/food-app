@@ -26,7 +26,7 @@ struct PlanGeneratorView: View {
     let mealOptions = [1, 2, 3]
 
     var body: some View {
-        NavigationStack {
+        
             ZStack {
                 themeManager.current.background.ignoresSafeArea()
 
@@ -41,7 +41,7 @@ struct PlanGeneratorView: View {
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
             } message: { Text(errorMsg) }
-        }
+        
     }
 
     // MARK: - Settings
