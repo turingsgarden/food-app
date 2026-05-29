@@ -80,13 +80,10 @@ def _normalize_email(email):
 
 def _new_user_provider_defaults():
     return {
-        "apple_id": None,
-        "google_id": None,
         "apple_sub": None,
         "google_sub": None,
         "auth_providers": [],
     }
-
 
 def _sync_auth_providers(user):
     methods = list(user.get("login_methods") or [])
