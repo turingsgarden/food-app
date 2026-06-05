@@ -209,8 +209,11 @@ def parse_nutrition_node(state: MealPhotoState) -> MealPhotoState:
                     ):
                         visible_ingredients.append(line)
                 elif current_section == "hidden" and "|" in line:
-                    parts = line.split("|")
-                    name = parts[0].strip()
+                    parts = [p.strip() for p in line.split("|") if p.strip()]
+                    # Skip row divider lines like ---|---|---
+                    if not parts or all(c == '-' for c in parts[0]):
+                        continue
+                    name = parts[0]
                     if len(parts) >= 3 and len(name) > 1 and not any(
                         x in name.lower() for x in ["ingredient", "quantity", "---"]
                     ):
