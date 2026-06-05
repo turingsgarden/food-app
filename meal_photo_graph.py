@@ -37,7 +37,7 @@ MEAL_ANALYSIS_PROMPT = """Analyze this food image completely. Return ONLY the se
 [The specific dish name]
 
 === VISIBLE INGREDIENTS ===
-[Each ingredient you can see, one per line:]
+[Each primary ingredient or component, one per line. For blended dishes/dips (e.g., hummus, smoothies, soups), break down the core base components here even if mixed together:]
 Ingredient name | Quantity | Unit | Visible
 
 === HIDDEN INGREDIENTS ===
@@ -279,20 +279,14 @@ def validate_output_node(state: MealPhotoState) -> MealPhotoState:
     rid = state["request_id"]
     with lf_node_span("meal_photo.node.validate_output", redact_for_trace(state)):
         with trace_node(rid, "validate_output", input_summary=state.get("dish_prediction", "")) as meta:
-            visible_count = state.get("_visible_count", 0)
             if state.get("error"):
                 meta["output_summary"] = state["error"]
                 return state
 
-            if visible_count < 2:
-                err = f"Insufficient ingredients detected (only {visible_count})"
-                meta["output_summary"] = err
-                return {
-                    **state,
-                    "error": err,
-                    "result": _failure_result(state.get("user_id", ""), err),
-                }
-
+            dish = (state.get("dish_prediction") or "").strip()
+            visible_count = state.get("_visible_count", 0)
+            
+            # Extract calories for validation
             nutrition_info = state.get("nutrition_info", "")
             calories = 0
             for line in nutrition_info.split("\n"):
@@ -305,9 +299,22 @@ def validate_output_node(state: MealPhotoState) -> MealPhotoState:
                             calories = 0
                     break
 
-            dish = (state.get("dish_prediction") or "").strip()
+            # ADAPTIVE GUARDRAIL: 
+            # If the dish was successfully predicted and has valid calories, 
+            # allow low visible ingredient counts (perfect for dips, soups, or whole single items).
+            is_identifiable_dish = dish and "could not identify" not in dish.lower()
+            
+            if visible_count < 2 and not (is_identifiable_dish and calories > 0):
+                err = f"Insufficient ingredients detected (only {visible_count})"
+                meta["output_summary"] = err
+                return {
+                    **state,
+                    "error": err,
+                    "result": _failure_result(state.get("user_id", ""), err),
+                }
+
             if calories <= 0 or not dish:
-                err = "Invalid analysis output"
+                err = "Invalid analysis output (Zero calories or missing dish name)"
                 meta["output_summary"] = err
                 return {
                     **state,
