@@ -190,6 +190,7 @@ def parse_nutrition_node(state: MealPhotoState) -> MealPhotoState:
                 line = line.strip()
                 if not line:
                     continue
+                clean_line = line.replace("**", "").strip()
                 if "=== DISH NAME ===" in line:
                     current_section = "dish"
                 elif "=== VISIBLE INGREDIENTS ===" in line:
