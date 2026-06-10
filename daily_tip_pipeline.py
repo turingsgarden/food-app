@@ -127,6 +127,7 @@ Patient profile:
 - Systolic BP: {profile.get('systolic_bp', 'N/A')} | Diastolic BP: {profile.get('diastolic_bp', 'N/A')}
 - Fasting blood sugar: {profile.get('fasting_blood_sugar', 'N/A')} mmol/L
 - Total cholesterol: {profile.get('total_cholesterol', 'N/A')} mmol/L
+- Triglycerides: {profile.get('triglycerides', 'N/A')} mmol/L (normal < 1.7)
 - Dietary preferences: {', '.join(profile.get('dietary_preferences', []) or ['none'])}
 - Allergens: {', '.join(profile.get('allergens', []) or ['none'])}
 - Health goals: {', '.join(goals) if goals else 'general wellness'}

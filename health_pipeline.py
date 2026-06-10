@@ -181,6 +181,19 @@ def generate_health_report(profile: dict, goals: list, gemini_model,
                 f"recommend oats, avocado, fatty fish"
             )
 
+    trig = profile.get("triglycerides")
+    if trig:
+        if trig >= 2.3:
+            clinical_flags.append(
+                f"HIGH TRIGLYCERIDES ({trig} mmol/L) → "
+                f"limit added sugars, refined carbs, and alcohol; recommend Omega-3 rich fish"
+            )
+        elif trig >= 1.7:
+            clinical_flags.append(
+                f"BORDERLINE TRIGLYCERIDES ({trig} mmol/L) → "
+                f"reduce sugary drinks and refined carbs, favor whole grains and fatty fish"
+            )
+
     if bmi >= 30:
         clinical_flags.append(
             f"OBESE (BMI {bmi}) → recommend HIGH-SATIETY LOW-CALORIE-DENSITY foods"
@@ -224,6 +237,7 @@ Recent daily averages: calories={recent_avgs.get('calories','N/A')} kcal | prote
 
 === USER CONTEXT ===
 Age: {profile.get('age')} | Sex: {profile.get('sex')} | BMI: {bmi}
+Triglycerides: {profile.get('triglycerides', 'N/A')} mmol/L (normal < 1.7)
 Goals: {', '.join(goals) if goals else 'general wellness'}
 Top frequent foods: {', '.join(top_foods) if top_foods else 'no data'}
 Preferred cooking styles: {cooking_str}
