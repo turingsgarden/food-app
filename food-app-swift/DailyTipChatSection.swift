@@ -337,9 +337,21 @@ struct DailyTipChatSection: View {
             if let reply, !reply.isEmpty {
                 appendCoachMessage(reply)
             } else {
-                appendCoachMessage(fallback)
+                appendFallbackCoachMessage(fallback)
                 _ = error
             }
+        }
+    }
+
+    /// Degraded-mode reply: labeled as offline and never repeats the previous
+    /// coach message verbatim (avoids the "broken record" effect).
+    private func appendFallbackCoachMessage(_ text: String) {
+        let labeled = "AI coach is temporarily unavailable — quick answer from today's plan:\n\(text)"
+        let lastCoachText = messages.last(where: { $0.role == .coach })?.text
+        if lastCoachText == labeled {
+            appendCoachMessage("Still couldn't reach the AI coach. Please try again in a moment — I'll have a personalized answer then.")
+        } else {
+            appendCoachMessage(labeled)
         }
     }
 
@@ -347,23 +359,27 @@ struct DailyTipChatSection: View {
         let lower = prompt.lowercased()
         let plan = tip.comprehensive
 
-        if lower.contains("why") || lower.contains("metric") {
+        let asksWhy = ["why", "metric", "为什么", "指标", "问题", "怎么回事"].contains { lower.contains($0) }
+        let asksDiet = ["eat", "dinner", "diet", "food", "meal", "吃", "饮食", "晚餐", "早餐", "午餐"].contains { lower.contains($0) }
+        let asksLifestyle = ["lifestyle", "walk", "sleep", "exercise", "运动", "锻炼", "睡眠", "生活", "散步"].contains { lower.contains($0) }
+
+        if asksWhy {
             if !plan.associationSummary.isEmpty { return plan.associationSummary }
             return tip.whyThisMatters
         }
-        if lower.contains("eat") || lower.contains("dinner") || lower.contains("diet") || lower.contains("food") {
+        if asksDiet {
             if !plan.dietSteps.isEmpty {
                 return plan.dietSteps.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n")
             }
             return tip.detailText
         }
-        if lower.contains("lifestyle") || lower.contains("walk") || lower.contains("sleep") {
+        if asksLifestyle {
             if !plan.lifestyleSteps.isEmpty {
                 return plan.lifestyleSteps.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n")
             }
             return "Take a short walk after a meal and stay hydrated through the day."
         }
-        return "Based on your plan today: \(tip.shortText)"
+        return "Today's priority: \(tip.shortText)"
     }
 
     private var sectionBodyColor: Color {

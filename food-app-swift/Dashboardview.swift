@@ -254,6 +254,9 @@ struct DashboardView: View {
                 dailyTipManager.refresh()
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in fetchAllData() }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("HealthProfileSaved"))) { _ in
+                dailyTipManager.refresh()
+            }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NutritionRecalculated"))) { notification in
                 guard let mealId = notification.userInfo?["mealId"] as? String,
                       let nutritionInfo = notification.userInfo?["nutritionInfo"] as? String else { return }

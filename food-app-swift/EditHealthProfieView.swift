@@ -500,6 +500,7 @@ struct EditHealthProfileView: View {
             self.isSaving = false
             if success {
                 UserDefaults.standard.set(true, forKey: "health_profile_complete")
+                NotificationCenter.default.post(name: Notification.Name("HealthProfileSaved"), object: nil)
                 self.onComplete?(profile)
                 self.dismiss()
             } else {

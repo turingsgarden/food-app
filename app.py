@@ -23,6 +23,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
 import json
+import hashlib
 import io
 import re
 import fitz          # PyMuPDF  — pip install pymupdf
@@ -1295,19 +1296,36 @@ def generate_daily_tip_route():
         force = bool(data.get("force", False))
         date_key = data.get("date") or datetime.now().strftime("%Y-%m-%d")
 
-        if not force:
-            cached = db["daily_tips"].find_one(
-                {"user_id": request.user_id, "date_key": date_key}
-            )
-            if cached:
-                cached.pop("_id", None)
-                print(f"📋 Returning cached daily tip for {request.user_id} @ {date_key}")
-                return jsonify(cached.get("tip", cached)), 200
-
         profile = db["health_profiles"].find_one({"user_id": request.user_id})
         if not profile:
             return jsonify({"error": "Health profile not found"}), 404
         profile.pop("_id", None)
+
+        # Fingerprint of vitals that influence the tip — if the user edits
+        # their profile, the cached tip for today is considered stale.
+        fingerprint_fields = {
+            k: profile.get(k)
+            for k in (
+                "age", "sex", "height_cm", "weight_kg",
+                "systolic_bp", "diastolic_bp", "fasting_blood_sugar",
+                "total_cholesterol", "triglycerides",
+                "dietary_preferences", "allergens",
+            )
+        }
+        profile_fingerprint = hashlib.md5(
+            json.dumps(fingerprint_fields, sort_keys=True, default=str).encode()
+        ).hexdigest()
+
+        if not force:
+            cached = db["daily_tips"].find_one(
+                {"user_id": request.user_id, "date_key": date_key}
+            )
+            if cached and cached.get("profile_fingerprint") == profile_fingerprint:
+                cached.pop("_id", None)
+                print(f"📋 Returning cached daily tip for {request.user_id} @ {date_key}")
+                return jsonify(cached.get("tip", cached)), 200
+            if cached:
+                print(f"♻️ Profile changed — regenerating daily tip for {request.user_id} @ {date_key}")
 
         health_report = db["health_reports"].find_one(
             {"user_id": request.user_id},
@@ -1348,6 +1366,7 @@ def generate_daily_tip_route():
             "user_id": request.user_id,
             "date_key": date_key,
             "tip": tip,
+            "profile_fingerprint": profile_fingerprint,
             "created_at": datetime.now().isoformat(),
         }
         db["daily_tips"].update_one(

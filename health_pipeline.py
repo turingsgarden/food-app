@@ -292,8 +292,9 @@ Constraints:
 - If meal data coverage < 30%, acknowledge limited data in health_summary
 """
 
-    response = gemini_model.generate_content(prompt)
-    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
+    from daily_tip_pipeline import generate_with_fallback
+    raw = generate_with_fallback(prompt, gemini_model=gemini_model)
+    raw = raw.strip().replace("```json", "").replace("```", "").strip()
 
     start = raw.find("{")
     end   = raw.rfind("}") + 1

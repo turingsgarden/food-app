@@ -137,7 +137,44 @@ struct DailyComprehensivePlan: Codable, Equatable {
     func plan(for metric: DailyMetricEvidence) -> DailyPerMetricPlan? {
         perMetricPlans.first { $0.id == metric.id }
     }
+}
 
+// MARK: - Focus-aware copy
+
+extension DailyTip {
+    func focusedMetric(_ id: String?) -> DailyMetricEvidence? {
+        guard let id else { return nil }
+        return comprehensive.abnormalEvidence.first { $0.id == id }
+    }
+
+    /// Headline honoring the selected focus metric (detail sheet title).
+    func headline(focus id: String?) -> String {
+        guard let metric = focusedMetric(id) else { return shortText }
+        return "Today's focus: \(metric.shortTabTitle)"
+    }
+
+    /// Body copy honoring the selected focus metric.
+    func detailBody(focus id: String?) -> String {
+        guard let metric = focusedMetric(id) else { return detailText }
+        if let plan = comprehensive.plan(for: metric), !plan.summary.isEmpty {
+            return plan.summary
+        }
+        if let advice = metric.advice, !advice.isEmpty { return advice }
+        return detailText
+    }
+
+    /// Banner one-liner honoring the selected focus metric.
+    func bannerText(focus id: String?) -> String {
+        guard let metric = focusedMetric(id) else { return shortText }
+        if let plan = comprehensive.plan(for: metric), !plan.summary.isEmpty {
+            return plan.summary
+        }
+        if let advice = metric.advice, !advice.isEmpty { return advice }
+        return shortText
+    }
+}
+
+extension DailyComprehensivePlan {
     var hasAbnormalMetrics: Bool { !abnormalEvidence.isEmpty }
 
     /// One-line summary shown when analysis is collapsed — lists every flagged metric.

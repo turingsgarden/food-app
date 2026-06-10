@@ -86,13 +86,14 @@ struct DailyHealthBanner: View {
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundColor(themeManager.current.primaryText)
 
-            // Keep homepage message short and scannable.
-            Text(tip.shortText)
+            // Keep homepage message short and scannable; follows ring focus selection.
+            Text(tip.bannerText(focus: selectedMetricID))
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(themeManager.current.primaryText.opacity(0.95))
                 .lineSpacing(1)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
+                .animation(.easeInOut(duration: 0.2), value: selectedMetricID)
 
             HStack(spacing: 10) {
                 Button(action: { onAcknowledge?() }) {
@@ -363,12 +364,12 @@ struct DailyTipDetailSheetView: View {
                 )
             }
 
-            Text(tip.shortText)
+            Text(tip.headline(focus: selectedMetricID))
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundColor(themeManager.current.primaryText)
                 .fixedSize(horizontal: false, vertical: true)
 
-            Text(tip.detailText)
+            Text(tip.detailBody(focus: selectedMetricID))
                 .font(.system(size: 15, weight: .regular))
                 .foregroundColor(sectionBodyColor)
                 .lineSpacing(4)

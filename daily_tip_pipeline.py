@@ -1,11 +1,13 @@
 """
 Daily Health Coach — Gemini-powered daily plan + chat.
 
-Uses Gemini 2.5 Flash by default; falls back to 1.5 Flash on quota errors.
+Uses Gemini 2.5 Flash by default; falls back through still-served models
+(2.5 Flash-Lite, 3.1 Flash-Lite) on quota/rate-limit or retired-model 404s.
 """
 
 import json
 import os
+import time
 import traceback
 from datetime import datetime
 
@@ -17,8 +19,14 @@ from meal_analyzer import analyze_meal_history
 load_dotenv()
 
 GEN_API_KEY = os.getenv("GEMINI_API_KEY")
-PRIMARY_MODEL = "gemini-2.5-flash"
-FALLBACK_MODEL = "gemini-1.5-flash"
+
+# Ordered fallback chain. 1.5/2.0 families are retired (API returns 404),
+# so only currently-served models belong here.
+MODEL_CHAIN = [
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-3.1-flash-lite",
+]
 
 if GEN_API_KEY:
     genai.configure(api_key=GEN_API_KEY)
@@ -26,32 +34,51 @@ else:
     print("⚠️ daily_tip_pipeline: GEMINI_API_KEY not set")
 
 
-def _generate_content(prompt: str, gemini_model=None) -> str:
-    """Call Gemini with 2.5 Flash; on quota/rate-limit, retry with 1.5 Flash."""
+def _is_retryable(error: Exception) -> bool:
+    """Quota/rate-limit or retired-model errors → try the next model."""
+    msg = str(error).lower()
+    quota = any(k in msg for k in ("quota", "429", "resource exhausted", "rate limit"))
+    gone = any(k in msg for k in ("404", "not found", "not supported"))
+    return quota or gone
+
+
+def generate_with_fallback(prompt: str, gemini_model=None) -> str:
+    """Call Gemini walking down MODEL_CHAIN on quota/404 errors.
+
+    A short pause before each fallback helps when the quota window is
+    per-minute rather than per-day.
+    """
     if gemini_model is not None:
-        return gemini_model.generate_content(prompt).text
+        try:
+            return gemini_model.generate_content(prompt).text
+        except Exception as e:
+            if not _is_retryable(e):
+                raise
+            print(f"⚠️ provided model failed ({e}) — falling back to model chain")
 
     if not GEN_API_KEY:
         raise Exception("Gemini API key not configured")
 
-    models_to_try = [PRIMARY_MODEL, FALLBACK_MODEL]
     last_error = None
-
-    for model_name in models_to_try:
+    for i, model_name in enumerate(MODEL_CHAIN):
         try:
+            if i > 0:
+                time.sleep(2)
             model = genai.GenerativeModel(model_name)
             print(f"🤖 daily_tip_pipeline using {model_name}")
             return model.generate_content(prompt).text
         except Exception as e:
             last_error = e
-            msg = str(e).lower()
-            is_quota = any(k in msg for k in ("quota", "429", "resource exhausted", "rate limit"))
-            if is_quota and model_name != FALLBACK_MODEL:
-                print(f"⚠️ {model_name} quota/rate limit — trying {FALLBACK_MODEL}")
+            if _is_retryable(e) and i < len(MODEL_CHAIN) - 1:
+                print(f"⚠️ {model_name} unavailable ({e}) — trying {MODEL_CHAIN[i + 1]}")
                 continue
             raise
 
     raise last_error or Exception("Gemini generation failed")
+
+
+# Backwards-compatible alias used by the tip/chat functions below.
+_generate_content = generate_with_fallback
 
 
 def _extract_json_object(text: str) -> dict:
@@ -122,7 +149,7 @@ JSON schema:
   "id": "{date_key}_<category>",
   "category": "<sodium|cholesterol|bloodSugar|weight|fiber|hydration|general>",
   "category_label": "<short human label>",
-  "short_text": "<one scannable sentence for home banner>",
+  "short_text": "<ONE short imperative action, MAX 10 words, no colons or lists>",
   "detail_text": "<2-3 sentences expanding today's action for {time_slot}>",
   "why_this_matters": "<why this priority was chosen today>",
   "suggested_action": null,
@@ -156,8 +183,10 @@ JSON schema:
 }}
 
 Rules:
+- short_text MUST be 10 words or fewer — it renders on a small banner; put nuance in detail_text instead.
 - abnormal_evidence: include ALL non-normal attention items; if report empty, infer from profile vitals.
 - per_metric_plans: one entry per abnormal_evidence item with tailored steps.
+- per_metric_plans[].summary: 1-2 sentences, focused only on that metric, usable as a standalone headline plan.
 - diet_steps / lifestyle_steps: 3-5 items each for overall plan.
 - Be concise, warm, and clinically cautious (not diagnostic)."""
 
