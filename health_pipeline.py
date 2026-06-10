@@ -607,3 +607,7 @@ def calculate_bmi(height_cm: float, weight_kg: float) -> dict:
     elif bmi < 30:   cat = "Overweight"
     else:            cat = "Obese"
     return {"bmi": bmi, "category": cat}
+
+
+# Daily Health Coach AI lives in daily_tip_pipeline.py (Gemini 2.5 Flash + fallback).
+from daily_tip_pipeline import generate_daily_tip, daily_tip_chat_reply  # noqa: E402, F401

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct DraggableTipFloatingWidget: View {
+    var showHint: Bool = false
+    var onHintSeen: () -> Void = {}
     var onRestore: () -> Void
 
     private let storageXKey = "daily_tip_floating_norm_x"
@@ -28,25 +30,44 @@ struct DraggableTipFloatingWidget: View {
     @State private var isDragging = false
     /// Ignore taps briefly after a drag so lift-off is not treated as double-tap.
     @State private var ignoreTapsUntil = Date.distantPast
+    @State private var isHintVisible = false
+    @State private var hintDismissed = false
 
     var body: some View {
         GeometryReader { geo in
             let safe = geo.safeAreaInsets
             let bounds = bounds(in: geo.size, safe: safe)
+            let currentCenter = CGPoint(
+                x: clampedX(centerX + dragOffset.width, bounds: bounds),
+                y: clampedY(centerY + dragOffset.height, bounds: bounds)
+            )
+            let hintOnLeft = currentCenter.x > geo.size.width / 2
 
-            chip
-                .contentShape(Capsule())
-                .position(
-                    x: clampedX(centerX + dragOffset.width, bounds: bounds),
-                    y: clampedY(centerY + dragOffset.height, bounds: bounds)
-                )
+            ZStack {
+                chip
+                    .contentShape(Capsule())
+                    .position(x: currentCenter.x, y: currentCenter.y)
+
+                if isHintVisible {
+                    hintBubble(pointingLeft: hintOnLeft)
+                        .position(
+                            x: currentCenter.x + (hintOnLeft ? -105 : 105),
+                            y: currentCenter.y - 2
+                        )
+                        .transition(.opacity.combined(with: .scale(scale: 0.94)))
+                        .zIndex(2)
+                }
+            }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .onTapGesture(count: 2) {
                     guard Date() >= ignoreTapsUntil else { return }
+                    dismissHintIfNeeded()
                     restoreBanner()
                 }
                 .gesture(
                     DragGesture(minimumDistance: dragStartThreshold)
                         .onChanged { value in
+                            dismissHintIfNeeded()
                             if !isDragging { isDragging = true }
                             dragOffset = value.translation
                         }
@@ -83,6 +104,7 @@ struct DraggableTipFloatingWidget: View {
                     guard !didLoadPosition else { return }
                     loadInitialPosition(containerSize: geo.size, safe: safe, bounds: bounds)
                     didLoadPosition = true
+                    showHintIfNeeded()
                 }
         }
         .ignoresSafeArea()
@@ -105,6 +127,25 @@ struct DraggableTipFloatingWidget: View {
         dragOffset = .zero
         isDragging = false
         onRestore()
+    }
+
+    private func showHintIfNeeded() {
+        guard showHint, !hintDismissed else { return }
+        withAnimation(.easeOut(duration: 0.2)) {
+            isHintVisible = true
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+            dismissHintIfNeeded()
+        }
+    }
+
+    private func dismissHintIfNeeded() {
+        guard isHintVisible || (showHint && !hintDismissed) else { return }
+        hintDismissed = true
+        withAnimation(.easeOut(duration: 0.2)) {
+            isHintVisible = false
+        }
+        onHintSeen()
     }
 
     private struct PositionBounds {
@@ -213,11 +254,83 @@ struct DraggableTipFloatingWidget: View {
         UserDefaults.standard.set(normX, forKey: storageXKey)
         UserDefaults.standard.set(normY, forKey: storageYKey)
     }
+
+    @ViewBuilder
+    private func hintBubble(pointingLeft: Bool) -> some View {
+        HStack(spacing: 0) {
+            if pointingLeft {
+                hintContent
+                triangle(directionLeft: true)
+            } else {
+                triangle(directionLeft: false)
+                hintContent
+            }
+        }
+    }
+
+    private var hintContent: some View {
+        Text("Double-tap to open tip")
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(themeText)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(themeFill)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .stroke(themeStroke, lineWidth: 1)
+                    )
+            )
+            .shadow(color: .black.opacity(0.12), radius: 5, x: 0, y: 3)
+    }
+
+    private func triangle(directionLeft: Bool) -> some View {
+        TriangleShape(pointingLeft: directionLeft)
+            .fill(themeFill)
+            .frame(width: 8, height: 10)
+            .overlay(
+                TriangleShape(pointingLeft: directionLeft)
+                    .stroke(themeStroke, lineWidth: 1)
+            )
+            .offset(x: directionLeft ? -0.5 : 0.5)
+    }
+
+    private var themeFill: Color {
+        Color(UIColor.systemBackground)
+    }
+
+    private var themeStroke: Color {
+        Color.orange.opacity(0.28)
+    }
+
+    private var themeText: Color {
+        Color(UIColor.label)
+    }
+}
+
+private struct TriangleShape: Shape {
+    let pointingLeft: Bool
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        if pointingLeft {
+            path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        } else {
+            path.move(to: CGPoint(x: rect.maxX, y: rect.midY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        }
+        path.closeSubpath()
+        return path
+    }
 }
 
 #Preview {
     ZStack {
         Color.gray.opacity(0.15).ignoresSafeArea()
-        DraggableTipFloatingWidget(onRestore: {})
+        DraggableTipFloatingWidget(showHint: true, onHintSeen: {}, onRestore: {})
     }
 }

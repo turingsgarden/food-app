@@ -31,6 +31,7 @@ import threading
 from jwt import PyJWKClient
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
+from daily_tip_pipeline import generate_daily_tip, daily_tip_chat_reply
 from health_pipeline import (
     generate_nutrition_targets,
     generate_weekly_meal_plan,
@@ -92,6 +93,8 @@ if client is not None and users_collection is not None:
         profiles_collection.create_index("user_id")
         meals_collection.create_index([("user_id", 1), ("saved_at", -1)])
         analysis_collection.create_index([("user_id", 1), ("analyzed_at", -1)])
+        db["daily_tips"].create_index([("user_id", 1), ("date_key", 1)], unique=True)
+        db["daily_chats"].create_index([("user_id", 1), ("date_key", 1)], unique=True)
         print("✅ Indexes created")
     except Exception as e:
         print(f"⚠️ Index creation: {e}")
@@ -281,7 +284,7 @@ def get_profile():
 @token_required
 def analyze():
     try:
-        if not gemini_model:
+        if not os.getenv("GEMINI_API_KEY"):
             return jsonify({"error": "AI service unavailable"}), 503
         if "image" not in request.files:
             return jsonify({"error": "No image in request"}), 400
@@ -1276,6 +1279,199 @@ def get_health_report():
     except Exception as e:
         print(f"❌ get_health_report: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+# ── Daily Health Coach (AI tip + chat) ───────────────────────────────────────
+
+@app.route("/generate-daily-tip", methods=["POST"])
+@token_required
+@db_required
+def generate_daily_tip_route():
+    try:
+        if not os.getenv("GEMINI_API_KEY"):
+            return jsonify({"error": "AI service unavailable"}), 503
+
+        data = request.get_json() or {}
+        force = bool(data.get("force", False))
+        date_key = data.get("date") or datetime.now().strftime("%Y-%m-%d")
+
+        if not force:
+            cached = db["daily_tips"].find_one(
+                {"user_id": request.user_id, "date_key": date_key}
+            )
+            if cached:
+                cached.pop("_id", None)
+                print(f"📋 Returning cached daily tip for {request.user_id} @ {date_key}")
+                return jsonify(cached.get("tip", cached)), 200
+
+        profile = db["health_profiles"].find_one({"user_id": request.user_id})
+        if not profile:
+            return jsonify({"error": "Health profile not found"}), 404
+        profile.pop("_id", None)
+
+        health_report = db["health_reports"].find_one(
+            {"user_id": request.user_id},
+            sort=[("created_at", -1)]
+        )
+        if health_report:
+            health_report.pop("_id", None)
+
+        goals = data.get("goals", [])
+        if not goals:
+            plan = db["nutrition_plans"].find_one({"user_id": request.user_id})
+            if plan:
+                goals = plan.get("goals", [])
+
+        meal_history = list(db["meals"].find(
+            {
+                "user_id": request.user_id,
+                "saved_at": {"$gte": (datetime.now() - timedelta(days=30)).isoformat()},
+            },
+            {
+                "dish_prediction": 1,
+                "nutrition_info": 1,
+                "meal_type": 1,
+                "saved_at": 1,
+                "_id": 0,
+            },
+        ).sort("saved_at", -1).limit(100))
+
+        tip = generate_daily_tip(
+            profile=profile,
+            goals=goals,
+            health_report=health_report,
+            meal_history=meal_history,
+            date_key=date_key,
+        )
+
+        record = {
+            "user_id": request.user_id,
+            "date_key": date_key,
+            "tip": tip,
+            "created_at": datetime.now().isoformat(),
+        }
+        db["daily_tips"].update_one(
+            {"user_id": request.user_id, "date_key": date_key},
+            {"$set": record},
+            upsert=True,
+        )
+
+        return jsonify(tip), 200
+    except json.JSONDecodeError:
+        return jsonify({"error": "AI returned invalid format"}), 500
+    except Exception as e:
+        print(f"❌ generate_daily_tip_route: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get-daily-tip", methods=["GET"])
+@token_required
+@db_required
+def get_daily_tip_route():
+    try:
+        date_key = request.args.get("date") or datetime.now().strftime("%Y-%m-%d")
+        cached = db["daily_tips"].find_one(
+            {"user_id": request.user_id, "date_key": date_key}
+        )
+        if not cached:
+            return jsonify({"error": "not found"}), 404
+        return jsonify(cached.get("tip", cached)), 200
+    except Exception as e:
+        print(f"❌ get_daily_tip_route: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/daily-tip-chat", methods=["POST"])
+@token_required
+@db_required
+def daily_tip_chat_route():
+    try:
+        if not os.getenv("GEMINI_API_KEY"):
+            return jsonify({"error": "AI service unavailable"}), 503
+
+        data = request.get_json() or {}
+        messages = data.get("messages", [])
+        date_key = data.get("date_key") or datetime.now().strftime("%Y-%m-%d")
+        tip_snapshot = data.get("tip_snapshot")
+
+        if not messages:
+            return jsonify({"error": "messages required"}), 400
+
+        if not tip_snapshot:
+            cached = db["daily_tips"].find_one(
+                {"user_id": request.user_id, "date_key": date_key}
+            )
+            tip_snapshot = (cached or {}).get("tip")
+
+        if not tip_snapshot:
+            return jsonify({"error": "Daily tip not found for this date"}), 404
+
+        profile = db["health_profiles"].find_one({"user_id": request.user_id}) or {}
+        profile.pop("_id", None)
+        health_report = db["health_reports"].find_one(
+            {"user_id": request.user_id},
+            sort=[("created_at", -1)],
+        ) or {}
+        health_report.pop("_id", None)
+
+        reply = daily_tip_chat_reply(
+            messages=messages,
+            tip_snapshot=tip_snapshot,
+            profile=profile,
+            health_report=health_report,
+        )
+
+        now_iso = datetime.now().isoformat()
+        stored_messages = []
+        for msg in messages:
+            stored_messages.append({
+                "role": msg.get("role", "user"),
+                "text": msg.get("text", ""),
+                "ts": msg.get("ts") or now_iso,
+            })
+        stored_messages.append({
+            "role": "coach",
+            "text": reply,
+            "ts": now_iso,
+        })
+
+        db["daily_chats"].update_one(
+            {"user_id": request.user_id, "date_key": date_key},
+            {
+                "$set": {
+                    "user_id": request.user_id,
+                    "date_key": date_key,
+                    "messages": stored_messages,
+                    "updated_at": now_iso,
+                }
+            },
+            upsert=True,
+        )
+
+        return jsonify({"reply": reply}), 200
+    except Exception as e:
+        print(f"❌ daily_tip_chat_route: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/get-daily-tip-chat", methods=["GET"])
+@token_required
+@db_required
+def get_daily_tip_chat_route():
+    try:
+        date_key = request.args.get("date") or datetime.now().strftime("%Y-%m-%d")
+        doc = db["daily_chats"].find_one(
+            {"user_id": request.user_id, "date_key": date_key}
+        )
+        if not doc:
+            return jsonify({"messages": []}), 200
+        return jsonify({"messages": doc.get("messages", [])}), 200
+    except Exception as e:
+        print(f"❌ get_daily_tip_chat_route: {e}")
+        return jsonify({"error": str(e)}), 500
+
 
 # ── Error Handlers ──
 

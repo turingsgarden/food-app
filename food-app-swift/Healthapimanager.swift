@@ -376,3 +376,186 @@ extension HealthAPIManager {
         }.resume()
     }
 }
+
+// MARK: - Daily Health Coach (AI)
+
+extension HealthAPIManager {
+
+    func generateDailyTip(
+        goals: [String] = [],
+        force: Bool = false,
+        date: String? = nil,
+        completion: @escaping (DailyTip?, String?) -> Void
+    ) {
+        guard let url = URL(string: "\(base)/generate-daily-tip"),
+              let token = token else {
+            completion(nil, "Auth error")
+            return
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = Timeout.long
+        var body: [String: Any] = ["goals": goals, "force": force]
+        if let date { body["date"] = date }
+        req.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        URLSession.shared.dataTask(with: req) { data, resp, err in
+            DispatchQueue.main.async {
+                if let err = err {
+                    completion(nil, err.localizedDescription)
+                    return
+                }
+                guard let data = data,
+                      let http = resp as? HTTPURLResponse else {
+                    completion(nil, "Failed to generate daily tip")
+                    return
+                }
+                guard http.statusCode == 200 else {
+                    let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
+                        ?? "Failed to generate daily tip"
+                    completion(nil, message)
+                    return
+                }
+                guard let tip = try? JSONDecoder().decode(DailyTip.self, from: data) else {
+                    completion(nil, "Invalid daily tip response")
+                    return
+                }
+                completion(tip, nil)
+            }
+        }.resume()
+    }
+
+    func dailyTipChat(
+        messages: [(role: String, text: String)],
+        dateKey: String,
+        tipSnapshot: DailyTip?,
+        completion: @escaping (String?, String?) -> Void
+    ) {
+        guard let url = URL(string: "\(base)/daily-tip-chat"),
+              let token = token else {
+            completion(nil, "Auth error")
+            return
+        }
+
+        var snapshotObject: Any = NSNull()
+        if let tipSnapshot,
+           let data = try? JSONEncoder().encode(tipSnapshot),
+           let object = try? JSONSerialization.jsonObject(with: data) {
+            snapshotObject = object
+        }
+
+        let payload: [String: Any] = [
+            "messages": messages.map { ["role": $0.role, "text": $0.text] },
+            "date_key": dateKey,
+            "tip_snapshot": snapshotObject
+        ]
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = Timeout.long
+        req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        URLSession.shared.dataTask(with: req) { data, resp, err in
+            DispatchQueue.main.async {
+                if let err = err {
+                    completion(nil, err.localizedDescription)
+                    return
+                }
+                guard let data = data,
+                      let http = resp as? HTTPURLResponse else {
+                    completion(nil, "Chat request failed")
+                    return
+                }
+                guard http.statusCode == 200,
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let reply = json["reply"] as? String else {
+                    let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
+                        ?? "Chat request failed"
+                    completion(nil, message)
+                    return
+                }
+                completion(reply, nil)
+            }
+        }.resume()
+    }
+
+    func getDailyTip(
+        date: String? = nil,
+        completion: @escaping (DailyTip?, String?) -> Void
+    ) {
+        var components = URLComponents(string: "\(base)/get-daily-tip")!
+        if let date {
+            components.queryItems = [URLQueryItem(name: "date", value: date)]
+        }
+        guard let url = components.url, let token = token else {
+            completion(nil, "Auth error")
+            return
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = Timeout.standard
+
+        URLSession.shared.dataTask(with: req) { data, resp, err in
+            DispatchQueue.main.async {
+                if let err = err {
+                    completion(nil, err.localizedDescription)
+                    return
+                }
+                guard let data = data,
+                      let http = resp as? HTTPURLResponse,
+                      http.statusCode == 200,
+                      let tip = try? JSONDecoder().decode(DailyTip.self, from: data) else {
+                    completion(nil, "Daily tip not found")
+                    return
+                }
+                completion(tip, nil)
+            }
+        }.resume()
+    }
+
+    func getDailyTipChatHistory(
+        dateKey: String,
+        completion: @escaping ([DailyTipChatMessage]?, String?) -> Void
+    ) {
+        var components = URLComponents(string: "\(base)/get-daily-tip-chat")!
+        components.queryItems = [URLQueryItem(name: "date", value: dateKey)]
+        guard let url = components.url, let token = token else {
+            completion(nil, "Auth error")
+            return
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "GET"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.timeoutInterval = Timeout.standard
+
+        URLSession.shared.dataTask(with: req) { data, resp, err in
+            DispatchQueue.main.async {
+                if let err = err {
+                    completion(nil, err.localizedDescription)
+                    return
+                }
+                guard let data = data,
+                      let http = resp as? HTTPURLResponse,
+                      http.statusCode == 200,
+                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                      let rawMessages = json["messages"] as? [[String: Any]] else {
+                    completion(nil, "Chat history unavailable")
+                    return
+                }
+                let messages: [DailyTipChatMessage] = rawMessages.compactMap { item in
+                    guard let roleRaw = item["role"] as? String,
+                          let text = item["text"] as? String,
+                          let role = DailyTipChatMessage.Role(rawValue: roleRaw),
+                          !text.isEmpty else { return nil }
+                    return DailyTipChatMessage(role: role, text: text)
+                }
+                completion(messages, nil)
+            }
+        }.resume()
+    }
+}

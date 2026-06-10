@@ -43,8 +43,11 @@ struct DashboardView: View {
     @State private var showTimePicker = false
     @State private var nutritionPage: Int = 0
     @State private var healthReportCalorieGoal: Int? = nil
-    @State private var isDailyBannerMinimized = false
+    @StateObject private var dailyTipManager = DailyTipManager()
     @State private var showDailyTipDetail = false
+    @State private var showDailyTipHistory = false
+    @State private var expandTipChatOnOpen = false
+    @State private var selectedTipMetricID: String? = nil
 
 
     var filteredNutrition: (protein: Int, carbs: Int, fat: Int, fiber: Int, sugar: Int, sodium: Int) {
@@ -83,28 +86,6 @@ struct DashboardView: View {
         if h < 12 { return "Good Morning ☀️" }
         if h < 17 { return "Good Afternoon 🌤" }
         return "Good Evening 🌙"
-    }
-
-    var dailyTipShortText: String {
-        let h = Calendar.current.component(.hour, from: Date())
-        if h < 12 {
-            return "Morning Bella! Try some oatmeal — it helps support healthy cholesterol."
-        }
-        if h < 17 {
-            return "Afternoon check-in: keep lunch simple with lean protein and greens."
-        }
-        return "Evening tip: keep dinner lighter and lower in sodium than yesterday."
-    }
-
-    var dailyTipDetailText: String {
-        let h = Calendar.current.component(.hour, from: Date())
-        if h < 12 {
-            return "Oatmeal is rich in soluble fiber and can support healthy cholesterol management over time. Keep portions moderate and pair it with fruit for better satiety."
-        }
-        if h < 17 {
-            return "For lunch, aim for a clean plate structure: one lean protein source, one fiber-rich vegetable, and one controlled portion of carbs. This helps keep energy stable through the afternoon."
-        }
-        return "In the evening, prioritize lighter meals and avoid excess sodium. A simple option is grilled protein with vegetables and less sauce. This can support overnight recovery and better next-day metrics."
     }
 
     var userName: String { session.userName.isEmpty ? "Friend" : session.userName }
@@ -211,15 +192,17 @@ struct DashboardView: View {
                             .padding(.bottom, 16)
 
                         VStack(spacing: 16) {
-                            if !isDailyBannerMinimized {
+                            if !dailyTipManager.isMinimized {
                                 DailyHealthBanner(
-                                    shortTip: dailyTipShortText,
+                                    tip: dailyTipManager.tip,
+                                    selectedMetricID: $selectedTipMetricID,
                                     onAcknowledge: {
                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                            isDailyBannerMinimized = true
+                                            dailyTipManager.dismissForToday()
                                         }
                                     },
                                     onLearnMore: {
+                                        expandTipChatOnOpen = true
                                         showDailyTipDetail = true
                                     }
                                 )
@@ -242,12 +225,20 @@ struct DashboardView: View {
                         .padding(.horizontal, 16)
                     }
                 }
-                .refreshable { await refreshDashboard() }
+                .refreshable {
+                    await refreshDashboard()
+                    dailyTipManager.refresh()
+                }
 
-                if isDailyBannerMinimized {
-                    DraggableTipFloatingWidget {
+                if dailyTipManager.isMinimized {
+                    DraggableTipFloatingWidget(
+                        showHint: !dailyTipManager.hasSeenFloatingHint,
+                        onHintSeen: {
+                            dailyTipManager.markFloatingHintSeen()
+                        }
+                    ) {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                            isDailyBannerMinimized = false
+                            dailyTipManager.restore()
                         }
                     }
                     .zIndex(90)
@@ -258,7 +249,10 @@ struct DashboardView: View {
             }
             .preferredColorScheme(themeManager.current.colorScheme)
             .navigationBarHidden(true)
-            .onAppear { initializeDashboard() }
+            .onAppear {
+                initializeDashboard()
+                dailyTipManager.refresh()
+            }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("MealSaved"))) { _ in fetchAllData() }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("NutritionRecalculated"))) { notification in
                 guard let mealId = notification.userInfo?["mealId"] as? String,
@@ -272,6 +266,7 @@ struct DashboardView: View {
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ExerciseAdded"))) { _ in fetchExerciseData() }
             .onReceive(profileManager.$userProfile) { newProfile in
                 if let profile = newProfile { withAnimation { calorieGoal = profile.calorieTarget } }
+                dailyTipManager.refresh()
             }
             .sheet(isPresented: $showMealHistory) { MealHistoryView().environmentObject(themeManager) }
             .sheet(isPresented: $showUploadMeal) { BatchUploadView().environmentObject(themeManager) }
@@ -284,10 +279,25 @@ struct DashboardView: View {
             .sheet(isPresented: $showWeightTracking) { WeightTrackingView().environmentObject(themeManager) }
             .sheet(isPresented: $showDailyTipDetail) {
                 DailyTipDetailSheetView(
-                    title: dailyTipShortText,
-                    analysisText: dailyTipDetailText
+                    tip: dailyTipManager.tip,
+                    onOpenHistory: {
+                        showDailyTipDetail = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                            showDailyTipHistory = true
+                        }
+                    },
+                    expandChatOnAppear: expandTipChatOnOpen,
+                    initialMetricID: selectedTipMetricID
                 )
                 .environmentObject(themeManager)
+                .onDisappear {
+                    expandTipChatOnOpen = false
+                    selectedTipMetricID = nil
+                }
+            }
+            .sheet(isPresented: $showDailyTipHistory) {
+                DailyTipHistoryListView(tipManager: dailyTipManager)
+                    .environmentObject(themeManager)
             }
             .sheet(item: $selectedMealForDetail) { meal in
                 NavigationView { MealDetailView(meal: meal).environmentObject(themeManager) }
