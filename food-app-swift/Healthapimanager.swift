@@ -18,7 +18,7 @@ private enum Timeout {
 
 class HealthAPIManager {
     static let shared = HealthAPIManager()
-    private let base = "https://food-app-swift-qb4k.onrender.com"
+    private let base = AppConfig.apiBaseURL
     private var keepAliveTimer: Timer?
 
     private var token: String? { SessionManager.shared.getAuthToken() }

@@ -102,7 +102,7 @@ struct ForgotPasswordView: View {
     }
     
     private func sendResetCode() {
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/send_password_reset_code") else { return }
+        guard let url = AppConfig.url(path: "/send_password_reset_code") else { return }
         
         isSending = true
         message = ""
@@ -131,7 +131,7 @@ struct ForgotPasswordView: View {
     }
     
     private func verifyCode() {
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/verify_code") else { return }
+        guard let url = AppConfig.url(path: "/verify_code") else { return }
         
         isVerifying = true
         message = ""

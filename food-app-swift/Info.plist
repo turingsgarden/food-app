@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>API_BASE_URL</key>
+	<string>$(API_BASE_URL)</string>
+	<key>DEVELOPER_LABEL</key>
+	<string>$(DEVELOPER_LABEL)</string>
 	<key>CFBundleDisplayName</key>
 	<string>NutriCam - AI Food Tracker</string>
 	<key>CFBundleURLTypes</key>

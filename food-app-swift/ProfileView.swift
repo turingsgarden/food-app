@@ -537,7 +537,7 @@ struct ProfileView: View {
 
     func fetchUserEmail() {
         guard let token = session.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/get-login-methods") else { return }
+              let url = AppConfig.url(path: "/get-login-methods") else { return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         URLSession.shared.dataTask(with: req) { data, _, _ in
@@ -567,7 +567,7 @@ struct ProfileView: View {
 
     func performAccountDeletion() {
         isDeletingAccount = true
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/delete_account") else {
+        guard let url = AppConfig.url(path: "/delete_account") else {
             isDeletingAccount = false; errorMessage = "Server error"; showErrorAlert = true; return
         }
         var request = URLRequest(url: url); request.httpMethod = "DELETE"

@@ -96,7 +96,7 @@ class RecalculationManager: ObservableObject {
 
     private func saveMealToBackend(mealData: [String: Any], completion: @escaping (Bool) -> Void) {
         guard let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/update-meal"),
+              let url = AppConfig.url(path: "/update-meal"),
               let jsonData = try? JSONSerialization.data(withJSONObject: mealData) else {
             completion(false)
             return

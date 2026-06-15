@@ -188,7 +188,7 @@ struct WaterTrackingView: View {
     }
     
     func fetchWaterData() {
-        guard let userId = getCurrentUserId(), let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-water?user_id=\(userId)") else { return }
+        guard let userId = getCurrentUserId(), let url = AppConfig.url(path: "/user-water?user_id=\(userId)") else { return }
         var request = URLRequest(url: url); request.setValue("application/json", forHTTPHeaderField: "Accept")
         URLSession.shared.dataTask(with: request) { data, _, error in
             guard let data = data, error == nil else { return }
@@ -209,7 +209,7 @@ struct WaterTrackingView: View {
     
     func addWater() {
         guard selectedAmount > 0, let userId = getCurrentUserId(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/add-water") else { return }
+              let url = AppConfig.url(path: "/add-water") else { return }
         isLoading = true
         let payload: [String: Any] = ["user_id": userId, "amount": selectedAmount, "recorded_at": ISO8601DateFormatter().string(from: Date())]
         guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else { isLoading = false; return }

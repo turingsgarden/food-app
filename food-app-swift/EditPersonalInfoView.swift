@@ -172,7 +172,7 @@ struct EditPersonalInfoView: View {
         displayName = session.userName
 
         guard let token = session.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/get-login-methods") else { return }
+              let url = AppConfig.url(path: "/get-login-methods") else { return }
         var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         URLSession.shared.dataTask(with: req) { data, _, _ in
@@ -196,7 +196,7 @@ struct EditPersonalInfoView: View {
         isSaving = true
 
         guard let token = session.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/update_name") else {
+              let url = AppConfig.url(path: "/update_name") else {
             isSaving = false; errorMsg = "Server error"; showError = true; return
         }
         var req = URLRequest(url: url); req.httpMethod = "POST"

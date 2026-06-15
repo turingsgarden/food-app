@@ -337,7 +337,7 @@ struct EditHealthProfileView: View {
 
     func callDocumentOCR(base64: String, fileType: String) {
         guard let token = session.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/ocr-document") else {
+              let url = AppConfig.url(path: "/ocr-document") else {
             DispatchQueue.main.async {
                 self.isScanning = false
                 self.errorMsg = "Unable to connect to OCR service."
@@ -407,7 +407,7 @@ struct EditHealthProfileView: View {
 
     func callGeminiOCR(base64: String, prompt: String) {
         guard let token = session.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/ocr-health-report") else {
+              let url = AppConfig.url(path: "/ocr-health-report") else {
             DispatchQueue.main.async { self.isScanning = false; self.errorMsg = "Unable to connect."; self.showError = true }
             return
         }

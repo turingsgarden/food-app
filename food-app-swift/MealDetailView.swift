@@ -417,7 +417,7 @@ struct MealDetailView: View {
             return
         }
         guard let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/meal-insight")
+              let url = AppConfig.url(path: "/meal-insight")
         else { return }
 
         isLoadingInsight = true

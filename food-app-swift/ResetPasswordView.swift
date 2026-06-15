@@ -82,7 +82,7 @@ struct ResetPasswordView: View {
         guard newPassword.count >= 6 else {
             message = "Password must be at least 6 characters"; messageColor = .red; return
         }
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/reset_password") else { return }
+        guard let url = AppConfig.url(path: "/reset_password") else { return }
 
         isSubmitting = true; message = ""
 

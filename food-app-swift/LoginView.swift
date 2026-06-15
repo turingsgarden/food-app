@@ -276,7 +276,7 @@ struct LoginView: View {
     }
     
     private func sendGoogleTokenToBackend(idToken: String, email: String) {
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/google_login") else { return }
+        guard let url = AppConfig.url(path: "/google_login") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"; request.timeoutInterval = 90
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")

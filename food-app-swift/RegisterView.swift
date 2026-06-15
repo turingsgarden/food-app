@@ -217,7 +217,7 @@ struct RegisterView: View {
 
     func attemptRegister() {
         isLoading = true; registrationFailed = false
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/register") else { return }
+        guard let url = AppConfig.url(path: "/register") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"; request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["name": name, "email": email, "password": password])
@@ -264,7 +264,7 @@ struct RegisterView: View {
     }
 
     private func sendGoogleTokenToBackend(idToken: String, email: String) {
-        guard let url = URL(string: "https://food-app-swift-qb4k.onrender.com/google_login") else { return }
+        guard let url = AppConfig.url(path: "/google_login") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"; request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["idToken": idToken, "email": email])

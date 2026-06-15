@@ -1,0 +1,3 @@
+// Shared defaults for all NutriCam build flavors.
+// Note: https:/$()/ avoids // being treated as an xcconfig comment.
+API_BASE_URL = https:/$()/food-app-swift-qb4k.onrender.com

@@ -219,7 +219,7 @@ struct WeightTrackingView: View {
     }
     
     func fetchWeightData() {
-        guard let userId = getCurrentUserId(), let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-weight?user_id=\(userId)") else { return }
+        guard let userId = getCurrentUserId(), let url = AppConfig.url(path: "/user-weight?user_id=\(userId)") else { return }
         var request = URLRequest(url: url); request.setValue("application/json", forHTTPHeaderField: "Accept")
         URLSession.shared.dataTask(with: request) { data, _, error in
             guard let data = data, error == nil else { return }
@@ -236,7 +236,7 @@ struct WeightTrackingView: View {
     func addWeight() {
         guard let weight = Double(currentWeight), weight > 0,
               let userId = getCurrentUserId(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/add-weight") else { return }
+              let url = AppConfig.url(path: "/add-weight") else { return }
         isLoading = true
         let weightInKg = selectedUnit == "lbs" ? weight / 2.20462 : weight
         let payload: [String: Any] = ["user_id": userId, "weight": weightInKg, "recorded_at": ISO8601DateFormatter().string(from: Date())]

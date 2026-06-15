@@ -807,7 +807,7 @@ struct DashboardView: View {
     // Completion handler added so initializeDashboard() can chain off it
     func fetchHealthReportCalorieGoal(completion: (() -> Void)? = nil) {
         guard let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/get-health-report")
+              let url = AppConfig.url(path: "/get-health-report")
         else {
             completion?()   // still unblock the chain even on auth error
             return
@@ -843,7 +843,7 @@ struct DashboardView: View {
     func fetchMeals() {
         guard let userId = getCurrentUserId(),
               let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-meals?user_id=\(userId)")
+              let url = AppConfig.url(path: "/user-meals?user_id=\(userId)")
         else { networkError = .noInternet; return }
      
         isLoading = true
@@ -905,7 +905,7 @@ struct DashboardView: View {
     func fetchWaterData() {
         guard let userId = getCurrentUserId(),
               let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-water?user_id=\(userId)")
+              let url = AppConfig.url(path: "/user-water?user_id=\(userId)")
         else { return }
      
         var request = URLRequest(url: url)
@@ -923,7 +923,7 @@ struct DashboardView: View {
     func fetchExerciseData() {
         guard let userId = getCurrentUserId(),
               let token = SessionManager.shared.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/user-exercise?user_id=\(userId)")
+              let url = AppConfig.url(path: "/user-exercise?user_id=\(userId)")
         else { return }
      
         var request = URLRequest(url: url)

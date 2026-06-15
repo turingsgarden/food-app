@@ -371,7 +371,7 @@ struct HealthProfileView: View {
 
     func callImageOCR(base64: String) {
         guard let token = session.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/ocr-health-report") else {
+              let url = AppConfig.url(path: "/ocr-health-report") else {
             isScanning = false; errorMsg = "Unable to connect."; showError = true; return
         }
         var request = URLRequest(url: url)
@@ -408,7 +408,7 @@ struct HealthProfileView: View {
 
     func callDocumentOCR(base64: String, fileType: String) {
         guard let token = session.getAuthToken(),
-              let url = URL(string: "https://food-app-swift-qb4k.onrender.com/ocr-document") else {
+              let url = AppConfig.url(path: "/ocr-document") else {
             isScanning = false; errorMsg = "Unable to connect."; showError = true; return
         }
         var request = URLRequest(url: url)

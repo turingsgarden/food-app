@@ -10,7 +10,7 @@ class ProfileManager: ObservableObject {
     @Published var errorMessage: String?
     @Published var isNewUser = false  // NEW: Track if this is a new user without profile
     
-    private let baseURL = "https://food-app-swift-qb4k.onrender.com"
+    private let baseURL = AppConfig.apiBaseURL
     private var cancellables = Set<AnyCancellable>()
     private var currentFetchTask: URLSessionDataTask?
     private var retryCount = 0

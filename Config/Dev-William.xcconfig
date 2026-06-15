@@ -1,0 +1,9 @@
+// William dev build — separate Bundle ID for side-by-side install.
+#include "Base.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = com.food-app.nutricam.dev.william
+INFOPLIST_KEY_CFBundleDisplayName = NutriCam Dev (William)
+ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon-DevWilliam
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+DEVELOPER_LABEL = william

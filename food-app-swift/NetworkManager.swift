@@ -12,7 +12,7 @@ private enum NMTimeout {
 class NetworkManager {
     static let shared = NetworkManager()
 
-    private let baseURL = "https://food-app-swift-qb4k.onrender.com"
+    private let baseURL = AppConfig.apiBaseURL
 
     // General session – most endpoints
     private lazy var session: URLSession = {
