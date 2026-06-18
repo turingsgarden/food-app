@@ -15,7 +15,7 @@ load_dotenv()
 GEN_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEN_API_KEY:
     genai.configure(api_key=GEN_API_KEY)
-    _model       = genai.GenerativeModel('gemini-2.5-pro')
+    _model       = genai.GenerativeModel('gemini-2.5-flash')
     _flash_model = genai.GenerativeModel('gemini-2.5-flash')
 else:
     _model = _flash_model = None
