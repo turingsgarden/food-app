@@ -17,6 +17,7 @@ from langgraph.graph import END, START, StateGraph
 from PIL import Image
 
 from execution_trace import init_trace, set_request_id, trace_node
+from reasoning_trace import build_reasoning, check, warn
 from extensions import gemini_model
 from model_pipeline import encode_image, validate_image_for_analysis
 from observability import (
@@ -99,16 +100,28 @@ def validate_image_node(state: MealPhotoState) -> MealPhotoState:
             image_path = state.get("image_path") or ""
             if not image_path or not os.path.exists(image_path):
                 out = {**state, "error": "Image file not found", "result": _failure_result(state.get("user_id", ""), "Image file not found")}
-                meta["output_summary"] = "Image missing"
+                meta["output_summary"] = build_reasoning(          
+                    observe={"image_path": image_path},
+                    evaluate={"file_exists": check(False, "file on disk", fail_detail="path missing or not found")},
+                    decide="Abort — no image to process",
+                    confidence="high",
+                )
                 return out
 
             is_valid, msg = validate_image_for_analysis(image_path)
             if not is_valid:
                 out = {**state, "error": msg, "result": _failure_result(state.get("user_id", ""), msg)}
-                meta["output_summary"] = msg
+                meta["output_summary"] = build_reasoning(          
+                    observe={"image_path": image_path},
+                    evaluate={"format_valid": check(False, "format/size", fail_detail=msg)},
+                    decide=f"Abort — {msg}",
+                    confidence="high",
+                )
                 return out
 
             image = Image.open(image_path)
+            original_size = image.size
+            original_mode = image.mode
             image.thumbnail((1024, 1024), Image.Resampling.LANCZOS)
             if image.mode not in ("RGB", "L"):
                 image = image.convert("RGB")
@@ -122,7 +135,19 @@ def validate_image_node(state: MealPhotoState) -> MealPhotoState:
             except Exception:
                 pass
 
-            meta["output_summary"] = f"Validated image ({len(image_data)} b64 chars)"
+            meta["output_summary"] = build_reasoning(              
+                observe={"image_path": image_path, "original_size": str(original_size), "original_mode": original_mode},
+                consider=["Does file exist?", "Does it pass format validation?", "Does it need resizing or colour conversion?"],
+                evaluate={
+                    "file_exists":        check(True, "file on disk"),
+                    "format_valid":       check(True, "format/size"),
+                    "conversion_needed":  check(original_mode not in ("RGB", "L"), "needed RGB conversion", pass_detail=f"was {original_mode}"),
+                    "resized":            warn(original_size[0] > 1024 or original_size[1] > 1024, "within 1024x1024", detail=f"was {original_size}"),
+                    "output_b64_len":     str(len(image_data)),
+                },
+                decide="Image valid and optimised — proceed to analyze_food",
+                confidence="high",
+            )
             return {**state, "image_data": image_data, "error": ""}
 
 
@@ -135,7 +160,11 @@ def analyze_food_node(state: MealPhotoState) -> MealPhotoState:
         with trace_node(rid, "analyze_food", input_summary="Gemini vision single-pass") as meta:
             if not gemini_model:
                 err = "Gemini model not configured"
-                meta["output_summary"] = err
+                meta["output_summary"] = build_reasoning(          # ← ADD
+                    evaluate={"model_available": check(False, "gemini_model initialised", fail_detail="not configured")},
+                    decide="Abort — Gemini model not configured",
+                    confidence="high",
+                )
                 return {**state, "error": err, "result": _failure_result(state.get("user_id", ""), err)}
 
             response = lf_generation(
@@ -149,10 +178,31 @@ def analyze_food_node(state: MealPhotoState) -> MealPhotoState:
             raw = (getattr(response, "text", None) or "").strip()
             if not raw:
                 err = "Empty response from Gemini"
-                meta["output_summary"] = err
+                meta["output_summary"] = build_reasoning(          # reasoning trace add
+                    evaluate={
+                        "model_available":  check(True, "gemini_model initialised"),
+                        "response_non_empty": check(False, "non-empty response", fail_detail="empty string returned"),
+                    },
+                    decide="Abort — empty response from Gemini",
+                    confidence="high",
+                    risks="Model may have refused the image or hit a content filter",
+                )
                 return {**state, "error": err, "result": _failure_result(state.get("user_id", ""), err)}
 
-            meta["output_summary"] = raw[:200]
+            meta["output_summary"] = build_reasoning(              # To pull from reasoning trace
+                observe={"image_data_len": len(state["image_data"]), "user_id": state.get("user_id")},
+                evaluate={
+                    "model_available":    check(True, "gemini_model initialised"),
+                    "prompt_strategy":    "single_pass_v3 — structured section headers",
+                    "prompt_length":      str(len(MEAL_ANALYSIS_PROMPT)),
+                    "response_non_empty": check(True, "non-empty response"),
+                    "response_length":    str(len(raw)),
+                    "response_preview":   raw[:150],
+                },
+                decide="Raw response accepted — pass to parse_nutrition",
+                confidence="medium",
+                risks="Model output is non-deterministic — parser may still fail on malformed sections",
+            )
             return {**state, "raw_response": raw, "error": ""}
 
 
