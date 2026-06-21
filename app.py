@@ -1507,6 +1507,28 @@ def payload_too_large(error):
     return jsonify({"error": "Request payload too large"}), 413
 
 
+def _empty_health_ocr_response(message: str) -> dict:
+    return {
+        "systolic_bp": None, "diastolic_bp": None,
+        "blood_sugar": None, "cholesterol": None,
+        "triglycerides": None, "height_cm": None, "weight_kg": None,
+        "message": message,
+    }
+
+
+def _gemini_transcribe_image(image_b64: str) -> str:
+    """OCR step 1 for images: Gemini reads the report and returns full text."""
+    ocr_prompt = (
+        "Transcribe ALL text from this medical or laboratory report image verbatim. "
+        "Preserve table rows and columns. Do not summarize, translate, or omit content."
+    )
+    response = gemini_model.generate_content([
+        ocr_prompt,
+        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
+    ])
+    return (response.text or "").strip()
+
+
 @app.route("/ocr-health-report", methods=["POST"])
 @token_required
 def ocr_health_report():
@@ -1515,87 +1537,69 @@ def ocr_health_report():
         if not data or not data.get("image_base64"):
             return jsonify({"error": "No image provided"}), 400
 
-        image_b64 = data["image_base64"]
-        vision_key = os.getenv("GOOGLE_VISION_API_KEY")
-        if not vision_key:
+        if not gemini_model:
             return jsonify({"error": "OCR service not configured on server"}), 503
 
-        vision_url = f"https://vision.googleapis.com/v1/images:annotate?key={vision_key}"
-        vision_payload = {
-            "requests": [{
-                "image": {"content": image_b64},
-                "features": [{"type": "DOCUMENT_TEXT_DETECTION", "maxResults": 1}],
-                "imageContext": {"languageHints": ["en", "zh-Hans", "zh-Hant"]}
-            }]
-        }
+        image_b64 = data["image_base64"]
+        print("📤 Gemini image OCR: transcribing report...")
+        full_text = _gemini_transcribe_image(image_b64)
 
-        print(f"📤 Calling Google Vision API...")
-        vision_resp = requests.post(vision_url, json=vision_payload,
-                                    headers={"Content-Type": "application/json"}, timeout=20)
+        if not full_text:
+            return jsonify(_empty_health_ocr_response(
+                "No text detected. Make sure the image is clear and well-lit."
+            )), 200
 
-        if vision_resp.status_code != 200:
-            err_body = vision_resp.text[:300]
-            print(f"❌ Google Vision API {vision_resp.status_code}: {err_body}")
-            return jsonify({"error": f"OCR service error ({vision_resp.status_code})."}), 502
-
-        vision_data = vision_resp.json()
-        if "error" in vision_data.get("responses", [{}])[0]:
-            api_err = vision_data["responses"][0]["error"]
-            return jsonify({"error": api_err.get("message", "OCR failed")}), 502
-
-        try:
-            full_text = vision_data["responses"][0]["fullTextAnnotation"]["text"]
-        except (KeyError, IndexError):
-            try:
-                annotations = vision_data["responses"][0].get("textAnnotations", [])
-                full_text = annotations[0].get("description", "") if annotations else ""
-            except (KeyError, IndexError):
-                full_text = ""
-
-        if not full_text.strip():
-            return jsonify({
-                "systolic_bp": None, "diastolic_bp": None,
-                "blood_sugar": None, "cholesterol": None,
-                "triglycerides": None, "height_cm": None, "weight_kg": None,
-                "message": "No text detected. Make sure the image is clear and well-lit."
-            }), 200
-
-        print(f"📄 Vision OCR extracted {len(full_text)} chars")
-
-        if not gemini_model:
-            return jsonify(_extract_health_values_regex(full_text)), 200
-
-        extract_prompt = f"""You are a medical data extraction assistant.
-Extract health values from this OCR text. Return ONLY valid JSON, no markdown:
-{{"systolic_bp": <int or null>, "diastolic_bp": <int or null>, "blood_sugar": <float mmol/L or null>, "cholesterol": <float mmol/L or null>, "triglycerides": <float mmol/L or null>, "height_cm": <float or null>, "weight_kg": <float or null>}}
-
-Rules: only extract clearly readable values. Use null if missing or ambiguous.
-If mg/dL: glucose÷18, cholesterol÷38.67, triglycerides÷88.57.
-
-OCR TEXT:
-\"\"\"{full_text}\"\"\"
-"""
-        gemini_resp = gemini_model.generate_content(extract_prompt)
-        raw = gemini_resp.text.strip().replace("```json", "").replace("```", "").strip()
-        start = raw.find("{"); end = raw.rfind("}") + 1
-        if start >= 0 and end > start:
-            raw = raw[start:end]
-        else:
-            return jsonify(_extract_health_values_regex(full_text)), 200
-
-        result_json = json.loads(raw)
+        print(f"📄 Gemini OCR extracted {len(full_text)} chars")
+        result_json = _extract_health_values_from_text(full_text)
         cleaned = _validate_health_values(result_json)
         print(f"✅ OCR final: {cleaned}")
         return jsonify(cleaned), 200
 
     except json.JSONDecodeError:
         return jsonify({"error": "Could not parse scan results. Try a clearer image."}), 422
-    except requests.exceptions.Timeout:
-        return jsonify({"error": "OCR timed out. Please try again."}), 504
-    except requests.exceptions.ConnectionError:
-        return jsonify({"error": "Cannot reach OCR service. Check your connection."}), 503
     except Exception as e:
         print(f"❌ OCR unexpected error: {e}")
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/ocr-document", methods=["POST"])
+@token_required
+def ocr_document():
+    """OCR for PDF/Word: extract text with PyMuPDF or python-docx, then Gemini extraction."""
+    try:
+        data = request.get_json()
+        if not data or not data.get("file_base64"):
+            return jsonify({"error": "No file provided"}), 400
+
+        if not gemini_model:
+            return jsonify({"error": "OCR service not configured on server"}), 503
+
+        file_bytes = base64.b64decode(data["file_base64"])
+        file_type = (data.get("file_type") or "pdf").lower()
+
+        if file_type == "pdf":
+            full_text = _extract_text_from_pdf(file_bytes)
+        elif file_type in ("docx", "doc"):
+            full_text = _extract_text_from_docx(file_bytes)
+        else:
+            return jsonify({"error": "Unsupported file type. Use pdf or docx."}), 400
+
+        if not full_text.strip():
+            return jsonify(_empty_health_ocr_response(
+                "No text found in document. If it is a scanned PDF, try uploading a photo instead."
+            )), 200
+
+        print(f"📄 Document OCR extracted {len(full_text)} chars ({file_type})")
+        result_json = _extract_health_values_from_text(full_text)
+        cleaned = _validate_health_values(result_json)
+        print(f"✅ Document OCR final: {cleaned}")
+        return jsonify(cleaned), 200
+
+    except json.JSONDecodeError:
+        return jsonify({"error": "Could not parse scan results. Try a clearer document."}), 422
+    except Exception as e:
+        print(f"❌ Document OCR error: {e}")
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -1678,21 +1682,34 @@ def _extract_text_from_docx(docx_bytes: bytes) -> str:
     return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
 
 def _extract_health_values_from_text(raw_text: str) -> dict:
-    prompt = f"""You are a medical document parser. Extract health values from the following text.
-Return ONLY a valid JSON object with these keys (use null if not found):
-{{"systolic_bp": <int or null>, "diastolic_bp": <int or null>, "blood_sugar": <float mmol/L or null>, "cholesterol": <float mmol/L or null>, "triglycerides": <float mmol/L or null>, "height_cm": <float or null>, "weight_kg": <float or null>}}
-Conversion: glucose mg/dL÷18, cholesterol mg/dL÷38.67, triglycerides mg/dL÷88.57, weight lbs×0.4536.
-Document text:\"\"\"{raw_text[:4000]}\"\"\"
-Respond with JSON only."""
-    import google.generativeai as genai
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY", ""))
-    model = genai.GenerativeModel("gemini-2.0-flash")
-    response = model.generate_content(prompt)
-    raw = response.text.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
-    try:
-        return json.loads(raw)
-    except Exception:
+    """OCR step 2: extract structured health fields from transcribed text."""
+    if not raw_text.strip():
+        return _extract_health_values_regex("")
+
+    if not gemini_model:
         return _extract_health_values_regex(raw_text)
+
+    prompt = f"""You are a medical data extraction assistant.
+Extract health values from this OCR text. Return ONLY valid JSON, no markdown:
+{{"systolic_bp": <int or null>, "diastolic_bp": <int or null>, "blood_sugar": <float mmol/L or null>, "cholesterol": <float mmol/L or null>, "triglycerides": <float mmol/L or null>, "height_cm": <float or null>, "weight_kg": <float or null>}}
+
+Rules: only extract clearly readable values. Use null if missing or ambiguous.
+If mg/dL: glucose÷18, cholesterol÷38.67, triglycerides÷88.57. Weight in lbs: ×0.4536 for kg.
+
+OCR TEXT:
+\"\"\"{raw_text[:4000]}\"\"\"
+"""
+    response = gemini_model.generate_content(prompt)
+    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+    if start >= 0 and end > start:
+        raw = raw[start:end]
+        try:
+            return json.loads(raw)
+        except json.JSONDecodeError:
+            pass
+    return _extract_health_values_regex(raw_text)
 
 
 @app.route("/meal-insight", methods=["POST"])
