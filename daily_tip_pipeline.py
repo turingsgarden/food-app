@@ -7,6 +7,7 @@ Uses Gemini 2.5 Flash by default; falls back through still-served models
 
 import json
 import os
+import re
 import time
 import traceback
 from datetime import datetime
@@ -40,6 +41,72 @@ def _is_retryable(error: Exception) -> bool:
     quota = any(k in msg for k in ("quota", "429", "resource exhausted", "rate limit"))
     gone = any(k in msg for k in ("404", "not found", "not supported"))
     return quota or gone
+
+
+def _parse_retry_seconds(error: Exception):
+    m = re.search(r"retry in ([\d.]+)s", str(error), re.I)
+    return float(m.group(1)) if m else None
+
+
+def generate_content_with_fallback(
+    contents,
+    gemini_model=None,
+    *,
+    quota_retry_wait_cap: float = 45.0,
+) -> str:
+    """Text prompt or multimodal content. Model chain + one quota wait per model."""
+    last_error = None
+
+    def _call(model):
+        text = model.generate_content(contents).text
+        return text or ""
+
+    if gemini_model is not None:
+        for quota_attempt in range(2):
+            try:
+                return _call(gemini_model)
+            except Exception as e:
+                last_error = e
+                if not _is_retryable(e):
+                    raise
+                if quota_attempt == 0:
+                    wait = _parse_retry_seconds(e)
+                    if wait is not None:
+                        wait = min(wait, quota_retry_wait_cap)
+                        print(f"⏳ quota hit — waiting {wait:.0f}s before retry")
+                        time.sleep(wait)
+                        continue
+                print(f"⚠️ provided model failed ({e}) — falling back to model chain")
+                break
+
+    if not GEN_API_KEY:
+        raise Exception("Gemini API key not configured")
+
+    for i, model_name in enumerate(MODEL_CHAIN):
+        model = genai.GenerativeModel(model_name)
+        for quota_attempt in range(2):
+            try:
+                if i > 0 and quota_attempt == 0:
+                    time.sleep(2)
+                print(f"🤖 generate_content_with_fallback using {model_name}")
+                return _call(model)
+            except Exception as e:
+                last_error = e
+                if not _is_retryable(e):
+                    raise
+                if quota_attempt == 0:
+                    wait = _parse_retry_seconds(e)
+                    if wait is not None:
+                        wait = min(wait, quota_retry_wait_cap)
+                        print(f"⏳ {model_name} quota — waiting {wait:.0f}s")
+                        time.sleep(wait)
+                        continue
+                if i < len(MODEL_CHAIN) - 1:
+                    print(f"⚠️ {model_name} unavailable — trying {MODEL_CHAIN[i + 1]}")
+                    break
+                raise
+
+    raise last_error or Exception("Gemini generation failed")
 
 
 def generate_with_fallback(prompt: str, gemini_model=None) -> str:

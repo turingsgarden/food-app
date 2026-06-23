@@ -32,7 +32,7 @@ import threading
 from jwt import PyJWKClient
 from google.oauth2 import id_token
 from google.auth.transport import requests as grequests
-from daily_tip_pipeline import generate_daily_tip, daily_tip_chat_reply
+from daily_tip_pipeline import generate_daily_tip, daily_tip_chat_reply, generate_content_with_fallback
 from health_pipeline import (
     generate_nutrition_targets,
     generate_weekly_meal_plan,
@@ -107,7 +107,7 @@ try:
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     if gemini_api_key:
         genai.configure(api_key=gemini_api_key)
-        gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+        gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
         print("✅ Gemini configured")
     else:
         print("⚠️ GEMINI_API_KEY not found")
@@ -1522,11 +1522,11 @@ def _gemini_transcribe_image(image_b64: str) -> str:
         "Transcribe ALL text from this medical or laboratory report image verbatim. "
         "Preserve table rows and columns. Do not summarize, translate, or omit content."
     )
-    response = gemini_model.generate_content([
+    contents = [
         ocr_prompt,
         {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
-    ])
-    return (response.text or "").strip()
+    ]
+    return generate_content_with_fallback(contents, gemini_model=gemini_model).strip()
 
 
 @app.route("/ocr-health-report", methods=["POST"])
@@ -1699,8 +1699,8 @@ If mg/dL: glucose÷18, cholesterol÷38.67, triglycerides÷88.57. Weight in lbs: 
 OCR TEXT:
 \"\"\"{raw_text[:4000]}\"\"\"
 """
-    response = gemini_model.generate_content(prompt)
-    raw = response.text.strip().replace("```json", "").replace("```", "").strip()
+    raw = generate_content_with_fallback(prompt, gemini_model=gemini_model).strip()
+    raw = raw.replace("```json", "").replace("```", "").strip()
     start = raw.find("{")
     end = raw.rfind("}") + 1
     if start >= 0 and end > start:

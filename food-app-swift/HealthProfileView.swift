@@ -378,7 +378,7 @@ struct HealthProfileView: View {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 45
+        request.timeoutInterval = 120
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["image_base64": base64])
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async { self.handleOCRResponse(data: data, error: error) }
@@ -415,7 +415,7 @@ struct HealthProfileView: View {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 60
+        request.timeoutInterval = 120
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["file_base64": base64, "file_type": fileType])
         URLSession.shared.dataTask(with: request) { data, _, error in
             DispatchQueue.main.async { self.handleOCRResponse(data: data, error: error) }

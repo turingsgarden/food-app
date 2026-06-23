@@ -350,7 +350,7 @@ struct EditHealthProfileView: View {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 60    // documents can be larger than images
+        request.timeoutInterval = 120
 
         let body: [String: Any] = ["file_base64": base64, "file_type": fileType]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
@@ -415,7 +415,7 @@ struct EditHealthProfileView: View {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 45
+        request.timeoutInterval = 120
         request.httpBody = try? JSONSerialization.data(withJSONObject: ["image_base64": base64])
 
         URLSession.shared.dataTask(with: request) { data, _, error in
