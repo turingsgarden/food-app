@@ -160,7 +160,7 @@ def analyze_food_node(state: MealPhotoState) -> MealPhotoState:
         with trace_node(rid, "analyze_food", input_summary="Gemini vision single-pass") as meta:
             if not gemini_model:
                 err = "Gemini model not configured"
-                meta["output_summary"] = build_reasoning(          # ← ADD
+                meta["output_summary"] = build_reasoning(          # reasoning trace
                     evaluate={"model_available": check(False, "gemini_model initialised", fail_detail="not configured")},
                     decide="Abort — Gemini model not configured",
                     confidence="high",
@@ -216,6 +216,12 @@ def parse_nutrition_node(state: MealPhotoState) -> MealPhotoState:
     with lf_node_span("meal_photo.node.parse_nutrition", {"raw_len": len(raw)}):
         with trace_node(rid, "parse_nutrition", input_summary=f"raw_len={len(raw)}") as meta:
             if "unable to identify" in raw.lower():
+                meta["output_summary"] = build_reasoning(          # reasoning race
+                    observe={"raw_len": len(raw)},
+                    evaluate={"identifiable": check(False, "food identifiable", fail_detail="model returned 'unable to identify'")},
+                    decide="Abort — food could not be identified",
+                    confidence="high",
+                )
                 start_time = state.get("start_time", time.time())
                 result = {
                     "dish_prediction": "Could not identify food",
@@ -227,7 +233,6 @@ def parse_nutrition_node(state: MealPhotoState) -> MealPhotoState:
                     "error": "Detection failed: unable to identify food",
                     "analysis_confidence": 0,
                 }
-                meta["output_summary"] = "Unable to identify food"
                 return {**state, "result": result, "error": result["error"]}
 
             dish_name = ""
@@ -302,8 +307,27 @@ def parse_nutrition_node(state: MealPhotoState) -> MealPhotoState:
                 else:
                     final_nutrition.append(f"{nutrient}|0|{unit}")
 
-            meta["output_summary"] = (
-                f"dish={dish_name[:60]} visible={len(visible_ingredients)} hidden={len(hidden_ingredients)}"
+            missing_nutrients = [n for n in required_nutrients if n not in found_nutrients]
+            confidence_score = min(100, len(visible_ingredients) * 10)
+            meta["output_summary"] = build_reasoning(
+                observe={"raw_len": len(raw)},
+                consider=[
+                    "Were all 4 sections found in the response?",
+                    "Are ingredient rows well-formed (name|qty|unit)?",
+                    "Do all 7 required nutrients appear with valid values?",
+                ],
+                evaluate={
+                    "identifiable":       check(True, "food identifiable"),
+                    "dish_name_found":    check(bool(dish_name), "dish name extracted", fail_detail="empty"),
+                    "visible_parsed":     check(len(visible_ingredients) > 0, f"{len(visible_ingredients)} visible ingredients"),
+                    "hidden_parsed":      warn(len(hidden_ingredients) > 0, "hidden ingredients present", detail="none found"),
+                    "nutrition_parsed":   check(len(nutrition_lines) > 0, "nutrition lines found"),
+                    "missing_nutrients":  str(missing_nutrients) if missing_nutrients else "none — all 7 present",
+                    "confidence_formula": f"visible_count({len(visible_ingredients)}) × 10 = {confidence_score}% (capped at 100)",
+                },
+                decide=f"Parsed — dish='{dish_name}' visible={len(visible_ingredients)} hidden={len(hidden_ingredients)} confidence={confidence_score}%",
+                confidence="high" if len(visible_ingredients) >= 3 else "low",
+                risks=f"Nutrients defaulted to 0: {missing_nutrients}" if missing_nutrients else "None",
             )
             return {
                 **state,
@@ -330,7 +354,11 @@ def validate_output_node(state: MealPhotoState) -> MealPhotoState:
     with lf_node_span("meal_photo.node.validate_output", redact_for_trace(state)):
         with trace_node(rid, "validate_output", input_summary=state.get("dish_prediction", "")) as meta:
             if state.get("error"):
-                meta["output_summary"] = state["error"]
+                meta["output_summary"] = = build_reasoning(          # reasoning trace add
+                    observe={"error": state["error"]},
+                    decide=f"Passthrough — upstream error: {state['error']}",
+                    confidence="high",
+                )
                 return state
 
             dish = (state.get("dish_prediction") or "").strip()
@@ -356,7 +384,15 @@ def validate_output_node(state: MealPhotoState) -> MealPhotoState:
             
             if visible_count < 2 and not (is_identifiable_dish and calories > 0):
                 err = f"Insufficient ingredients detected (only {visible_count})"
-                meta["output_summary"] = err
+                meta["output_summary"] =  build_reasoning(        # reasoning trace add
+                    observe={"dish": dish, "visible_count": visible_count, "calories": calories},
+                    evaluate={
+                        "visible_count":      check(False, ">=2 ingredients", fail_detail=f"only {visible_count}"),
+                        "adaptive_guardrail": "CANNOT BYPASS — dish not identifiable or calories=0",
+                    },
+                    decide=f"Abort — insufficient ingredients ({visible_count} detected)",
+                    confidence="high",
+                )
                 return {
                     **state,
                     "error": err,
@@ -365,7 +401,15 @@ def validate_output_node(state: MealPhotoState) -> MealPhotoState:
 
             if calories <= 0 or not dish:
                 err = "Invalid analysis output (Zero calories or missing dish name)"
-                meta["output_summary"] = err
+                meta["output_summary"] = build_reasoning(          # reasoning trace
+                    observe={"dish": dish, "calories": calories},
+                    evaluate={
+                        "calories_check": check(False, "calories > 0", fail_detail=f"got {calories}"),
+                        "dish_check":     check(False, "dish name present", fail_detail="empty string"),
+                    },
+                    decide="Abort — zero calories or missing dish name",
+                    confidence="high",
+                )
                 return {
                     **state,
                     "error": err,
