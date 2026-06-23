@@ -1516,17 +1516,25 @@ def _empty_health_ocr_response(message: str) -> dict:
     }
 
 
-def _gemini_transcribe_image(image_b64: str) -> str:
-    """OCR step 1 for images: Gemini reads the report and returns full text."""
+def _gemini_transcribe_image_b64(image_b64: str, mime_type: str = "image/jpeg") -> str:
+    """OCR step 1: Gemini reads a report image and returns full text."""
     ocr_prompt = (
         "Transcribe ALL text from this medical or laboratory report image verbatim. "
         "Preserve table rows and columns. Do not summarize, translate, or omit content."
     )
     contents = [
         ocr_prompt,
-        {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
+        {"inline_data": {"mime_type": mime_type, "data": image_b64}},
     ]
     return generate_content_with_fallback(contents, gemini_model=gemini_model).strip()
+
+
+def _gemini_transcribe_image(image_b64: str) -> str:
+    return _gemini_transcribe_image_b64(image_b64, "image/jpeg")
+
+
+_PDF_GEMINI_MAX_PAGES = 3
+_PDF_RENDER_SCALE = 2
 
 
 @app.route("/ocr-health-report", methods=["POST"])
@@ -1587,7 +1595,7 @@ def ocr_document():
 
         if not full_text.strip():
             return jsonify(_empty_health_ocr_response(
-                "No text found in document. If it is a scanned PDF, try uploading a photo instead."
+                "No text detected in document. Try a clearer file or upload a photo instead."
             )), 200
 
         print(f"📄 Document OCR extracted {len(full_text)} chars ({file_type})")
@@ -1671,11 +1679,27 @@ def _extract_health_values_regex(text: str) -> dict:
 
 
 def _extract_text_from_pdf(pdf_bytes: bytes) -> str:
-    text_pages = []
     with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
-        for page in doc:
-            text_pages.append(page.get_text())
-    return "\n".join(text_pages)
+        text_pages = [page.get_text() for page in doc]
+        full = "\n".join(text_pages)
+        if full.strip():
+            return full
+
+        if not gemini_model:
+            return ""
+
+        text_parts = []
+        page_count = min(len(doc), _PDF_GEMINI_MAX_PAGES)
+        print(f"📄 PDF has no text layer — Gemini OCR on {page_count} page(s)...")
+        matrix = fitz.Matrix(_PDF_RENDER_SCALE, _PDF_RENDER_SCALE)
+        for i in range(page_count):
+            pix = doc[i].get_pixmap(matrix=matrix)
+            image_b64 = base64.b64encode(pix.tobytes("png")).decode("ascii")
+            print(f"📤 Gemini PDF page OCR: transcribing page {i + 1}/{page_count}...")
+            page_text = _gemini_transcribe_image_b64(image_b64, "image/png")
+            if page_text:
+                text_parts.append(page_text)
+        return "\n\n".join(text_parts)
 
 def _extract_text_from_docx(docx_bytes: bytes) -> str:
     doc = docx.Document(io.BytesIO(docx_bytes))
