@@ -12,6 +12,8 @@ from io import BytesIO
 import traceback
 import json
 
+from daily_tip_pipeline import generate_content_with_fallback
+
 # Load environment variables
 load_dotenv()
 
@@ -21,7 +23,22 @@ if not GEN_API_KEY:
     raise ValueError("GEMINI_API_KEY is not set in environment variables.")
 
 genai.configure(api_key=GEN_API_KEY)
-gemini_model = genai.GenerativeModel('gemini-2.5-pro')
+# Food analysis now uses Flash instead of Pro (Pro has the lowest free-tier quota).
+# All calls route through generate_content_with_fallback
+# (flash -> flash-lite -> 3.1-flash-lite) so a single-model 429 degrades
+# gracefully instead of hard-failing the food recognition feature.
+gemini_model = genai.GenerativeModel('gemini-2.5-flash')
+
+
+class _Resp:
+    """Shim so existing `response.text` call sites keep working unchanged."""
+    def __init__(self, text):
+        self.text = text
+
+
+def _gen(contents):
+    """Generate via the shared fallback chain (flash -> flash-lite -> 3.1-flash-lite)."""
+    return _Resp(generate_content_with_fallback(contents))
 
 # MongoDB Setup
 mongo_uri = os.getenv("MONGO_URI")
@@ -100,7 +117,7 @@ If you cannot clearly identify the food, say "Unable to identify food clearly"."
         
         print("🔍 Analyzing actual image content...")
         
-        response = gemini_model.generate_content([
+        response = _gen([
             prompt,
             {"mime_type": "image/jpeg", "data": image_data}
         ])
@@ -156,7 +173,7 @@ BE SPECIFIC - match the cuisine and cooking style of the actual dish."""
     
     try:
         print("🔍 Detecting actual hidden ingredients...")
-        response = gemini_model.generate_content(prompt)
+        response = _gen(prompt)
         
         if response and response.text:
             lines = response.text.strip().split('\n')
@@ -211,7 +228,7 @@ IMPORTANT: Return ONLY the nutrition lines in the exact format above, no other t
     
     try:
         print("📊 Calculating actual nutrition from ingredients...")
-        response = gemini_model.generate_content(prompt)
+        response = _gen(prompt)
         
         if response and response.text:
             # Clean and validate the response
@@ -329,7 +346,7 @@ Rules:
 - If you cannot identify the food, write "Unable to identify" under DISH NAME"""
 
         print("🔍 Single-pass Gemini analysis starting...")
-        response = gemini_model.generate_content([
+        response = _gen([
             prompt,
             {"mime_type": "image/jpeg", "data": image_data}
         ])
@@ -488,7 +505,7 @@ Fiber|ACTUAL_VALUE|g
 Sugar|ACTUAL_VALUE|g
 Sodium|ACTUAL_VALUE|mg"""
         
-        response = gemini_model.generate_content(prompt)
+        response = _gen(prompt)
         
         if response and response.text:
             # Validate we got real values
