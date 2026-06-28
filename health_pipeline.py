@@ -58,7 +58,10 @@ Patient:
 - Age: {profile.get('age')} | Sex: {profile.get('sex')} | BMI: {bmi}
 - Blood pressure: {bp}
 - Fasting blood sugar: {profile.get('fasting_blood_sugar', 'N/A')} mmol/L
+- HbA1c: {profile.get('hba1c', 'N/A')} %
 - Cholesterol: {profile.get('total_cholesterol', 'N/A')} mmol/L
+- LDL cholesterol: {profile.get('ldl', 'N/A')} mmol/L
+- HDL cholesterol: {profile.get('hdl', 'N/A')} mmol/L
 - Triglycerides: {profile.get('triglycerides', 'N/A')} mmol/L
 - Diet: {', '.join(profile.get('dietary_preferences', ['no restriction']))}
 - Avoid allergens: {', '.join(profile.get('allergens', ['none']))}
@@ -194,6 +197,39 @@ def generate_health_report(profile: dict, goals: list, gemini_model,
                 f"reduce sugary drinks and refined carbs, favor whole grains and fatty fish"
             )
 
+    a1c = profile.get("hba1c")
+    if a1c:
+        if a1c >= 6.5:
+            clinical_flags.append(
+                f"HIGH HbA1c ({a1c}%, diabetic range) → "
+                f"recommend LOW-GI foods only, consistent carbohydrate portions, high-fiber vegetables and legumes"
+            )
+        elif a1c >= 5.7:
+            clinical_flags.append(
+                f"BORDERLINE HbA1c ({a1c}%, prediabetic range) → "
+                f"reduce refined carbs and sugary drinks, favor whole grains and fiber-rich foods"
+            )
+
+    ldl = profile.get("ldl")
+    if ldl:
+        if ldl >= 4.1:
+            clinical_flags.append(
+                f"HIGH LDL CHOLESTEROL ({ldl} mmol/L) → "
+                f"limit saturated and trans fats, recommend soluble fiber (oats, beans) and Omega-3 rich fish"
+            )
+        elif ldl >= 3.4:
+            clinical_flags.append(
+                f"BORDERLINE LDL ({ldl} mmol/L) → "
+                f"favor unsaturated fats (olive oil, nuts, avocado) over saturated fats"
+            )
+
+    hdl = profile.get("hdl")
+    if hdl and hdl < 1.0:
+        clinical_flags.append(
+            f"LOW HDL CHOLESTEROL ({hdl} mmol/L, cardio-protective HDL is low) → "
+            f"recommend healthy fats (olive oil, nuts, fatty fish) and encourage regular physical activity"
+        )
+
     if bmi >= 30:
         clinical_flags.append(
             f"OBESE (BMI {bmi}) → recommend HIGH-SATIETY LOW-CALORIE-DENSITY foods"
@@ -238,6 +274,7 @@ Recent daily averages: calories={recent_avgs.get('calories','N/A')} kcal | prote
 === USER CONTEXT ===
 Age: {profile.get('age')} | Sex: {profile.get('sex')} | BMI: {bmi}
 Triglycerides: {profile.get('triglycerides', 'N/A')} mmol/L (normal < 1.7)
+HbA1c: {profile.get('hba1c', 'N/A')} % (normal < 5.7) | LDL: {profile.get('ldl', 'N/A')} mmol/L (normal < 3.4) | HDL: {profile.get('hdl', 'N/A')} mmol/L (normal > 1.0)
 Goals: {', '.join(goals) if goals else 'general wellness'}
 Top frequent foods: {', '.join(top_foods) if top_foods else 'no data'}
 Preferred cooking styles: {cooking_str}

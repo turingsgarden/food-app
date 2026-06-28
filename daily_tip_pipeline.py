@@ -193,7 +193,10 @@ Patient profile:
 - Age: {profile.get('age', 'N/A')} | Sex: {profile.get('sex', 'N/A')} | BMI: {bmi}
 - Systolic BP: {profile.get('systolic_bp', 'N/A')} | Diastolic BP: {profile.get('diastolic_bp', 'N/A')}
 - Fasting blood sugar: {profile.get('fasting_blood_sugar', 'N/A')} mmol/L
+- HbA1c: {profile.get('hba1c', 'N/A')} % (normal < 5.7)
 - Total cholesterol: {profile.get('total_cholesterol', 'N/A')} mmol/L
+- LDL cholesterol: {profile.get('ldl', 'N/A')} mmol/L (normal < 3.4)
+- HDL cholesterol: {profile.get('hdl', 'N/A')} mmol/L (normal > 1.0)
 - Triglycerides: {profile.get('triglycerides', 'N/A')} mmol/L (normal < 1.7)
 - Dietary preferences: {', '.join(profile.get('dietary_preferences', []) or ['none'])}
 - Allergens: {', '.join(profile.get('allergens', []) or ['none'])}

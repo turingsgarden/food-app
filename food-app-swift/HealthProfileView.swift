@@ -39,6 +39,12 @@ struct HealthProfileView: View {
     @State private var cholesterol: Double = 4.5
     @State private var hasTriglycerides = false
     @State private var triglycerides: Double = 1.2
+    @State private var hasHbA1c = false
+    @State private var hba1c: Double = 5.5
+    @State private var hasLDL = false
+    @State private var ldl: Double = 2.5
+    @State private var hasHDL = false
+    @State private var hdl: Double = 1.3
 
     // Step 3 — Diet preferences & allergens
     @State private var selectedDietary: Set<String> = []
@@ -58,6 +64,12 @@ struct HealthProfileView: View {
     @State private var selectedPhotoItem: PhotosPickerItem? = nil
     @State private var scanResult: OCRHealthResult? = nil
     @State private var showScanBanner = false   // show result banner in step 1
+
+    // OCR confirmation (raw → processed review)
+    @State private var showOCRConfirm = false
+    @State private var pendingFields: [OCRField] = []
+    @State private var ocrStatus = ""
+    @State private var ocrMessage: String? = nil
 
     private let prefill: HealthProfile?
 
@@ -148,6 +160,14 @@ struct HealthProfileView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Upload a photo, PDF, or Word document with your health report.")
+            }
+
+            // OCR raw → processed confirmation
+            .sheet(isPresented: $showOCRConfirm) {
+                OCRConfirmView(fields: pendingFields, status: ocrStatus, message: ocrMessage) { confirmed in
+                    applyConfirmedFields(confirmed)
+                }
+                .environmentObject(themeManager)
             }
         }
     }
@@ -431,16 +451,27 @@ struct HealthProfileView: View {
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             errorMsg = "Could not read scan results. Enter values manually."; showError = true; return
         }
-        let result = parseOCRResult(json: json)
-        if result.hasAnyResult {
-            applyOCRResult(result)
-            scanResult = result
-            showScanBanner = true
-            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { currentStep = 1 }
-        } else {
-            errorMsg = "No health values detected. Try a clearer image or enter manually."
-            showError = true
+        presentOCRConfirmation(json: json)
+    }
+
+    /// Open the raw → processed confirmation sheet. Falls back to the legacy
+    /// direct-apply path if the response has no `fields` double-layer (older backend).
+    func presentOCRConfirmation(json: [String: Any]) {
+        let fields = parseOCRFields(json: json)
+        if fields.isEmpty {
+            let legacy = parseOCRResult(json: json)
+            if legacy.hasAnyResult {
+                applyOCRResult(legacy)
+                scanResult = legacy
+                showScanBanner = true
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { currentStep = 1 }
+                return
+            }
         }
+        pendingFields = fields
+        ocrStatus = (json["status"] as? String) ?? (fields.isEmpty ? "no_fields" : "ok")
+        ocrMessage = json["message"] as? String
+        showOCRConfirm = true
     }
 
     func parseOCRResult(json: [String: Any]) -> OCRHealthResult {
@@ -459,6 +490,12 @@ struct HealthProfileView: View {
         else if let v = json["height_cm"]    as? Int    { r.heightCm    = Double(v) }
         if let v = json["weight_kg"]    as? Double { r.weightKg    = v }
         else if let v = json["weight_kg"]    as? Int    { r.weightKg    = Double(v) }
+        if let v = json["hba1c"] as? Double { r.hba1c = v }
+        else if let v = json["hba1c"] as? Int { r.hba1c = Double(v) }
+        if let v = json["ldl"] as? Double { r.ldl = v }
+        else if let v = json["ldl"] as? Int { r.ldl = Double(v) }
+        if let v = json["hdl"] as? Double { r.hdl = v }
+        else if let v = json["hdl"] as? Int { r.hdl = Double(v) }
         return r
     }
 
@@ -473,6 +510,36 @@ struct HealthProfileView: View {
             if let bs = result.bloodSugar,   bs >= 2.0 && bs <= 15.0 { hasBloodSugar = true; bloodSugar = bs }
             if let ch = result.cholesterol,  ch >= 1.0 && ch <= 10.0 { hasCholesterol = true; cholesterol = ch }
             if let tr = result.triglycerides, tr >= 0.2 && tr <= 8.0  { hasTriglycerides = true; triglycerides = tr }
+            if let a = result.hba1c, a >= 3.0 && a <= 18.0 { hasHbA1c = true; hba1c = a }
+            if let l = result.ldl, l >= 0.3 && l <= 10.0 { hasLDL = true; ldl = l }
+            if let hd = result.hdl, hd >= 0.3 && hd <= 5.0 { hasHDL = true; hdl = hd }
+        }
+    }
+
+    /// Build an OCRHealthResult from the user-confirmed fields, then apply + advance.
+    func applyConfirmedFields(_ fields: [OCRField]) {
+        var r = OCRHealthResult()
+        for f in fields where f.accepted {
+            guard let v = Double(f.editedValue.trimmingCharacters(in: .whitespaces)) else { continue }
+            switch f.id {
+            case "systolic_bp":   r.systolicBP = Int(v)
+            case "diastolic_bp":  r.diastolicBP = Int(v)
+            case "blood_sugar":   r.bloodSugar = v
+            case "hba1c":         r.hba1c = v
+            case "cholesterol":   r.cholesterol = v
+            case "ldl":           r.ldl = v
+            case "hdl":           r.hdl = v
+            case "triglycerides": r.triglycerides = v
+            case "height_cm":     r.heightCm = v
+            case "weight_kg":     r.weightKg = v
+            default: break   // bmi is derived from height/weight, not stored directly
+            }
+        }
+        applyOCRResult(r)
+        if r.hasAnyResult {
+            scanResult = r
+            showScanBanner = true
+            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { currentStep = 1 }
         }
     }
 
@@ -638,6 +705,21 @@ struct HealthProfileView: View {
                 sliderCard(label: "Triglycerides", value: $triglycerides, range: 0.2...8.0, step: 0.1,
                            display: String(format: "%.1f mmol/L", triglycerides), warningRange: 1.7...2.3)
             }
+            clinicalToggleCard(title: "HbA1c", subtitle: "Normal: < 5.7 %",
+                               icon: "percent", isOn: $hasHbA1c) {
+                sliderCard(label: "HbA1c", value: $hba1c, range: 3.0...18.0, step: 0.1,
+                           display: String(format: "%.1f %%", hba1c), warningRange: 5.7...6.4)
+            }
+            clinicalToggleCard(title: "LDL Cholesterol", subtitle: "Normal: < 3.4 mmol/L",
+                               icon: "arrow.down.circle.fill", isOn: $hasLDL) {
+                sliderCard(label: "LDL", value: $ldl, range: 0.3...10.0, step: 0.1,
+                           display: String(format: "%.1f mmol/L", ldl), warningRange: 3.4...4.1)
+            }
+            clinicalToggleCard(title: "HDL Cholesterol", subtitle: "Normal: > 1.0 mmol/L",
+                               icon: "arrow.up.circle.fill", isOn: $hasHDL) {
+                sliderCard(label: "HDL", value: $hdl, range: 0.3...5.0, step: 0.1,
+                           display: String(format: "%.1f mmol/L", hdl))
+            }
         }
     }
 
@@ -728,11 +810,14 @@ struct HealthProfileView: View {
                 reviewRow("BMI", value: String(format: "%.1f — %@", bmi, bmiCategoryLabel().0))
             }
 
-            if hasBP || hasBloodSugar || hasCholesterol || hasTriglycerides {
+            if hasBP || hasBloodSugar || hasCholesterol || hasTriglycerides || hasHbA1c || hasLDL || hasHDL {
                 reviewCard(title: "Clinical Markers") {
                     if hasBP { reviewRow("Blood Pressure", value: "\(Int(systolicBP))/\(Int(diastolicBP)) mmHg") }
                     if hasBloodSugar { reviewRow("Blood Sugar", value: String(format: "%.1f mmol/L", bloodSugar)) }
+                    if hasHbA1c { reviewRow("HbA1c", value: String(format: "%.1f %%", hba1c)) }
                     if hasCholesterol { reviewRow("Cholesterol", value: String(format: "%.1f mmol/L", cholesterol)) }
+                    if hasLDL { reviewRow("LDL", value: String(format: "%.1f mmol/L", ldl)) }
+                    if hasHDL { reviewRow("HDL", value: String(format: "%.1f mmol/L", hdl)) }
                     if hasTriglycerides { reviewRow("Triglycerides", value: String(format: "%.1f mmol/L", triglycerides)) }
                 }
             }
@@ -818,6 +903,9 @@ struct HealthProfileView: View {
             fastingBloodSugar: hasBloodSugar ? bloodSugar : nil,
             totalCholesterol: hasCholesterol ? cholesterol : nil,
             triglycerides: hasTriglycerides ? triglycerides : nil,
+            hba1c: hasHbA1c ? hba1c : nil,
+            ldl: hasLDL ? ldl : nil,
+            hdl: hasHDL ? hdl : nil,
             dietaryPreferences: Array(selectedDietary),
             allergens: Array(selectedAllergens)
         )
@@ -845,6 +933,9 @@ struct HealthProfileView: View {
         if let bs = p.fastingBloodSugar { hasBloodSugar = true; bloodSugar = bs }
         if let ch = p.totalCholesterol  { hasCholesterol = true; cholesterol = ch }
         if let tr = p.triglycerides     { hasTriglycerides = true; triglycerides = tr }
+        if let a = p.hba1c { hasHbA1c = true; hba1c = a }
+        if let l = p.ldl   { hasLDL = true; ldl = l }
+        if let hd = p.hdl  { hasHDL = true; hdl = hd }
         selectedDietary  = Set(p.dietaryPreferences)
         selectedAllergens = Set(p.allergens)
         // If editing existing profile, skip Step 0 and go straight to Step 1

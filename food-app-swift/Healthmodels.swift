@@ -23,6 +23,9 @@ struct HealthProfile: Codable {
     var fastingBloodSugar: Double?
     var totalCholesterol: Double?
     var triglycerides: Double?
+    var hba1c: Double? = nil
+    var ldl: Double? = nil
+    var hdl: Double? = nil
 
     var dietaryPreferences: [String]
 
@@ -48,6 +51,9 @@ struct HealthProfile: Codable {
         case fastingBloodSugar = "fasting_blood_sugar"
         case totalCholesterol = "total_cholesterol"
         case triglycerides
+        case hba1c
+        case ldl
+        case hdl
         case dietaryPreferences = "dietary_preferences"
         case allergens
     }
@@ -287,6 +293,9 @@ struct BloodRange {
     static let bloodSugar   = BloodRange(name: "Fasting Sugar", unit: "mmol/L",normal: 3.9...5.5, warning: 5.6...6.9)
     static let cholesterol  = BloodRange(name: "Cholesterol",   unit: "mmol/L",normal: 0...5.2,   warning: 5.2...6.2)
     static let triglycerides = BloodRange(name: "Triglycerides",unit: "mmol/L",normal: 0...1.7,   warning: 1.7...2.3)
+    static let hba1c        = BloodRange(name: "HbA1c",         unit: "%",     normal: 0...5.7,   warning: 5.7...6.4)
+    static let ldl          = BloodRange(name: "LDL",           unit: "mmol/L",normal: 0...3.4,   warning: 3.4...4.1)
+    static let hdl          = BloodRange(name: "HDL",           unit: "mmol/L",normal: 1.0...5.0, warning: 0.9...1.0)
 }
 // MARK: - Health Report
  

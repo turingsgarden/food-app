@@ -31,10 +31,67 @@ struct OCRHealthResult {
     var triglycerides: Double?
     var heightCm: Double?
     var weightKg: Double?
+    var hba1c: Double?
+    var ldl: Double?
+    var hdl: Double?
 
     var hasAnyResult: Bool {
         systolicBP != nil || diastolicBP != nil || bloodSugar != nil ||
-        cholesterol != nil || triglycerides != nil || heightCm != nil || weightKg != nil
+        cholesterol != nil || triglycerides != nil || heightCm != nil || weightKg != nil ||
+        hba1c != nil || ldl != nil || hdl != nil
+    }
+}
+
+// MARK: - OCR raw/processed field (for the confirmation sheet)
+
+/// One detected metric from the OCR `fields` double-layer: the raw reading the
+/// model saw, plus the normalized (processed) value the user can confirm/edit.
+struct OCRField: Identifiable {
+    let id: String            // backend key, e.g. "cholesterol"
+    let label: String         // display name, e.g. "Total Cholesterol"
+    let rawName: String?      // raw label on the report, e.g. "TC"
+    let rawValue: String?     // raw value text, e.g. "200"
+    let rawUnit: String?      // raw unit, e.g. "mg/dL"
+    let processedUnit: String // normalized unit, e.g. "mmol/L"
+    var editedValue: String   // user-editable processed value
+    var accepted: Bool        // whether to apply this field
+
+    /// Display order + human labels for the 11 MVP fields.
+    static let order: [(key: String, label: String)] = [
+        ("systolic_bp",   "Systolic BP"),
+        ("diastolic_bp",  "Diastolic BP"),
+        ("height_cm",     "Height"),
+        ("weight_kg",     "Weight"),
+        ("bmi",           "BMI"),
+        ("blood_sugar",   "Blood Sugar"),
+        ("hba1c",         "HbA1c"),
+        ("cholesterol",   "Total Cholesterol"),
+        ("ldl",           "LDL Cholesterol"),
+        ("hdl",           "HDL Cholesterol"),
+        ("triglycerides", "Triglycerides"),
+    ]
+}
+
+/// Parse the backend `fields` double-layer into ordered, editable rows.
+func parseOCRFields(json: [String: Any]) -> [OCRField] {
+    guard let fields = json["fields"] as? [String: Any] else { return [] }
+    return OCRField.order.compactMap { entry in
+        guard let f = fields[entry.key] as? [String: Any],
+              let proc = f["processed"] as? [String: Any] else { return nil }
+        let pv = (proc["value"] as? Double) ?? (proc["value"] as? Int).map(Double.init)
+        guard let value = pv else { return nil }
+        let raw = f["raw"] as? [String: Any]
+        let display = (value == value.rounded()) ? String(Int(value)) : String(format: "%.2f", value)
+        return OCRField(
+            id: entry.key,
+            label: entry.label,
+            rawName: raw?["name"] as? String,
+            rawValue: raw?["value"] as? String,
+            rawUnit: raw?["unit"] as? String,
+            processedUnit: proc["unit"] as? String ?? "",
+            editedValue: display,
+            accepted: true
+        )
     }
 }
 
@@ -61,6 +118,12 @@ struct EditHealthProfileView: View {
     @State private var cholesterol: Double = 4.5
     @State private var hasTriglycerides = false
     @State private var triglycerides: Double = 1.2
+    @State private var hasHbA1c = false
+    @State private var hba1c: Double = 5.5
+    @State private var hasLDL = false
+    @State private var ldl: Double = 2.5
+    @State private var hasHDL = false
+    @State private var hdl: Double = 1.3
 
     @State private var selectedDietary: Set<String> = []
     @State private var selectedAllergens: Set<String> = []
@@ -77,6 +140,12 @@ struct EditHealthProfileView: View {
     @State private var isScanning = false
     @State private var scanResult: OCRHealthResult? = nil
     @State private var showScanResult = false
+
+    // ── OCR confirmation (raw → processed review) ───────────────────────────────
+    @State private var showOCRConfirm = false
+    @State private var pendingFields: [OCRField] = []
+    @State private var ocrStatus = ""
+    @State private var ocrMessage: String? = nil
     @State private var scanErrorMsg = ""
     @State private var selectedPhotoItem: PhotosPickerItem? = nil
     @State private var scannedImage: UIImage? = nil
@@ -128,6 +197,12 @@ struct EditHealthProfileView: View {
         if hasTriglycerides, let ot = original.triglycerides {
             if abs(triglycerides - ot) > 0.05 { return true }
         }
+        if hasHbA1c != (original.hba1c != nil) { return true }
+        if hasHbA1c, let oa = original.hba1c, abs(hba1c - oa) > 0.05 { return true }
+        if hasLDL != (original.ldl != nil) { return true }
+        if hasLDL, let ol = original.ldl, abs(ldl - ol) > 0.05 { return true }
+        if hasHDL != (original.hdl != nil) { return true }
+        if hasHDL, let oh = original.hdl, abs(hdl - oh) > 0.05 { return true }
         if selectedDietary != Set(original.dietaryPreferences) { return true }
         if selectedAllergens != Set(original.allergens) { return true }
         return false
@@ -185,6 +260,18 @@ struct EditHealthProfileView: View {
                                 clinicalRow(title: "Triglycerides", subtitle: "Normal: < 1.7 mmol/L", isOn: $hasTriglycerides) {
                                     inlineSlider(label: "Triglycerides", value: $triglycerides, range: 0.2...8.0, step: 0.1,
                                                  display: String(format: "%.1f mmol/L", triglycerides), warningRange: 1.7...2.3)
+                                }
+                                clinicalRow(title: "HbA1c", subtitle: "Normal: < 5.7 %", isOn: $hasHbA1c) {
+                                    inlineSlider(label: "HbA1c", value: $hba1c, range: 3.0...18.0, step: 0.1,
+                                                 display: String(format: "%.1f %%", hba1c), warningRange: 5.7...6.4)
+                                }
+                                clinicalRow(title: "LDL Cholesterol", subtitle: "Normal: < 3.4 mmol/L", isOn: $hasLDL) {
+                                    inlineSlider(label: "LDL", value: $ldl, range: 0.3...10.0, step: 0.1,
+                                                 display: String(format: "%.1f mmol/L", ldl), warningRange: 3.4...4.1)
+                                }
+                                clinicalRow(title: "HDL Cholesterol", subtitle: "Normal: > 1.0 mmol/L", isOn: $hasHDL) {
+                                    inlineSlider(label: "HDL", value: $hdl, range: 0.3...5.0, step: 0.1,
+                                                 display: String(format: "%.1f mmol/L", hdl))
                                 }
                             }
                         }
@@ -248,6 +335,14 @@ struct EditHealthProfileView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Upload a photo, image, PDF, or Word document containing your lab or health report.")
+            }
+
+            // ── OCR raw → processed confirmation ─────────────────────────────
+            .sheet(isPresented: $showOCRConfirm) {
+                OCRConfirmView(fields: pendingFields, status: ocrStatus, message: ocrMessage) { confirmed in
+                    applyConfirmedFields(confirmed)
+                }
+                .environmentObject(themeManager)
             }
         }
     }
@@ -369,15 +464,7 @@ struct EditHealthProfileView: View {
                     self.showError = true
                     return
                 }
-                let result = self.parseOCRResult(json: json)
-                if result.hasAnyResult {
-                    self.applyOCRResult(result)
-                    self.scanResult = result
-                    self.showScanResult = true
-                } else {
-                    self.errorMsg = "No health values detected in this document. Make sure it contains lab results and try again."
-                    self.showError = true
-                }
+                self.presentOCRConfirmation(json: json)
             }
         }.resume()
     }
@@ -426,17 +513,29 @@ struct EditHealthProfileView: View {
                       let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
                     self.errorMsg = "Could not read scan results. Please enter values manually."; self.showError = true; return
                 }
-                let result = self.parseOCRResult(json: json)
-                if result.hasAnyResult {
-                    self.applyOCRResult(result); self.scanResult = result; self.showScanResult = true
-                } else {
-                    self.errorMsg = "No health values detected. Try a clearer image or enter values manually."; self.showError = true
-                }
+                self.presentOCRConfirmation(json: json)
             }
         }.resume()
     }
 
-    // MARK: - Parse / Apply / Prefill / Save — all unchanged
+    // MARK: - Parse / Apply / Prefill / Save
+
+    /// Open the raw → processed confirmation sheet. Falls back to the legacy
+    /// direct-apply path if the response has no `fields` double-layer (older backend).
+    func presentOCRConfirmation(json: [String: Any]) {
+        let fields = parseOCRFields(json: json)
+        if fields.isEmpty {
+            let legacy = parseOCRResult(json: json)
+            if legacy.hasAnyResult {
+                applyOCRResult(legacy); scanResult = legacy; showScanResult = true
+                return
+            }
+        }
+        pendingFields = fields
+        ocrStatus = (json["status"] as? String) ?? (fields.isEmpty ? "no_fields" : "ok")
+        ocrMessage = json["message"] as? String
+        showOCRConfirm = true
+    }
 
     func parseOCRResult(json: [String: Any]) -> OCRHealthResult {
         var result = OCRHealthResult()
@@ -454,6 +553,12 @@ struct EditHealthProfileView: View {
         else if let v = json["height_cm"] as? Int { result.heightCm = Double(v) }
         if let v = json["weight_kg"] as? Double { result.weightKg = v }
         else if let v = json["weight_kg"] as? Int { result.weightKg = Double(v) }
+        if let v = json["hba1c"] as? Double { result.hba1c = v }
+        else if let v = json["hba1c"] as? Int { result.hba1c = Double(v) }
+        if let v = json["ldl"] as? Double { result.ldl = v }
+        else if let v = json["ldl"] as? Int { result.ldl = Double(v) }
+        if let v = json["hdl"] as? Double { result.hdl = v }
+        else if let v = json["hdl"] as? Int { result.hdl = Double(v) }
         return result
     }
 
@@ -468,7 +573,34 @@ struct EditHealthProfileView: View {
             if let bs = result.bloodSugar, bs >= 2.0 && bs <= 15.0 { hasBloodSugar = true; bloodSugar = bs }
             if let ch = result.cholesterol, ch >= 1.0 && ch <= 10.0 { hasCholesterol = true; cholesterol = ch }
             if let tr = result.triglycerides, tr >= 0.2 && tr <= 8.0 { hasTriglycerides = true; triglycerides = tr }
+            if let a = result.hba1c, a >= 3.0 && a <= 18.0 { hasHbA1c = true; hba1c = a }
+            if let l = result.ldl, l >= 0.3 && l <= 10.0 { hasLDL = true; ldl = l }
+            if let hd = result.hdl, hd >= 0.3 && hd <= 5.0 { hasHDL = true; hdl = hd }
         }
+    }
+
+    /// Build an OCRHealthResult from the user-confirmed fields, then apply it.
+    func applyConfirmedFields(_ fields: [OCRField]) {
+        var r = OCRHealthResult()
+        for f in fields where f.accepted {
+            guard let v = Double(f.editedValue.trimmingCharacters(in: .whitespaces)) else { continue }
+            switch f.id {
+            case "systolic_bp":   r.systolicBP = Int(v)
+            case "diastolic_bp":  r.diastolicBP = Int(v)
+            case "blood_sugar":   r.bloodSugar = v
+            case "hba1c":         r.hba1c = v
+            case "cholesterol":   r.cholesterol = v
+            case "ldl":           r.ldl = v
+            case "hdl":           r.hdl = v
+            case "triglycerides": r.triglycerides = v
+            case "height_cm":     r.heightCm = v
+            case "weight_kg":     r.weightKg = v
+            default: break   // bmi is derived from height/weight, not stored directly
+            }
+        }
+        applyOCRResult(r)
+        scanResult = r
+        showScanResult = r.hasAnyResult
     }
 
     func applyPrefill() {
@@ -478,6 +610,9 @@ struct EditHealthProfileView: View {
         if let bs = p.fastingBloodSugar { hasBloodSugar = true; bloodSugar = bs }
         if let ch = p.totalCholesterol  { hasCholesterol = true; cholesterol = ch }
         if let tr = p.triglycerides     { hasTriglycerides = true; triglycerides = tr }
+        if let a = p.hba1c { hasHbA1c = true; hba1c = a }
+        if let l = p.ldl   { hasLDL = true; ldl = l }
+        if let hd = p.hdl  { hasHDL = true; hdl = hd }
         selectedDietary  = Set(p.dietaryPreferences)
         selectedAllergens = Set(p.allergens)
     }
@@ -493,6 +628,9 @@ struct EditHealthProfileView: View {
             fastingBloodSugar: hasBloodSugar ? bloodSugar : nil,
             totalCholesterol: hasCholesterol ? cholesterol : nil,
             triglycerides: hasTriglycerides ? triglycerides : nil,
+            hba1c: hasHbA1c ? hba1c : nil,
+            ldl: hasLDL ? ldl : nil,
+            hdl: hasHDL ? hdl : nil,
             dietaryPreferences: Array(selectedDietary),
             allergens: Array(selectedAllergens)
         )
@@ -544,7 +682,10 @@ struct EditHealthProfileView: View {
         if let s = result.systolicBP, let d = result.diastolicBP { items.append("BP: \(s)/\(d) mmHg") }
         if let bs = result.bloodSugar  { items.append("Glucose: \(String(format: "%.1f", bs)) mmol/L") }
         if let ch = result.cholesterol { items.append("Cholesterol: \(String(format: "%.1f", ch)) mmol/L") }
+        if let l = result.ldl  { items.append("LDL: \(String(format: "%.1f", l)) mmol/L") }
+        if let hd = result.hdl { items.append("HDL: \(String(format: "%.1f", hd)) mmol/L") }
         if let tr = result.triglycerides { items.append("Triglycerides: \(String(format: "%.1f", tr)) mmol/L") }
+        if let a = result.hba1c { items.append("HbA1c: \(String(format: "%.1f", a)) %") }
         if let h = result.heightCm    { items.append("Height: \(Int(h)) cm") }
         if let w = result.weightKg    { items.append("Weight: \(String(format: "%.1f", w)) kg") }
         return items
@@ -792,4 +933,141 @@ private struct _FlowLayout<Item: Hashable, Content: View>: View {
 private struct _HeightKey: PreferenceKey {
     static var defaultValue: CGFloat = .zero
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
+// MARK: - OCR Confirmation Sheet (raw → processed review)
+
+/// Shows each detected metric's RAW reading (what the model saw on the report)
+/// next to the normalized PROCESSED value. The user confirms/edits before any
+/// value is applied to the form, so only confirmed processed values get saved.
+struct OCRConfirmView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    @Environment(\.dismiss) var dismiss
+
+    @State var fields: [OCRField]
+    let status: String          // "ok" / "no_fields" / "no_text"
+    let message: String?
+    let onConfirm: ([OCRField]) -> Void
+
+    private var hasFields: Bool { status == "ok" && !fields.isEmpty }
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                themeManager.current.background.ignoresSafeArea()
+                if hasFields { fieldList } else { emptyState }
+            }
+            .preferredColorScheme(themeManager.current.colorScheme)
+            .navigationTitle("Confirm Scan")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundColor(themeManager.current.primaryText)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if hasFields {
+                        Button("Use Values") {
+                            onConfirm(fields.filter { $0.accepted })
+                            dismiss()
+                        }
+                        .font(.system(size: 16, weight: .bold))
+                    }
+                }
+            }
+        }
+    }
+
+    private var fieldList: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 14)).foregroundColor(.green)
+                    Text("Check what we read from your report. Edit any value, then confirm.")
+                        .font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
+                    Spacer()
+                }
+                .padding(12)
+                .background(Color.green.opacity(0.06)).cornerRadius(12)
+
+                ForEach($fields) { $field in
+                    fieldRow($field)
+                }
+            }
+            .padding(20)
+        }
+    }
+
+    private func fieldRow(_ field: Binding<OCRField>) -> some View {
+        let f = field.wrappedValue
+        let rawText = [f.rawName, f.rawValue, f.rawUnit]
+            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(f.label)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(themeManager.current.primaryText)
+                Spacer()
+                Toggle("", isOn: field.accepted)
+                    .toggleStyle(SwitchToggleStyle(tint: themeManager.current == .dark ? .white : .black))
+                    .labelsHidden()
+            }
+            if !rawText.isEmpty {
+                Text("Read: \(rawText)")
+                    .font(.system(size: 12))
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+            HStack(spacing: 8) {
+                Text("Value")
+                    .font(.system(size: 13))
+                    .foregroundColor(themeManager.current.secondaryText)
+                Spacer()
+                TextField("", text: field.editedValue)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundColor(themeManager.current.primaryText)
+                    .frame(width: 90)
+                    .padding(.vertical, 6).padding(.horizontal, 10)
+                    .background(themeManager.current.inputBackground)
+                    .cornerRadius(8)
+                    .disabled(!f.accepted)
+                Text(f.processedUnit)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+        }
+        .padding(14)
+        .background(themeManager.current.cardBackground)
+        .cornerRadius(14)
+        .overlay(RoundedRectangle(cornerRadius: 14)
+            .stroke(f.accepted ? Color.green.opacity(0.25) : themeManager.current.cardBorder, lineWidth: 1))
+        .opacity(f.accepted ? 1 : 0.55)
+    }
+
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Image(systemName: status == "no_text" ? "doc.text.magnifyingglass" : "questionmark.folder")
+                .font(.system(size: 44))
+                .foregroundColor(themeManager.current.secondaryText)
+            Text(status == "no_text" ? "No text detected" : "No recognizable metrics")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(themeManager.current.primaryText)
+            Text(message ?? "You can enter your values manually.")
+                .font(.system(size: 14))
+                .foregroundColor(themeManager.current.secondaryText)
+                .multilineTextAlignment(.center)
+            Button(action: { dismiss() }) {
+                Text("Enter manually")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(themeManager.current == .dark ? .black : .white)
+                    .frame(maxWidth: .infinity).padding(.vertical, 14)
+                    .background(themeManager.current == .dark ? Color.white : Color.black)
+                    .cornerRadius(14)
+            }
+            .padding(.top, 8)
+        }
+        .padding(32)
+    }
 }
