@@ -1507,17 +1507,58 @@ def payload_too_large(error):
     return jsonify({"error": "Request payload too large"}), 413
 
 
-def _empty_health_ocr_response(message: str) -> dict:
-    return {
-        "systolic_bp": None, "diastolic_bp": None,
-        "blood_sugar": None, "cholesterol": None,
-        "triglycerides": None, "height_cm": None, "weight_kg": None,
-        "message": message,
-    }
+# ── OCR health-field specification (single source of truth) ──
+# 11 MVP fields. Each: standard unit, type, valid range (out-of-range → null).
+HEALTH_FIELD_SPECS = {
+    "systolic_bp":   {"type": "int",   "unit": "mmHg",   "min": 60,    "max": 250},
+    "diastolic_bp":  {"type": "int",   "unit": "mmHg",   "min": 30,    "max": 150},
+    "height_cm":     {"type": "float", "unit": "cm",     "min": 100.0, "max": 230.0},
+    "weight_kg":     {"type": "float", "unit": "kg",     "min": 30.0,  "max": 300.0},
+    "bmi":           {"type": "float", "unit": "kg/m2",  "min": 10.0,  "max": 60.0},
+    "blood_sugar":   {"type": "float", "unit": "mmol/L", "min": 2.0,   "max": 30.0},
+    "hba1c":         {"type": "float", "unit": "%",      "min": 3.0,   "max": 20.0},
+    "cholesterol":   {"type": "float", "unit": "mmol/L", "min": 1.0,   "max": 15.0},
+    "ldl":           {"type": "float", "unit": "mmol/L", "min": 0.3,   "max": 10.0},
+    "hdl":           {"type": "float", "unit": "mmol/L", "min": 0.3,   "max": 5.0},
+    "triglycerides": {"type": "float", "unit": "mmol/L", "min": 0.2,   "max": 10.0},
+}
+
+# Aliases used BOTH as Gemini prompt hints and as regex-fallback patterns.
+# Kept reasonably specific to avoid cross-field false matches (esp. TC vs LDL/HDL).
+HEALTH_FIELD_ALIASES = {
+    "systolic_bp":   ["SBP", "systolic", "收缩压", "高压"],
+    "diastolic_bp":  ["DBP", "diastolic", "舒张压", "低压"],
+    "height_cm":     ["height", "Ht", "身高"],
+    "weight_kg":     ["weight", "Wt", "BW", "体重"],
+    "bmi":           ["BMI", "body mass index", "体重指数", "体质指数"],
+    "blood_sugar":   ["glucose", "GLU", "FBG", "FPG", "blood sugar", "空腹血糖", "血糖"],
+    "hba1c":         ["HbA1c", "A1c", "glycated hemoglobin", "糖化血红蛋白", "糖化"],
+    "cholesterol":   ["TC", "CHOL", "total cholesterol", "总胆固醇"],
+    "ldl":           ["LDL-C", "LDL", "低密度脂蛋白", "低密度"],
+    "hdl":           ["HDL-C", "HDL", "高密度脂蛋白", "高密度"],
+    "triglycerides": ["TG", "TRIG", "triglyceride", "甘油三酯", "三酰甘油"],
+}
+
+_NO_FIELDS_MESSAGE = "No recognizable health metrics in this report. You can enter values manually."
+
+
+def _blank_health_fields() -> dict:
+    return {f: None for f in HEALTH_FIELD_SPECS}
+
+
+def _empty_health_ocr_response(message: str, status: str = "no_text") -> dict:
+    """All-null response. status distinguishes 'no_text' (OCR failed) vs 'no_fields'."""
+    resp = _blank_health_fields()
+    resp["fields"] = {}
+    resp["status"] = status
+    resp["message"] = message
+    return resp
 
 
 def _gemini_transcribe_image_b64(image_b64: str, mime_type: str = "image/jpeg") -> str:
-    """OCR step 1: Gemini reads a report image and returns full text."""
+    """OCR step 1 (transcription) — SWAP POINT for the Gemini-only vs Vision+Gemini
+    comparison: to build the Vision variant, replace ONLY this function's body with a
+    Google Cloud Vision OCR call; all downstream extraction/validation stays identical."""
     ocr_prompt = (
         "Transcribe ALL text from this medical or laboratory report image verbatim. "
         "Preserve table rows and columns. Do not summarize, translate, or omit content."
@@ -1612,69 +1653,157 @@ def ocr_document():
         return jsonify({"error": str(e)}), 500
 
 
+def _clamp_health_value(field: str, value):
+    """Type-cast + range-clamp a single field; out-of-range / unparseable → None."""
+    spec = HEALTH_FIELD_SPECS[field]
+    if value is None:
+        return None
+    try:
+        if spec["type"] == "int":
+            v = int(round(float(value)))
+        else:
+            v = round(float(value), 2)
+    except (TypeError, ValueError):
+        return None
+    return v if spec["min"] <= v <= spec["max"] else None
+
+
 def _validate_health_values(raw: dict) -> dict:
-    def safe_int(val, lo, hi):
-        if val is None: return None
-        try:
-            v = int(round(float(val)))
-            return v if lo <= v <= hi else None
-        except: return None
+    """Build the response contract: flat processed values (backward-compatible)
+    + per-field raw/processed double layer + status three-state.
 
-    def safe_float(val, lo, hi, dp=1):
-        if val is None: return None
-        try:
-            v = round(float(val), dp)
-            return v if lo <= v <= hi else None
-        except: return None
+    Accepts per-field entries that are either a scalar (processed value only)
+    or a dict {raw_name, raw_value, raw_unit, value}.
+    """
+    raw = raw if isinstance(raw, dict) else {}
+    flat = {}
+    fields = {}
 
-    return {
-        "systolic_bp":   safe_int(raw.get("systolic_bp"),    60,  250),
-        "diastolic_bp":  safe_int(raw.get("diastolic_bp"),   30,  150),
-        "blood_sugar":   safe_float(raw.get("blood_sugar"),    2.0, 30.0),
-        "cholesterol":   safe_float(raw.get("cholesterol"),    1.0, 15.0),
-        "triglycerides": safe_float(raw.get("triglycerides"),  0.2, 10.0),
-        "height_cm":     safe_float(raw.get("height_cm"),    100.0, 230.0),
-        "weight_kg":     safe_float(raw.get("weight_kg"),     30.0, 300.0),
-    }
+    for field, spec in HEALTH_FIELD_SPECS.items():
+        entry = raw.get(field)
+        if isinstance(entry, dict):
+            value = _clamp_health_value(field, entry.get("value"))
+            raw_name = entry.get("raw_name")
+            raw_value = entry.get("raw_value")
+            raw_unit = entry.get("raw_unit")
+        else:
+            value = _clamp_health_value(field, entry)
+            raw_name = raw_value = raw_unit = None
+
+        flat[field] = value
+        if value is not None:
+            fields[field] = {
+                "raw": {
+                    "name": (raw_name or None),
+                    "value": (str(raw_value) if raw_value not in (None, "") else str(value)),
+                    "unit": (raw_unit or None),
+                },
+                "processed": {"value": value, "unit": spec["unit"]},
+            }
+
+    result = dict(flat)
+    result["fields"] = fields
+    result["status"] = "ok" if fields else "no_fields"
+    result["message"] = None if fields else _NO_FIELDS_MESSAGE
+    return result
+
+
+def _regex_find_field(text: str, field: str):
+    """Find a single field via its aliases. Returns (raw_name, raw_value, raw_unit) or None."""
+    aliases = HEALTH_FIELD_ALIASES.get(field, [])
+    if not aliases:
+        return None
+    grp = "|".join(re.escape(a) for a in aliases)
+    # Allow a little non-digit junk between the label and the number (e.g. "(TC):", ": "),
+    # but never cross a line break (keeps the number tied to its own label).
+    m = re.search(rf'({grp})[^\d\n]{{0,15}}(-?\d+\.?\d*)\s*([A-Za-z/%]+)?', text, re.IGNORECASE)
+    if not m:
+        return None
+    return m.group(1), m.group(2), (m.group(3) or "")
 
 
 def _extract_health_values_regex(text: str) -> dict:
-    result = {
-        "systolic_bp": None, "diastolic_bp": None,
-        "blood_sugar": None, "cholesterol": None,
-        "triglycerides": None, "height_cm": None, "weight_kg": None
-    }
+    """Fallback extractor (used when Gemini is unavailable or returns invalid JSON).
+    Returns per-field dicts {raw_name, raw_value, raw_unit, value} so the downstream
+    validator can build the same raw/processed double-layer structure."""
+    result = {f: None for f in HEALTH_FIELD_SPECS}
+
+    def put(field, raw_name, raw_value, raw_unit, value):
+        result[field] = {
+            "raw_name": (raw_name or "").strip() or None,
+            "raw_value": str(raw_value),
+            "raw_unit": (raw_unit or "").strip() or None,
+            "value": value,
+        }
+
+    # Blood pressure (combined "120/80")
     bp = re.search(r'(?:BP|blood\s*pressure|收缩压|血压)?[:\s]*(\d{2,3})\s*/\s*(\d{2,3})', text, re.IGNORECASE)
     if not bp:
         bp = re.search(r'(?:SBP|systolic)[:\s]*(\d{2,3}).*?(?:DBP|diastolic)[:\s]*(\d{2,3})', text, re.IGNORECASE | re.DOTALL)
     if bp:
-        s, d = int(bp.group(1)), int(bp.group(2))
-        if 60 <= s <= 250 and 30 <= d <= 150:
-            result["systolic_bp"] = s
-            result["diastolic_bp"] = d
-    glucose = re.search(r'(?:glucose|blood\s*sugar|FBG|GLU|空腹血糖|血糖)[^0-9]*(\d+\.?\d*)', text, re.IGNORECASE)
-    if glucose:
-        v = float(glucose.group(1))
-        if v > 30: v = round(v / 18.0, 1)
-        if 2.0 <= v <= 30.0: result["blood_sugar"] = round(v, 1)
-    chol = re.search(r'(?:total\s*chol(?:esterol)?|CHOL|TC|总胆固醇)[^0-9]*(\d+\.?\d*)', text, re.IGNORECASE)
-    if chol:
-        v = float(chol.group(1))
-        if v > 20: v = round(v / 38.67, 1)
-        if 1.0 <= v <= 15.0: result["cholesterol"] = round(v, 1)
-    trig = re.search(r'(?:triglyceride|TG|TRIG|甘油三酯)[^0-9]*(\d+\.?\d*)', text, re.IGNORECASE)
-    if trig:
-        v = float(trig.group(1))
-        if v > 15: v = round(v / 88.57, 1)
-        if 0.2 <= v <= 10.0: result["triglycerides"] = round(v, 1)
-    height = re.search(r'(?:height|Ht|身高)[^0-9]*(\d{3}(?:\.\d)?)\s*(?:cm)?', text, re.IGNORECASE)
-    if height:
-        v = float(height.group(1))
-        if 100 <= v <= 230: result["height_cm"] = v
-    weight = re.search(r'(?:weight|Wt|体重)[^0-9]*(\d{2,3}\.?\d*)\s*(?:kg)?', text, re.IGNORECASE)
-    if weight:
-        v = float(weight.group(1))
-        if 30 <= v <= 300: result["weight_kg"] = round(v, 1)
+        put("systolic_bp", "BP", bp.group(1), "mmHg", int(bp.group(1)))
+        put("diastolic_bp", "BP", bp.group(2), "mmHg", int(bp.group(2)))
+    # Fallback for non-slash layouts (e.g. "收缩压 120 ... 舒张压 78")
+    if result["systolic_bp"] is None:
+        m = _regex_find_field(text, "systolic_bp")
+        if m:
+            put("systolic_bp", m[0], m[1], m[2], int(round(float(m[1]))))
+    if result["diastolic_bp"] is None:
+        m = _regex_find_field(text, "diastolic_bp")
+        if m:
+            put("diastolic_bp", m[0], m[1], m[2], int(round(float(m[1]))))
+
+    # Blood glucose (mg/dL ÷ 18)
+    m = _regex_find_field(text, "blood_sugar")
+    if m:
+        v = float(m[1])
+        if "mg" in m[2].lower() or v > 30:
+            v = v / 18.0
+        put("blood_sugar", m[0], m[1], m[2], round(v, 1))
+
+    # HbA1c (%)
+    m = _regex_find_field(text, "hba1c")
+    if m:
+        put("hba1c", m[0], m[1], m[2], round(float(m[1]), 1))
+
+    # Lipids: total cholesterol / LDL / HDL (mg/dL ÷ 38.67)
+    for field in ("cholesterol", "ldl", "hdl"):
+        m = _regex_find_field(text, field)
+        if m:
+            v = float(m[1])
+            if "mg" in m[2].lower() or v > 20:
+                v = v / 38.67
+            put(field, m[0], m[1], m[2], round(v, 2))
+
+    # Triglycerides (mg/dL ÷ 88.57)
+    m = _regex_find_field(text, "triglycerides")
+    if m:
+        v = float(m[1])
+        if "mg" in m[2].lower() or v > 15:
+            v = v / 88.57
+        put("triglycerides", m[0], m[1], m[2], round(v, 2))
+
+    # Height (inch ×2.54)
+    m = _regex_find_field(text, "height_cm")
+    if m:
+        v = float(m[1])
+        if "in" in m[2].lower():
+            v = v * 2.54
+        put("height_cm", m[0], m[1], m[2], round(v, 1))
+
+    # Weight (lb ×0.4536)
+    m = _regex_find_field(text, "weight_kg")
+    if m:
+        v = float(m[1])
+        if "lb" in m[2].lower():
+            v = v * 0.4536
+        put("weight_kg", m[0], m[1], m[2], round(v, 1))
+
+    # BMI
+    m = _regex_find_field(text, "bmi")
+    if m:
+        put("bmi", m[0], m[1], m[2], round(float(m[1]), 1))
+
     return result
 
 
@@ -1706,22 +1835,47 @@ def _extract_text_from_docx(docx_bytes: bytes) -> str:
     return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
 
 def _extract_health_values_from_text(raw_text: str) -> dict:
-    """OCR step 2: extract structured health fields from transcribed text."""
+    """OCR step 2: extract structured health fields from transcribed text.
+
+    Asks Gemini to return BOTH the raw reading (as printed) and the processed
+    value (normalized to the standard unit) per field. Falls back to regex."""
     if not raw_text.strip():
         return _extract_health_values_regex("")
 
     if not gemini_model:
         return _extract_health_values_regex(raw_text)
 
-    prompt = f"""You are a medical data extraction assistant.
-Extract health values from this OCR text. Return ONLY valid JSON, no markdown:
-{{"systolic_bp": <int or null>, "diastolic_bp": <int or null>, "blood_sugar": <float mmol/L or null>, "cholesterol": <float mmol/L or null>, "triglycerides": <float mmol/L or null>, "height_cm": <float or null>, "weight_kg": <float or null>}}
+    field_json = ", ".join(
+        f'"{f}": {{"raw_name": <str|null>, "raw_value": <str|null>, "raw_unit": <str|null>, "value": <number|null>}}'
+        for f in HEALTH_FIELD_SPECS
+    )
+    alias_hints = "\n".join(
+        f"- {f}: {', '.join(HEALTH_FIELD_ALIASES[f])}" for f in HEALTH_FIELD_SPECS
+    )
 
-Rules: only extract clearly readable values. Use null if missing or ambiguous.
-If mg/dL: glucose÷18, cholesterol÷38.67, triglycerides÷88.57. Weight in lbs: ×0.4536 for kg.
+    prompt = f"""You are a medical data extraction assistant.
+From the OCR text, extract these health fields. Return ONLY valid JSON, no markdown.
+For each field return BOTH the raw reading (exactly as printed on the report) and the processed value (normalized to the standard unit):
+{{{field_json}}}
+
+Field aliases (map any of these names to the field):
+{alias_hints}
+
+Standard units & conversion for the processed "value":
+- systolic_bp / diastolic_bp: mmHg (BP printed as "120/80" → systolic_bp=120, diastolic_bp=80)
+- blood_sugar: mmol/L (if mg/dL: divide by 18.0)
+- cholesterol / ldl / hdl: mmol/L (if mg/dL: divide by 38.67)
+- triglycerides: mmol/L (if mg/dL: divide by 88.57)
+- hba1c: % (if IFCC mmol/mol: multiply by 0.0915 then add 2.15)
+- height_cm: cm (if inch: multiply by 2.54); weight_kg: kg (if lb: multiply by 0.4536); bmi: kg/m2
+
+Rules:
+- "cholesterol" means TOTAL cholesterol (TC) ONLY. Do NOT put LDL or HDL values into "cholesterol".
+- raw_name / raw_value / raw_unit = exactly as printed (do NOT convert). "value" = number in the standard unit.
+- Use null for raw_* and value when the field is missing or unreadable.
 
 OCR TEXT:
-\"\"\"{raw_text[:4000]}\"\"\"
+\"\"\"{raw_text[:6000]}\"\"\"
 """
     raw = generate_content_with_fallback(prompt, gemini_model=gemini_model).strip()
     raw = raw.replace("```json", "").replace("```", "").strip()
