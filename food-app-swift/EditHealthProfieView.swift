@@ -932,7 +932,457 @@ private struct _FlowLayout<Item: Hashable, Content: View>: View {
 }
 private struct _HeightKey: PreferenceKey {
     static var defaultValue: CGFloat = .zero
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue())     }
+}
+
+// MARK: - OCR field conversion details (structured tooltips)
+
+private struct OCRTipContent {
+    struct ConversionRule: Identifiable {
+        let id = UUID()
+        let label: String
+        let formula: String
+    }
+
+    let title: String?
+    let onReport: String?
+    let formula: String?
+    let calculation: String?
+    let conversionNote: String?
+    let noConversionNote: String?
+    let savedValue: String
+    let savedUnit: String
+    let fromValue: String?
+    let fromUnit: String?
+    let footnote: String?
+    let rules: [ConversionRule]
+
+    static func overview() -> OCRTipContent {
+        OCRTipContent(
+            title: "How this works",
+            onReport: nil,
+            formula: nil,
+            calculation: nil,
+            conversionNote: "Read shows what's printed on your report. Value is the number we save in standard units.",
+            noConversionNote: nil,
+            savedValue: "",
+            savedUnit: "",
+            fromValue: nil,
+            fromUnit: nil,
+            footnote: "Tap ⓘ on any row for that field's math. Toggle off = won't save.",
+            rules: [
+                .init(label: "Glucose", formula: "mg/dL ÷ 18"),
+                .init(label: "Lipids", formula: "mg/dL ÷ 38.67"),
+                .init(label: "Triglycerides", formula: "mg/dL ÷ 88.57"),
+                .init(label: "HbA1c (IFCC)", formula: "× 0.0915 + 2.15"),
+                .init(label: "Height", formula: "in × 2.54"),
+                .init(label: "Weight", formula: "lb × 0.4536"),
+                .init(label: "BP", formula: "no change"),
+            ]
+        )
+    }
+}
+
+private enum OCRFieldConversionTip {
+    static func content(for field: OCRField) -> OCRTipContent {
+        let rawLine = [field.rawName, field.rawValue, field.rawUnit]
+            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+        let rawUnit = (field.rawUnit ?? "").lowercased()
+        let rawNum = parseNumber(field.rawValue)
+        let procNum = parseNumber(field.editedValue)
+        let procUnit = field.processedUnit
+        let onReport = rawLine.isEmpty ? nil : rawLine
+
+        switch field.id {
+        case "systolic_bp", "diastolic_bp":
+            return OCRTipContent(
+                title: field.label,
+                onReport: onReport,
+                formula: nil,
+                calculation: nil,
+                conversionNote: nil,
+                noConversionNote: "mmHg — kept as printed on the report.",
+                savedValue: field.editedValue,
+                savedUnit: "mmHg",
+                fromValue: field.rawValue,
+                fromUnit: normalizedUnit(field.rawUnit) ?? "mmHg",
+                footnote: nil,
+                rules: []
+            )
+
+        case "blood_sugar":
+            return conversionTip(
+                field: field, onReport: onReport, rawUnit: rawUnit,
+                rawNum: rawNum, procNum: procNum, procUnit: procUnit,
+                formula: "mg/dL ÷ 18 → mmol/L", factor: 18.0, divide: true
+            )
+
+        case "cholesterol", "ldl", "hdl":
+            return conversionTip(
+                field: field, onReport: onReport, rawUnit: rawUnit,
+                rawNum: rawNum, procNum: procNum, procUnit: procUnit,
+                formula: "mg/dL ÷ 38.67 → mmol/L", factor: 38.67, divide: true
+            )
+
+        case "triglycerides":
+            return conversionTip(
+                field: field, onReport: onReport, rawUnit: rawUnit,
+                rawNum: rawNum, procNum: procNum, procUnit: procUnit,
+                formula: "mg/dL ÷ 88.57 → mmol/L", factor: 88.57, divide: true
+            )
+
+        case "hba1c":
+            if rawUnit.contains("mol") || rawUnit.contains("ifcc") {
+                var calc: String?
+                if let r = rawNum {
+                    calc = "\(trimNum(r)) × 0.0915 + 2.15 ≈ \(trimNum(r * 0.0915 + 2.15))%"
+                }
+                return OCRTipContent(
+                    title: field.label,
+                    onReport: onReport,
+                    formula: "IFCC mmol/mol → %",
+                    calculation: calc,
+                    conversionNote: "% = mmol/mol × 0.0915 + 2.15",
+                    noConversionNote: nil,
+                    savedValue: field.editedValue,
+                    savedUnit: procUnit,
+                    fromValue: field.rawValue,
+                    fromUnit: normalizedUnit(field.rawUnit),
+                    footnote: nil,
+                    rules: []
+                )
+            }
+            return passthroughTip(field: field, onReport: onReport, procUnit: procUnit)
+
+        case "height_cm":
+            if rawUnit.contains("in") || rawUnit == "\"" || rawUnit == "in" {
+                return conversionTip(
+                    field: field, onReport: onReport, rawUnit: rawUnit,
+                    rawNum: rawNum, procNum: procNum, procUnit: procUnit,
+                    formula: "in × 2.54 → cm", factor: 2.54, divide: false
+                )
+            }
+            return passthroughTip(field: field, onReport: onReport, procUnit: procUnit)
+
+        case "weight_kg":
+            if rawUnit.contains("lb") {
+                return conversionTip(
+                    field: field, onReport: onReport, rawUnit: rawUnit,
+                    rawNum: rawNum, procNum: procNum, procUnit: procUnit,
+                    formula: "lb × 0.4536 → kg", factor: 0.4536, divide: false
+                )
+            }
+            return passthroughTip(field: field, onReport: onReport, procUnit: procUnit)
+
+        case "bmi":
+            return OCRTipContent(
+                title: field.label,
+                onReport: onReport,
+                formula: nil,
+                calculation: nil,
+                conversionNote: nil,
+                noConversionNote: "Usually taken straight from the report.",
+                savedValue: field.editedValue,
+                savedUnit: procUnit,
+                fromValue: field.rawValue,
+                fromUnit: normalizedUnit(field.rawUnit),
+                footnote: nil,
+                rules: []
+            )
+
+        default:
+            return passthroughTip(field: field, onReport: onReport, procUnit: procUnit)
+        }
+    }
+
+    private static func passthroughTip(field: OCRField, onReport: String?, procUnit: String) -> OCRTipContent {
+        OCRTipContent(
+            title: field.label,
+            onReport: onReport,
+            formula: nil,
+            calculation: nil,
+            conversionNote: nil,
+            noConversionNote: "Already in \(procUnit) — no conversion needed.",
+            savedValue: field.editedValue,
+            savedUnit: procUnit,
+            fromValue: field.rawValue,
+            fromUnit: normalizedUnit(field.rawUnit) ?? procUnit,
+            footnote: nil,
+            rules: []
+        )
+    }
+
+    private static func conversionTip(
+        field: OCRField,
+        onReport: String?,
+        rawUnit: String,
+        rawNum: Double?,
+        procNum: Double?,
+        procUnit: String,
+        formula: String,
+        factor: Double,
+        divide: Bool
+    ) -> OCRTipContent {
+        let needsConversion = rawUnit.contains("mg") || rawUnit.contains("lb")
+            || rawUnit.contains("in") || rawUnit == "\""
+        guard needsConversion else {
+            return passthroughTip(field: field, onReport: onReport, procUnit: procUnit)
+        }
+
+        var calculation: String?
+        var note: String?
+        if let r = rawNum {
+            let calc = divide ? r / factor : r * factor
+            let op = divide ? "÷" : "×"
+            calculation = "\(trimNum(r)) \(op) \(trimNum(factor)) ≈ \(trimNum(calc))"
+            if let p = procNum, abs(calc - p) > 0.15 {
+                note = "Showing \(trimNum(p)) after rounding"
+            }
+        }
+
+        return OCRTipContent(
+            title: field.label,
+            onReport: onReport,
+            formula: formula,
+            calculation: calculation,
+            conversionNote: note,
+            noConversionNote: nil,
+            savedValue: field.editedValue,
+            savedUnit: procUnit,
+            fromValue: field.rawValue,
+            fromUnit: normalizedUnit(field.rawUnit),
+            footnote: nil,
+            rules: []
+        )
+    }
+
+    private static func normalizedUnit(_ unit: String?) -> String? {
+        guard let unit, !unit.isEmpty else { return nil }
+        return unit
+            .replacingOccurrences(of: "mm[Hg]", with: "mmHg", options: .regularExpression)
+            .replacingOccurrences(of: "kg/m2", with: "kg/m²", options: .caseInsensitive)
+    }
+
+    private static func parseNumber(_ text: String?) -> Double? {
+        guard let text else { return nil }
+        let cleaned = text
+            .replacingOccurrences(of: ",", with: "")
+            .trimmingCharacters(in: .whitespaces)
+        return Double(cleaned)
+    }
+
+    private static func trimNum(_ n: Double) -> String {
+        n == n.rounded() && abs(n) < 1_000_000
+            ? String(format: "%.0f", n)
+            : String(format: "%.2f", n)
+    }
+}
+
+// MARK: - OCR tooltip panel
+
+private struct OCRTipPanelView: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    let content: OCRTipContent
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if let title = content.title {
+                Text(title)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundColor(themeManager.current.primaryText)
+            }
+
+            if let onReport = content.onReport {
+                tipSection(icon: "doc.text", label: "On report") {
+                    Text(onReport)
+                        .font(.system(size: 13))
+                        .foregroundColor(themeManager.current.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            if let conversionNote = content.conversionNote, content.formula == nil {
+                tipSection(icon: "info.circle", label: "Note") {
+                    Text(conversionNote)
+                        .font(.system(size: 13))
+                        .foregroundColor(themeManager.current.secondaryText)
+                }
+            }
+
+            if let formula = content.formula {
+                tipSection(icon: "arrow.triangle.2.circlepath", label: "Conversion") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(formula)
+                            .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                            .foregroundColor(themeManager.current.primaryText)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(themeManager.current.inputBackground)
+                            .cornerRadius(8)
+
+                        if let calculation = content.calculation {
+                            Text(calculation)
+                                .font(.system(size: 12, design: .monospaced))
+                                .foregroundColor(themeManager.current.secondaryText)
+                        }
+
+                        if let note = content.conversionNote {
+                            Text(note)
+                                .font(.system(size: 11))
+                                .foregroundColor(themeManager.current.secondaryText)
+                        }
+                    }
+                }
+            }
+
+            if let noConversion = content.noConversionNote {
+                tipSection(icon: "checkmark.circle", label: "Conversion") {
+                    Text(noConversion)
+                        .font(.system(size: 13))
+                        .foregroundColor(themeManager.current.secondaryText)
+                }
+            }
+
+            if !content.savedValue.isEmpty {
+                tipSection(icon: "checkmark.seal.fill", label: "Saved value") {
+                    if let fromValue = content.fromValue,
+                       let fromUnit = content.fromUnit,
+                       content.formula != nil {
+                        conversionFlow(
+                            fromValue: fromValue,
+                            fromUnit: fromUnit,
+                            toValue: content.savedValue,
+                            toUnit: content.savedUnit
+                        )
+                    } else {
+                        Text("\(content.savedValue) \(content.savedUnit)")
+                            .font(.system(size: 17, weight: .bold, design: .rounded))
+                            .foregroundColor(.green)
+                    }
+                }
+            }
+
+            if !content.rules.isEmpty {
+                tipSection(icon: "list.bullet.rectangle", label: "Common conversions") {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ForEach(content.rules) { rule in
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text(rule.label)
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(themeManager.current.primaryText)
+                                    .frame(width: 92, alignment: .leading)
+                                Text(rule.formula)
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .foregroundColor(themeManager.current.secondaryText)
+                            }
+                        }
+                    }
+                }
+            }
+
+            if let footnote = content.footnote {
+                Text(footnote)
+                    .font(.system(size: 11))
+                    .foregroundColor(themeManager.current.secondaryText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func tipSection<Content: View>(
+        icon: String,
+        label: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(.green)
+                Text(label.uppercased())
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(0.6)
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+            content()
+        }
+    }
+
+    private func conversionFlow(
+        fromValue: String,
+        fromUnit: String,
+        toValue: String,
+        toUnit: String
+    ) -> some View {
+        HStack(spacing: 12) {
+            VStack(spacing: 2) {
+                Text(fromValue)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundColor(themeManager.current.primaryText)
+                Text(fromUnit)
+                    .font(.system(size: 10))
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+            .frame(maxWidth: .infinity)
+
+            Image(systemName: "arrow.right")
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.green)
+
+            VStack(spacing: 2) {
+                Text(toValue)
+                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .foregroundColor(.green)
+                Text(toUnit)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.green.opacity(0.8))
+            }
+            .frame(maxWidth: .infinity)
+        }
+        .padding(12)
+        .background(Color.green.opacity(0.08))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - OCR info tooltip
+
+private struct InfoTipButton: View {
+    @EnvironmentObject var themeManager: ThemeManager
+    let content: OCRTipContent
+    @State private var showTip = false
+
+    private var isOverview: Bool { !content.rules.isEmpty }
+
+    var body: some View {
+        Button { showTip = true } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 14))
+                .foregroundColor(themeManager.current.secondaryText)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("More information")
+        .sheet(isPresented: $showTip) {
+            NavigationStack {
+                ScrollView(showsIndicators: false) {
+                    OCRTipPanelView(content: content)
+                        .padding(20)
+                }
+                .background(themeManager.current.background)
+                .navigationTitle(isOverview ? "Scan help" : content.title ?? "Details")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Done") { showTip = false }
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+            }
+            .presentationDetents(isOverview ? [.medium, .large] : [.height(340), .medium])
+            .presentationDragIndicator(.visible)
+            .environmentObject(themeManager)
+        }
+    }
 }
 
 // MARK: - OCR Confirmation Sheet (raw → processed review)
@@ -981,18 +1431,19 @@ struct OCRConfirmView: View {
     private var fieldList: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 12) {
-                HStack(spacing: 8) {
+                HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 14)).foregroundColor(.green)
+                        .padding(.top, 1)
                     Text("Check what we read from your report. Edit any value, then confirm.")
                         .font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
-                    Spacer()
+                    InfoTipButton(content: OCRTipContent.overview())
                 }
                 .padding(12)
                 .background(Color.green.opacity(0.06)).cornerRadius(12)
 
-                ForEach($fields) { $field in
-                    fieldRow($field)
+                ForEach(fields.indices, id: \.self) { index in
+                    fieldRow($fields[index])
                 }
             }
             .padding(20)
@@ -1004,10 +1455,11 @@ struct OCRConfirmView: View {
         let rawText = [f.rawName, f.rawValue, f.rawUnit]
             .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
         return VStack(alignment: .leading, spacing: 8) {
-            HStack {
+            HStack(alignment: .top, spacing: 6) {
                 Text(f.label)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(themeManager.current.primaryText)
+                InfoTipButton(content: OCRFieldConversionTip.content(for: f))
                 Spacer()
                 Toggle("", isOn: field.accepted)
                     .toggleStyle(SwitchToggleStyle(tint: themeManager.current == .dark ? .white : .black))
