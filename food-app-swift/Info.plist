@@ -4,10 +4,6 @@
 <dict>
 	<key>API_BASE_URL</key>
 	<string>$(API_BASE_URL)</string>
-	<key>DEVELOPER_LABEL</key>
-	<string>$(DEVELOPER_LABEL)</string>
-	<key>CFBundleDisplayName</key>
-	<string>NutriCam - AI Food Tracker</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -21,5 +17,7 @@
 			</array>
 		</dict>
 	</array>
+	<key>DEVELOPER_LABEL</key>
+	<string>$(DEVELOPER_LABEL)</string>
 </dict>
 </plist>

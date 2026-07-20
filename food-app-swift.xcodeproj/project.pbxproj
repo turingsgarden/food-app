@@ -439,13 +439,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "food-app-swift/food-app-swiftDebug.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = XJ5899F6G7;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "food-app-swift/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "NutriCam - Nutrition Analyzer";
+				INFOPLIST_KEY_CFBundleDisplayName = "NutriCam - AI Food Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "NutriSnap needs camera access to take photos of your meals for nutrition analysis.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "NutriSnap needs photo library access to let you select meal photos for nutrition analysis.";
@@ -458,8 +459,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.14;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.food-app.food-app-swift";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.food-app.nutricam.dev.afsara";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -476,13 +478,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_ENTITLEMENTS = "food-app-swift/food-app-swiftRelease.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
-				DEVELOPMENT_TEAM = XJ5899F6G7;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "food-app-swift/Info.plist";
-				INFOPLIST_KEY_CFBundleDisplayName = "NutriCam - Nutrition Analyzer";
+				INFOPLIST_KEY_CFBundleDisplayName = "NutriCam - AI Food Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "NutriSnap needs camera access to take photos of your meals for nutrition analysis.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "NutriSnap needs photo library access to let you select meal photos for nutrition analysis.";
@@ -495,8 +498,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.14;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.food-app.food-app-swift";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.food-app.nutricam.dev.afsara";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -712,6 +716,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "food-app-swift/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "NutriCam - AI Food Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "NutriSnap needs camera access to take photos of your meals for nutrition analysis.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "NutriSnap needs photo library access to let you select meal photos for nutrition analysis.";
@@ -744,6 +749,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "food-app-swift/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "NutriCam - AI Food Tracker";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_NSCameraUsageDescription = "NutriSnap needs camera access to take photos of your meals for nutrition analysis.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "NutriSnap needs photo library access to let you select meal photos for nutrition analysis.";

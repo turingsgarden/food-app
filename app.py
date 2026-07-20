@@ -40,6 +40,17 @@ from health_pipeline import (
     generate_health_report,
 )
 
+
+
+from ocr_health_pipeline import (
+    FIELD_NAMES as OCR_HEALTH_FIELD_NAMES,
+    HealthOcrApiError,
+    HealthOcrConfigurationError,
+    process_health_report,
+    transcribe_document,
+)
+
+
 load_dotenv()
 
 app = Flask(__name__)
