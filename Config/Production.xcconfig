@@ -1,3 +1,6 @@
-// Default production / main scheme settings.
+// Default production / main scheme settings (food-app-swift → App Store).
 #include "Base.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = com.food-app.food-app-swift
+INFOPLIST_KEY_CFBundleDisplayName = NutriCam - Nutrition Analyzer
 DEVELOPER_LABEL = production
