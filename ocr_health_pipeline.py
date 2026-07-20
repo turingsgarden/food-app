@@ -554,7 +554,8 @@ def _extract_health_values_from_text(
 
 NUMBER_PATTERN = r"[-+]?\d+(?:[.,]\d+)?"
 UNIT_PATTERN = (
-    r"(?:mm\s*hg|kpa|mg\s*/?\s*dl|mmol\s*/\s*l|mmol\s*/\s*mol|"
+    r"(?:mm\s*(?:\[\s*hg\s*\]|\(\s*hg\s*\)|hg)|"
+    r"kpa|mg\s*/?\s*dl|mmol\s*/\s*l|mmol\s*/\s*mol|"
     r"kg\s*/\s*m(?:2|²)|%|cm|mm|m|inches?|inch|in|\"|kgs?|"
     r"kilograms?|lbs?|pounds?)"
 )
@@ -622,7 +623,7 @@ def _extract_health_values_regex(
         rf"(?:(?:blood\s*pressure|\bBP\b)\s*[:=\-]?\s*)?"
         rf"(?P<sys>\d{{2,3}}(?:\.\d+)?)\s*/\s*"
         rf"(?P<dia>\d{{2,3}}(?:\.\d+)?)"
-        rf"\s*(?P<unit>mm\s*hg|kpa)?"
+        rf"\s*(?P<unit>mm\s*(?:\[\s*hg\s*\]|\(\s*hg\s*\)|hg)|kpa)?"
         rf"(?!\s*/\s*\d)",
         flags=re.IGNORECASE,
     )
@@ -728,8 +729,8 @@ def _coerce_number(value: Any) -> Optional[float]:
 
 def _normalize_unit_text(unit: Optional[str]) -> str:
     text = (unit or "").strip().lower()
-    text = text.replace("㎎", "mg").replace("／", "/").replace("⁄", "/")
-    text = text.replace("²", "2")
+    text = text.replace("㎎", "mg").replace("／", "/").replace("⁄", "/").replace("²", "2")
+    text = re.sub(r"[\[\]\(\)]", "", text)
     text = re.sub(r"\s+", "", text)
     text = text.rstrip(".,")
 

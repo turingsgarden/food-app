@@ -2,6 +2,7 @@ flask==2.3.3
 flask-cors==4.0.0
 Pillow==10.0.0
 google-generativeai==0.3.2
+google-genai 
 python-dotenv==1.1.0
 numpy==1.24.3
 pymongo==4.5.0

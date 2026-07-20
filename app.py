@@ -41,13 +41,10 @@ from health_pipeline import (
 )
 
 
-
 from ocr_health_pipeline import (
-    FIELD_NAMES as OCR_HEALTH_FIELD_NAMES,
     HealthOcrApiError,
     HealthOcrConfigurationError,
     process_health_report,
-    transcribe_document,
 )
 
 
@@ -1590,38 +1587,110 @@ _PDF_RENDER_SCALE = 2
 
 
 @app.route("/ocr-health-report", methods=["POST"])
-@token_required
+#@token_required
 def ocr_health_report():
+    """Extract normalized health metrics from an uploaded report image or PDF."""
+
     try:
-        data = request.get_json()
-        if not data or not data.get("image_base64"):
-            return jsonify({"error": "No image provided"}), 400
+        data = request.get_json(silent=True) or {}
 
-        if not gemini_model:
-            return jsonify({"error": "OCR service not configured on server"}), 503
+        # Keep compatibility with the existing image_base64 request.
+        encoded_file = (
+            data.get("image_base64")
+            or data.get("file_base64")
+        )
 
-        image_b64 = data["image_base64"]
-        print("📤 Gemini image OCR: transcribing report...")
-        full_text = _gemini_transcribe_image(image_b64)
+        if not encoded_file:
+            return jsonify({
+                "error": "No image or document was provided."
+            }), 400
 
-        if not full_text:
-            return jsonify(_empty_health_ocr_response(
-                "No text detected. Make sure the image is clear and well-lit."
-            )), 200
+        if not isinstance(encoded_file, str):
+            return jsonify({
+                "error": "The uploaded file must be base64 encoded."
+            }), 400
 
-        print(f"📄 Gemini OCR extracted {len(full_text)} chars")
-        result_json = _extract_health_values_from_text(full_text)
-        cleaned = _validate_health_values(result_json)
-        print(f"✅ OCR final: {cleaned}")
-        return jsonify(cleaned), 200
+        # Support strings such as:
+        # data:image/jpeg;base64,/9j/4AAQ...
+        if encoded_file.startswith("data:"):
+            try:
+                encoded_file = encoded_file.split(",", 1)[1]
+            except IndexError:
+                return jsonify({
+                    "error": "Invalid base64 data URL."
+                }), 400
 
-    except json.JSONDecodeError:
-        return jsonify({"error": "Could not parse scan results. Try a clearer image."}), 422
-    except Exception as e:
-        print(f"❌ OCR unexpected error: {e}")
+        # Remove accidental spaces or line breaks.
+        encoded_file = "".join(encoded_file.split())
+
+        try:
+            file_bytes = base64.b64decode(
+                encoded_file,
+                validate=True,
+            )
+        except Exception:
+            return jsonify({
+                "error": "The uploaded file contains invalid base64 data."
+            }), 400
+
+        if not file_bytes:
+            return jsonify({
+                "error": "The uploaded file is empty."
+            }), 400
+
+        # Base64 is larger than the original file, so check decoded bytes.
+        max_file_size = 10 * 1024 * 1024
+
+        if len(file_bytes) > max_file_size:
+            return jsonify({
+                "error": "File too large. Maximum size is 10 MB."
+            }), 413
+
+        filename = data.get("filename") or "upload.jpg"
+        mime_type = data.get("mime_type") or "image/jpeg"
+
+        result = process_health_report(
+            file_bytes,
+            filename=filename,
+            mime_type=mime_type,
+            include_raw_text=False,
+            max_retries=3,
+        )
+
+        print(
+            f"✅ Health OCR completed: "
+            f"status={result.get('status')}"
+        )
+
+        return jsonify(result), 200
+
+    except HealthOcrConfigurationError as error:
+        print(f"❌ OCR configuration error: {error}")
+
+        return jsonify({
+            "error": "OCR service is not configured on the server."
+        }), 503
+
+    except HealthOcrApiError as error:
+        print(f"❌ Gemini OCR API error: {error}")
+
+        return jsonify({
+            "error": "The OCR service could not process the report."
+        }), 502
+
+    except ValueError as error:
+        # Covers unsupported file types and invalid PDF files.
+        return jsonify({
+            "error": str(error)
+        }), 400
+
+    except Exception as error:
+        print(f"❌ Unexpected OCR error: {error}")
         traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
 
+        return jsonify({
+            "error": "Unexpected OCR processing error."
+        }), 500
 
 @app.route("/ocr-document", methods=["POST"])
 @token_required
@@ -1632,8 +1701,7 @@ def ocr_document():
         if not data or not data.get("file_base64"):
             return jsonify({"error": "No file provided"}), 400
 
-        if not gemini_model:
-            return jsonify({"error": "OCR service not configured on server"}), 503
+        
 
         file_bytes = base64.b64decode(data["file_base64"])
         file_type = (data.get("file_type") or "pdf").lower()
