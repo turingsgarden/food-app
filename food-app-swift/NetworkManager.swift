@@ -7,6 +7,9 @@ private enum NMTimeout {
     static let standard: TimeInterval = 30   // normal reads/writes
     static let login:    TimeInterval = 90   // /login – must survive cold start
     static let upload:   TimeInterval = 120  // Gemini image analysis
+
+    // OCR can involve transcription, extraction, and retries.
+    static let ocr: TimeInterval = 240
 }
 
 class NetworkManager {
@@ -36,6 +39,21 @@ class NetworkManager {
         config.httpAdditionalHeaders = ["Accept": "application/json"]
         return URLSession(configuration: config)
     }()
+
+    private lazy var ocrSession: URLSession = {
+        let configuration = URLSessionConfiguration.default
+
+        configuration.timeoutIntervalForRequest = NMTimeout.ocr
+        configuration.timeoutIntervalForResource = NMTimeout.ocr
+        configuration.waitsForConnectivity = true
+        configuration.allowsCellularAccess = true
+        configuration.httpMaximumConnectionsPerHost = 1
+        configuration.httpAdditionalHeaders = [
+            "Accept": "application/json"
+        ]
+
+        return URLSession(configuration: configuration)
+    }() 
 
     private init() {}
 
@@ -547,8 +565,204 @@ class NetworkManager {
             }
         }.resume()
     }
+    // MARK: - Health Report OCR
 
+    // MARK: - Health Report OCR
+
+func scanHealthReport(
+    imageData: Data,
+    filename: String = "health-report.jpg",
+    mimeType: String = "image/jpeg",
+    completion: @escaping (
+        Result<HealthOCRResponse, Error>
+    ) -> Void
+) {
+    guard let url = URL(
+        string: "\(baseURL)/ocr-health-report"
+    ) else {
+        completion(
+            .failure(
+                nsErr(
+                    -1,
+                    "Invalid OCR endpoint URL."
+                )
+            )
+        )
+        return
+    }
+
+    var request = createAuthenticatedRequest(url: url)
+    request.httpMethod = "POST"
+    request.timeoutInterval = NMTimeout.ocr
+    request.cachePolicy =
+        .reloadIgnoringLocalAndRemoteCacheData
+
+    request.setValue(
+        "application/json",
+        forHTTPHeaderField: "Content-Type"
+    )
+
+    request.setValue(
+        "application/json",
+        forHTTPHeaderField: "Accept"
+    )
+
+    let payload: [String: Any] = [
+        "image_base64": imageData.base64EncodedString(),
+        "filename": filename,
+        "mime_type": mimeType
+    ]
+
+    do {
+        request.httpBody = try JSONSerialization.data(
+            withJSONObject: payload
+        )
+    } catch {
+        completion(.failure(error))
+        return
+    }
+
+    let startTime = Date()
+
+    ocrSession.dataTask(with: request) {
+        [weak self] data,
+        response,
+        networkError in
+
+        guard let self else {
+            return
+        }
+
+        if let networkError {
+            DispatchQueue.main.async {
+                completion(.failure(networkError))
+            }
+            return
+        }
+
+        guard let httpResponse =
+                response as? HTTPURLResponse else {
+            DispatchQueue.main.async {
+                completion(
+                    .failure(
+                        self.nsErr(
+                            -2,
+                            "Invalid response from OCR server."
+                        )
+                    )
+                )
+            }
+            return
+        }
+
+        guard let data else {
+            DispatchQueue.main.async {
+                completion(
+                    .failure(
+                        self.nsErr(
+                            -3,
+                            "No OCR response received."
+                        )
+                    )
+                )
+            }
+            return
+        }
+
+        let duration = Date().timeIntervalSince(startTime)
+
+        #if DEBUG
+        print(
+            "⏱️ OCR completed in " +
+            "\(String(format: "%.2f", duration)) seconds"
+        )
+
+        print("OCR HTTP status:", httpResponse.statusCode)
+
+        if let responseText = String(
+            data: data,
+            encoding: .utf8
+        ) {
+            print("OCR response:", responseText)
+        }
+        #endif
+
+        guard (200...299).contains(
+            httpResponse.statusCode
+        ) else {
+            if httpResponse.statusCode == 401 {
+                self.clearToken()
+            }
+
+            let serverMessage =
+                Self.ocrErrorMessage(from: data)
+                ?? "OCR request failed with HTTP status " +
+                   "\(httpResponse.statusCode)."
+
+            DispatchQueue.main.async {
+                completion(
+                    .failure(
+                        self.nsErr(
+                            httpResponse.statusCode,
+                            serverMessage
+                        )
+                    )
+                )
+            }
+            return
+        }
+
+        do {
+            let result = try JSONDecoder().decode(
+                HealthOCRResponse.self,
+                from: data
+            )
+
+            DispatchQueue.main.async {
+                completion(.success(result))
+            }
+        } catch {
+            #if DEBUG
+            print("❌ OCR decoding error:", error)
+            #endif
+
+            DispatchQueue.main.async {
+                completion(
+                    .failure(
+                        self.nsErr(
+                            -4,
+                            "Could not decode the OCR response: " +
+                            error.localizedDescription
+                        )
+                    )
+                )
+            }
+        }
+    }.resume()
+}
+
+    private static func ocrErrorMessage(
+        from data: Data
+    ) -> String? {
+        guard
+            let object = try? JSONSerialization.jsonObject(
+                with: data
+            ),
+            let dictionary = object as? [String: Any]
+        else {
+            return nil
+        }
+
+        return dictionary["error"] as? String
+            ?? dictionary["message"] as? String
+    }
     private func nsErr(_ code: Int, _ msg: String) -> NSError {
         NSError(domain: "NetworkManager", code: code, userInfo: [NSLocalizedDescriptionKey: msg])
     }
 }
+
+
+//connect xcode to the ocr endpoint
+
+
+

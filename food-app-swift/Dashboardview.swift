@@ -219,6 +219,17 @@ struct DashboardView: View {
                             if !filteredMealsForDisplay.isEmpty { comprehensiveNutritionSection }
 
                             todayMealsSection
+                            
+                            // Temporary button for testing the OCR connection
+                            
+                            NavigationLink {
+                                HealthOCRTestView()
+                            } label: {
+                                Label(
+                                    "Test Health OCR",
+                                    systemImage: "doc.text.viewfinder"
+                                )
+                            }
 
                             Spacer(minLength: 100)
                         }

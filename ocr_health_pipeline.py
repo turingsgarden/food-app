@@ -12,7 +12,7 @@ Design implemented:
 Required environment variables:
     GEMINI_API_KEY
 Optional:
-    GEMINI_OCR_MODEL   default: gemini-3.5-flash
+    GEMINI_OCR_MODEL: gemini-3.1-flash-lite
 """
 
 from __future__ import annotations

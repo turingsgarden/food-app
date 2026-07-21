@@ -47,7 +47,6 @@ from ocr_health_pipeline import (
     process_health_report,
 )
 
-
 load_dotenv()
 
 app = Flask(__name__)
@@ -1589,8 +1588,6 @@ _PDF_RENDER_SCALE = 2
 @app.route("/ocr-health-report", methods=["POST"])
 #@token_required
 def ocr_health_report():
-    """Extract normalized health metrics from an uploaded report image or PDF."""
-
     try:
         data = request.get_json(silent=True) or {}
 
@@ -1701,7 +1698,6 @@ def ocr_document():
         if not data or not data.get("file_base64"):
             return jsonify({"error": "No file provided"}), 400
 
-        
 
         file_bytes = base64.b64decode(data["file_base64"])
         file_type = (data.get("file_type") or "pdf").lower()
