@@ -722,8 +722,10 @@ func scanHealthReport(
                 completion(.success(result))
             }
         } catch {
+            let decodingMessage = Self.describeOCRDecodingError(error)
+
             #if DEBUG
-            print("❌ OCR decoding error:", error)
+            print("❌ OCR decoding error:", decodingMessage)
             #endif
 
             DispatchQueue.main.async {
@@ -732,7 +734,7 @@ func scanHealthReport(
                         self.nsErr(
                             -4,
                             "Could not decode the OCR response: " +
-                            error.localizedDescription
+                            decodingMessage
                         )
                     )
                 )
@@ -740,6 +742,38 @@ func scanHealthReport(
         }
     }.resume()
 }
+
+    private static func describeOCRDecodingError(
+        _ error: Error
+    ) -> String {
+        func pathText(_ path: [CodingKey]) -> String {
+            let path = path.map(\.stringValue).joined(separator: ".")
+            return path.isEmpty ? "root" : path
+        }
+
+        switch error {
+        case let DecodingError.keyNotFound(key, context):
+            return "Missing key '\(key.stringValue)' at " +
+                pathText(context.codingPath) + "."
+
+        case let DecodingError.typeMismatch(type, context):
+            return "Wrong value type for \(type) at " +
+                pathText(context.codingPath) + ": " +
+                context.debugDescription
+
+        case let DecodingError.valueNotFound(type, context):
+            return "Missing value for \(type) at " +
+                pathText(context.codingPath) + "."
+
+        case let DecodingError.dataCorrupted(context):
+            return "Invalid JSON at " +
+                pathText(context.codingPath) + ": " +
+                context.debugDescription
+
+        default:
+            return error.localizedDescription
+        }
+    }
 
     private static func ocrErrorMessage(
         from data: Data
@@ -763,6 +797,3 @@ func scanHealthReport(
 
 
 //connect xcode to the ocr endpoint
-
-
-

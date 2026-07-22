@@ -129,22 +129,33 @@ struct HealthOCRTestView: View {
             message = """
             OCR completed successfully.
 
-            Blood sugar: \(show(response.bloodSugar))
-            BMI: \(show(response.bmi))
-            Cholesterol: \(show(response.cholesterol))
-            Systolic BP: \(show(response.systolicBP))
-            Diastolic BP: \(show(response.diastolicBP))
+            Systolic BP: \(show(response.systolicBP)) mmHg
+            Diastolic BP: \(show(response.diastolicBP)) mmHg
+            Height: \(show(response.heightCM)) cm
+            Weight: \(show(response.weightKG)) kg
+            BMI: \(show(response.bmi)) kg/m²
+            Blood sugar: \(show(response.bloodSugar)) mmol/L
+            HbA1c: \(show(response.hba1c)) %
+            Cholesterol: \(show(response.cholesterol)) mmol/L
+            LDL: \(show(response.ldl)) mmol/L
+            HDL: \(show(response.hdl)) mmol/L
+            Triglycerides: \(show(response.triglycerides)) mmol/L
             """
 
             print("OCR status:", response.status.rawValue)
-            print("Blood sugar:", response.bloodSugar as Any)
+            print("Systolic BP:", response.systolicBP as Any)
+            print("Diastolic BP:", response.diastolicBP as Any)
+            print("Height:", response.heightCM as Any)
+            print("Weight:", response.weightKG as Any)
             print("BMI:", response.bmi as Any)
+            print("Blood sugar:", response.bloodSugar as Any)
+            print("HbA1c:", response.hba1c as Any)
+            print("Cholesterol:", response.cholesterol as Any)
+            print("LDL:", response.ldl as Any)
+            print("HDL:", response.hdl as Any)
+            print("Triglycerides:", response.triglycerides as Any)
 
-            print(
-                "Raw glucose:",
-                response.fields.bloodSugar.raw.value?
-                    .displayText as Any
-            )
+            
 
         case .noFields:
             message =

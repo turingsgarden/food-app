@@ -1689,6 +1689,7 @@ def ocr_health_report():
             "error": "Unexpected OCR processing error."
         }), 500
 
+
 @app.route("/ocr-document", methods=["POST"])
 @token_required
 def ocr_document():
