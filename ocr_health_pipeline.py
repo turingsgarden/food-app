@@ -62,135 +62,18 @@ class FieldSpec:
     maximum: float
     aliases: Tuple[str, ...]
 
-
 FIELD_SPECS: Dict[str, FieldSpec] = {
-    "systolic_bp": FieldSpec(
-        "int",
-        "mmHg",
-        60,
-        250,
-        (
-            "systolic blood pressure",
-            "systolic pressure",
-            "systolic",
-            "SBP",
-            "high pressure",
-            "left value of BP",
-        ),
-    ),
-    "diastolic_bp": FieldSpec(
-        "int",
-        "mmHg",
-        30,
-        150,
-        (
-            "diastolic blood pressure",
-            "diastolic pressure",
-            "diastolic",
-            "DBP",
-            "low pressure",
-            "right value of BP",
-        ),
-    ),
-    "height_cm": FieldSpec(
-        "float",
-        "cm",
-        100,
-        230,
-        ("body height", "height", "Ht"),
-    ),
-    "weight_kg": FieldSpec(
-        "float",
-        "kg",
-        30,
-        300,
-        ("body weight", "weight", "Wt", "BW"),
-    ),
-    "bmi": FieldSpec(
-        "float",
-        "kg/m²",
-        10,
-        60,
-        ("body mass index", "BMI"),
-    ),
-    "blood_sugar": FieldSpec(
-        "float",
-        "mmol/L",
-        2.0,
-        30.0,
-        (
-            "fasting blood glucose",
-            "fasting plasma glucose",
-            "fasting glucose",
-            "blood glucose",
-            "blood sugar",
-            "glucose",
-            "FBG",
-            "FPG",
-            "GLU",
-        ),
-    ),
-    "hba1c": FieldSpec(
-        "float",
-        "%",
-        3.0,
-        20.0,
-        (
-            "glycated hemoglobin",
-            "glycosylated hemoglobin",
-            "HbA1c",
-            "A1c",
-        ),
-    ),
-    "cholesterol": FieldSpec(
-        "float",
-        "mmol/L",
-        1.0,
-        15.0,
-        (
-            "total cholesterol",
-            "cholesterol total",
-            "total chol",
-            "TC",
-            "CHOL",
-        ),
-    ),
-    "ldl": FieldSpec(
-        "float",
-        "mmol/L",
-        0.3,
-        10.0,
-        (
-            "low-density lipoprotein cholesterol",
-            "low density lipoprotein",
-            "LDL-C",
-            "LDL",
-        ),
-    ),
-    "hdl": FieldSpec(
-        "float",
-        "mmol/L",
-        0.3,
-        5.0,
-        (
-            "high-density lipoprotein cholesterol",
-            "high density lipoprotein",
-            "HDL-C",
-            "HDL",
-        ),
-    ),
-    "triglycerides": FieldSpec(
-        "float",
-        "mmol/L",
-        0.2,
-        10.0,
-        (
-            "triglycerides",
-            "triglyceride",
-            "TRIG",
-            "TG",
-        ),
-    ),
+    "systolic_bp": FieldSpec("int", "mmHg", 60, 250, ("systolic blood pressure", "systolic pressure", "systolic", "SBP", "high pressure", "left value of BP")),
+    "diastolic_bp": FieldSpec("int", "mmHg", 30, 150, ("diastolic blood pressure", "diastolic pressure", "diastolic", "DBP", "low pressure", "right value of BP")),
+    "height_cm": FieldSpec("float", "cm", 100, 230, ("body height", "height", "Ht")),
+    "weight_kg": FieldSpec("float", "kg", 30, 300, ("body weight", "weight", "Wt", "BW")),
+    "bmi": FieldSpec("float", "kg/m²", 10, 60, ("body mass index", "BMI")),
+    "blood_sugar": FieldSpec("float", "mmol/L", 2.0, 30.0, ("fasting blood glucose", "fasting plasma glucose", "fasting glucose", "blood glucose", "blood sugar", "glucose", "FBG", "FPG", "GLU")),
+    "hba1c": FieldSpec("float", "%", 3.0, 20.0, ("glycated hemoglobin", "glycosylated hemoglobin", "HbA1c", "A1c")),
+    "cholesterol": FieldSpec("float", "mmol/L", 1.0, 15.0, ("total cholesterol", "cholesterol total", "total chol", "TC", "CHOL")),
+    "ldl": FieldSpec("float", "mmol/L", 0.3, 10.0, ("low-density lipoprotein cholesterol", "low density lipoprotein", "LDL-C", "LDL")),
+    "hdl": FieldSpec("float", "mmol/L", 0.3, 5.0, ("high-density lipoprotein cholesterol", "high density lipoprotein", "HDL-C", "HDL")),
+    "triglycerides": FieldSpec("float", "mmol/L", 0.2, 10.0, ("triglycerides", "triglyceride", "TRIG", "TG")),
 }
 
 
@@ -202,6 +85,7 @@ SUPPORTED_MIME_TYPES = {
     "image/heif",
     "application/pdf",
 }
+
 
 MAX_PDF_PAGES = 10
 MAX_TRANSCRIPTION_CHARS = 80_000
@@ -228,12 +112,38 @@ RAW_ITEM_SCHEMA = {
     ]
 }
 
-RAW_EXTRACTION_SCHEMA = {
+ADDITIONAL_ITEM_SCHEMA = {
     "type": "object",
-    "properties": {name: RAW_ITEM_SCHEMA for name in FIELD_NAMES},
-    "required": list(FIELD_NAMES),
+    "properties": {
+        "name": {"type": "string"},
+        "value": {
+            "anyOf": [
+                {"type": "string"},
+                {"type": "number"},
+                {"type": "null"},
+            ]
+        },
+        "unit": {"anyOf": [{"type": "string"}, {"type": "null"},]},
+    },
+    "required": ["name", "value", "unit"],
     "additionalProperties": False,
 }
+
+
+RAW_EXTRACTION_SCHEMA = {
+    "type": "object",
+    "properties": {
+        **{name: RAW_ITEM_SCHEMA for name in FIELD_NAMES},
+
+        "additional_fields": {
+            "type": "array",
+            "items": ADDITIONAL_ITEM_SCHEMA,
+        },
+    },
+    "required": [*FIELD_NAMES, "additional_fields"],
+    "additionalProperties": False,
+}
+
 
 
 class HealthOcrError(RuntimeError):
@@ -453,26 +363,43 @@ def transcribe_document(
 
 def _extraction_prompt(transcription: str) -> str:
     alias_lines = []
+
     for field_name, spec in FIELD_SPECS.items():
         alias_lines.append(
             f"- {field_name}: {', '.join(spec.aliases)}"
         )
 
     return f"""
-Extract only the following 11 health metrics from the report transcription.
+Extract the following 11 canonical health metrics AND every other laboratory
+or health measurement found in the report transcription.
 
 Canonical fields and accepted label examples:
 {chr(10).join(alias_lines)}
 
+For the 11 canonical fields:
+- Put each matched measurement in its corresponding canonical JSON key.
+- Return null when the field is absent.
+
+For every other measurement:
+- Put it inside `additional_fields`.
+- Preserve the original test name.
+- Preserve the original result.
+- Preserve the original unit.
+- One measurement must produce one object.
+
 Important rules:
 - Matching is case-insensitive.
-- Preserve the label, value, and unit exactly as they appear in the report.
-- Return null for a field that is absent or unreadable.
-- Do not invent or calculate values in this extraction step.
+- Preserve labels, values, and units exactly as they appear.
+- Do not invent, interpret, diagnose, or calculate values.
+- Do not duplicate one of the 11 canonical fields inside `additional_fields`.
+- Do not include patient name, patient ID, address, age, gender, dates,
+  doctor names, signatures, headings, reference ranges, or report metadata.
+- Include text results such as Positive, Negative, Reactive,
+  Non-reactive, Detected, or Not Detected.
 - Do not place LDL or HDL values into cholesterol.
 - cholesterol means Total Cholesterol / Total / TC only.
-- SBP and DBP are different fields and must never be swapped.
-- Return every required JSON key, even when its value is null.
+- SBP and DBP must never be swapped.
+- Return every required JSON key.
 - Return only JSON matching the supplied schema.
 
 REPORT TRANSCRIPTION:
@@ -524,32 +451,194 @@ def _validate_raw_extraction(data: Any) -> Dict[str, Dict[str, Any]]:
 
     return normalized
 
+#for additional fields
 
+def _normalized_label(value: Any) -> str:
+    text = "" if value is None else str(value)
+
+    return re.sub(
+        r"[^a-z0-9]+",
+        " ",
+        text.lower(),
+    ).strip()
+
+
+def _is_canonical_label(
+    name: str,
+    canonical_raw: Optional[
+        Mapping[str, Mapping[str, Any]]
+    ] = None,
+) -> bool:
+    candidate = _normalized_label(name)
+
+    if not candidate:
+        return False
+
+    # Remove exact duplicates of canonical fields selected by Gemini.
+    if canonical_raw:
+        for field_name in FIELD_NAMES:
+            item = canonical_raw.get(field_name) or {}
+            raw_name = _normalized_label(item.get("name"))
+
+            if raw_name and candidate == raw_name:
+                return True
+
+    # Also compare against configured aliases.
+    aliases = set(FIELD_NAMES)
+
+    for spec in FIELD_SPECS.values():
+        aliases.update(spec.aliases)
+
+    padded_candidate = f" {candidate} "
+
+    for alias in aliases:
+        alias_key = _normalized_label(alias)
+
+        if not alias_key:
+            continue
+
+        if candidate == alias_key:
+            return True
+
+        # Longer aliases may appear inside a complete laboratory label.
+        if (
+            len(alias_key) >= 3
+            and f" {alias_key} " in padded_candidate
+        ):
+            return True
+
+    return False
+
+
+def _is_metadata_label(name: str) -> bool:
+    candidate = _normalized_label(name)
+
+    metadata_labels = {
+        "patient name",
+        "name",
+        "age",
+        "gender",
+        "sex",
+        "date of birth",
+        "dob",
+        "address",
+        "city",
+        "state",
+        "postcode",
+        "postal code",
+        "mrn",
+        "patient id",
+        "report date",
+        "collection date",
+        "received date",
+        "doctor",
+        "physician",
+        "laboratory",
+        "lab name",
+        "signature",
+    }
+
+    return candidate in metadata_labels
+
+
+def _validate_additional_fields(
+    data: Any,
+    canonical_raw: Optional[
+        Mapping[str, Mapping[str, Any]]
+    ] = None,
+) -> list[Dict[str, Any]]:
+    if not isinstance(data, Mapping):
+        return []
+
+    raw_items = data.get("additional_fields")
+
+    if not isinstance(raw_items, list):
+        return []
+
+    normalized: list[Dict[str, Any]] = []
+    seen = set()
+
+    for item in raw_items[:200]:
+        if not isinstance(item, Mapping):
+            continue
+
+        name = str(item.get("name") or "").strip()
+        value = item.get("value")
+        unit = str(item.get("unit") or "").strip() or None
+
+        if (
+            not name
+            or _is_canonical_label(name, canonical_raw)
+            or _is_metadata_label(name)
+        ):
+            continue
+
+        if isinstance(value, str):
+            value = value.strip()
+
+        dedupe_key = (
+            _normalized_label(name),
+            _normalized_label(value),
+            _normalized_label(unit),
+        )
+
+        if dedupe_key in seen:
+            continue
+
+        seen.add(dedupe_key)
+
+        normalized.append({
+            "name": name,
+            "value": value,
+            "unit": unit,
+        })
+
+    return normalized
+
+#_______
 def _extract_health_values_from_text(
     transcription: str,
     *,
     max_retries: int = 3,
-) -> Dict[str, Dict[str, Any]]:
-    """Gemini text-to-fixed-fields extraction. Returns raw values only."""
+) -> Tuple[
+    Dict[str, Dict[str, Any]],
+    list[Dict[str, Any]],
+]:
+    """
+    Extract the 11 canonical fields and all other medical measurements.
+    """
     _require_genai_sdk()
+
     response = _retry_generate_content(
         contents=[_extraction_prompt(transcription)],
         config=types.GenerateContentConfig(
             temperature=0,
-            max_output_tokens=4096,
+            max_output_tokens=8192,
             response_mime_type="application/json",
             response_json_schema=RAW_EXTRACTION_SCHEMA,
-            http_options=types.HttpOptions(timeout=120_000),
+            http_options=types.HttpOptions(
+                timeout=120_000
+            ),
         ),
         max_retries=max_retries,
     )
 
     parsed = getattr(response, "parsed", None)
+
     if not isinstance(parsed, Mapping):
-        raw_text = _clean_json_text(response.text or "")
+        raw_text = _clean_json_text(
+            response.text or ""
+        )
         parsed = json.loads(raw_text)
 
-    return _validate_raw_extraction(parsed)
+    canonical_raw = _validate_raw_extraction(parsed)
+
+    additional_fields = _validate_additional_fields(
+        parsed,
+        canonical_raw=canonical_raw,
+    )
+
+    return canonical_raw, additional_fields
 
 
 NUMBER_PATTERN = r"[-+]?\d+(?:[.,]\d+)?"
@@ -971,6 +1060,9 @@ def _response_from_fields(
     status: str,
     message: Optional[str],
     fields: Mapping[str, Mapping[str, Any]],
+    additional_fields: Optional[
+        list[Dict[str, Any]]
+    ] = None,
     include_raw_text: bool = False,
     raw_text: str = "",
 ) -> Dict[str, Any]:
@@ -992,6 +1084,10 @@ def _response_from_fields(
         field_name: fields.get(field_name, _empty_field_payload(field_name))
         for field_name in FIELD_NAMES
     }
+
+    response["additional_fields"] = list(
+        additional_fields or []
+    )
 
     if include_raw_text:
         response["raw_text"] = raw_text
@@ -1053,8 +1149,10 @@ def process_health_report(
 
     fallback_raw = _extract_health_values_regex(transcription)
 
+    additional_fields: list[Dict[str, Any]] = []
+
     try:
-        model_raw = _extract_health_values_from_text(
+        model_raw, additional_fields = _extract_health_values_from_text(
             transcription,
             max_retries=max_retries,
         )
@@ -1065,9 +1163,14 @@ def process_health_report(
         raw_values = fallback_raw
 
     fields = _validate_health_values(raw_values)
-    has_any_value = any(
+    
+    has_canonical_value = any(
         fields[field_name]["processed"]["value"] is not None
         for field_name in FIELD_NAMES
+    )
+    has_any_value = (
+        has_canonical_value
+        or bool(additional_fields)
     )
 
     if not has_any_value:
@@ -1078,6 +1181,7 @@ def process_health_report(
                 "You may add them manually."
             ),
             fields=fields,
+            additional_fields=additional_fields,
             include_raw_text=include_raw_text,
             raw_text=transcription,
         )
@@ -1086,6 +1190,7 @@ def process_health_report(
         status="ok",
         message=None,
         fields=fields,
+        additional_fields=additional_fields,
         include_raw_text=include_raw_text,
         raw_text=transcription,
     )
