@@ -3,8 +3,8 @@ OCR health-metric extraction pipeline for food-app.
 
 Design implemented:
 1. Transcribe the uploaded image/PDF without rewriting the text.
-2. Extract 11 canonical health metrics while preserving raw label/value/unit.
-3. Normalize units deterministically in Python.
+2. Extract 11 canonical health metrics including additional tests while preserving raw label/value/unit.
+3. Normalize units.
 4. Validate values against approved ranges.
 5. Return one of: ok, no_fields, no_text.
 6. Preserve a field-level raw + processed + transform structure.
@@ -90,6 +90,7 @@ SUPPORTED_MIME_TYPES = {
 MAX_PDF_PAGES = 10
 MAX_TRANSCRIPTION_CHARS = 80_000
 
+# for 11 main health fields
 RAW_ITEM_SCHEMA = {
     "anyOf": [
         {"type": "null"},
@@ -112,6 +113,7 @@ RAW_ITEM_SCHEMA = {
     ]
 }
 
+#extra health fields
 ADDITIONAL_ITEM_SCHEMA = {
     "type": "object",
     "properties": {
@@ -129,7 +131,7 @@ ADDITIONAL_ITEM_SCHEMA = {
     "additionalProperties": False,
 }
 
-
+#The complete Gemini extraction response
 RAW_EXTRACTION_SCHEMA = {
     "type": "object",
     "properties": {
@@ -165,7 +167,7 @@ def _require_genai_sdk() -> None:
             "Run: pip install google-genai"
         ) from _GENAI_IMPORT_ERROR
 
-
+#Reads GEMINI_API_KEY from the backend environment and creates a Gemini API client.
 def _get_client() -> "genai.Client":
     _require_genai_sdk()
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
@@ -248,13 +250,10 @@ def _retry_generate_content(
     raise HealthOcrApiError(str(last_error or "Unknown Gemini API error"))
 
 
-def _gemini_transcribe_image(
-    image_bytes: bytes,
-    mime_type: str,
-    *,
-    max_retries: int = 3,
-) -> str:
+def _gemini_transcribe_image(image_bytes: bytes, mime_type: str, *, max_retries: int = 3,) -> str:
+
     """Transcribe one image verbatim. Do not normalize names or units here."""
+
     _require_genai_sdk()
     prompt = """
 Transcribe every readable character from this medical or laboratory report.
@@ -285,9 +284,7 @@ Rules:
     return (response.text or "").strip()
 
 
-def _extract_pdf_text_or_images(
-    pdf_bytes: bytes,
-) -> Tuple[str, Tuple[bytes, ...]]:
+def _extract_pdf_text_or_images(pdf_bytes: bytes,) -> Tuple[str, Tuple[bytes, ...]]:
     """
     Return embedded text when the PDF has a usable text layer.
     Otherwise render pages to PNG for image transcription.
@@ -325,13 +322,7 @@ def _extract_pdf_text_or_images(
         document.close()
 
 
-def transcribe_document(
-    file_bytes: bytes,
-    *,
-    filename: str = "upload.jpg",
-    mime_type: Optional[str] = None,
-    max_retries: int = 3,
-) -> str:
+def transcribe_document(file_bytes: bytes, *, filename: str = "upload.jpg", mime_type: Optional[str] = None, max_retries: int = 3,) -> str:
     if not file_bytes:
         return ""
 
@@ -451,7 +442,7 @@ def _validate_raw_extraction(data: Any) -> Dict[str, Dict[str, Any]]:
 
     return normalized
 
-#for additional fields
+######### for additional fields #################
 
 def _normalized_label(value: Any) -> str:
     text = "" if value is None else str(value)
@@ -701,7 +692,7 @@ def _extract_health_values_regex(
     transcription: str,
 ) -> Dict[str, Dict[str, Any]]:
     """
-    Deterministic fallback when Gemini extraction fails.
+    It is a backup extractor. It runs when Gemini cannot extract the information properly.
     It is intentionally conservative and does not guess unrelated tests.
     """
     result = _empty_raw_extraction()
@@ -867,6 +858,7 @@ def _alias_hit(field_name: str, raw_name: Optional[str]) -> Optional[str]:
     return f"{raw_name}→{field_name}"
 
 
+#i/p("weight_kg", 100, "lb") -> o/p(45.36, "lb×0.4536", None)
 def _normalize_numeric_value(
     field_name: str,
     raw_value: Any,
@@ -883,6 +875,7 @@ def _normalize_numeric_value(
         return None, None, "missing_or_non_numeric"
 
     unit = _normalize_unit_text(raw_unit)
+    #Prepare the conversion message: This variable remembers whether a conversion happened.
     factor_description: Optional[str] = None
 
     if field_name in {"systolic_bp", "diastolic_bp"}:
@@ -971,7 +964,7 @@ def _normalize_numeric_value(
 
     return round(float(numeric), 2), factor_description, None
 
-
+#The function first prepares an empty result box for every expected health value.
 def _empty_field_payload(field_name: str) -> Dict[str, Any]:
     return {
         "raw": _empty_raw_item(),
@@ -991,6 +984,7 @@ def _validate_health_values(
     raw_values: Mapping[str, Mapping[str, Any]],
 ) -> Dict[str, Dict[str, Any]]:
     """Normalize units, convert types, and clamp invalid values to null."""
+    #Create empty results for every health field
     fields = {
         field_name: _empty_field_payload(field_name)
         for field_name in FIELD_NAMES
@@ -1168,6 +1162,7 @@ def process_health_report(
         fields[field_name]["processed"]["value"] is not None
         for field_name in FIELD_NAMES
     )
+    #the report is considered successful when it contains either one of 11 fields or 1 of additional fields
     has_any_value = (
         has_canonical_value
         or bool(additional_fields)

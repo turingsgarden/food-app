@@ -5,12 +5,25 @@ import UIKit
 // MARK: - One table row
 
 struct OCRResultRow: Identifiable {
-    var id: String { name }
-
+    let id: String
     let name: String
     let value: String
     let unit: String
     let isMissing: Bool
+
+    init(
+        id: String? = nil,
+        name: String,
+        value: String,
+        unit: String,
+        isMissing: Bool
+    ) {
+        self.id = id ?? name
+        self.name = name
+        self.value = value
+        self.unit = unit
+        self.isMissing = isMissing
+    }
 }
 
 // MARK: - Health OCR screen
@@ -25,6 +38,7 @@ struct HealthOCRTestView: View {
 
     @State private var message = "Select a medical-report image."
     @State private var isScanning = false
+    @State private var isExtendedResultsExpanded = false
 
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -254,10 +268,160 @@ struct HealthOCRTestView: View {
                         lineWidth: 1
                     )
             }
+            // if !additionalResultRows.isEmpty {
+            //     extendedResultsDisclosure
+            // }
+            extendedResultsDisclosure
         }
     }
+    private var extendedResultsDisclosure: some View {
+    VStack(spacing: 10) {
+        Button {
+            withAnimation(
+                .easeInOut(duration: 0.2)
+            ) {
+                isExtendedResultsExpanded.toggle()
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Image(
+                    systemName:
+                        "list.bullet.rectangle"
+                )
+                .foregroundColor(.orange)
 
+                VStack(
+                    alignment: .leading,
+                    spacing: 2
+                ) {
+                    Text("Extended Results")
+                        .font(
+                            .system(
+                                size: 15,
+                                weight: .semibold
+                            )
+                        )
+                        .foregroundColor(.primary)
+
+                    Text(
+                        "\(additionalResultRows.count) other fields found"
+                    )
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                }
+
+                Spacer()
+
+                Image(
+                    systemName:
+                        isExtendedResultsExpanded
+                        ? "chevron.up"
+                        : "chevron.down"
+                )
+                .font(
+                    .system(
+                        size: 13,
+                        weight: .bold
+                    )
+                )
+                .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 16)
+            .frame(height: 60)
+            .background(
+                RoundedRectangle(
+                    cornerRadius: 16
+                )
+                .fill(
+                    Color(
+                        .secondarySystemBackground
+                    )
+                )
+            )
+            .overlay {
+                RoundedRectangle(
+                    cornerRadius: 16
+                )
+                .stroke(
+                    Color.orange.opacity(0.35),
+                    lineWidth: 1
+                )
+            }
+        }
+        .buttonStyle(.plain)
+
+        if isExtendedResultsExpanded {
+            resultTable(
+                rows: additionalResultRows
+            )
+            .transition(
+                .opacity.combined(
+                    with: .move(edge: .top)
+                )
+            )
+        }
+    }
+}
     // MARK: - Table data
+
+    private func resultTable(
+    rows: [OCRResultRow]
+) -> some View {
+    VStack(spacing: 0) {
+        HStack(spacing: 8) {
+            Text("Health field")
+                .frame(
+                    maxWidth: .infinity,
+                    alignment: .leading
+                )
+
+            Text("Result")
+                .frame(
+                    width: 80,
+                    alignment: .trailing
+                )
+
+            Text("Unit")
+                .frame(
+                    width: 70,
+                    alignment: .leading
+                )
+        }
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundColor(.secondary)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(Color(.tertiarySystemBackground))
+
+        Divider()
+
+        ForEach(
+            Array(rows.enumerated()),
+            id: \.element.id
+        ) { index, row in
+            OCRResultTableRow(row: row)
+
+            if index < rows.count - 1 {
+                Divider()
+                    .padding(.leading, 14)
+            }
+        }
+    }
+    .background(
+        RoundedRectangle(cornerRadius: 16)
+            .fill(Color(.secondarySystemBackground))
+    )
+    .clipShape(
+        RoundedRectangle(cornerRadius: 16)
+    )
+    .overlay {
+        RoundedRectangle(cornerRadius: 16)
+            .stroke(
+                Color.gray.opacity(0.18),
+                lineWidth: 1
+            )
+    }
+}
 
     private var resultRows: [OCRResultRow] {
         guard let response = ocrResponse else {
@@ -323,8 +487,40 @@ struct HealthOCRTestView: View {
         ]
     }
 
+    private var additionalResultRows: [OCRResultRow] {
+    guard let response = ocrResponse else {
+        return []
+    }
+
+    return response.additionalFields.enumerated().map {
+        index,
+        field in
+
+        let rawDisplayValue =
+            field.value?.displayText ?? ""
+
+        let displayValue =
+            rawDisplayValue.trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+
+        return OCRResultRow(
+            id: "additional-\(index)-\(field.id)",
+            name: field.name,
+            value: displayValue.isEmpty
+                ? "Not found"
+                : displayValue,
+            unit: field.unit ?? "",
+            isMissing: displayValue.isEmpty
+        )
+    }
+}
+
     private var detectedFieldCount: Int {
         resultRows.filter { !$0.isMissing }.count
+            + additionalResultRows.filter {
+                !$0.isMissing
+            }.count
     }
 
     private func createRow(
@@ -387,6 +583,7 @@ struct HealthOCRTestView: View {
 
                     // Remove previous results when selecting a new image.
                     ocrResponse = nil
+                    isExtendedResultsExpanded = false
 
                     message =
                         "Image selected. Press Run OCR."
@@ -446,6 +643,20 @@ struct HealthOCRTestView: View {
         case .ok:
             ocrResponse = response
             message = "OCR completed successfully."
+
+            print(
+                "✅ Swift additional fields count:",
+                response.additionalFields.count
+            )
+
+            for field in response.additionalFields {
+                print(
+                    "✅ Extra:",
+                    field.name,
+                    field.value?.displayText ?? "nil",
+                    field.unit ?? ""
+                )
+            }
 
             print("OCR status:", response.status.rawValue)
             print("Systolic BP:", response.systolicBP as Any)

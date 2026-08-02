@@ -21,6 +21,7 @@ struct HealthOCRResponse: Codable {
 
     // Full raw + processed + transform structure.
     let fields: HealthOCRFields
+    let additionalFields: [HealthOCRAdditionalField]
 
     // Present only when the backend uses include_raw_text=True.
     let rawText: String?
@@ -43,6 +44,7 @@ struct HealthOCRResponse: Codable {
 
         case fields
         case rawText = "raw_text"
+        case additionalFields = "additional_fields"
     }
 
     init(from decoder: Decoder) throws {
@@ -75,9 +77,52 @@ struct HealthOCRResponse: Codable {
         ) ?? HealthOCRFields.empty
 
         rawText = try container.decodeIfPresent(String.self, forKey: .rawText)
+
+
+        additionalFields = try container.decodeIfPresent([HealthOCRAdditionalField].self, forKey: .additionalFields) ?? []
+
     }
 }
 
+
+// MARK: - Additional OCR measurement
+
+struct HealthOCRAdditionalField: Codable, Identifiable {
+    let name: String
+    let value: HealthOCRRawValue?
+    let unit: String?
+
+    var id: String {
+        "\(name)|\(value?.displayText ?? "")|\(unit ?? "")"
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case value
+        case unit
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(
+            keyedBy: CodingKeys.self
+        )
+
+        name = try container.decodeIfPresent(
+            String.self,
+            forKey: .name
+        ) ?? "Unknown field"
+
+        value = try container.decodeIfPresent(
+            HealthOCRRawValue.self,
+            forKey: .value
+        )
+
+        unit = try container.decodeIfPresent(
+            String.self,
+            forKey: .unit
+        )
+    }
+}
 
 // MARK: - OCR status
 

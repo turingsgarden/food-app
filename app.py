@@ -1691,7 +1691,7 @@ def ocr_health_report():
 
 
 @app.route("/ocr-document", methods=["POST"])
-@token_required
+#@token_required
 def ocr_document():
     """OCR for PDF/Word: extract text with PyMuPDF or python-docx, then Gemini extraction."""
     try:

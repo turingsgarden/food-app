@@ -565,10 +565,8 @@ class NetworkManager {
             }
         }.resume()
     }
-    // MARK: - Health Report OCR
 
     // MARK: - Health Report OCR
-
 func scanHealthReport(
     imageData: Data,
     filename: String = "health-report.jpg",
@@ -578,7 +576,8 @@ func scanHealthReport(
     ) -> Void
 ) {
     guard let url = URL(
-        string: "\(baseURL)/ocr-health-report"
+        string: "http://127.0.0.1:5001/ocr-health-report"
+        // string: "\(baseURL)/ocr-health-report"
     ) else {
         completion(
             .failure(
@@ -590,6 +589,7 @@ func scanHealthReport(
         )
         return
     }
+    print("✅ ACTUAL OCR URL:", url.absoluteString)
 
     var request = createAuthenticatedRequest(url: url)
     request.httpMethod = "POST"
@@ -711,6 +711,14 @@ func scanHealthReport(
             }
             return
         }
+
+        if let rawJSON = String(
+                data: data,
+                encoding: .utf8
+            ) {
+                print("✅ RAW OCR RESPONSE:")
+                print(rawJSON)
+            }
 
         do {
             let result = try JSONDecoder().decode(
