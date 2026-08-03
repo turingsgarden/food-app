@@ -68,6 +68,8 @@ struct HealthProfileView: View {
     // OCR confirmation (raw → processed review)
     @State private var showOCRConfirm = false
     @State private var pendingFields: [OCRField] = []
+    @State private var pendingAdditionalFields:
+    [HealthOCRAdditionalField] = []
     @State private var ocrStatus = ""
     @State private var ocrMessage: String? = nil
 
@@ -164,11 +166,16 @@ struct HealthProfileView: View {
 
             // OCR raw → processed confirmation
             .sheet(isPresented: $showOCRConfirm) {
-                OCRConfirmView(fields: pendingFields, status: ocrStatus, message: ocrMessage) { confirmed in
-                    applyConfirmedFields(confirmed)
-                }
-                .environmentObject(themeManager)
-            }
+    OCRConfirmView(
+        fields: pendingFields,
+        additionalFields: pendingAdditionalFields,
+        status: ocrStatus,
+        message: ocrMessage
+    ) { confirmed in
+        applyConfirmedFields(confirmed)
+    }
+    .environmentObject(themeManager)
+}
         }
     }
 
@@ -456,23 +463,79 @@ struct HealthProfileView: View {
 
     /// Open the raw → processed confirmation sheet. Falls back to the legacy
     /// direct-apply path if the response has no `fields` double-layer (older backend).
-    func presentOCRConfirmation(json: [String: Any]) {
-        let fields = parseOCRFields(json: json)
-        if fields.isEmpty {
-            let legacy = parseOCRResult(json: json)
-            if legacy.hasAnyResult {
-                applyOCRResult(legacy)
-                scanResult = legacy
-                showScanBanner = true
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { currentStep = 1 }
-                return
-            }
-        }
-        pendingFields = fields
-        ocrStatus = (json["status"] as? String) ?? (fields.isEmpty ? "no_fields" : "ok")
-        ocrMessage = json["message"] as? String
-        showOCRConfirm = true
+    func presentOCRConfirmation(
+    json: [String: Any]
+) {
+    let fields = parseOCRFields(json: json)
+
+    // Decode additional_fields from the backend response.
+    if let rawAdditionalFields =
+            json["additional_fields"]
+                as? [[String: Any]],
+       let additionalData =
+            try? JSONSerialization.data(
+                withJSONObject: rawAdditionalFields
+            ),
+       let decodedAdditionalFields =
+            try? JSONDecoder().decode(
+                [HealthOCRAdditionalField].self,
+                from: additionalData
+            ) {
+
+        pendingAdditionalFields =
+            decodedAdditionalFields
+
+    } else {
+        pendingAdditionalFields = []
     }
+
+    /*
+     Use the old direct-apply fallback only when both
+     canonical fields and additional fields are absent.
+     */
+    if fields.isEmpty &&
+        pendingAdditionalFields.isEmpty {
+
+        let legacy =
+            parseOCRResult(json: json)
+
+        if legacy.hasAnyResult {
+            applyOCRResult(legacy)
+            scanResult = legacy
+            showScanBanner = true
+
+            withAnimation(
+                .spring(
+                    response: 0.35,
+                    dampingFraction: 0.8
+                )
+            ) {
+                currentStep = 1
+            }
+
+            return
+        }
+    }
+
+    pendingFields = fields
+
+    let hasAnyDetectedField =
+        !fields.isEmpty ||
+        !pendingAdditionalFields.isEmpty
+
+    ocrStatus =
+        (json["status"] as? String)
+        ?? (
+            hasAnyDetectedField
+                ? "ok"
+                : "no_fields"
+        )
+
+    ocrMessage =
+        json["message"] as? String
+
+    showOCRConfirm = true
+}
 
     func parseOCRResult(json: [String: Any]) -> OCRHealthResult {
         var r = OCRHealthResult()

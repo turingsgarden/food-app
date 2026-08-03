@@ -565,8 +565,10 @@ class NetworkManager {
             }
         }.resume()
     }
+    // MARK: - Health Report OCR
 
     // MARK: - Health Report OCR
+// private let baseURL = "http://127.0.0.1:5001"
 func scanHealthReport(
     imageData: Data,
     filename: String = "health-report.jpg",

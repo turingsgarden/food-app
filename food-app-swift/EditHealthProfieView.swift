@@ -74,22 +74,69 @@ struct OCRField: Identifiable {
 
 /// Parse the backend `fields` double-layer into ordered, editable rows.
 func parseOCRFields(json: [String: Any]) -> [OCRField] {
-    guard let fields = json["fields"] as? [String: Any] else { return [] }
+    guard let fields = json["fields"] as? [String: Any] else {
+        return []
+    }
+
+    // JSONSerialization commonly represents JSON numbers as NSNumber.
+    func readNumber(_ value: Any?) -> Double? {
+        if let number = value as? NSNumber {
+            return number.doubleValue
+        }
+
+        if let text = value as? String {
+            let normalized = text.replacingOccurrences(of: ",", with: ".")
+            return Double(normalized)
+        }
+
+        return nil
+    }
+
+    // Raw OCR values may be strings, numbers, or null.
+    func readText(_ value: Any?) -> String? {
+        guard let value, !(value is NSNull) else {
+            return nil
+        }
+
+        if let text = value as? String {
+            return text
+        }
+
+        if let number = value as? NSNumber {
+            return number.stringValue
+        }
+
+        return String(describing: value)
+    }
+
     return OCRField.order.compactMap { entry in
-        guard let f = fields[entry.key] as? [String: Any],
-              let proc = f["processed"] as? [String: Any] else { return nil }
-        let pv = (proc["value"] as? Double) ?? (proc["value"] as? Int).map(Double.init)
-        guard let value = pv else { return nil }
-        let raw = f["raw"] as? [String: Any]
-        let display = (value == value.rounded()) ? String(Int(value)) : String(format: "%.2f", value)
+        guard
+            let field = fields[entry.key] as? [String: Any],
+            let processed = field["processed"] as? [String: Any],
+            let processedValue = readNumber(processed["value"])
+        else {
+            // Missing or invalid fields do not need a confirmation row.
+            return nil
+        }
+
+        let raw = field["raw"] as? [String: Any]
+
+        let editedValue: String
+
+        if processedValue.rounded() == processedValue {
+            editedValue = String(Int(processedValue))
+        } else {
+            editedValue = String(format: "%.2f", processedValue)
+        }
+
         return OCRField(
             id: entry.key,
             label: entry.label,
-            rawName: raw?["name"] as? String,
-            rawValue: raw?["value"] as? String,
-            rawUnit: raw?["unit"] as? String,
-            processedUnit: proc["unit"] as? String ?? "",
-            editedValue: display,
+            rawName: readText(raw?["name"]),
+            rawValue: readText(raw?["value"]),
+            rawUnit: readText(raw?["unit"]),
+            processedUnit: readText(processed["unit"]) ?? "",
+            editedValue: editedValue,
             accepted: true
         )
     }
@@ -144,6 +191,7 @@ struct EditHealthProfileView: View {
     // ── OCR confirmation (raw → processed review) ───────────────────────────────
     @State private var showOCRConfirm = false
     @State private var pendingFields: [OCRField] = []
+    @State private var pendingAdditionalFields:[HealthOCRAdditionalField] = []
     @State private var ocrStatus = ""
     @State private var ocrMessage: String? = nil
     @State private var scanErrorMsg = ""
@@ -339,11 +387,16 @@ struct EditHealthProfileView: View {
 
             // ── OCR raw → processed confirmation ─────────────────────────────
             .sheet(isPresented: $showOCRConfirm) {
-                OCRConfirmView(fields: pendingFields, status: ocrStatus, message: ocrMessage) { confirmed in
-                    applyConfirmedFields(confirmed)
-                }
-                .environmentObject(themeManager)
-            }
+    OCRConfirmView(
+        fields: pendingFields,
+        additionalFields:
+            pendingAdditionalFields,
+        status: ocrStatus,
+        message: ocrMessage
+    ) { confirmed in
+        applyConfirmedFields(confirmed)
+    }
+}
         }
     }
 
@@ -471,71 +524,185 @@ struct EditHealthProfileView: View {
 
     // MARK: - Existing OCR (image) — unchanged
 
-    func loadAndScanPhoto(item: PhotosPickerItem?) async {
-        guard let item = item else { return }
-        do {
-            guard let data = try await item.loadTransferable(type: Data.self),
-                  let image = UIImage(data: data) else { return }
-            await MainActor.run { runOCR(on: image) }
-        } catch {
-            await MainActor.run {
-                errorMsg = "Failed to load image: \(error.localizedDescription)"
-                showError = true
-            }
-        }
+func loadAndScanPhoto(item: PhotosPickerItem?) async {
+    guard
+        let item,
+        let data = try? await item.loadTransferable(type: Data.self),
+        let image = UIImage(data: data)
+    else {
+        return
     }
+
+    await MainActor.run {
+        runOCR(on: image)
+    }
+}
 
     func runOCR(on image: UIImage) {
-        guard let imageData = image.jpegData(compressionQuality: 0.8) else { return }
-        isScanning = true
-        showScanResult = false
-        callGeminiOCR(base64: imageData.base64EncodedString(), prompt: "")
+    guard let imageData = image.jpegData(compressionQuality: 0.9) else {
+        errorMsg = "Could not prepare the selected image."
+        showError = true
+        return
     }
+    pendingFields = []
+    pendingAdditionalFields = []
 
-    func callGeminiOCR(base64: String, prompt: String) {
-        guard let token = session.getAuthToken(),
-              let url = AppConfig.url(path: "/ocr-health-report") else {
-            DispatchQueue.main.async { self.isScanning = false; self.errorMsg = "Unable to connect."; self.showError = true }
-            return
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.timeoutInterval = 120
-        request.httpBody = try? JSONSerialization.data(withJSONObject: ["image_base64": base64])
+    submitHealthReport(
+        data: imageData,
+        filename: "health-report.jpg",
+        mimeType: "image/jpeg"
+    )
+}
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
-            DispatchQueue.main.async {
-                self.isScanning = false
-                if let error = error { self.errorMsg = "Scan failed: \(error.localizedDescription)"; self.showError = true; return }
-                guard let data = data,
-                      let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                    self.errorMsg = "Could not read scan results. Please enter values manually."; self.showError = true; return
-                }
-                self.presentOCRConfirmation(json: json)
+private func submitHealthReport(
+    data: Data,
+    filename: String,
+    mimeType: String
+) {
+    isScanning = true
+    showScanResult = false
+
+    NetworkManager.shared.scanHealthReport(
+        imageData: data,
+        filename: filename,
+        mimeType: mimeType
+    ) { result in
+        DispatchQueue.main.async {
+            self.isScanning = false
+
+            switch result {
+            case .success(let response):
+                self.handleOCRResponse(response)
+
+            case .failure(let error):
+                self.errorMsg =
+                    "Scan failed: \(error.localizedDescription)"
+                self.showError = true
             }
-        }.resume()
+        }
     }
+}
+
+private func handleOCRResponse(
+    _ response: HealthOCRResponse
+) {
+    switch response.status {
+
+    case .ok:
+        do {
+            // Store the extended fields for Confirm Scan.
+            pendingAdditionalFields =
+                response.additionalFields
+
+            print(
+                "✅ Extended OCR fields:",
+                response.additionalFields.count
+            )
+
+            for field in response.additionalFields {
+                print(
+                    "✅ Extended:",
+                    field.name,
+                    field.value?.displayText ?? "nil",
+                    field.unit ?? ""
+                )
+            }
+
+            let encodedData =
+                try JSONEncoder().encode(response)
+
+            guard let json =
+                    try JSONSerialization.jsonObject(
+                        with: encodedData
+                    ) as? [String: Any]
+            else {
+                throw NSError(
+                    domain: "HealthOCR",
+                    code: -1,
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            "The OCR response had an invalid format."
+                    ]
+                )
+            }
+
+            presentOCRConfirmation(json: json)
+
+        } catch {
+            pendingFields = []
+            pendingAdditionalFields = []
+
+            errorMsg =
+                "Could not read the scan result: " +
+                error.localizedDescription
+
+            showError = true
+        }
+
+    case .noFields:
+        pendingFields = []
+        pendingAdditionalFields = []
+
+        errorMsg =
+            response.message ??
+            "No supported health values were found in this report."
+
+        showError = true
+
+    case .noText:
+        pendingFields = []
+        pendingAdditionalFields = []
+
+        errorMsg =
+            response.message ??
+            "No readable text was found. Try a clearer image."
+
+        showError = true
+    }
+} 
 
     // MARK: - Parse / Apply / Prefill / Save
 
     /// Open the raw → processed confirmation sheet. Falls back to the legacy
     /// direct-apply path if the response has no `fields` double-layer (older backend).
-    func presentOCRConfirmation(json: [String: Any]) {
-        let fields = parseOCRFields(json: json)
-        if fields.isEmpty {
-            let legacy = parseOCRResult(json: json)
-            if legacy.hasAnyResult {
-                applyOCRResult(legacy); scanResult = legacy; showScanResult = true
-                return
-            }
-        }
-        pendingFields = fields
-        ocrStatus = (json["status"] as? String) ?? (fields.isEmpty ? "no_fields" : "ok")
-        ocrMessage = json["message"] as? String
-        showOCRConfirm = true
+    // func presentOCRConfirmation(json: [String: Any]) {
+    //     let fields = parseOCRFields(json: json)
+    //     if fields.isEmpty {
+    //         let legacy = parseOCRResult(json: json)
+    //         if legacy.hasAnyResult {
+    //             applyOCRResult(legacy); scanResult = legacy; showScanResult = true
+    //             return
+    //         }
+    //     }
+    //     pendingFields = fields
+    //     ocrStatus = (json["status"] as? String) ?? (fields.isEmpty ? "no_fields" : "ok")
+    //     ocrMessage = json["message"] as? String
+    //     showOCRConfirm = true
+    // }
+
+    func presentOCRConfirmation(
+    json: [String: Any]
+) {
+    let canonicalFields =
+        parseOCRFields(json: json)
+
+    guard
+        !canonicalFields.isEmpty
+        || !pendingAdditionalFields.isEmpty
+    else {
+        errorMsg =
+            "No supported health values were found."
+
+        showError = true
+        return
     }
+
+    pendingFields = canonicalFields
+    // ocrStatus = json["status"] as? String
+    ocrStatus = (json["status"] as? String) ?? "ok"
+    ocrMessage = json["message"] as? String
+    showOCRConfirm = true
+}
 
     func parseOCRResult(json: [String: Any]) -> OCRHealthResult {
         var result = OCRHealthResult()
@@ -1395,11 +1562,18 @@ struct OCRConfirmView: View {
     @Environment(\.dismiss) var dismiss
 
     @State var fields: [OCRField]
+    let additionalFields:
+        [HealthOCRAdditionalField]
     let status: String          // "ok" / "no_fields" / "no_text"
     let message: String?
     let onConfirm: ([OCRField]) -> Void
+    @State private var
+        isExtendedResultsExpanded = false
 
-    private var hasFields: Bool { status == "ok" && !fields.isEmpty }
+    private var hasFields: Bool {
+    status == "ok" &&
+    (!fields.isEmpty || !additionalFields.isEmpty)
+}
 
     var body: some View {
         NavigationStack {
@@ -1444,6 +1618,9 @@ struct OCRConfirmView: View {
 
                 ForEach(fields.indices, id: \.self) { index in
                     fieldRow($fields[index])
+                }
+                if !additionalFields.isEmpty { 
+                    extendedResultsSection 
                 }
             }
             .padding(20)
@@ -1522,4 +1699,212 @@ struct OCRConfirmView: View {
         }
         .padding(32)
     }
+
+
+
+    private var extendedResultsSection:
+    some View {
+
+    VStack(spacing: 10) {
+        Button {
+            withAnimation(
+                .easeInOut(duration: 0.2)
+            ) {
+                isExtendedResultsExpanded
+                    .toggle()
+            }
+        } label: {
+            HStack(spacing: 12) {
+                Image(
+                    systemName:
+                        "list.bullet.rectangle"
+                )
+                .font(.system(size: 18))
+                .foregroundStyle(.blue)
+
+                VStack(
+                    alignment: .leading,
+                    spacing: 3
+                ) {
+                    Text("Extended Results")
+                        .font(
+                            .system(
+                                size: 17,
+                                weight: .semibold
+                            )
+                        )
+                        .foregroundStyle(.primary)
+
+                    Text(
+                        "\(additionalFields.count) other fields found"
+                    )
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                }
+
+                Spacer()
+
+                Image(
+                    systemName:
+                        isExtendedResultsExpanded
+                        ? "chevron.up"
+                        : "chevron.down"
+                )
+                .font(
+                    .system(
+                        size: 14,
+                        weight: .semibold
+                    )
+                )
+                .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 18)
+            .frame(minHeight: 70)
+            .background(
+                RoundedRectangle(
+                    cornerRadius: 18
+                )
+                .fill(
+                    Color(
+                        .secondarySystemBackground
+                    )
+                )
+            )
+            .overlay {
+                RoundedRectangle(
+                    cornerRadius: 18
+                )
+                .stroke(
+                    Color.blue.opacity(0.25),
+                    lineWidth: 1
+                )
+            }
+        }
+        .buttonStyle(.plain)
+
+        if isExtendedResultsExpanded {
+            VStack(spacing: 0) {
+                ForEach(
+                    Array(
+                        additionalFields
+                            .enumerated()
+                    ),
+                    id: \.element.id
+                ) { index, field in
+                    extendedResultRow(field)
+
+                    if index <
+                        additionalFields.count - 1 {
+                        Divider()
+                            .padding(
+                                .leading,
+                                18
+                            )
+                    }
+                }
+            }
+            .background(
+                RoundedRectangle(
+                    cornerRadius: 18
+                )
+                .fill(
+                    Color(
+                        .secondarySystemBackground
+                    )
+                )
+            )
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: 18
+                )
+            )
+            .overlay {
+                RoundedRectangle(
+                    cornerRadius: 18
+                )
+                .stroke(
+                    Color.gray.opacity(0.18),
+                    lineWidth: 1
+                )
+            }
+            .transition(
+                .opacity.combined(
+                    with:
+                        .move(edge: .top)
+                )
+            )
+        }
+    }
+}
+
+private func extendedResultRow(
+    _ field: HealthOCRAdditionalField
+) -> some View {
+
+    let value =
+        field.value?
+            .displayText
+            .trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+        ?? ""
+
+    let unit =
+        field.unit?
+            .trimmingCharacters(
+                in: .whitespacesAndNewlines
+            )
+        ?? ""
+
+    return HStack(
+        alignment: .center,
+        spacing: 12
+    ) {
+        VStack(
+            alignment: .leading,
+            spacing: 5
+        ) {
+            Text(field.name)
+                .font(
+                    .system(
+                        size: 16,
+                        weight: .semibold
+                    )
+                )
+                .foregroundStyle(.primary)
+
+            Text("Additional report field")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+        }
+
+        Spacer()
+
+        Text(
+            value.isEmpty
+                ? "Not found"
+                : value
+        )
+        .font(
+            .system(
+                size: 16,
+                weight: .semibold
+            )
+        )
+        .multilineTextAlignment(.trailing)
+        .foregroundStyle(
+            value.isEmpty
+                ? .secondary
+                : .primary
+        )
+
+        if !unit.isEmpty {
+            Text(unit)
+                .font(.system(size: 14))
+                .foregroundStyle(.secondary)
+        }
+    }
+    .padding(.horizontal, 18)
+    .padding(.vertical, 16)
+}
 }
