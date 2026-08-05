@@ -363,6 +363,8 @@ def main():
     with col_right:
         display_summary_panel(summary_dict)
 
+def run_version5():
+    main()
 
 if __name__ == "__main__":
-    main()
+    run_version5()      
