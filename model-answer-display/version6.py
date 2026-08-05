@@ -8,7 +8,7 @@ def load_model_data():
     """Load new prediction data from new JSON file and ground truth from metadata"""
     # Use the new prediction file
     model_files = {
-        "gemini-2.5-pro": "output/Nutrition5k_Gemini-2_5-pro_pydantic_food_dataset_analysis_1.json"
+        "gemini-2.5-pro": "output/Nutrition5k_Gemini-2.5-pro_pydantic_food_dataset_analysis_1.json"
     }
     ground_truth_path = "Nutrition5k/metadata/dish_metadata_cafe1.json"
 
