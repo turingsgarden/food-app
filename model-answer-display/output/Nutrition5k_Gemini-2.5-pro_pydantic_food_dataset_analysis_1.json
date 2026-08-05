@@ -1,0 +1,2917 @@
+[
+  {
+    "image_filename": "dish_1561662216.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "brown rice",
+        "quantity": 45.5
+      },
+      {
+        "name": "mixed salad greens",
+        "quantity": 35.2
+      },
+      {
+        "name": "grilled chicken breast pieces",
+        "quantity": 65.8
+      },
+      {
+        "name": "red chili pepper slices",
+        "quantity": 2.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "balsamic vinaigrette",
+        "quantity": 8.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562688426.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "sausage pieces",
+        "quantity": 120.0
+      },
+      {
+        "name": "roasted potato",
+        "quantity": 25.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1561662054.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "spinach leaves",
+        "quantity": 45.5
+      },
+      {
+        "name": "shredded carrots",
+        "quantity": 12.2
+      },
+      {
+        "name": "grilled pork slices",
+        "quantity": 85.0
+      },
+      {
+        "name": "white rice",
+        "quantity": 35.8
+      },
+      {
+        "name": "green beans",
+        "quantity": 40.5
+      },
+      {
+        "name": "cherry tomato",
+        "quantity": 15.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 8.5
+      },
+      {
+        "name": "soy sauce",
+        "quantity": 5.2
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "garlic",
+        "quantity": 2.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562008979.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "grilled chicken breast",
+        "quantity": 85.5
+      },
+      {
+        "name": "coleslaw mix",
+        "quantity": 45.2
+      },
+      {
+        "name": "romaine lettuce",
+        "quantity": 60.8
+      },
+      {
+        "name": "croutons",
+        "quantity": 12.4
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "caesar dressing",
+        "quantity": 35.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "olive oil",
+        "quantity": 5.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1560455030.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "shredded carrots",
+        "quantity": 25.0
+      },
+      {
+        "name": "cucumber slices",
+        "quantity": 45.0
+      },
+      {
+        "name": "cherry tomatoes",
+        "quantity": 60.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558372433.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "apple",
+        "quantity": 182.5
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1563379132.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 120.0
+      },
+      {
+        "name": "tomato sauce",
+        "quantity": 45.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 10.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1565640549.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "asparagus spears",
+        "quantity": 45.0
+      },
+      {
+        "name": "lettuce leaves",
+        "quantity": 65.0
+      },
+      {
+        "name": "cherry tomato",
+        "quantity": 15.0
+      },
+      {
+        "name": "mango cubes",
+        "quantity": 12.0
+      },
+      {
+        "name": "pomegranate seeds",
+        "quantity": 2.0
+      },
+      {
+        "name": "pine nuts",
+        "quantity": 1.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563207364.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "red grapes",
+        "quantity": 45.0
+      },
+      {
+        "name": "roasted sweet potato cubes",
+        "quantity": 85.0
+      },
+      {
+        "name": "scrambled eggs",
+        "quantity": 60.0
+      },
+      {
+        "name": "egg whites",
+        "quantity": 40.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1561575474.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "cauliflower florets",
+        "quantity": 45.5
+      },
+      {
+        "name": "roasted eggplant cubes",
+        "quantity": 38.2
+      },
+      {
+        "name": "roasted potato chunks",
+        "quantity": 52.4
+      },
+      {
+        "name": "shredded carrot",
+        "quantity": 1.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "dried herbs",
+        "quantity": 0.2
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1550795690.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "red apple",
+        "quantity": 115.5
+      },
+      {
+        "name": "green apple",
+        "quantity": 75.2
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1563216717.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "broccoli florets",
+        "quantity": 85.5
+      },
+      {
+        "name": "breaded chicken breast pieces",
+        "quantity": 92.0
+      },
+      {
+        "name": "diced apple",
+        "quantity": 45.2
+      },
+      {
+        "name": "roasted squash",
+        "quantity": 65.8
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 10.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "balsamic glaze",
+        "quantity": 5.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1565972591.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "sliced pork sausage",
+        "quantity": 85.0
+      },
+      {
+        "name": "scrambled egg bits",
+        "quantity": 1.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 3.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1568649312.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "raspberries",
+        "quantity": 25.0
+      },
+      {
+        "name": "blackberries",
+        "quantity": 30.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1550876012.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "chicken drumsticks",
+        "quantity": 160.0
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 85.0
+      },
+      {
+        "name": "honeydew melon chunks",
+        "quantity": 70.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 10.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551565034.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "shredded carrots",
+        "quantity": 45.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1550860747.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "pineapple chunks",
+        "quantity": 125.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1566245398.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "grilled chicken pieces",
+        "quantity": 185.5
+      },
+      {
+        "name": "spinach leaves",
+        "quantity": 8.2
+      },
+      {
+        "name": "cooked rice",
+        "quantity": 25.4
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 12.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.9
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "paprika seasoning",
+        "quantity": 0.6
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563381680.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "cooked bacon",
+        "quantity": 25.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "rendered bacon fat",
+        "quantity": 1.2
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562183096.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "whole button mushrooms",
+        "quantity": 75.0
+      },
+      {
+        "name": "arugula",
+        "quantity": 25.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "balsamic vinegar",
+        "quantity": 3.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563476551.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "penne pasta",
+        "quantity": 45.5
+      },
+      {
+        "name": "pizza slice",
+        "quantity": 60.2
+      },
+      {
+        "name": "beef steak",
+        "quantity": 55.8
+      },
+      {
+        "name": "salmon fillet",
+        "quantity": 85.4
+      },
+      {
+        "name": "cauliflower florets",
+        "quantity": 40.3
+      },
+      {
+        "name": "yellow squash",
+        "quantity": 35.7
+      },
+      {
+        "name": "cooked carrots",
+        "quantity": 25.6
+      },
+      {
+        "name": "spinach",
+        "quantity": 15.2
+      },
+      {
+        "name": "brussels sprouts",
+        "quantity": 20.1
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 12.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.9
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "garlic herb seasoning",
+        "quantity": 1.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1559844951.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "almonds",
+        "quantity": 28.5
+      },
+      {
+        "name": "roasted potato chunks",
+        "quantity": 85.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1550778583.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "roasted potato wedges",
+        "quantity": 145.0
+      },
+      {
+        "name": "dried herbs",
+        "quantity": 0.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 8.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562963704.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "spaghetti pasta",
+        "quantity": 85.0
+      },
+      {
+        "name": "roasted baby potatoes",
+        "quantity": 110.0
+      },
+      {
+        "name": "grilled chicken pieces",
+        "quantity": 120.0
+      },
+      {
+        "name": "pizza slice",
+        "quantity": 65.0
+      },
+      {
+        "name": "caesar salad",
+        "quantity": 95.0
+      },
+      {
+        "name": "green onions",
+        "quantity": 5.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 12.0
+      },
+      {
+        "name": "salt",
+        "quantity": 1.2
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.6
+      },
+      {
+        "name": "caesar dressing",
+        "quantity": 20.0
+      },
+      {
+        "name": "garlic powder",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1566417398.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "mixed salad greens",
+        "quantity": 35.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "balsamic vinegar",
+        "quantity": 2.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1561739238.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "fresh mozzarella cheese",
+        "quantity": 65.5
+      },
+      {
+        "name": "shredded hash browns",
+        "quantity": 45.2
+      },
+      {
+        "name": "blackberries",
+        "quantity": 22.8
+      },
+      {
+        "name": "raspberries",
+        "quantity": 28.4
+      },
+      {
+        "name": "roasted sweet potato cubes",
+        "quantity": 72.6
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562611680.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "romaine lettuce",
+        "quantity": 45.5
+      },
+      {
+        "name": "croutons",
+        "quantity": 12.2
+      },
+      {
+        "name": "parmesan cheese shavings",
+        "quantity": 5.8
+      },
+      {
+        "name": "pizza slice",
+        "quantity": 65.0
+      },
+      {
+        "name": "pepperoni slice",
+        "quantity": 8.5
+      },
+      {
+        "name": "grilled chicken breast",
+        "quantity": 35.0
+      },
+      {
+        "name": "arugula",
+        "quantity": 20.0
+      },
+      {
+        "name": "cherry tomatoes",
+        "quantity": 15.5
+      },
+      {
+        "name": "cooked white rice",
+        "quantity": 40.0
+      },
+      {
+        "name": "sliced beef steak",
+        "quantity": 55.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "caesar dressing",
+        "quantity": 15.0
+      },
+      {
+        "name": "olive oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "pizza sauce",
+        "quantity": 10.0
+      },
+      {
+        "name": "mozzarella cheese",
+        "quantity": 8.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1568144828.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "grape tomatoes",
+        "quantity": 85.0
+      },
+      {
+        "name": "sliced carrots",
+        "quantity": 95.0
+      },
+      {
+        "name": "kalamata olives",
+        "quantity": 45.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1550708440.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "pineapple chunks",
+        "quantity": 115.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1551307090.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "nacho cheese tortilla chips",
+        "quantity": 28.5
+      },
+      {
+        "name": "cooked bacon strips",
+        "quantity": 22.0
+      },
+      {
+        "name": "wood ear mushrooms",
+        "quantity": 18.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 2.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1564432238.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "mixed green salad",
+        "quantity": 45.5
+      },
+      {
+        "name": "pepperoni pizza slice",
+        "quantity": 65.0
+      },
+      {
+        "name": "pineapple chunks",
+        "quantity": 55.2
+      },
+      {
+        "name": "cauliflower florets",
+        "quantity": 60.8
+      },
+      {
+        "name": "beef stir-fry with cabbage",
+        "quantity": 85.4
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil dressing",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "soy sauce",
+        "quantity": 4.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563468327.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "raspberries",
+        "quantity": 25.0
+      },
+      {
+        "name": "blackberries",
+        "quantity": 35.0
+      },
+      {
+        "name": "watermelon cubes",
+        "quantity": 110.0
+      },
+      {
+        "name": "roasted sweet potato cubes",
+        "quantity": 85.0
+      },
+      {
+        "name": "pineapple chunks",
+        "quantity": 75.0
+      },
+      {
+        "name": "cottage cheese",
+        "quantity": 90.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562862493.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 120.0
+      },
+      {
+        "name": "diced tomatoes",
+        "quantity": 35.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "butter",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558549008.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "grape tomatoes",
+        "quantity": 170.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1560453174.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "green beans",
+        "quantity": 85.0
+      },
+      {
+        "name": "mixed salad greens",
+        "quantity": 60.0
+      },
+      {
+        "name": "chicken drumstick",
+        "quantity": 75.0
+      },
+      {
+        "name": "blueberries",
+        "quantity": 15.0
+      },
+      {
+        "name": "shredded carrots",
+        "quantity": 10.0
+      },
+      {
+        "name": "pumpkin seeds",
+        "quantity": 5.0
+      },
+      {
+        "name": "roasted garlic clove",
+        "quantity": 8.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 7.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "balsamic vinaigrette",
+        "quantity": 10.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551226363.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "broccoli florets",
+        "quantity": 65.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562691032.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "scrambled eggs",
+        "quantity": 120.0
+      },
+      {
+        "name": "roasted red potatoes",
+        "quantity": 85.0
+      },
+      {
+        "name": "roasted broccoli",
+        "quantity": 70.0
+      },
+      {
+        "name": "sliced strawberries",
+        "quantity": 65.0
+      },
+      {
+        "name": "pineapple chunks",
+        "quantity": 80.0
+      },
+      {
+        "name": "blueberries",
+        "quantity": 25.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 10.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551374440.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "peeled banana",
+        "quantity": 85.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1563824250.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "red onion slices",
+        "quantity": 25.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1560543755.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "shredded cabbage",
+        "quantity": 45.5
+      },
+      {
+        "name": "shredded carrots",
+        "quantity": 8.2
+      },
+      {
+        "name": "romanesco broccoli",
+        "quantity": 35.0
+      },
+      {
+        "name": "roasted potato wedges",
+        "quantity": 65.4
+      },
+      {
+        "name": "glazed chicken piece",
+        "quantity": 55.0
+      },
+      {
+        "name": "leafy greens",
+        "quantity": 12.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 7.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "glaze sauce",
+        "quantity": 10.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558549773.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "fresh spinach leaves",
+        "quantity": 12.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 2.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563822597.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "romaine lettuce",
+        "quantity": 45.0
+      },
+      {
+        "name": "croutons",
+        "quantity": 12.5
+      },
+      {
+        "name": "parmesan cheese shavings",
+        "quantity": 8.0
+      },
+      {
+        "name": "yellow squash slices",
+        "quantity": 25.0
+      },
+      {
+        "name": "zucchini slices",
+        "quantity": 25.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "caesar dressing",
+        "quantity": 15.0
+      },
+      {
+        "name": "olive oil",
+        "quantity": 3.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551492561.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "sliced chicken sausage",
+        "quantity": 85.0
+      },
+      {
+        "name": "kalamata olives",
+        "quantity": 65.0
+      },
+      {
+        "name": "wood ear mushrooms",
+        "quantity": 45.0
+      },
+      {
+        "name": "marinated mushrooms",
+        "quantity": 25.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1566920365.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "fresh cheese curds",
+        "quantity": 215.5
+      },
+      {
+        "name": "roasted sweet potato chunks",
+        "quantity": 110.2
+      },
+      {
+        "name": "salsa verde",
+        "quantity": 85.4
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "vegetable oil",
+        "quantity": 5.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563984242.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "fresh mozzarella cheese",
+        "quantity": 225.5
+      },
+      {
+        "name": "cantaloupe melon",
+        "quantity": 110.2
+      },
+      {
+        "name": "pineapple",
+        "quantity": 65.8
+      },
+      {
+        "name": "roasted eggplant",
+        "quantity": 85.4
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551237016.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "roasted beef slices",
+        "quantity": 115.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "cooking oil",
+        "quantity": 2.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551489812.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "Kalamata olives",
+        "quantity": 140.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "Brine",
+        "quantity": 5.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558459276.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "white rice",
+        "quantity": 145.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "vegetable oil",
+        "quantity": 2.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1560974707.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "spinach leaves",
+        "quantity": 35.0
+      },
+      {
+        "name": "cherry tomato",
+        "quantity": 12.5
+      },
+      {
+        "name": "chopped onion",
+        "quantity": 5.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1564686855.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "flatbread pizza",
+        "quantity": 115.5
+      },
+      {
+        "name": "mixed salad greens",
+        "quantity": 45.2
+      },
+      {
+        "name": "diced grilled chicken breast",
+        "quantity": 85.6
+      },
+      {
+        "name": "kalamata olives",
+        "quantity": 22.4
+      },
+      {
+        "name": "brownie pieces",
+        "quantity": 48.9
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil dressing",
+        "quantity": 10.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "balsamic vinegar",
+        "quantity": 5.2
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1565119669.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "kale",
+        "quantity": 45.5
+      },
+      {
+        "name": "yellow squash",
+        "quantity": 85.2
+      },
+      {
+        "name": "red chard",
+        "quantity": 12.4
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1566417516.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "roasted eggplant",
+        "quantity": 115.5
+      },
+      {
+        "name": "mixed salad greens",
+        "quantity": 45.2
+      },
+      {
+        "name": "breaded fish fillet",
+        "quantity": 95.8
+      },
+      {
+        "name": "roasted potato",
+        "quantity": 35.6
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 12.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.9
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "balsamic vinaigrette",
+        "quantity": 8.4
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558724031.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "cherry tomatoes",
+        "quantity": 85.0
+      },
+      {
+        "name": "cauliflower florets",
+        "quantity": 45.0
+      },
+      {
+        "name": "almonds",
+        "quantity": 35.0
+      },
+      {
+        "name": "cantaloupe melon pieces",
+        "quantity": 70.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551494178.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "Kalamata olives",
+        "quantity": 140.0
+      },
+      {
+        "name": "Grilled chicken breast chunks",
+        "quantity": 115.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "Olive oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "Salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "Black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551233434.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "broccoli florets",
+        "quantity": 85.5
+      },
+      {
+        "name": "sliced cucumber",
+        "quantity": 42.2
+      },
+      {
+        "name": "cooked chicken pieces",
+        "quantity": 55.8
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551390304.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "kiwi slices",
+        "quantity": 65.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1558637393.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "almonds",
+        "quantity": 65.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563393217.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "red onion",
+        "quantity": 25.0
+      },
+      {
+        "name": "cucumber",
+        "quantity": 35.0
+      },
+      {
+        "name": "orange bell pepper",
+        "quantity": 20.0
+      },
+      {
+        "name": "broccoli florets",
+        "quantity": 60.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562789268.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "corn on the cob slices",
+        "quantity": 120.0
+      },
+      {
+        "name": "pizza slice",
+        "quantity": 85.0
+      },
+      {
+        "name": "grilled pork chop",
+        "quantity": 110.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563998323.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "grilled chicken breast",
+        "quantity": 85.5
+      },
+      {
+        "name": "roasted potatoes",
+        "quantity": 95.2
+      },
+      {
+        "name": "seared steak",
+        "quantity": 115.8
+      },
+      {
+        "name": "steamed cauliflower florets",
+        "quantity": 140.4
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 12.0
+      },
+      {
+        "name": "salt",
+        "quantity": 1.5
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.6
+      },
+      {
+        "name": "garlic",
+        "quantity": 3.5
+      },
+      {
+        "name": "fresh herbs",
+        "quantity": 1.2
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1568144803.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "sliced carrots",
+        "quantity": 115.5
+      },
+      {
+        "name": "kalamata olives",
+        "quantity": 38.2
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551487158.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "Kalamata olives",
+        "quantity": 115.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "Olive oil",
+        "quantity": 3.5
+      },
+      {
+        "name": "Salt",
+        "quantity": 0.6
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1559700851.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "mixed salad greens",
+        "quantity": 25.0
+      },
+      {
+        "name": "shredded carrots",
+        "quantity": 5.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "balsamic vinegar",
+        "quantity": 3.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551395233.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "sweet corn kernels",
+        "quantity": 45.5
+      },
+      {
+        "name": "diced grilled chicken breast",
+        "quantity": 85.2
+      },
+      {
+        "name": "cooked shrimp",
+        "quantity": 72.8
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1561492204.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "yellow rice",
+        "quantity": 145.5
+      },
+      {
+        "name": "fresh spinach leaves",
+        "quantity": 45.2
+      },
+      {
+        "name": "breaded chicken breast",
+        "quantity": 110.8
+      },
+      {
+        "name": "quinoa topping",
+        "quantity": 15.4
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 8.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.9
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "tomato sauce",
+        "quantity": 25.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1567613057.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "diced sweet potato",
+        "quantity": 115.5
+      },
+      {
+        "name": "diced tomato",
+        "quantity": 85.2
+      },
+      {
+        "name": "egg whites",
+        "quantity": 140.0
+      },
+      {
+        "name": "salsa verde",
+        "quantity": 65.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563996485.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "arugula",
+        "quantity": 35.5
+      },
+      {
+        "name": "cauliflower florets",
+        "quantity": 65.2
+      },
+      {
+        "name": "roasted potato chunks",
+        "quantity": 55.8
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 7.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1550775393.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "broccoli florets",
+        "quantity": 85.5
+      },
+      {
+        "name": "banana",
+        "quantity": 65.0
+      },
+      {
+        "name": "pecans",
+        "quantity": 22.5
+      },
+      {
+        "name": "cashews",
+        "quantity": 28.0
+      },
+      {
+        "name": "almonds",
+        "quantity": 15.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1564761488.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "scrambled egg whites",
+        "quantity": 85.0
+      },
+      {
+        "name": "fried rice with corn",
+        "quantity": 110.0
+      },
+      {
+        "name": "bacon strip",
+        "quantity": 25.0
+      },
+      {
+        "name": "honeydew melon chunks",
+        "quantity": 75.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551376970.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 35.5
+      },
+      {
+        "name": "kiwi",
+        "quantity": 42.8
+      },
+      {
+        "name": "sweet corn kernels",
+        "quantity": 65.2
+      },
+      {
+        "name": "blackberries",
+        "quantity": 38.4
+      },
+      {
+        "name": "raspberries",
+        "quantity": 22.6
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "sugar",
+        "quantity": 1.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1559239151.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "fresh baby spinach leaves",
+        "quantity": 18.5
+      },
+      {
+        "name": "shredded carrots",
+        "quantity": 4.2
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 3.5
+      },
+      {
+        "name": "balsamic vinegar",
+        "quantity": 2.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1559678330.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "fresh spinach leaves",
+        "quantity": 25.5
+      },
+      {
+        "name": "sun-dried tomatoes",
+        "quantity": 8.2
+      },
+      {
+        "name": "diced cucumber",
+        "quantity": 4.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 3.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563998210.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "cooked chicken breast pieces",
+        "quantity": 45.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 2.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1565033110.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "broccoli florets",
+        "quantity": 115.5
+      },
+      {
+        "name": "mixed salad greens",
+        "quantity": 45.2
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1564428444.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "mixed salad greens",
+        "quantity": 45.0
+      },
+      {
+        "name": "shredded carrots",
+        "quantity": 8.5
+      },
+      {
+        "name": "cauliflower florets",
+        "quantity": 75.0
+      },
+      {
+        "name": "sunflower seeds",
+        "quantity": 1.2
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil dressing",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558459115.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "apple",
+        "quantity": 180.0
+      },
+      {
+        "name": "red grapes",
+        "quantity": 45.0
+      },
+      {
+        "name": "green grape",
+        "quantity": 8.0
+      },
+      {
+        "name": "cherry tomatoes",
+        "quantity": 75.0
+      },
+      {
+        "name": "white rice",
+        "quantity": 85.0
+      },
+      {
+        "name": "almonds",
+        "quantity": 40.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1564082178.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "quinoa-crusted chicken breast",
+        "quantity": 185.5
+      },
+      {
+        "name": "lettuce leaf",
+        "quantity": 4.2
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 7.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "egg wash",
+        "quantity": 5.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1550707756.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "cooked beef steak pieces",
+        "quantity": 115.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "cooking oil",
+        "quantity": 2.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558723777.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "apple",
+        "quantity": 180.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1558721757.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "almonds",
+        "quantity": 65.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1551227216.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "cooked chicken gizzards",
+        "quantity": 45.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      },
+      {
+        "name": "cooking oil",
+        "quantity": 1.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1564777960.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "cheese pizza slice",
+        "quantity": 45.5
+      },
+      {
+        "name": "cooked pork loin slices",
+        "quantity": 85.2
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "pizza sauce",
+        "quantity": 8.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551492702.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "Romanesco broccoli",
+        "quantity": 115.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "Olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "Salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "Black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563378110.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "egg whites",
+        "quantity": 115.5
+      },
+      {
+        "name": "roasted sweet potatoes",
+        "quantity": 85.2
+      },
+      {
+        "name": "pineapple chunks",
+        "quantity": 65.4
+      },
+      {
+        "name": "papaya chunks",
+        "quantity": 35.8
+      },
+      {
+        "name": "sliced pork sausage",
+        "quantity": 42.6
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558376306.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "sliced smoked sausage",
+        "quantity": 145.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 3.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558114086.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "red apple",
+        "quantity": 185.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1550771267.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "broccoli florets",
+        "quantity": 85.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 4.5
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.1
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551390215.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "broccoli florets",
+        "quantity": 45.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "olive oil",
+        "quantity": 2.5
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558720236.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "sliced carrots",
+        "quantity": 115.5
+      },
+      {
+        "name": "cauliflower florets",
+        "quantity": 65.2
+      },
+      {
+        "name": "almonds",
+        "quantity": 85.0
+      },
+      {
+        "name": "apple",
+        "quantity": 145.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1563468269.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "raspberries",
+        "quantity": 28.5
+      },
+      {
+        "name": "blackberries",
+        "quantity": 32.0
+      },
+      {
+        "name": "watermelon cubes",
+        "quantity": 145.0
+      },
+      {
+        "name": "pineapple chunks",
+        "quantity": 135.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1558380557.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "sliced smoked sausage",
+        "quantity": 115.5
+      },
+      {
+        "name": "whole almonds",
+        "quantity": 42.0
+      },
+      {
+        "name": "red grapes",
+        "quantity": 48.0
+      },
+      {
+        "name": "green grape",
+        "quantity": 5.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1562873028.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "cherry tomatoes",
+        "quantity": 85.0
+      },
+      {
+        "name": "green beans",
+        "quantity": 60.0
+      },
+      {
+        "name": "celery",
+        "quantity": 30.0
+      },
+      {
+        "name": "baked fish fillet",
+        "quantity": 120.0
+      },
+      {
+        "name": "potatoes",
+        "quantity": 100.0
+      },
+      {
+        "name": "mushrooms",
+        "quantity": 25.0
+      },
+      {
+        "name": "parsley garnish",
+        "quantity": 1.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "olive oil",
+        "quantity": 10.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "garlic",
+        "quantity": 5.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551565884.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "strawberries",
+        "quantity": 35.0
+      },
+      {
+        "name": "blackberry",
+        "quantity": 4.5
+      },
+      {
+        "name": "raspberry",
+        "quantity": 3.5
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1558637769.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "apple",
+        "quantity": 180.0
+      }
+    ],
+    "hidden_ingredients": []
+  },
+  {
+    "image_filename": "dish_1558724959.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "apple",
+        "quantity": 150.0
+      },
+      {
+        "name": "brussels sprouts",
+        "quantity": 130.0
+      },
+      {
+        "name": "almonds",
+        "quantity": 45.0
+      },
+      {
+        "name": "sliced carrots",
+        "quantity": 110.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "cooking oil",
+        "quantity": 5.0
+      },
+      {
+        "name": "salt",
+        "quantity": 0.3
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551391034.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "risotto",
+        "quantity": 115.5
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "parmesan cheese",
+        "quantity": 12.0
+      },
+      {
+        "name": "butter",
+        "quantity": 8.5
+      },
+      {
+        "name": "olive oil",
+        "quantity": 4.2
+      },
+      {
+        "name": "salt",
+        "quantity": 0.6
+      },
+      {
+        "name": "black pepper",
+        "quantity": 0.3
+      },
+      {
+        "name": "vegetable broth",
+        "quantity": 15.0
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1558115867.jpg",
+    "image_source": "rgb",
+    "visible_ingredients": [
+      {
+        "name": "almonds",
+        "quantity": 18.0
+      }
+    ],
+    "hidden_ingredients": [
+      {
+        "name": "salt",
+        "quantity": 0.3
+      }
+    ]
+  },
+  {
+    "image_filename": "dish_1551391302.jpg",
+    "image_source": "side_angle_frame",
+    "visible_ingredients": [
+      {
+        "name": "cantaloupe melon",
+        "quantity": 115.0
+      }
+    ],
+    "hidden_ingredients": []
+  }
+]
