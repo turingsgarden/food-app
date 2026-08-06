@@ -70,6 +70,8 @@ struct HealthProfileView: View {
     @State private var pendingFields: [OCRField] = []
     @State private var pendingAdditionalFields:
     [HealthOCRAdditionalField] = []
+    @State private var confirmedAdditionalFields:
+    [HealthOCRAdditionalField] = []
     @State private var ocrStatus = ""
     @State private var ocrMessage: String? = nil
 
@@ -173,6 +175,9 @@ struct HealthProfileView: View {
         message: ocrMessage
     ) { confirmed in
         applyConfirmedFields(confirmed)
+
+        confirmedAdditionalFields =
+            pendingAdditionalFields
     }
     .environmentObject(themeManager)
 }
@@ -970,7 +975,8 @@ struct HealthProfileView: View {
             ldl: hasLDL ? ldl : nil,
             hdl: hasHDL ? hdl : nil,
             dietaryPreferences: Array(selectedDietary),
-            allergens: Array(selectedAllergens)
+            allergens: Array(selectedAllergens),
+            additionalFields: confirmedAdditionalFields
         )
 
         HealthAPIManager.shared.saveHealthProfile(profile) { success, err in
@@ -1001,6 +1007,9 @@ struct HealthProfileView: View {
         if let hd = p.hdl  { hasHDL = true; hdl = hd }
         selectedDietary  = Set(p.dietaryPreferences)
         selectedAllergens = Set(p.allergens)
+
+        confirmedAdditionalFields =
+            p.additionalFields ?? []
         // If editing existing profile, skip Step 0 and go straight to Step 1
         if prefill != nil { currentStep = 1 }
     }

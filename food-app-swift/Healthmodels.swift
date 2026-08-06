@@ -31,6 +31,9 @@ struct HealthProfile: Codable {
 
     var allergens: [String]
 
+    var additionalFields:[HealthOCRAdditionalField]? = nil
+
+
     var bmi: Double { weightKg / ((heightCm / 100) * (heightCm / 100)) }
 
     var bmiCategory: String {
@@ -56,6 +59,7 @@ struct HealthProfile: Codable {
         case hdl
         case dietaryPreferences = "dietary_preferences"
         case allergens
+        case additionalFields = "additional_fields"
     }
 }
 

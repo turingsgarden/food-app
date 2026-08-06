@@ -222,7 +222,7 @@ struct DashboardView: View {
                             
                             // Temporary button for testing the OCR connection
                             
-                            healthOCRScanCard
+                            // healthOCRScanCard
 
                             Spacer(minLength: 100)
                         }
@@ -733,57 +733,57 @@ struct DashboardView: View {
 
     // MARK: - Health OCR Card
 
-private var healthOCRScanCard: some View {
-    NavigationLink {
-        HealthOCRTestView()
-    } label: {
-        HStack(spacing: 14) {
+// private var healthOCRScanCard: some View {
+//     NavigationLink {
+//         HealthOCRTestView()
+//     } label: {
+//         HStack(spacing: 14) {
 
-            // OCR icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.orange.opacity(0.10))
-                    .frame(width: 44, height: 44)
+//             // OCR icon
+//             ZStack {
+//                 RoundedRectangle(cornerRadius: 10)
+//                     .fill(Color.orange.opacity(0.10))
+//                     .frame(width: 44, height: 44)
 
-                Image(systemName: "doc.text.viewfinder")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundColor(themeManager.current.primaryText)
-            }
+//                 Image(systemName: "doc.text.viewfinder")
+//                     .font(.system(size: 20, weight: .medium))
+//                     .foregroundColor(themeManager.current.primaryText)
+//             }
 
-            // Title and description
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Scan Health Report")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(themeManager.current.primaryText)
+//             // Title and description
+//             VStack(alignment: .leading, spacing: 4) {
+//                 Text("Scan Health Report")
+//                     .font(.system(size: 15, weight: .semibold))
+//                     .foregroundColor(themeManager.current.primaryText)
 
-                Text("Import medical measurements\nautomatically")
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundColor(themeManager.current.secondaryText)
-                    .multilineTextAlignment(.leading)
-                    .lineSpacing(2)
-            }
+//                 Text("Import medical measurements\nautomatically")
+//                     .font(.system(size: 11, weight: .regular))
+//                     .foregroundColor(themeManager.current.secondaryText)
+//                     .multilineTextAlignment(.leading)
+//                     .lineSpacing(2)
+//             }
 
-            Spacer()
+//             Spacer()
 
-            // Orange arrow
-            Image(systemName: "arrow.right")
-                .font(.system(size: 17, weight: .bold))
-                .foregroundColor(.orange)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 13)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 18)
-                .fill(themeManager.current.cardBackground)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(Color.orange.opacity(0.65), lineWidth: 1.4)
-        )
-    }
-    .buttonStyle(.plain)
-}
+//             // Orange arrow
+//             Image(systemName: "arrow.right")
+//                 .font(.system(size: 17, weight: .bold))
+//                 .foregroundColor(.orange)
+//         }
+//         .padding(.horizontal, 14)
+//         .padding(.vertical, 13)
+//         .frame(maxWidth: .infinity, alignment: .leading)
+//         .background(
+//             RoundedRectangle(cornerRadius: 18)
+//                 .fill(themeManager.current.cardBackground)
+//         )
+//         .overlay(
+//             RoundedRectangle(cornerRadius: 18)
+//                 .stroke(Color.orange.opacity(0.65), lineWidth: 1.4)
+//         )
+//     }
+//     .buttonStyle(.plain)
+// }
 
     // MARK: - Floating Button
 

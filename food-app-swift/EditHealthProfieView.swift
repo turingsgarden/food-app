@@ -192,6 +192,8 @@ struct EditHealthProfileView: View {
     @State private var showOCRConfirm = false
     @State private var pendingFields: [OCRField] = []
     @State private var pendingAdditionalFields:[HealthOCRAdditionalField] = []
+    @State private var confirmedAdditionalFields:[HealthOCRAdditionalField] = []
+    @State private var isAdditionalResultsExpanded = false
     @State private var ocrStatus = ""
     @State private var ocrMessage: String? = nil
     @State private var scanErrorMsg = ""
@@ -253,6 +255,27 @@ struct EditHealthProfileView: View {
         if hasHDL, let oh = original.hdl, abs(hdl - oh) > 0.05 { return true }
         if selectedDietary != Set(original.dietaryPreferences) { return true }
         if selectedAllergens != Set(original.allergens) { return true }
+
+
+        let currentAdditionalFieldSignatures =
+    confirmedAdditionalFields.map {
+        "\($0.name)|" +
+        "\($0.value?.displayText ?? "")|" +
+        "\($0.unit ?? "")"
+    }
+
+let originalAdditionalFieldSignatures =
+    (original.additionalFields ?? []).map {
+        "\($0.name)|" +
+        "\($0.value?.displayText ?? "")|" +
+        "\($0.unit ?? "")"
+    }
+
+if currentAdditionalFieldSignatures !=
+    originalAdditionalFieldSignatures {
+
+    return true
+}
         return false
     }
 
@@ -280,6 +303,7 @@ struct EditHealthProfileView: View {
                                 sexPicker
                             }
                         }
+                        
 
                         sectionCard(title: "Clinical Markers", icon: "heart.fill") {
                             VStack(spacing: 12) {
@@ -322,6 +346,9 @@ struct EditHealthProfileView: View {
                                                  display: String(format: "%.1f mmol/L", hdl))
                                 }
                             }
+                        }
+                        if !confirmedAdditionalFields.isEmpty {
+                            extendedHealthResultsSection
                         }
 
                         sectionCard(title: "Dietary Preferences", icon: "leaf.fill") { dietaryGrid }
@@ -389,13 +416,19 @@ struct EditHealthProfileView: View {
             .sheet(isPresented: $showOCRConfirm) {
     OCRConfirmView(
         fields: pendingFields,
-        additionalFields:
-            pendingAdditionalFields,
+        additionalFields: pendingAdditionalFields,
         status: ocrStatus,
         message: ocrMessage
     ) { confirmed in
+
+        // Apply the predefined health fields.
         applyConfirmedFields(confirmed)
+
+        // Keep the extended fields for the Health Profile UI.
+        confirmedAdditionalFields =
+            pendingAdditionalFields
     }
+    .environmentObject(themeManager)
 }
         }
     }
@@ -544,6 +577,7 @@ func loadAndScanPhoto(item: PhotosPickerItem?) async {
         showError = true
         return
     }
+    //clear any OCR results from a previous scan.
     pendingFields = []
     pendingAdditionalFields = []
 
@@ -583,6 +617,7 @@ private func submitHealthReport(
     }
 }
 
+//handles the OCR result returned by the backend
 private func handleOCRResponse(
     _ response: HealthOCRResponse
 ) {
@@ -679,6 +714,7 @@ private func handleOCRResponse(
     //     ocrMessage = json["message"] as? String
     //     showOCRConfirm = true
     // }
+    //
 
     func presentOCRConfirmation(
     json: [String: Any]
@@ -782,6 +818,8 @@ private func handleOCRResponse(
         if let hd = p.hdl  { hasHDL = true; hdl = hd }
         selectedDietary  = Set(p.dietaryPreferences)
         selectedAllergens = Set(p.allergens)
+        confirmedAdditionalFields =
+            p.additionalFields ?? []
     }
 
     func saveProfile() {
@@ -799,7 +837,9 @@ private func handleOCRResponse(
             ldl: hasLDL ? ldl : nil,
             hdl: hasHDL ? hdl : nil,
             dietaryPreferences: Array(selectedDietary),
-            allergens: Array(selectedAllergens)
+            allergens: Array(selectedAllergens),
+            // Save extended fields with the profile.
+            additionalFields: confirmedAdditionalFields
         )
         HealthAPIManager.shared.saveHealthProfile(profile) { success, err in
             self.isSaving = false
@@ -968,6 +1008,229 @@ private func handleOCRResponse(
             }
         }
     }
+
+    // MARK: - Extended Health Results
+
+// MARK: - Additional Test Results Tab
+
+private var extendedHealthResultsSection:
+    some View {
+
+    VStack(spacing: 0) {
+
+        // Collapsible tab header
+        Button {
+            withAnimation(
+                .easeInOut(duration: 0.22)
+            ) {
+                isAdditionalResultsExpanded.toggle()
+            }
+        } label: {
+            HStack(spacing: 14) {
+                Image(
+                    systemName:
+                        "list.bullet.rectangle"
+                )
+                .font(
+                    .system(
+                        size: 20,
+                        weight: .semibold
+                    )
+                )
+                .foregroundColor(.blue)
+
+                VStack(
+                    alignment: .leading,
+                    spacing: 4
+                ) {
+                    Text("Additional Test Results")
+                        .font(
+                            .system(
+                                size: 18,
+                                weight: .bold
+                            )
+                        )
+                        .foregroundColor(
+                            themeManager.current.primaryText
+                        )
+
+                    Text(
+                        "\(confirmedAdditionalFields.count) tests found"
+                    )
+                    .font(.system(size: 13))
+                    .foregroundColor(
+                        themeManager.current.secondaryText
+                    )
+                }
+
+                Spacer()
+
+                Image(
+                    systemName:
+                        isAdditionalResultsExpanded
+                        ? "chevron.up"
+                        : "chevron.down"
+                )
+                .font(
+                    .system(
+                        size: 15,
+                        weight: .semibold
+                    )
+                )
+                .foregroundColor(
+                    themeManager.current.secondaryText
+                )
+                .rotationEffect(
+                    .degrees(
+                        isAdditionalResultsExpanded
+                        ? 0
+                        : 0
+                    )
+                )
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 18)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(
+            isAdditionalResultsExpanded
+            ? "Hide additional test results"
+            : "Show additional test results"
+        )
+
+        // Results appear only after the tab is opened
+        if isAdditionalResultsExpanded {
+            Divider()
+                .padding(.horizontal, 18)
+
+            VStack(spacing: 0) {
+                ForEach(
+                    Array(
+                        confirmedAdditionalFields.enumerated()
+                    ),
+                    id: \.element.id
+                ) { index, field in
+
+                    extendedHealthResultRow(field)
+                        .padding(.horizontal, 18)
+
+                    if index <
+                        confirmedAdditionalFields.count - 1 {
+
+                        Divider()
+                            .padding(.leading, 18)
+                    }
+                }
+            }
+            .padding(.bottom, 6)
+            
+        }
+    }
+    .background(
+        themeManager.current.cardBackground
+    )
+    .cornerRadius(20)
+    .overlay {
+        RoundedRectangle(
+            cornerRadius: 20
+        )
+        .stroke(
+            isAdditionalResultsExpanded
+            ? Color.blue.opacity(0.35)
+            : themeManager.current.cardBorder,
+            lineWidth: 1
+        )
+    }
+}
+
+private func extendedHealthResultRow(
+    _ field: HealthOCRAdditionalField
+) -> some View {
+
+    let valueText = (
+        field.value?.displayText ?? ""
+    )
+    .trimmingCharacters(
+        in: .whitespacesAndNewlines
+    )
+
+    let unitText = (
+        field.unit ?? ""
+    )
+    .trimmingCharacters(
+        in: .whitespacesAndNewlines
+    )
+
+    return HStack(
+        alignment: .center,
+        spacing: 12
+    ) {
+        VStack(
+            alignment: .leading,
+            spacing: 4
+        ) {
+            Text(field.name)
+                .font(
+                    .system(
+                        size: 14,
+                        weight: .semibold
+                    )
+                )
+                .foregroundColor(
+                    themeManager.current.primaryText
+                )
+
+            // Text("Detected from health report")
+            //     .font(.system(size: 11))
+            //     .foregroundColor(
+            //         themeManager.current.secondaryText
+            //     )
+        }
+
+        Spacer()
+
+        HStack(
+            alignment: .firstTextBaseline,
+            spacing: 5
+        ) {
+            Text(
+                valueText.isEmpty
+                    ? "Not found"
+                    : valueText
+            )
+            .font(
+                .system(
+                    size: 15,
+                    weight: .bold,
+                    design: .rounded
+                )
+            )
+            .foregroundColor(
+                valueText.isEmpty
+                    ? themeManager.current.secondaryText
+                    : themeManager.current.primaryText
+            )
+            .multilineTextAlignment(.trailing)
+            .lineLimit(2)
+
+            if !unitText.isEmpty {
+                Text(unitText)
+                    .font(
+                        .system(
+                            size: 12,
+                            weight: .medium
+                        )
+                    )
+                    .foregroundColor(
+                        themeManager.current.secondaryText
+                    )
+            }
+        }
+    }
+    .padding(.vertical, 13)
+    .padding(.horizontal, 2)
+}
 
     var saveButton: some View {
         VStack(spacing: 8) {
@@ -1827,12 +2090,7 @@ struct OCRConfirmView: View {
                     lineWidth: 1
                 )
             }
-            .transition(
-                .opacity.combined(
-                    with:
-                        .move(edge: .top)
-                )
-            )
+            
         }
     }
 }
