@@ -224,24 +224,13 @@ def display_ground_truth_mass(ground_truth):
 
     st.subheader("Ground Truth")
 
-    # Display ingredients first so this label lines up with "Visible Ingredients:"
+    # Display ingredients so this label lines up with "Visible Ingredients:"
     # in the model prediction column.
     st.markdown("**Ingredients:**")
     if ground_truth.get("ingredients"):
         render_ingredient_box(ground_truth["ingredients"])
     else:
         st.info("No ingredients data available")
-
-    st.markdown("---")
-
-    # Get ground truth mass from nutrition.mass
-    ground_truth_mass = None
-    if "nutrition" in ground_truth and isinstance(ground_truth["nutrition"], dict):
-        ground_truth_mass = ground_truth["nutrition"].get("mass")
-
-    # Display ground truth mass
-    mass_text = f"{ground_truth_mass:.1f} g" if ground_truth_mass is not None else "N/A"
-    st.metric("Actual Mass", mass_text)
 
 
 def main():
@@ -251,6 +240,15 @@ def main():
     st.markdown(
         """
     <style>
+        /* Override Streamlit's underlying theme variables so every built-in
+           component (labels, buttons, inputs, metrics) pulls light-mode colors
+           instead of the app's dark theme defaults. */
+        :root, .stApp {
+            --text-color: #111111 !important;
+            --background-color: #ffffff !important;
+            --secondary-background-color: #f0f2f6 !important;
+        }
+
         /* Force light mode regardless of the user's Streamlit theme setting */
         .stApp {
             background-color: #ffffff;
@@ -348,12 +346,17 @@ def main():
             margin: 20px 0;
         }
 
-        /* Make st.metric's number the same size as its label */
+        /* Make st.metric's number the same size as its label, and make sure
+           both are actually visible against a light background */
         [data-testid="stMetricValue"] {
             font-size: 14px;
+            color: #111111 !important;
         }
         [data-testid="stMetricLabel"] {
             font-size: 14px;
+        }
+        [data-testid="stMetricLabel"] * {
+            color: #111111 !important;
         }
 
         /* White buttons instead of Streamlit's default dark buttons
@@ -388,10 +391,15 @@ def main():
             color: #888888 !important;
             opacity: 1;
         }
-        [data-testid="stWidgetLabel"] label,
-        [data-testid="stWidgetLabel"] p,
-        [data-testid="stWidgetLabel"] {
+        [data-testid="stWidgetLabel"],
+        [data-testid="stWidgetLabel"] * {
             color: #111111 !important;
+        }
+        /* Catch-all for any remaining Streamlit text (captions, markdown,
+           widget helper text) that inherits the dark-theme text color */
+        .stMarkdown, .stMarkdown *, .stCaption, .stCaption *,
+        label, p, span {
+            color: #111111;
         }
     </style>
     """,
@@ -447,7 +455,7 @@ def main():
 
     # Title
     st.markdown("<div class='main-container'>", unsafe_allow_html=True)
-    st.title("🍽️ Food Ingredient Prediction Display")
+    st.title("Food Ingredient Prediction Display")
     st.markdown("</div>", unsafe_allow_html=True)
 
     # Search box
