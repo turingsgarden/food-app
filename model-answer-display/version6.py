@@ -224,6 +224,16 @@ def display_ground_truth_mass(ground_truth):
 
     st.subheader("Ground Truth")
 
+    # Display ingredients first so this label lines up with "Visible Ingredients:"
+    # in the model prediction column.
+    st.markdown("**Ingredients:**")
+    if ground_truth.get("ingredients"):
+        render_ingredient_box(ground_truth["ingredients"])
+    else:
+        st.info("No ingredients data available")
+
+    st.markdown("---")
+
     # Get ground truth mass from nutrition.mass
     ground_truth_mass = None
     if "nutrition" in ground_truth and isinstance(ground_truth["nutrition"], dict):
@@ -232,15 +242,6 @@ def display_ground_truth_mass(ground_truth):
     # Display ground truth mass
     mass_text = f"{ground_truth_mass:.1f} g" if ground_truth_mass is not None else "N/A"
     st.metric("Actual Mass", mass_text)
-
-    st.markdown("---")
-
-    # Display ingredients if available
-    st.markdown("**Ingredients:**")
-    if ground_truth.get("ingredients"):
-        render_ingredient_box(ground_truth["ingredients"])
-    else:
-        st.info("No ingredients data available")
 
 
 def main():
@@ -353,6 +354,35 @@ def main():
         }
         [data-testid="stMetricLabel"] {
             font-size: 14px;
+        }
+
+        /* White buttons instead of Streamlit's default dark buttons
+           (covers regular buttons and the number_input +/- steppers) */
+        .stButton > button,
+        button {
+            background-color: #ffffff;
+            color: #111111;
+            border: 1px solid #cccccc;
+        }
+        .stButton > button:hover,
+        button:hover {
+            background-color: #f0f0f0;
+            color: #111111;
+            border: 1px solid #999999;
+        }
+        .stButton > button:disabled,
+        button:disabled {
+            background-color: #f5f5f5;
+            color: #aaaaaa;
+            border: 1px solid #e0e0e0;
+        }
+
+        /* White text input / number input fields */
+        [data-testid="stTextInput"] input,
+        [data-testid="stNumberInput"] input {
+            background-color: #ffffff;
+            color: #111111;
+            border: 1px solid #cccccc;
         }
     </style>
     """,
