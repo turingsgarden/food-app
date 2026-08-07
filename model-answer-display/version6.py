@@ -377,12 +377,21 @@ def main():
             border: 1px solid #e0e0e0;
         }
 
-        /* White text input / number input fields */
+        /* White text input / number input fields, with visible text/labels */
         [data-testid="stTextInput"] input,
         [data-testid="stNumberInput"] input {
-            background-color: #ffffff;
-            color: #111111;
+            background-color: #ffffff !important;
+            color: #111111 !important;
             border: 1px solid #cccccc;
+        }
+        [data-testid="stTextInput"] input::placeholder {
+            color: #888888 !important;
+            opacity: 1;
+        }
+        [data-testid="stWidgetLabel"] label,
+        [data-testid="stWidgetLabel"] p,
+        [data-testid="stWidgetLabel"] {
+            color: #111111 !important;
         }
     </style>
     """,
