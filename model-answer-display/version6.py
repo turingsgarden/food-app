@@ -174,33 +174,35 @@ def format_analysis_time(seconds):
         return f"{minutes}m{remaining_seconds:.1f}s"
 
 
+def render_ingredient_box(items, key_field="name", value_field="quantity", unit="g"):
+    """Render an ingredient list as a light-background HTML box instead of st.code,
+    so it isn't forced into Streamlit's dark code-block styling."""
+    rows = "".join(
+        f"<div class='ingredient-row'>"
+        f"<span class='ingredient-name'>{item.get(key_field, 'Unknown')}</span>"
+        f"<span class='ingredient-value'>{item.get(value_field, 0):.1f} {item.get('unit', unit)}</span>"
+        f"</div>"
+        for item in items
+    )
+    st.markdown(f"<div class='content-box'>{rows}</div>", unsafe_allow_html=True)
+
+
 def display_model_predicted_ingredients(response, model_name):
     """Display model's predicted ingredients (visible and hidden)"""
     if not response:
         st.info("No model response available")
         return
 
-    st.subheader(f"🤖 {model_name} Predictions")
+    st.subheader(f"{model_name} Predictions")
 
     # Get visible and hidden ingredients
     visible_ingredients = response.get("visible_ingredients", [])
     hidden_ingredients = response.get("hidden_ingredients", [])
 
-    # Calculate totals
-    visible_total = sum(item.get("quantity", 0) for item in visible_ingredients)
-    hidden_total = sum(item.get("quantity", 0) for item in hidden_ingredients)
-
     # Display visible ingredients
     st.markdown("**Visible Ingredients:**")
     if visible_ingredients:
-        visible_text = "\n".join(
-            [
-                f"• {item.get('name', 'Unknown'):<30} {item.get('quantity', 0):>8.1f} g"
-                for item in visible_ingredients
-            ]
-        )
-        st.code(visible_text)
-        st.metric("Visible Total", f"{visible_total:.1f} g")
+        render_ingredient_box(visible_ingredients)
     else:
         st.info("No visible ingredients detected")
 
@@ -209,27 +211,9 @@ def display_model_predicted_ingredients(response, model_name):
     # Display hidden ingredients
     st.markdown("**Hidden Ingredients:**")
     if hidden_ingredients:
-        hidden_text = "\n".join(
-            [
-                f"• {item.get('name', 'Unknown'):<30} {item.get('quantity', 0):>8.1f} g"
-                for item in hidden_ingredients
-            ]
-        )
-        st.code(hidden_text)
-        st.metric("Hidden Total", f"{hidden_total:.1f} g")
+        render_ingredient_box(hidden_ingredients)
     else:
         st.info("No hidden ingredients detected")
-
-    st.markdown("---")
-
-    # Display totals
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Visible Weight", f"{visible_total:.1f} g")
-    with col2:
-        st.metric("Hidden Weight", f"{hidden_total:.1f} g")
-    with col3:
-        st.metric("Grand Total", f"{visible_total + hidden_total:.1f} g")
 
 
 def display_ground_truth_mass(ground_truth):
@@ -238,7 +222,7 @@ def display_ground_truth_mass(ground_truth):
         st.info("No ground truth available")
         return
 
-    st.subheader("📊 Ground Truth")
+    st.subheader("Ground Truth")
 
     # Get ground truth mass from nutrition.mass
     ground_truth_mass = None
@@ -254,19 +238,7 @@ def display_ground_truth_mass(ground_truth):
     # Display ingredients if available
     st.markdown("**Ingredients:**")
     if ground_truth.get("ingredients"):
-        ingredients_list = []
-        total_ingredient_mass = 0
-        for ing in ground_truth["ingredients"]:
-            name = ing.get("name", "Unknown")
-            quantity = ing.get("quantity", 0)
-            unit = ing.get("unit", "g")
-            ingredients_list.append(f"• {name:<30} {quantity:>8.1f} {unit}")
-            if unit == "g":
-                total_ingredient_mass += quantity
-
-        ingredients_text = "\n".join(ingredients_list)
-        st.code(ingredients_text)
-        st.metric("Total Ingredients Weight", f"{total_ingredient_mass:.1f} g")
+        render_ingredient_box(ground_truth["ingredients"])
     else:
         st.info("No ingredients data available")
 
@@ -278,6 +250,18 @@ def main():
     st.markdown(
         """
     <style>
+        /* Force light mode regardless of the user's Streamlit theme setting */
+        .stApp {
+            background-color: #ffffff;
+            color: #111111;
+        }
+        [data-testid="stHeader"] {
+            background-color: #ffffff;
+        }
+        [data-testid="stSidebar"] {
+            background-color: #f5f5f5;
+        }
+
         .main-container {
             min-height: 100vh;
             width: 100%;
@@ -317,15 +301,30 @@ def main():
             color: #333;
         }
 
+        /* Light-background box used for ingredient lists (replaces st.code,
+           which renders with a dark background regardless of app theme) */
         .content-box {
             background-color: #f5f5f5;
+            color: #111111;
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 10px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 14px;
+        }
+
+        .ingredient-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .ingredient-name {
+            font-size: 14px;
+        }
+
+        .ingredient-value {
+            font-size: 14px;
         }
 
         .image-container {
@@ -346,6 +345,14 @@ def main():
             gap: 10px;
             justify-content: center;
             margin: 20px 0;
+        }
+
+        /* Make st.metric's number the same size as its label */
+        [data-testid="stMetricValue"] {
+            font-size: 14px;
+        }
+        [data-testid="stMetricLabel"] {
+            font-size: 14px;
         }
     </style>
     """,
@@ -400,7 +407,7 @@ def main():
         return
 
     # Title
-    st.markdown("<div class='main-title-container'>", unsafe_allow_html=True)
+    st.markdown("<div class='main-container'>", unsafe_allow_html=True)
     st.title("🍽️ Food Ingredient Prediction Display")
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -417,7 +424,7 @@ def main():
             )
 
         with col2:
-            if st.button("🔍 Search", use_container_width=True):
+            if st.button("Search", use_container_width=True):
                 if search_input.strip():
                     st.session_state.search_dish_id = search_input.strip()
                     st.session_state.search_mode = True
@@ -438,7 +445,7 @@ def main():
                     st.session_state.search_mode = False
 
         with col3:
-            if st.button("📄 Clear Search", use_container_width=True):
+            if st.button("Clear Search", use_container_width=True):
                 st.session_state.search_dish_id = ""
                 st.session_state.search_mode = False
                 st.session_state.current_page = 0
@@ -535,7 +542,7 @@ def main():
                     st.markdown("<div class='image-container'>", unsafe_allow_html=True)
                     st.image(image, width=300)
                     st.markdown(
-                        f"<div style='text-align: center; font-size: 12px; color: #666;'>{image_name}</div>",
+                        f"<div style='text-align: center; font-size: 14px; color: #666;'>{image_name}</div>",
                         unsafe_allow_html=True,
                     )
                     st.markdown("</div>", unsafe_allow_html=True)
