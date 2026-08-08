@@ -72,6 +72,8 @@ struct OCRField: Identifiable {
     ]
 }
 
+
+
 /// Parse the backend `fields` double-layer into ordered, editable rows.
 func parseOCRFields(json: [String: Any]) -> [OCRField] {
     guard let fields = json["fields"] as? [String: Any] else {
@@ -304,49 +306,50 @@ if currentAdditionalFieldSignatures !=
                             }
                         }
                         
+                        // sectionCard(title: "Clinical Markers", icon: "heart.fill") {
+                        //     VStack(spacing: 12) {
+                        //         if showScanResult, let result = scanResult, result.hasAnyResult {
+                        //             ocrResultBadge(result: result)
+                        //         }
+                        //         Text("Optional — fill in if you have these values")
+                        //             .font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
+                        //             .frame(maxWidth: .infinity, alignment: .leading)
+                        //         clinicalRow(title: "Blood Pressure", subtitle: "Normal: 90–120 / 60–80 mmHg", isOn: $hasBP) {
+                        //             VStack(spacing: 10) {
+                        //                 inlineSlider(label: "Systolic", value: $systolicBP, range: 80...200, step: 1,
+                        //                              display: "\(Int(systolicBP)) mmHg", warningRange: 120...139)
+                        //                 inlineSlider(label: "Diastolic", value: $diastolicBP, range: 40...130, step: 1,
+                        //                              display: "\(Int(diastolicBP)) mmHg", warningRange: 80...89)
+                        //             }
+                        //         }
+                        //         clinicalRow(title: "Fasting Blood Sugar", subtitle: "Normal: 3.9–5.5 mmol/L", isOn: $hasBloodSugar) {
+                        //             inlineSlider(label: "Blood Sugar", value: $bloodSugar, range: 2.0...15.0, step: 0.1,
+                        //                          display: String(format: "%.1f mmol/L", bloodSugar), warningRange: 5.6...6.9)
+                        //         }
+                        //         clinicalRow(title: "Total Cholesterol", subtitle: "Normal: < 5.2 mmol/L", isOn: $hasCholesterol) {
+                        //             inlineSlider(label: "Cholesterol", value: $cholesterol, range: 1.0...10.0, step: 0.1,
+                        //                          display: String(format: "%.1f mmol/L", cholesterol), warningRange: 5.2...6.2)
+                        //         }
+                        //         clinicalRow(title: "Triglycerides", subtitle: "Normal: < 1.7 mmol/L", isOn: $hasTriglycerides) {
+                        //             inlineSlider(label: "Triglycerides", value: $triglycerides, range: 0.2...8.0, step: 0.1,
+                        //                          display: String(format: "%.1f mmol/L", triglycerides), warningRange: 1.7...2.3)
+                        //         }
+                        //         clinicalRow(title: "HbA1c", subtitle: "Normal: < 5.7 %", isOn: $hasHbA1c) {
+                        //             inlineSlider(label: "HbA1c", value: $hba1c, range: 3.0...18.0, step: 0.1,
+                        //                          display: String(format: "%.1f %%", hba1c), warningRange: 5.7...6.4)
+                        //         }
+                        //         clinicalRow(title: "LDL Cholesterol", subtitle: "Normal: < 3.4 mmol/L", isOn: $hasLDL) {
+                        //             inlineSlider(label: "LDL", value: $ldl, range: 0.3...10.0, step: 0.1,
+                        //                          display: String(format: "%.1f mmol/L", ldl), warningRange: 3.4...4.1)
+                        //         }
+                        //         clinicalRow(title: "HDL Cholesterol", subtitle: "Normal: > 1.0 mmol/L", isOn: $hasHDL) {
+                        //             inlineSlider(label: "HDL", value: $hdl, range: 0.3...5.0, step: 0.1,
+                        //                          display: String(format: "%.1f mmol/L", hdl))
+                        //         }
+                        //     }
+                        // }
+                        clinicalMarkersSection
 
-                        sectionCard(title: "Clinical Markers", icon: "heart.fill") {
-                            VStack(spacing: 12) {
-                                if showScanResult, let result = scanResult, result.hasAnyResult {
-                                    ocrResultBadge(result: result)
-                                }
-                                Text("Optional — fill in if you have these values")
-                                    .font(.system(size: 12)).foregroundColor(themeManager.current.secondaryText)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                clinicalRow(title: "Blood Pressure", subtitle: "Normal: 90–120 / 60–80 mmHg", isOn: $hasBP) {
-                                    VStack(spacing: 10) {
-                                        inlineSlider(label: "Systolic", value: $systolicBP, range: 80...200, step: 1,
-                                                     display: "\(Int(systolicBP)) mmHg", warningRange: 120...139)
-                                        inlineSlider(label: "Diastolic", value: $diastolicBP, range: 40...130, step: 1,
-                                                     display: "\(Int(diastolicBP)) mmHg", warningRange: 80...89)
-                                    }
-                                }
-                                clinicalRow(title: "Fasting Blood Sugar", subtitle: "Normal: 3.9–5.5 mmol/L", isOn: $hasBloodSugar) {
-                                    inlineSlider(label: "Blood Sugar", value: $bloodSugar, range: 2.0...15.0, step: 0.1,
-                                                 display: String(format: "%.1f mmol/L", bloodSugar), warningRange: 5.6...6.9)
-                                }
-                                clinicalRow(title: "Total Cholesterol", subtitle: "Normal: < 5.2 mmol/L", isOn: $hasCholesterol) {
-                                    inlineSlider(label: "Cholesterol", value: $cholesterol, range: 1.0...10.0, step: 0.1,
-                                                 display: String(format: "%.1f mmol/L", cholesterol), warningRange: 5.2...6.2)
-                                }
-                                clinicalRow(title: "Triglycerides", subtitle: "Normal: < 1.7 mmol/L", isOn: $hasTriglycerides) {
-                                    inlineSlider(label: "Triglycerides", value: $triglycerides, range: 0.2...8.0, step: 0.1,
-                                                 display: String(format: "%.1f mmol/L", triglycerides), warningRange: 1.7...2.3)
-                                }
-                                clinicalRow(title: "HbA1c", subtitle: "Normal: < 5.7 %", isOn: $hasHbA1c) {
-                                    inlineSlider(label: "HbA1c", value: $hba1c, range: 3.0...18.0, step: 0.1,
-                                                 display: String(format: "%.1f %%", hba1c), warningRange: 5.7...6.4)
-                                }
-                                clinicalRow(title: "LDL Cholesterol", subtitle: "Normal: < 3.4 mmol/L", isOn: $hasLDL) {
-                                    inlineSlider(label: "LDL", value: $ldl, range: 0.3...10.0, step: 0.1,
-                                                 display: String(format: "%.1f mmol/L", ldl), warningRange: 3.4...4.1)
-                                }
-                                clinicalRow(title: "HDL Cholesterol", subtitle: "Normal: > 1.0 mmol/L", isOn: $hasHDL) {
-                                    inlineSlider(label: "HDL", value: $hdl, range: 0.3...5.0, step: 0.1,
-                                                 display: String(format: "%.1f mmol/L", hdl))
-                                }
-                            }
-                        }
                         if !confirmedAdditionalFields.isEmpty {
                             extendedHealthResultsSection
                         }
@@ -1006,6 +1009,304 @@ private func handleOCRResponse(
                 }
                 .buttonStyle(.plain)
             }
+        }
+    }
+
+
+    // MARK: - Redesigned Clinical Markers
+
+    private var clinicalMarkersSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if showScanResult,
+               let result = scanResult,
+               result.hasAnyResult {
+                ocrResultBadge(result: result)
+            }
+
+            Text("Optional — Fill in if you have these values")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(themeManager.current.secondaryText)
+                .padding(.horizontal, 4)
+
+            healthMetricCard(
+                title: "Blood Pressure",
+                normalText: "Systolic 90–120 / Diastolic 60–80 mmHg",
+                icon: "heart.fill",
+                iconColor: .green,
+                isOn: $hasBP
+            ) {
+                VStack(spacing: 16) {
+                    healthMetricSlider(
+                        label: "Systolic",
+                        value: $systolicBP,
+                        range: 80...200,
+                        step: 1,
+                        displayValue: "\(Int(systolicBP))",
+                        unit: "mmHg",
+                        warningRange: 120...139
+                    )
+
+                    Divider()
+                        .background(themeManager.current.cardBorder)
+
+                    healthMetricSlider(
+                        label: "Diastolic",
+                        value: $diastolicBP,
+                        range: 40...130,
+                        step: 1,
+                        displayValue: "\(Int(diastolicBP))",
+                        unit: "mmHg",
+                        warningRange: 80...89
+                    )
+                }
+            }
+
+            healthMetricCard(
+                title: "Fasting Blood Sugar",
+                normalText: "3.9–5.5 mmol/L",
+                icon: "drop.fill",
+                iconColor: .blue,
+                isOn: $hasBloodSugar
+            ) {
+                healthMetricSlider(
+                    label: "Blood Sugar",
+                    value: $bloodSugar,
+                    range: 2.0...15.0,
+                    step: 0.1,
+                    displayValue: String(format: "%.1f", bloodSugar),
+                    unit: "mmol/L",
+                    warningRange: 5.6...6.9
+                )
+            }
+
+            healthMetricCard(
+                title: "Total Cholesterol",
+                normalText: "< 5.2 mmol/L",
+                icon: "shield.fill",
+                iconColor: .purple,
+                isOn: $hasCholesterol
+            ) {
+                healthMetricSlider(
+                    label: "Cholesterol",
+                    value: $cholesterol,
+                    range: 1.0...10.0,
+                    step: 0.1,
+                    displayValue: String(format: "%.1f", cholesterol),
+                    unit: "mmol/L",
+                    warningRange: 5.2...6.2
+                )
+            }
+
+            healthMetricCard(
+                title: "Triglycerides",
+                normalText: "< 1.7 mmol/L",
+                icon: "drop.circle.fill",
+                iconColor: .orange,
+                isOn: $hasTriglycerides
+            ) {
+                healthMetricSlider(
+                    label: "Triglycerides",
+                    value: $triglycerides,
+                    range: 0.2...8.0,
+                    step: 0.1,
+                    displayValue: String(format: "%.1f", triglycerides),
+                    unit: "mmol/L",
+                    warningRange: 1.7...2.3
+                )
+            }
+
+            healthMetricCard(
+                title: "HbA1c",
+                normalText: "< 5.7 %",
+                icon: "cross.case.fill",
+                iconColor: .pink,
+                isOn: $hasHbA1c
+            ) {
+                healthMetricSlider(
+                    label: "HbA1c",
+                    value: $hba1c,
+                    range: 3.0...18.0,
+                    step: 0.1,
+                    displayValue: String(format: "%.1f", hba1c),
+                    unit: "%",
+                    warningRange: 5.7...6.4
+                )
+            }
+
+            healthMetricCard(
+                title: "LDL Cholesterol",
+                normalText: "< 3.4 mmol/L",
+                icon: "l.circle.fill",
+                iconColor: .teal,
+                isOn: $hasLDL
+            ) {
+                healthMetricSlider(
+                    label: "LDL",
+                    value: $ldl,
+                    range: 0.3...10.0,
+                    step: 0.1,
+                    displayValue: String(format: "%.1f", ldl),
+                    unit: "mmol/L",
+                    warningRange: 3.4...4.1
+                )
+            }
+
+            healthMetricCard(
+                title: "HDL Cholesterol",
+                normalText: "> 1.0 mmol/L",
+                icon: "h.circle.fill",
+                iconColor: .blue,
+                isOn: $hasHDL
+            ) {
+                healthMetricSlider(
+                    label: "HDL",
+                    value: $hdl,
+                    range: 0.3...5.0,
+                    step: 0.1,
+                    displayValue: String(format: "%.1f", hdl),
+                    unit: "mmol/L"
+                )
+            }
+        }
+    }
+
+    private func healthMetricCard<Content: View>(
+        title: String,
+        normalText: String,
+        icon: String,
+        iconColor: Color,
+        isOn: Binding<Bool>,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .center, spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(iconColor.opacity(0.10))
+                        .frame(width: 52, height: 52)
+
+                    Image(systemName: icon)
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(iconColor)
+                }
+
+                VStack(alignment: .leading, spacing: 7) {
+                    HStack(spacing: 7) {
+                        Text(title)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(themeManager.current.primaryText)
+
+                    }
+
+                    (
+                        Text("Normal: ")
+                            .foregroundColor(.green)
+                        +
+                        Text(normalText)
+                            .foregroundColor(themeManager.current.secondaryText)
+                    )
+                    .font(.system(size: 12, weight: .medium))
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 8)
+
+                Toggle("", isOn: isOn)
+                    .toggleStyle(SwitchToggleStyle(tint: .green))
+                    .labelsHidden()
+            }
+
+            if isOn.wrappedValue {
+                content()
+                    .padding(.top, 2)
+                    .transition(
+                        .opacity.combined(
+                            with: .scale(scale: 0.98, anchor: .top)
+                        )
+                    )
+            }
+        }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(themeManager.current.cardBackground)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(
+                    isOn.wrappedValue
+                        ? Color.green.opacity(0.10)
+                        : themeManager.current.cardBorder.opacity(0.70),
+                    lineWidth: 1
+                )
+        }
+        .shadow(
+            color: Color.black.opacity(
+                themeManager.current == .dark ? 0.20 : 0.055
+            ),
+            radius: 12,
+            x: 0,
+            y: 5
+        )
+        .animation(
+            .spring(response: 0.34, dampingFraction: 0.84),
+            value: isOn.wrappedValue
+        )
+    }
+
+    private func healthMetricSlider(
+        label: String,
+        value: Binding<Double>,
+        range: ClosedRange<Double>,
+        step: Double,
+        displayValue: String,
+        unit: String,
+        warningRange: ClosedRange<Double>? = nil
+    ) -> some View {
+        let isWarning =
+            warningRange.map {
+                value.wrappedValue >= $0.lowerBound &&
+                value.wrappedValue <= $0.upperBound
+            } ?? false
+
+        let isDanger =
+            warningRange.map {
+                value.wrappedValue > $0.upperBound
+            } ?? false
+
+        let statusColor: Color =
+            isDanger ? .red :
+            isWarning ? .orange :
+            themeManager.current.primaryText
+
+        let sliderColor: Color =
+            isDanger ? .red :
+            isWarning ? .orange :
+            .green
+
+        return VStack(spacing: 10) {
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(label)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText)
+
+                Spacer()
+
+                Text(displayValue)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundColor(statusColor)
+
+                Text(unit)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(themeManager.current.secondaryText)
+            }
+
+            Slider(
+                value: value,
+                in: range,
+                step: step
+            )
+            .accentColor(sliderColor)
         }
     }
 
@@ -1834,9 +2135,9 @@ struct OCRConfirmView: View {
         isExtendedResultsExpanded = false
 
     private var hasFields: Bool {
-    status == "ok" &&
-    (!fields.isEmpty || !additionalFields.isEmpty)
-}
+        status == "ok" &&
+        (!fields.isEmpty || !additionalFields.isEmpty)
+    }   
 
     var body: some View {
         NavigationStack {
@@ -1878,7 +2179,7 @@ struct OCRConfirmView: View {
                 }
                 .padding(12)
                 .background(Color.green.opacity(0.06)).cornerRadius(12)
-
+                
                 ForEach(fields.indices, id: \.self) { index in
                     fieldRow($fields[index])
                 }
@@ -1890,53 +2191,240 @@ struct OCRConfirmView: View {
         }
     }
 
-    private func fieldRow(_ field: Binding<OCRField>) -> some View {
-        let f = field.wrappedValue
-        let rawText = [f.rawName, f.rawValue, f.rawUnit]
-            .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
-        return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 6) {
+    // private func fieldRow(_ field: Binding<OCRField>) -> some View {
+    //     let f = field.wrappedValue
+    //     let rawText = [f.rawName, f.rawValue, f.rawUnit]
+    //         .compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+    //     return VStack(alignment: .leading, spacing: 8) {
+    //         HStack(alignment: .top, spacing: 6) {
+    //             Text(f.label)
+    //                 .font(.system(size: 15, weight: .semibold))
+    //                 .foregroundColor(themeManager.current.primaryText)
+    //             InfoTipButton(content: OCRFieldConversionTip.content(for: f))
+    //             Spacer()
+    //             Toggle("", isOn: field.accepted)
+    //                 .toggleStyle(SwitchToggleStyle(tint: themeManager.current == .dark ? .white : .black))
+    //                 .labelsHidden()
+    //         }
+    //         HStack(spacing: 8) {
+    //             // Text("Value")
+    //             //     .font(.system(size: 13))
+    //             //     .foregroundColor(themeManager.current.secondaryText)
+    //             Spacer()
+    //             TextField("", text: field.editedValue)
+    //                 .keyboardType(.decimalPad)
+    //                 .multilineTextAlignment(.center)
+    //                 .font(.system(size: 17, weight: .bold, design: .rounded))
+    //                 .foregroundColor(themeManager.current.primaryText)
+    //                 .frame(width: 90)
+    //                 .padding(.vertical, 6).padding(.horizontal, 10)
+    //                 .background(themeManager.current.inputBackground)
+    //                 .cornerRadius(8)
+    //                 .disabled(!f.accepted)
+    //             Text(f.processedUnit)
+    //                 .font(.system(size: 13, weight: .medium))
+    //                 .foregroundColor(themeManager.current.secondaryText)
+    //         }
+    //     }
+    //     .padding(14)
+    //     .background(themeManager.current.cardBackground)
+    //     .cornerRadius(14)
+    //     .overlay(RoundedRectangle(cornerRadius: 14)
+    //         .stroke(f.accepted ? Color.green.opacity(0.25) : themeManager.current.cardBorder, lineWidth: 1))
+    //     .opacity(f.accepted ? 1 : 0.55)
+    // }
+
+
+    private func fieldRow(
+    _ field: Binding<OCRField>
+) -> some View {
+
+    let f = field.wrappedValue
+    let style = fieldAppearance(for: f.id)
+
+    let rawText = [
+        f.rawName,
+        f.rawValue,
+        f.rawUnit
+    ]
+    .compactMap { $0 }
+    .map {
+        $0.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+    }
+    .filter { !$0.isEmpty }
+    .joined(separator: " ")
+
+    return VStack(
+        alignment: .leading,
+        spacing: 16
+    ) {
+        // Icon, title and switch
+        HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(style.color.opacity(0.12))
+                    .frame(width: 56, height: 56)
+
+                Image(systemName: style.icon)
+                    .font(
+                        .system(
+                            size: 23,
+                            weight: .semibold
+                        )
+                    )
+                    .foregroundColor(style.color)
+            }
+
+            HStack(spacing: 5) {
                 Text(f.label)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(themeManager.current.primaryText)
-                InfoTipButton(content: OCRFieldConversionTip.content(for: f))
-                Spacer()
-                Toggle("", isOn: field.accepted)
-                    .toggleStyle(SwitchToggleStyle(tint: themeManager.current == .dark ? .white : .black))
-                    .labelsHidden()
+                    .font(
+                        .system(
+                            size: 18,
+                            weight: .bold
+                        )
+                    )
+                    .foregroundColor(
+                        themeManager.current.primaryText
+                    )
+
+                InfoTipButton(
+                    content:
+                        OCRFieldConversionTip
+                            .content(for: f)
+                )
             }
-            if !rawText.isEmpty {
-                Text("Read: \(rawText)")
-                    .font(.system(size: 12))
-                    .foregroundColor(themeManager.current.secondaryText)
-            }
-            HStack(spacing: 8) {
-                Text("Value")
-                    .font(.system(size: 13))
-                    .foregroundColor(themeManager.current.secondaryText)
-                Spacer()
-                TextField("", text: field.editedValue)
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
-                    .foregroundColor(themeManager.current.primaryText)
-                    .frame(width: 90)
-                    .padding(.vertical, 6).padding(.horizontal, 10)
-                    .background(themeManager.current.inputBackground)
-                    .cornerRadius(8)
-                    .disabled(!f.accepted)
+
+            Spacer()
+
+            Toggle(
+                "",
+                isOn: field.accepted
+            )
+            .labelsHidden()
+            .toggleStyle(
+                SwitchToggleStyle(tint: .green)
+            )
+        }
+
+        // Original OCR text
+        // if !rawText.isEmpty {
+        //     Text("Read: \(rawText)")
+        //         .font(.system(size: 13))
+        //         .foregroundColor(
+        //             themeManager.current.secondaryText
+        //         )
+        // }
+
+        // Editable processed value
+        HStack(spacing: 10) {
+            Text("Value")
+                .font(.system(size: 15))
+                .foregroundColor(
+                    themeManager.current.secondaryText
+                )
+
+            Spacer()
+
+            TextField(
+                "",
+                text: field.editedValue
+            )
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.trailing)
+            .font(
+                .system(
+                    size: 18,
+                    weight: .bold,
+                    design: .rounded
+                )
+            )
+            .foregroundColor(
+                themeManager.current.primaryText
+            )
+            .frame(width: 100)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 9)
+            .background(
+                themeManager.current.inputBackground
+            )
+            .cornerRadius(10)
+            .disabled(!f.accepted)
+
+            if !f.processedUnit.isEmpty {
                 Text(f.processedUnit)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(themeManager.current.secondaryText)
+                    .font(
+                        .system(
+                            size: 14,
+                            weight: .medium
+                        )
+                    )
+                    .foregroundColor(
+                        themeManager.current.secondaryText
+                    )
+                    .fixedSize()
             }
         }
-        .padding(14)
-        .background(themeManager.current.cardBackground)
-        .cornerRadius(14)
-        .overlay(RoundedRectangle(cornerRadius: 14)
-            .stroke(f.accepted ? Color.green.opacity(0.25) : themeManager.current.cardBorder, lineWidth: 1))
-        .opacity(f.accepted ? 1 : 0.55)
     }
+    .padding(18)
+    .background(
+        themeManager.current.cardBackground
+    )
+    .cornerRadius(20)
+    .overlay {
+        RoundedRectangle(cornerRadius: 20)
+            .stroke(
+                f.accepted
+                    ? Color.green.opacity(0.22)
+                    : themeManager.current.cardBorder,
+                lineWidth: 1
+            )
+    }
+    .shadow(
+        color: Color.black.opacity(0.035),
+        radius: 10,
+        x: 0,
+        y: 4
+    )
+    .opacity(f.accepted ? 1 : 0.55)
+}
+private func fieldAppearance(
+    for fieldID: String
+) -> (icon: String, color: Color) {
+
+    switch fieldID {
+    case "height_cm":
+        return ("ruler.fill", .blue)
+
+    case "weight_kg":
+        return ("scalemass.fill", .orange)
+
+    case "bmi":
+        return ("number.square.fill", .purple)
+
+    case "blood_sugar":
+        return ("drop.fill", .blue)
+
+    case "hba1c":
+        return ("cross.case.fill", .pink)
+
+    case "cholesterol":
+        return ("shield.fill", .purple)
+
+    case "ldl":
+        return ("arrow.down.circle.fill", .orange)
+
+    case "hdl":
+        return ("arrow.up.circle.fill", .green)
+
+    case "triglycerides":
+        return ("drop.triangle.fill", .orange)
+
+    default:
+        return ("waveform.path.ecg", .green)
+    }
+}
 
     private var emptyState: some View {
         VStack(spacing: 16) {
@@ -1964,42 +2452,44 @@ struct OCRConfirmView: View {
     }
 
 
+private var extendedResultsSection: some View {
+    VStack(spacing: 0) {
 
-    private var extendedResultsSection:
-    some View {
-
-    VStack(spacing: 10) {
+        // Collapsible header
         Button {
             withAnimation(
-                .easeInOut(duration: 0.2)
+                .easeInOut(duration: 0.22)
             ) {
-                isExtendedResultsExpanded
-                    .toggle()
+                isExtendedResultsExpanded.toggle()
             }
         } label: {
-            HStack(spacing: 12) {
+            HStack(spacing: 14) {
                 Image(
-                    systemName:
-                        "list.bullet.rectangle"
+                    systemName: "list.bullet.rectangle"
                 )
-                .font(.system(size: 18))
+                .font(
+                    .system(
+                        size: 20,
+                        weight: .semibold
+                    )
+                )
                 .foregroundStyle(.blue)
 
                 VStack(
                     alignment: .leading,
-                    spacing: 3
+                    spacing: 4
                 ) {
-                    Text("Extended Results")
+                    Text("Additional Test Results")
                         .font(
                             .system(
-                                size: 17,
-                                weight: .semibold
+                                size: 18,
+                                weight: .bold
                             )
                         )
                         .foregroundStyle(.primary)
 
                     Text(
-                        "\(additionalFields.count) other fields found"
+                        "\(additionalFields.count) tests found"
                     )
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
@@ -2015,83 +2505,60 @@ struct OCRConfirmView: View {
                 )
                 .font(
                     .system(
-                        size: 14,
+                        size: 15,
                         weight: .semibold
                     )
                 )
                 .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 18)
-            .frame(minHeight: 70)
-            .background(
-                RoundedRectangle(
-                    cornerRadius: 18
-                )
-                .fill(
-                    Color(
-                        .secondarySystemBackground
-                    )
-                )
-            )
-            .overlay {
-                RoundedRectangle(
-                    cornerRadius: 18
-                )
-                .stroke(
-                    Color.blue.opacity(0.25),
-                    lineWidth: 1
-                )
-            }
+            .padding(.vertical, 18)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(
+            isExtendedResultsExpanded
+            ? "Hide additional test results"
+            : "Show additional test results"
+        )
 
+        // Expanded results
         if isExtendedResultsExpanded {
+            Divider()
+                .padding(.horizontal, 18)
+
             VStack(spacing: 0) {
                 ForEach(
-                    Array(
-                        additionalFields
-                            .enumerated()
-                    ),
+                    Array(additionalFields.enumerated()),
                     id: \.element.id
                 ) { index, field in
-                    extendedResultRow(field)
 
-                    if index <
-                        additionalFields.count - 1 {
+                    extendedResultRow(field)
+                        .padding(.horizontal, 18)
+
+                    if index < additionalFields.count - 1 {
                         Divider()
-                            .padding(
-                                .leading,
-                                18
-                            )
+                            .padding(.leading, 18)
                     }
                 }
             }
-            .background(
-                RoundedRectangle(
-                    cornerRadius: 18
-                )
-                .fill(
-                    Color(
-                        .secondarySystemBackground
-                    )
-                )
-            )
-            .clipShape(
-                RoundedRectangle(
-                    cornerRadius: 18
-                )
-            )
-            .overlay {
-                RoundedRectangle(
-                    cornerRadius: 18
-                )
-                .stroke(
-                    Color.gray.opacity(0.18),
-                    lineWidth: 1
-                )
-            }
-            
+            .padding(.bottom, 6)
         }
+    }
+    .background(
+        themeManager.current.cardBackground
+    )
+    .clipShape(
+        RoundedRectangle(cornerRadius: 20)
+    )
+    .overlay {
+        RoundedRectangle(cornerRadius: 20)
+            .stroke(
+                isExtendedResultsExpanded
+                ? Color.blue.opacity(0.35)
+                : Color.gray.opacity(0.18),
+                lineWidth: 1
+            )
     }
 }
 
@@ -2099,70 +2566,81 @@ private func extendedResultRow(
     _ field: HealthOCRAdditionalField
 ) -> some View {
 
-    let value =
-        field.value?
-            .displayText
-            .trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-        ?? ""
+    let valueText = (
+        field.value?.displayText ?? ""
+    )
+    .trimmingCharacters(
+        in: .whitespacesAndNewlines
+    )
 
-    let unit =
-        field.unit?
-            .trimmingCharacters(
-                in: .whitespacesAndNewlines
-            )
-        ?? ""
+    let unitText = (
+        field.unit ?? ""
+    )
+    .trimmingCharacters(
+        in: .whitespacesAndNewlines
+    )
 
     return HStack(
         alignment: .center,
         spacing: 12
     ) {
-        VStack(
-            alignment: .leading,
+        Text(field.name)
+            .font(
+                .system(
+                    size: 14,
+                    weight: .semibold
+                )
+            )
+            .foregroundStyle(.primary)
+            .multilineTextAlignment(.leading)
+            .fixedSize(
+                horizontal: false,
+                vertical: true
+            )
+
+        Spacer(minLength: 12)
+
+        HStack(
+            alignment: .firstTextBaseline,
             spacing: 5
         ) {
-            Text(field.name)
-                .font(
-                    .system(
-                        size: 16,
-                        weight: .semibold
-                    )
-                )
-                .foregroundStyle(.primary)
-
-            Text("Additional report field")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-        }
-
-        Spacer()
-
-        Text(
-            value.isEmpty
+            Text(
+                valueText.isEmpty
                 ? "Not found"
-                : value
-        )
-        .font(
-            .system(
-                size: 16,
-                weight: .semibold
+                : valueText
             )
-        )
-        .multilineTextAlignment(.trailing)
-        .foregroundStyle(
-            value.isEmpty
-                ? .secondary
-                : .primary
-        )
+            .font(
+                .system(
+                    size: 15,
+                    weight: .bold,
+                    design: .rounded
+                )
+            )
+            .foregroundStyle(
+                valueText.isEmpty
+                ? Color.secondary
+                : Color.primary
+            )
+            .multilineTextAlignment(.trailing)
+            .lineLimit(2)
 
-        if !unit.isEmpty {
-            Text(unit)
-                .font(.system(size: 14))
-                .foregroundStyle(.secondary)
+            if !unitText.isEmpty {
+                Text(unitText)
+                    .font(
+                        .system(
+                            size: 12,
+                            weight: .medium
+                        )
+                    )
+                    .foregroundStyle(.secondary)
+            }
         }
+        .fixedSize(
+            horizontal: true,
+            vertical: false
+        )
     }
-    .padding(.horizontal, 18)
-    .padding(.vertical, 16)
+    .padding(.vertical, 13)
+    .padding(.horizontal, 2)
 }
 }
