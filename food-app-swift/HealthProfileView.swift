@@ -173,11 +173,11 @@ struct HealthProfileView: View {
         additionalFields: pendingAdditionalFields,
         status: ocrStatus,
         message: ocrMessage
-    ) { confirmed in
+    ) { confirmed, confirmedAdditional in
         applyConfirmedFields(confirmed)
 
         confirmedAdditionalFields =
-            pendingAdditionalFields
+            confirmedAdditional
     }
     .environmentObject(themeManager)
 }

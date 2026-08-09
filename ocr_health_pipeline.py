@@ -373,7 +373,22 @@ For the 11 canonical fields:
 
 For every other measurement:
 - Put it inside `additional_fields`.
-- Preserve the original test name.
+- Return a short, normalized display name, preferably 2–5 words.
+- Do not return the complete report description as the test name.
+- Remove score ranges, measurement descriptions, report status, brackets,
+  codes, specimen details and method information from test names.
+- Use common medical abbreviations when they are clearer and shorter.
+- Examples:
+  "Pain severity - 0-10 verbal numeric rating [Score] - Reported"
+  -> "Pain Severity"
+  "Patient Health Questionnaire-9: Modified for Teens total score"
+  -> "PHQ-9"
+  "White Blood Cell Count"
+  -> "WBC Count"
+  "Respiratory rate"
+  -> "Respiratory Rate"
+  - Do not repeat the unit in the test name.
+- When the unit is "score", omit "Score" and "Total Score" from the test name.
 - Preserve the original result.
 - Preserve the original unit.
 - One measurement must produce one object.
@@ -399,7 +414,73 @@ REPORT TRANSCRIPTION:
 --- END REPORT ---
 """.strip()
 
+ADDITIONAL_DISPLAY_NAME_PATTERNS = (
+    (
+        r"\bpain severity\b",
+        "Pain Severity",
+    ),
+    (
+        r"\bpatient health questionnaire(?:\s+9)?\b|\bphq\s+9\b",
+        "PHQ-9",
+    ),
+    (
+        r"\bheart rate\b|\bpulse rate\b",
+        "Heart Rate",
+    ),
+    (
+        r"\brespiratory rate\b|\brespiration rate\b",
+        "Respiratory Rate",
+    ),
+    (
+        r"\bwhite blood cell(?: count)?\b|\bwbc(?: count)?\b",
+        "WBC Count",
+    ),
+    (
+        r"\bred blood cell(?: count)?\b|\brbc(?: count)?\b",
+        "RBC Count",
+    ),
+    (
+        r"\bplatelet(?: count)?\b|\bplt(?: count)?\b",
+        "Platelet Count",
+    ),
+)
+def _normalize_additional_test_name(name: str) -> str:
+    original_key = _normalized_label(name)
 
+    # Handle long descriptive names using partial/pattern matching.
+    for pattern, display_name in ADDITIONAL_DISPLAY_NAME_PATTERNS:
+        if re.search(pattern, original_key):
+            return display_name
+
+    # Remove content inside square or curly brackets.
+    cleaned_name = re.sub(
+        r"\[[^\]]*\]|\{[^}]*\}",
+        " ",
+        name,
+    )
+
+    # Remove descriptions following a spaced dash.
+    cleaned_name = re.split(
+        r"\s+(?:-|–|—)\s+",
+        cleaned_name,
+        maxsplit=1,
+    )[0]
+
+    cleaned_name = re.sub(
+        r"\s+",
+        " ",
+        cleaned_name,
+    ).strip(" :-")
+
+    lookup_key = _normalized_label(cleaned_name)
+
+    # Existing exact alias lookup.
+    normalized_name = _ADDITIONAL_TEST_LOOKUP.get(lookup_key)
+
+    if normalized_name:
+        return normalized_name
+
+    return cleaned_name
 def _clean_json_text(text: str) -> str:
     cleaned = (text or "").strip()
     cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
@@ -556,6 +637,18 @@ def _validate_additional_fields(
         name = str(item.get("name") or "").strip()
         value = item.get("value")
         unit = str(item.get("unit") or "").strip() or None
+        if unit:
+            unit = re.sub(r"[{}\[\]]", "", unit).strip() or None
+
+
+        # Avoid repeating "score" in both the name and unit.
+        if unit and _normalized_label(unit) == "score":
+            name = re.sub(
+                r"\s+(?:total\s+)?score\s*$",
+                "",
+                name,
+                flags=re.IGNORECASE,
+            ).strip()
 
         if (
             not name

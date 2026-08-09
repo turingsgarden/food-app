@@ -581,6 +581,10 @@ func scanHealthReport(
         string: "http://127.0.0.1:5001/ocr-health-report"
         // string: "\(baseURL)/ocr-health-report"
     ) else {
+
+    // guard let url = AppConfig.url(
+    //     path: "/ocr-health-report"
+    // ) else {
         completion(
             .failure(
                 nsErr(

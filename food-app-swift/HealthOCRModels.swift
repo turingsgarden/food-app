@@ -92,6 +92,16 @@ struct HealthOCRAdditionalField: Codable, Identifiable {
     let value: HealthOCRRawValue?
     let unit: String?
 
+    init(
+        name: String,
+        value: HealthOCRRawValue?,
+        unit: String?
+    ) {
+        self.name = name
+        self.value = value
+        self.unit = unit
+    }
+
     var id: String {
         "\(name)|\(value?.displayText ?? "")|\(unit ?? "")"
     }

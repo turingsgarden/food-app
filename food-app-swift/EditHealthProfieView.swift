@@ -422,14 +422,14 @@ if currentAdditionalFieldSignatures !=
         additionalFields: pendingAdditionalFields,
         status: ocrStatus,
         message: ocrMessage
-    ) { confirmed in
+    ) { confirmed, confirmedAdditional in
 
         // Apply the predefined health fields.
         applyConfirmedFields(confirmed)
 
         // Keep the extended fields for the Health Profile UI.
         confirmedAdditionalFields =
-            pendingAdditionalFields
+            confirmedAdditional
     }
     .environmentObject(themeManager)
 }
@@ -2126,13 +2126,48 @@ struct OCRConfirmView: View {
     @Environment(\.dismiss) var dismiss
 
     @State var fields: [OCRField]
-    let additionalFields:
-        [HealthOCRAdditionalField]
+    @State private var additionalFields: [OCRField]
     let status: String          // "ok" / "no_fields" / "no_text"
     let message: String?
-    let onConfirm: ([OCRField]) -> Void
+    let onConfirm: (
+        [OCRField],
+        [HealthOCRAdditionalField]
+    ) -> Void
     @State private var
         isExtendedResultsExpanded = false
+
+    init(
+        fields: [OCRField],
+        additionalFields: [HealthOCRAdditionalField],
+        status: String,
+        message: String?,
+        onConfirm: @escaping (
+            [OCRField],
+            [HealthOCRAdditionalField]
+        ) -> Void
+    ) {
+        _fields = State(initialValue: fields)
+        _additionalFields = State(
+            initialValue: additionalFields.enumerated().map { item in
+                let (index, field) = item
+
+                return OCRField(
+                    id: "additional_\(index)",
+                    label: field.name,
+                    rawName: field.name,
+                    rawValue: field.value?.displayText,
+                    rawUnit: field.unit,
+                    processedUnit: field.unit ?? "",
+                    editedValue: field.value?.displayText ?? "",
+                    accepted: true
+                )
+            }
+        )
+        self.status = status
+        self.message = message
+        self.onConfirm = onConfirm
+    }
+
 
     private var hasFields: Bool {
         status == "ok" &&
@@ -2156,7 +2191,10 @@ struct OCRConfirmView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     if hasFields {
                         Button("Use Values") {
-                            onConfirm(fields.filter { $0.accepted })
+                            onConfirm(
+                                fields.filter { $0.accepted },
+                                confirmedAdditionalFields
+                            )
                             dismiss()
                         }
                         .font(.system(size: 16, weight: .bold))
@@ -2527,22 +2565,12 @@ private var extendedResultsSection: some View {
             Divider()
                 .padding(.horizontal, 18)
 
-            VStack(spacing: 0) {
-                ForEach(
-                    Array(additionalFields.enumerated()),
-                    id: \.element.id
-                ) { index, field in
-
-                    extendedResultRow(field)
-                        .padding(.horizontal, 18)
-
-                    if index < additionalFields.count - 1 {
-                        Divider()
-                            .padding(.leading, 18)
-                    }
+            VStack(spacing: 12) {
+                ForEach(additionalFields.indices, id: \.self) { index in
+                    additionalFieldRow($additionalFields[index])
                 }
             }
-            .padding(.bottom, 6)
+            .padding(18)
         }
     }
     .background(
@@ -2562,85 +2590,114 @@ private var extendedResultsSection: some View {
     }
 }
 
-private func extendedResultRow(
-    _ field: HealthOCRAdditionalField
+private func additionalFieldRow(
+    _ field: Binding<OCRField>
 ) -> some View {
 
-    let valueText = (
-        field.value?.displayText ?? ""
-    )
-    .trimmingCharacters(
-        in: .whitespacesAndNewlines
-    )
+    let f = field.wrappedValue
 
-    let unitText = (
-        field.unit ?? ""
-    )
-    .trimmingCharacters(
-        in: .whitespacesAndNewlines
-    )
-
-    return HStack(
-        alignment: .center,
-        spacing: 12
-    ) {
-        Text(field.name)
-            .font(
-                .system(
-                    size: 14,
-                    weight: .semibold
-                )
-            )
-            .foregroundStyle(.primary)
-            .multilineTextAlignment(.leading)
-            .fixedSize(
-                horizontal: false,
-                vertical: true
-            )
-
-        Spacer(minLength: 12)
-
-        HStack(
-            alignment: .firstTextBaseline,
-            spacing: 5
-        ) {
-            Text(
-                valueText.isEmpty
-                ? "Not found"
-                : valueText
-            )
+    return HStack(spacing: 12) {
+        Text(f.label)
             .font(
                 .system(
                     size: 15,
+                    weight: .semibold
+                )
+            )
+            .foregroundColor(
+                themeManager.current.primaryText
+            )
+            .frame(
+                maxWidth: .infinity,
+                alignment: .leading
+            )
+
+        TextField("", text: field.editedValue)
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.trailing)
+            .font(
+                .system(
+                    size: 16,
                     weight: .bold,
                     design: .rounded
                 )
             )
-            .foregroundStyle(
-                valueText.isEmpty
-                ? Color.secondary
-                : Color.primary
+            .foregroundColor(
+                themeManager.current.primaryText
             )
-            .multilineTextAlignment(.trailing)
-            .lineLimit(2)
+            .frame(width: 85)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 9)
+            .background(
+                themeManager.current.inputBackground
+            )
+            .cornerRadius(9)
+            .disabled(!f.accepted)
 
-            if !unitText.isEmpty {
-                Text(unitText)
-                    .font(
-                        .system(
-                            size: 12,
-                            weight: .medium
-                        )
+        if !f.processedUnit.isEmpty {
+            Text(f.processedUnit)
+                .font(
+                    .system(
+                        size: 13,
+                        weight: .medium
                     )
-                    .foregroundStyle(.secondary)
-            }
+                )
+                .foregroundColor(
+                    themeManager.current.secondaryText
+                )
+                .fixedSize()
         }
-        .fixedSize(
-            horizontal: true,
-            vertical: false
-        )
+
+        Toggle("", isOn: field.accepted)
+            .labelsHidden()
+            .toggleStyle(
+                SwitchToggleStyle(tint: .green)
+            )
     }
-    .padding(.vertical, 13)
-    .padding(.horizontal, 2)
+    .padding(14)
+    .background(
+        themeManager.current.cardBackground
+    )
+    .cornerRadius(16)
+    .overlay {
+        RoundedRectangle(cornerRadius: 16)
+            .stroke(
+                f.accepted
+                    ? Color.green.opacity(0.22)
+                    : themeManager.current.cardBorder,
+                lineWidth: 1
+            )
+    }
+    .opacity(f.accepted ? 1 : 0.55)
+}
+
+private var confirmedAdditionalFields:
+    [HealthOCRAdditionalField] {
+
+    additionalFields
+        .filter { $0.accepted }
+        .map { field in
+            let editedValue = field.editedValue
+                .trimmingCharacters(
+                    in: .whitespacesAndNewlines
+                )
+
+            let value: HealthOCRRawValue?
+            if editedValue.isEmpty {
+                value = nil
+            } else if let number = Double(editedValue) {
+                value = .number(number)
+            } else {
+                value = .string(editedValue)
+            }
+
+            return HealthOCRAdditionalField(
+                name: field.label,
+                value: value,
+                unit: field.processedUnit.isEmpty
+                    ? nil
+                    : field.processedUnit
+            )
+        }
 }
 }
