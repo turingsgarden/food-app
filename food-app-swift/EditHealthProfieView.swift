@@ -97,13 +97,19 @@ func parseOCRFields(json: [String: Any]) -> [OCRField] {
     guard let value, !(value is NSNull) else {
       return nil
     }
-
     if let text = value as? String {
+      if let number = Double(text) {
+        return String(format: "%.2f", number)
+      }
+
       return text
     }
 
     if let number = value as? NSNumber {
-      return number.stringValue
+      return String(
+        format: "%.2f",
+        number.doubleValue
+      )
     }
 
     return String(describing: value)
@@ -778,26 +784,6 @@ struct EditHealthProfileView: View {
       showError = true
     }
   }
-
-  // MARK: - Parse / Apply / Prefill / Save
-
-  /// Open the raw → processed confirmation sheet. Falls back to the legacy
-  /// direct-apply path if the response has no `fields` double-layer (older backend).
-  // func presentOCRConfirmation(json: [String: Any]) {
-  //     let fields = parseOCRFields(json: json)
-  //     if fields.isEmpty {
-  //         let legacy = parseOCRResult(json: json)
-  //         if legacy.hasAnyResult {
-  //             applyOCRResult(legacy); scanResult = legacy; showScanResult = true
-  //             return
-  //         }
-  //     }
-  //     pendingFields = fields
-  //     ocrStatus = (json["status"] as? String) ?? (fields.isEmpty ? "no_fields" : "ok")
-  //     ocrMessage = json["message"] as? String
-  //     showOCRConfirm = true
-  // }
-  //
 
   func presentOCRConfirmation(
     json: [String: Any]
