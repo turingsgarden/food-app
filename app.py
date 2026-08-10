@@ -24,10 +24,7 @@ from email.mime.multipart import MIMEMultipart
 import requests
 import json
 import hashlib
-import io
-import re
-import fitz          # PyMuPDF  — pip install pymupdf
-import docx          # python-docx — pip install python-docx
+
 import threading
 from jwt import PyJWKClient
 from google.oauth2 import id_token
@@ -56,6 +53,8 @@ meal_plan_jobs = {}
 
 APPLE_KEYS = None
 APPLE_KEYS_LAST_FETCH = 0
+MAX_OCR_FILE_BYTES = 10 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
 
 app.config['SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'your-secret-key-change-this')
 app.config['JWT_EXPIRATION_HOURS'] = 24 * 7
@@ -1514,75 +1513,7 @@ def payload_too_large(error):
     return jsonify({"error": "Request payload too large"}), 413
 
 
-# ── OCR health-field specification (single source of truth) ──
-# 11 MVP fields. Each: standard unit, type, valid range (out-of-range → null).
-HEALTH_FIELD_SPECS = {
-    "systolic_bp":   {"type": "int",   "unit": "mmHg",   "min": 60,    "max": 250},
-    "diastolic_bp":  {"type": "int",   "unit": "mmHg",   "min": 30,    "max": 150},
-    "height_cm":     {"type": "float", "unit": "cm",     "min": 100.0, "max": 230.0},
-    "weight_kg":     {"type": "float", "unit": "kg",     "min": 30.0,  "max": 300.0},
-    "bmi":           {"type": "float", "unit": "kg/m2",  "min": 10.0,  "max": 60.0},
-    "blood_sugar":   {"type": "float", "unit": "mmol/L", "min": 2.0,   "max": 30.0},
-    "hba1c":         {"type": "float", "unit": "%",      "min": 3.0,   "max": 20.0},
-    "cholesterol":   {"type": "float", "unit": "mmol/L", "min": 1.0,   "max": 15.0},
-    "ldl":           {"type": "float", "unit": "mmol/L", "min": 0.3,   "max": 10.0},
-    "hdl":           {"type": "float", "unit": "mmol/L", "min": 0.3,   "max": 5.0},
-    "triglycerides": {"type": "float", "unit": "mmol/L", "min": 0.2,   "max": 10.0},
-}
 
-# Aliases used BOTH as Gemini prompt hints and as regex-fallback patterns.
-# Kept reasonably specific to avoid cross-field false matches (esp. TC vs LDL/HDL).
-HEALTH_FIELD_ALIASES = {
-    "systolic_bp":   ["SBP", "systolic", "收缩压", "高压"],
-    "diastolic_bp":  ["DBP", "diastolic", "舒张压", "低压"],
-    "height_cm":     ["height", "Ht", "身高"],
-    "weight_kg":     ["weight", "Wt", "BW", "体重"],
-    "bmi":           ["BMI", "body mass index", "体重指数", "体质指数"],
-    "blood_sugar":   ["glucose", "GLU", "FBG", "FPG", "blood sugar", "空腹血糖", "血糖"],
-    "hba1c":         ["HbA1c", "A1c", "glycated hemoglobin", "糖化血红蛋白", "糖化"],
-    "cholesterol":   ["TC", "CHOL", "total cholesterol", "总胆固醇"],
-    "ldl":           ["LDL-C", "LDL", "低密度脂蛋白", "低密度"],
-    "hdl":           ["HDL-C", "HDL", "高密度脂蛋白", "高密度"],
-    "triglycerides": ["TG", "TRIG", "triglyceride", "甘油三酯", "三酰甘油"],
-}
-
-_NO_FIELDS_MESSAGE = "No recognizable health metrics in this report. You can enter values manually."
-
-
-def _blank_health_fields() -> dict:
-    return {f: None for f in HEALTH_FIELD_SPECS}
-
-
-def _empty_health_ocr_response(message: str, status: str = "no_text") -> dict:
-    """All-null response. status distinguishes 'no_text' (OCR failed) vs 'no_fields'."""
-    resp = _blank_health_fields()
-    resp["fields"] = {}
-    resp["status"] = status
-    resp["message"] = message
-    return resp
-
-
-def _gemini_transcribe_image_b64(image_b64: str, mime_type: str = "image/jpeg") -> str:
-    """OCR step 1 (transcription) — SWAP POINT for the Gemini-only vs Vision+Gemini
-    comparison: to build the Vision variant, replace ONLY this function's body with a
-    Google Cloud Vision OCR call; all downstream extraction/validation stays identical."""
-    ocr_prompt = (
-        "Transcribe ALL text from this medical or laboratory report image verbatim. "
-        "Preserve table rows and columns. Do not summarize, translate, or omit content."
-    )
-    contents = [
-        ocr_prompt,
-        {"inline_data": {"mime_type": mime_type, "data": image_b64}},
-    ]
-    return generate_content_with_fallback(contents, gemini_model=gemini_model).strip()
-
-
-def _gemini_transcribe_image(image_b64: str) -> str:
-    return _gemini_transcribe_image_b64(image_b64, "image/jpeg")
-
-
-_PDF_GEMINI_MAX_PAGES = 3
-_PDF_RENDER_SCALE = 2
 
 
 @app.route("/ocr-health-report", methods=["POST"])
@@ -1689,281 +1620,129 @@ def ocr_health_report():
             "error": "Unexpected OCR processing error."
         }), 500
 
-
 @app.route("/ocr-document", methods=["POST"])
-#@token_required
+# @token_required
 def ocr_document():
-    """OCR for PDF/Word: extract text with PyMuPDF or python-docx, then Gemini extraction."""
-    try:
-        data = request.get_json()
-        if not data or not data.get("file_base64"):
-            return jsonify({"error": "No file provided"}), 400
-
-
-        file_bytes = base64.b64decode(data["file_base64"])
-        file_type = (data.get("file_type") or "pdf").lower()
-
-        if file_type == "pdf":
-            full_text = _extract_text_from_pdf(file_bytes)
-        elif file_type in ("docx", "doc"):
-            full_text = _extract_text_from_docx(file_bytes)
-        else:
-            return jsonify({"error": "Unsupported file type. Use pdf or docx."}), 400
-
-        if not full_text.strip():
-            return jsonify(_empty_health_ocr_response(
-                "No text detected in document. Try a clearer file or upload a photo instead."
-            )), 200
-
-        print(f"📄 Document OCR extracted {len(full_text)} chars ({file_type})")
-        result_json = _extract_health_values_from_text(full_text)
-        cleaned = _validate_health_values(result_json)
-        print(f"✅ Document OCR final: {cleaned}")
-        return jsonify(cleaned), 200
-
-    except json.JSONDecodeError:
-        return jsonify({"error": "Could not parse scan results. Try a clearer document."}), 422
-    except Exception as e:
-        print(f"❌ Document OCR error: {e}")
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-
-def _clamp_health_value(field: str, value):
-    """Type-cast + range-clamp a single field; out-of-range / unparseable → None."""
-    spec = HEALTH_FIELD_SPECS[field]
-    if value is None:
-        return None
-    try:
-        if spec["type"] == "int":
-            v = int(round(float(value)))
-        else:
-            v = round(float(value), 2)
-    except (TypeError, ValueError):
-        return None
-    return v if spec["min"] <= v <= spec["max"] else None
-
-
-def _validate_health_values(raw: dict) -> dict:
-    """Build the response contract: flat processed values (backward-compatible)
-    + per-field raw/processed double layer + status three-state.
-
-    Accepts per-field entries that are either a scalar (processed value only)
-    or a dict {raw_name, raw_value, raw_unit, value}.
     """
-    raw = raw if isinstance(raw, dict) else {}
-    flat = {}
-    fields = {}
+    PDF/DOCX compatibility endpoint.
 
-    for field, spec in HEALTH_FIELD_SPECS.items():
-        entry = raw.get(field)
-        if isinstance(entry, dict):
-            value = _clamp_health_value(field, entry.get("value"))
-            raw_name = entry.get("raw_name")
-            raw_value = entry.get("raw_value")
-            raw_unit = entry.get("raw_unit")
-        else:
-            value = _clamp_health_value(field, entry)
-            raw_name = raw_value = raw_unit = None
+    Both file types are processed by the new
+    ocr_health_pipeline.process_health_report pipeline.
+    """
+    try:
+        data = request.get_json(silent=True) or {}
 
-        flat[field] = value
-        if value is not None:
-            fields[field] = {
-                "raw": {
-                    "name": (raw_name or None),
-                    "value": (str(raw_value) if raw_value not in (None, "") else str(value)),
-                    "unit": (raw_unit or None),
-                },
-                "processed": {"value": value, "unit": spec["unit"]},
-            }
+        encoded_file = data.get("file_base64")
 
-    result = dict(flat)
-    result["fields"] = fields
-    result["status"] = "ok" if fields else "no_fields"
-    result["message"] = None if fields else _NO_FIELDS_MESSAGE
-    return result
+        if not encoded_file:
+            return jsonify({
+                "error": "No document was provided."
+            }), 400
 
+        if not isinstance(encoded_file, str):
+            return jsonify({
+                "error": "The document must be base64 encoded."
+            }), 400
 
-def _regex_find_field(text: str, field: str):
-    """Find a single field via its aliases. Returns (raw_name, raw_value, raw_unit) or None."""
-    aliases = HEALTH_FIELD_ALIASES.get(field, [])
-    if not aliases:
-        return None
-    grp = "|".join(re.escape(a) for a in aliases)
-    # Allow a little non-digit junk between the label and the number (e.g. "(TC):", ": "),
-    # but never cross a line break (keeps the number tied to its own label).
-    m = re.search(rf'({grp})[^\d\n]{{0,15}}(-?\d+\.?\d*)\s*([A-Za-z/%]+)?', text, re.IGNORECASE)
-    if not m:
-        return None
-    return m.group(1), m.group(2), (m.group(3) or "")
+        if encoded_file.startswith("data:"):
+            try:
+                encoded_file = encoded_file.split(",", 1)[1]
+            except IndexError:
+                return jsonify({
+                    "error": "Invalid base64 data URL."
+                }), 400
 
+        encoded_file = "".join(encoded_file.split())
 
-def _extract_health_values_regex(text: str) -> dict:
-    """Fallback extractor (used when Gemini is unavailable or returns invalid JSON).
-    Returns per-field dicts {raw_name, raw_value, raw_unit, value} so the downstream
-    validator can build the same raw/processed double-layer structure."""
-    result = {f: None for f in HEALTH_FIELD_SPECS}
+        try:
+            file_bytes = base64.b64decode(
+                encoded_file,
+                validate=True,
+            )
+        except Exception:
+            return jsonify({
+                "error": "The document contains invalid base64 data."
+            }), 400
 
-    def put(field, raw_name, raw_value, raw_unit, value):
-        result[field] = {
-            "raw_name": (raw_name or "").strip() or None,
-            "raw_value": str(raw_value),
-            "raw_unit": (raw_unit or "").strip() or None,
-            "value": value,
+        if not file_bytes:
+            return jsonify({
+                "error": "The uploaded document is empty."
+            }), 400
+
+        max_file_size = 10 * 1024 * 1024
+
+        if len(file_bytes) > max_file_size:
+            return jsonify({
+                "error": "File too large. Maximum size is 10 MB."
+            }), 413
+
+        file_type = str(
+            data.get("file_type") or ""
+        ).strip().lower()
+
+        file_config = {
+            "pdf": (
+                "health-report.pdf",
+                "application/pdf",
+            ),
+            "docx": (
+                "health-report.docx",
+                "application/vnd.openxmlformats-officedocument."
+                "wordprocessingml.document",
+            ),
         }
 
-    # Blood pressure (combined "120/80")
-    bp = re.search(r'(?:BP|blood\s*pressure|收缩压|血压)?[:\s]*(\d{2,3})\s*/\s*(\d{2,3})', text, re.IGNORECASE)
-    if not bp:
-        bp = re.search(r'(?:SBP|systolic)[:\s]*(\d{2,3}).*?(?:DBP|diastolic)[:\s]*(\d{2,3})', text, re.IGNORECASE | re.DOTALL)
-    if bp:
-        put("systolic_bp", "BP", bp.group(1), "mmHg", int(bp.group(1)))
-        put("diastolic_bp", "BP", bp.group(2), "mmHg", int(bp.group(2)))
-    # Fallback for non-slash layouts (e.g. "收缩压 120 ... 舒张压 78")
-    if result["systolic_bp"] is None:
-        m = _regex_find_field(text, "systolic_bp")
-        if m:
-            put("systolic_bp", m[0], m[1], m[2], int(round(float(m[1]))))
-    if result["diastolic_bp"] is None:
-        m = _regex_find_field(text, "diastolic_bp")
-        if m:
-            put("diastolic_bp", m[0], m[1], m[2], int(round(float(m[1]))))
+        if file_type not in file_config:
+            return jsonify({
+                "error": "Unsupported file type. Use PDF or DOCX."
+            }), 400
 
-    # Blood glucose (mg/dL ÷ 18)
-    m = _regex_find_field(text, "blood_sugar")
-    if m:
-        v = float(m[1])
-        if "mg" in m[2].lower() or v > 30:
-            v = v / 18.0
-        put("blood_sugar", m[0], m[1], m[2], round(v, 1))
+        filename, mime_type = file_config[file_type]
 
-    # HbA1c (%)
-    m = _regex_find_field(text, "hba1c")
-    if m:
-        put("hba1c", m[0], m[1], m[2], round(float(m[1]), 1))
+        result = process_health_report(
+            file_bytes,
+            filename=filename,
+            mime_type=mime_type,
+            include_raw_text=False,
+            max_retries=3,
+        )
 
-    # Lipids: total cholesterol / LDL / HDL (mg/dL ÷ 38.67)
-    for field in ("cholesterol", "ldl", "hdl"):
-        m = _regex_find_field(text, field)
-        if m:
-            v = float(m[1])
-            if "mg" in m[2].lower() or v > 20:
-                v = v / 38.67
-            put(field, m[0], m[1], m[2], round(v, 2))
+        print(
+            "✅ Document OCR completed: "
+            f"type={file_type}, "
+            f"status={result.get('status')}, "
+            f"additional_fields="
+            f"{len(result.get('additional_fields', []))}"
+        )
 
-    # Triglycerides (mg/dL ÷ 88.57)
-    m = _regex_find_field(text, "triglycerides")
-    if m:
-        v = float(m[1])
-        if "mg" in m[2].lower() or v > 15:
-            v = v / 88.57
-        put("triglycerides", m[0], m[1], m[2], round(v, 2))
+        return jsonify(result), 200
 
-    # Height (inch ×2.54)
-    m = _regex_find_field(text, "height_cm")
-    if m:
-        v = float(m[1])
-        if "in" in m[2].lower():
-            v = v * 2.54
-        put("height_cm", m[0], m[1], m[2], round(v, 1))
+    except HealthOcrConfigurationError as error:
+        print(f"❌ OCR configuration error: {error}")
 
-    # Weight (lb ×0.4536)
-    m = _regex_find_field(text, "weight_kg")
-    if m:
-        v = float(m[1])
-        if "lb" in m[2].lower():
-            v = v * 0.4536
-        put("weight_kg", m[0], m[1], m[2], round(v, 1))
+        return jsonify({
+            "error": "OCR service is not configured."
+        }), 503
 
-    # BMI
-    m = _regex_find_field(text, "bmi")
-    if m:
-        put("bmi", m[0], m[1], m[2], round(float(m[1]), 1))
+    except HealthOcrApiError as error:
+        print(f"❌ OCR API error: {error}")
 
-    return result
+        return jsonify({
+            "error": "The OCR service could not process the document."
+        }), 502
 
+    except ValueError as error:
+        return jsonify({
+            "error": str(error)
+        }), 400
 
-def _extract_text_from_pdf(pdf_bytes: bytes) -> str:
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as doc:
-        text_pages = [page.get_text() for page in doc]
-        full = "\n".join(text_pages)
-        if full.strip():
-            return full
+    except Exception as error:
+        print(f"❌ Document OCR error: {error}")
+        traceback.print_exc()
 
-        if not gemini_model:
-            return ""
-
-        text_parts = []
-        page_count = min(len(doc), _PDF_GEMINI_MAX_PAGES)
-        print(f"📄 PDF has no text layer — Gemini OCR on {page_count} page(s)...")
-        matrix = fitz.Matrix(_PDF_RENDER_SCALE, _PDF_RENDER_SCALE)
-        for i in range(page_count):
-            pix = doc[i].get_pixmap(matrix=matrix)
-            image_b64 = base64.b64encode(pix.tobytes("png")).decode("ascii")
-            print(f"📤 Gemini PDF page OCR: transcribing page {i + 1}/{page_count}...")
-            page_text = _gemini_transcribe_image_b64(image_b64, "image/png")
-            if page_text:
-                text_parts.append(page_text)
-        return "\n\n".join(text_parts)
-
-def _extract_text_from_docx(docx_bytes: bytes) -> str:
-    doc = docx.Document(io.BytesIO(docx_bytes))
-    return "\n".join(p.text for p in doc.paragraphs if p.text.strip())
-
-def _extract_health_values_from_text(raw_text: str) -> dict:
-    """OCR step 2: extract structured health fields from transcribed text.
-
-    Asks Gemini to return BOTH the raw reading (as printed) and the processed
-    value (normalized to the standard unit) per field. Falls back to regex."""
-    if not raw_text.strip():
-        return _extract_health_values_regex("")
-
-    if not gemini_model:
-        return _extract_health_values_regex(raw_text)
-
-    field_json = ", ".join(
-        f'"{f}": {{"raw_name": <str|null>, "raw_value": <str|null>, "raw_unit": <str|null>, "value": <number|null>}}'
-        for f in HEALTH_FIELD_SPECS
-    )
-    alias_hints = "\n".join(
-        f"- {f}: {', '.join(HEALTH_FIELD_ALIASES[f])}" for f in HEALTH_FIELD_SPECS
-    )
-
-    prompt = f"""You are a medical data extraction assistant.
-From the OCR text, extract these health fields. Return ONLY valid JSON, no markdown.
-For each field return BOTH the raw reading (exactly as printed on the report) and the processed value (normalized to the standard unit):
-{{{field_json}}}
-
-Field aliases (map any of these names to the field):
-{alias_hints}
-
-Standard units & conversion for the processed "value":
-- systolic_bp / diastolic_bp: mmHg (BP printed as "120/80" → systolic_bp=120, diastolic_bp=80)
-- blood_sugar: mmol/L (if mg/dL: divide by 18.0)
-- cholesterol / ldl / hdl: mmol/L (if mg/dL: divide by 38.67)
-- triglycerides: mmol/L (if mg/dL: divide by 88.57)
-- hba1c: % (if IFCC mmol/mol: multiply by 0.0915 then add 2.15)
-- height_cm: cm (if inch: multiply by 2.54); weight_kg: kg (if lb: multiply by 0.4536); bmi: kg/m2
-
-Rules:
-- "cholesterol" means TOTAL cholesterol (TC) ONLY. Do NOT put LDL or HDL values into "cholesterol".
-- raw_name / raw_value / raw_unit = exactly as printed (do NOT convert). "value" = number in the standard unit.
-- Use null for raw_* and value when the field is missing or unreadable.
-
-OCR TEXT:
-\"\"\"{raw_text[:6000]}\"\"\"
-"""
-    raw = generate_content_with_fallback(prompt, gemini_model=gemini_model).strip()
-    raw = raw.replace("```json", "").replace("```", "").strip()
-    start = raw.find("{")
-    end = raw.rfind("}") + 1
-    if start >= 0 and end > start:
-        raw = raw[start:end]
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            pass
-    return _extract_health_values_regex(raw_text)
+        return jsonify({
+            "error": "Unexpected document OCR error."
+        }), 500
 
 
 @app.route("/meal-insight", methods=["POST"])
@@ -2070,7 +1849,7 @@ def _bmi_category(bmi):
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5001))
     print(f"🚀 Starting on port {port}")
     print(f"🗄️ MongoDB: {'✅ Connected' if client else '❌ Not connected'}")
     print(f"🤖 Gemini AI: {'✅ Ready' if gemini_model else '❌ Not configured'}")

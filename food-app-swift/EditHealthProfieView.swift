@@ -506,6 +506,14 @@ struct EditHealthProfileView: View {
       defer { url.stopAccessingSecurityScopedResource() }
 
       do {
+        let hasAccess = url.startAccessingSecurityScopedResource()
+
+        defer {
+          if hasAccess {
+            url.stopAccessingSecurityScopedResource()
+          }
+        }
+
         let data = try Data(contentsOf: url)
         let ext = url.pathExtension.lowercased()
         let fileType: String = (ext == "pdf") ? "pdf" : "docx"
@@ -528,7 +536,10 @@ struct EditHealthProfileView: View {
 
   func callDocumentOCR(base64: String, fileType: String) {
     guard let token = session.getAuthToken(),
-      let url = AppConfig.url(path: "/ocr-document")
+      // let url = AppConfig.url(path: "/ocr-document")
+      let url = URL(
+        string: "http://127.0.0.1:5001/ocr-document"
+      )
     else {
       DispatchQueue.main.async {
         self.isScanning = false
@@ -547,22 +558,84 @@ struct EditHealthProfileView: View {
     let body: [String: Any] = ["file_base64": base64, "file_type": fileType]
     request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-    URLSession.shared.dataTask(with: request) { data, response, error in
+    URLSession.shared.dataTask(with: request) {
+      data,
+      response,
+      error in
+
       DispatchQueue.main.async {
         self.isScanning = false
-        if let error = error {
-          self.errorMsg = "Scan failed: \(error.localizedDescription)"
+
+        if let error {
+          self.errorMsg =
+            "Scan failed: \(error.localizedDescription)"
           self.showError = true
           return
         }
-        guard let data = data,
-          let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+        guard
+          let httpResponse =
+            response as? HTTPURLResponse
         else {
-          self.errorMsg = "Could not read scan results. Please try again or enter values manually."
+          self.errorMsg =
+            "Invalid response from OCR server."
           self.showError = true
           return
         }
-        self.presentOCRConfirmation(json: json)
+
+        guard let data else {
+          self.errorMsg =
+            "No OCR result was returned."
+          self.showError = true
+          return
+        }
+
+        guard
+          (200...299).contains(
+            httpResponse.statusCode
+          )
+        else {
+          let serverMessage: String
+
+          if let json =
+            try? JSONSerialization.jsonObject(
+              with: data
+            ) as? [String: Any],
+            let message =
+              json["error"] as? String
+              ?? json["message"] as? String
+          {
+            serverMessage = message
+          } else {
+            serverMessage =
+              "OCR failed with status "
+              + "\(httpResponse.statusCode)."
+          }
+
+          self.errorMsg = serverMessage
+          self.showError = true
+          return
+        }
+
+        do {
+          let ocrResponse =
+            try JSONDecoder().decode(
+              HealthOCRResponse.self,
+              from: data
+            )
+
+          // Uses the same response handling as photo OCR.
+          self.handleOCRResponse(
+            ocrResponse
+          )
+
+        } catch {
+          self.errorMsg =
+            "Could not decode document OCR result: "
+            + error.localizedDescription
+
+          self.showError = true
+        }
       }
     }.resume()
   }

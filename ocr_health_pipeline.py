@@ -23,6 +23,8 @@ import mimetypes
 import os
 import re
 import time
+import io
+import docx
 from dataclasses import dataclass
 from typing import Any, Dict, Iterable, Mapping, Optional, Tuple
 
@@ -76,7 +78,10 @@ FIELD_SPECS: Dict[str, FieldSpec] = {
     "triglycerides": FieldSpec("float", "mmol/L", 0.2, 10.0, ("triglycerides", "triglyceride", "TRIG", "TG")),
 }
 
-
+DOCX_MIME_TYPE = (
+    "application/vnd.openxmlformats-officedocument."
+    "wordprocessingml.document"
+)
 SUPPORTED_MIME_TYPES = {
     "image/jpeg",
     "image/png",
@@ -84,6 +89,7 @@ SUPPORTED_MIME_TYPES = {
     "image/heic",
     "image/heif",
     "application/pdf",
+    DOCX_MIME_TYPE,
 }
 
 
@@ -201,6 +207,7 @@ def _guess_mime_type(filename: str, supplied_mime_type: Optional[str]) -> str:
         ".heic": "image/heic",
         ".heif": "image/heif",
         ".pdf": "application/pdf",
+        ".docx": DOCX_MIME_TYPE,
     }
     if mime_type not in SUPPORTED_MIME_TYPES:
         mime_type = extension_fallbacks.get(extension, mime_type)
@@ -208,7 +215,7 @@ def _guess_mime_type(filename: str, supplied_mime_type: Optional[str]) -> str:
     if mime_type not in SUPPORTED_MIME_TYPES:
         raise ValueError(
             f"Unsupported document type: {mime_type or 'unknown'}. "
-            "Use JPEG, PNG, WebP, HEIC, HEIF, or PDF."
+            "Use JPEG, PNG, WebP, HEIC, HEIF, PDF, or DOCX."
         )
 
     return mime_type
@@ -321,13 +328,63 @@ def _extract_pdf_text_or_images(pdf_bytes: bytes,) -> Tuple[str, Tuple[bytes, ..
     finally:
         document.close()
 
+def _extract_docx_text(docx_bytes: bytes) -> str:
+    """
+    Extract readable text from DOCX paragraphs and tables.
+    The extracted text is then passed through the same new
+    health-field extraction pipeline used for photos and PDFs.
+    """
+    try:
+        document = docx.Document(io.BytesIO(docx_bytes))
+    except Exception as error:
+        raise ValueError(
+            f"Invalid or unreadable DOCX file: {error}"
+        ) from error
 
-def transcribe_document(file_bytes: bytes, *, filename: str = "upload.jpg", mime_type: Optional[str] = None, max_retries: int = 3,) -> str:
+    text_parts: list[str] = []
+
+    # Normal paragraphs
+    for paragraph in document.paragraphs:
+        text = paragraph.text.strip()
+
+        if text:
+            text_parts.append(text)
+
+    # Medical results are frequently inside Word tables.
+    for table in document.tables:
+        for row in table.rows:
+            cells = [
+                re.sub(r"\s+", " ", cell.text).strip()
+                for cell in row.cells
+            ]
+
+            if any(cells):
+                text_parts.append("\t".join(cells))
+
+    return "\n".join(text_parts).strip()[
+        :MAX_TRANSCRIPTION_CHARS
+    ]
+
+def transcribe_document(
+    file_bytes: bytes,
+    *,
+    filename: str = "upload.jpg",
+    mime_type: Optional[str] = None,
+    max_retries: int = 3,
+) -> str:
     if not file_bytes:
         return ""
 
-    resolved_mime = _guess_mime_type(filename, mime_type)
+    resolved_mime = _guess_mime_type(
+        filename,
+        mime_type,
+    )
 
+    # DOCX: extract text from paragraphs and tables.
+    if resolved_mime == DOCX_MIME_TYPE:
+        return _extract_docx_text(file_bytes)
+
+    # Images: send directly to Gemini transcription.
     if resolved_mime != "application/pdf":
         return _gemini_transcribe_image(
             file_bytes,
@@ -335,22 +392,35 @@ def transcribe_document(file_bytes: bytes, *, filename: str = "upload.jpg", mime
             max_retries=max_retries,
         )[:MAX_TRANSCRIPTION_CHARS]
 
-    embedded_text, page_images = _extract_pdf_text_or_images(file_bytes)
+    # PDF: use embedded text when available.
+    # Otherwise render its pages and run Gemini OCR.
+    embedded_text, page_images = (
+        _extract_pdf_text_or_images(file_bytes)
+    )
+
     if embedded_text:
         return embedded_text
 
     page_texts = []
-    for page_number, page_bytes in enumerate(page_images, start=1):
+
+    for page_number, page_bytes in enumerate(
+        page_images,
+        start=1,
+    ):
         page_text = _gemini_transcribe_image(
             page_bytes,
             "image/png",
             max_retries=max_retries,
         )
+
         if page_text:
-            page_texts.append(f"[Page {page_number}]\n{page_text}")
+            page_texts.append(
+                f"[Page {page_number}]\n{page_text}"
+            )
 
-    return "\n\n".join(page_texts).strip()[:MAX_TRANSCRIPTION_CHARS]
-
+    return "\n\n".join(page_texts).strip()[
+        :MAX_TRANSCRIPTION_CHARS
+    ]
 
 def _extraction_prompt(transcription: str) -> str:
     alias_lines = []
@@ -481,6 +551,8 @@ def _normalize_additional_test_name(name: str) -> str:
         return normalized_name
 
     return cleaned_name
+
+
 def _clean_json_text(text: str) -> str:
     cleaned = (text or "").strip()
     cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned, flags=re.IGNORECASE)
