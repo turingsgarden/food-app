@@ -663,13 +663,41 @@ struct EditHealthProfileView: View {
     }
   }
 
+  // func runOCR(on image: UIImage) {
+  //   guard let imageData = image.jpegData(compressionQuality: 0.9) else {
+  //     errorMsg = "Could not prepare the selected image."
+  //     showError = true
+  //     return
+  //   }
+  //   //clear any OCR results from a previous scan.
+  //   pendingFields = []
+  //   pendingAdditionalFields = []
+
+  //   submitHealthReport(
+  //     data: imageData,
+  //     filename: "health-report.jpg",
+  //     mimeType: "image/jpeg"
+  //   )
+  // }
   func runOCR(on image: UIImage) {
-    guard let imageData = image.jpegData(compressionQuality: 0.9) else {
+    let maxDimension: CGFloat = 2048
+    let largestDimension = max(image.size.width, image.size.height)
+    let scale = min(1, maxDimension / largestDimension)
+
+    let targetSize = CGSize(
+      width: image.size.width * scale,
+      height: image.size.height * scale
+    )
+
+    guard
+      let resizedImage = image.preparingThumbnail(of: targetSize),
+      let imageData = resizedImage.jpegData(compressionQuality: 0.75)
+    else {
       errorMsg = "Could not prepare the selected image."
       showError = true
       return
     }
-    //clear any OCR results from a previous scan.
+
     pendingFields = []
     pendingAdditionalFields = []
 

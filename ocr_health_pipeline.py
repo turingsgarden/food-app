@@ -284,7 +284,7 @@ Rules:
         config=types.GenerateContentConfig(
             temperature=0,
             max_output_tokens=8192,
-            http_options=types.HttpOptions(timeout=120_000),
+            http_options=types.HttpOptions(timeout=60_000),
         ),
         max_retries=max_retries,
     )
