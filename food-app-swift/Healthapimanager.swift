@@ -125,14 +125,43 @@ class HealthAPIManager {
           completion(nil, err.localizedDescription)
           return
         }
-        guard let data = data,
-          (resp as? HTTPURLResponse)?.statusCode == 200,
-          let plan = try? JSONDecoder().decode(NutritionPlan.self, from: data)
+        // guard let data = data,
+        //   (resp as? HTTPURLResponse)?.statusCode == 200,
+        //   let plan = try? JSONDecoder().decode(NutritionPlan.self, from: data)
+        // else {
+        //   completion(nil, "Failed to parse nutrition plan")
+        //   return
+        // }
+        // completion(plan, nil)
+
+        guard let data,
+          let response = resp as? HTTPURLResponse
         else {
-          completion(nil, "Failed to parse nutrition plan")
+          completion(nil, "No response from server")
           return
         }
-        completion(plan, nil)
+
+        guard (200..<300).contains(response.statusCode) else {
+          let message =
+            (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"]
+            as? String
+
+          completion(
+            nil,
+            message ?? "Server request failed (\(response.statusCode))"
+          )
+          return
+        }
+
+        do {
+          let plan = try JSONDecoder().decode(NutritionPlan.self, from: data)
+          completion(plan, nil)
+        } catch {
+          completion(
+            nil,
+            "Invalid nutrition plan response: \(error.localizedDescription)"
+          )
+        }
       }
     }.resume()
   }
