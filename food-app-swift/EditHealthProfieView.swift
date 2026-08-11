@@ -542,10 +542,11 @@ struct EditHealthProfileView: View {
 
   func callDocumentOCR(base64: String, fileType: String) {
     guard let token = session.getAuthToken(),
-      // let url = AppConfig.url(path: "/ocr-document")
-      let url = URL(
-        string: "http://127.0.0.1:5001/ocr-document"
-      )
+      let url = AppConfig.url(path: "/ocr-document")
+      // let url = URL(
+      //   string: "http://127.0.0.1:5001/ocr-document"
+      // )
+
     else {
       DispatchQueue.main.async {
         self.isScanning = false

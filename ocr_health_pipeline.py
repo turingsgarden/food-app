@@ -710,17 +710,17 @@ def _validate_additional_fields(
         value = item.get("value")
         unit = str(item.get("unit") or "").strip() or None
         if unit:
-            unit = re.sub(r"[{}\[\]]", "", unit).strip() or None
+            unit = re.sub(r"[{}\[\]()]", "", unit,).strip() or None   
 
 
         # Avoid repeating "score" in both the name and unit.
-        if unit and _normalized_label(unit) == "score":
-            name = re.sub(
-                r"\s+(?:total\s+)?score\s*$",
-                "",
-                name,
-                flags=re.IGNORECASE,
-            ).strip()
+        # if unit and _normalized_label(unit) == "score":
+        #     name = re.sub(
+        #         r"\s+(?:total\s+)?score\s*$",
+        #         "",
+        #         name,
+        #         flags=re.IGNORECASE,
+        #     ).strip()
 
         if (
             not name

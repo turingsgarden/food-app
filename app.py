@@ -24,6 +24,7 @@ from email.mime.multipart import MIMEMultipart
 import requests
 import json
 import hashlib
+from pathlib import Path
 
 import threading
 from jwt import PyJWKClient
@@ -44,7 +45,11 @@ from ocr_health_pipeline import (
     process_health_report,
 )
 
-load_dotenv()
+# load_dotenv()
+load_dotenv(
+    Path(__file__).resolve().parent / ".env",
+    override=True
+)
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -1517,7 +1522,7 @@ def payload_too_large(error):
 
 
 @app.route("/ocr-health-report", methods=["POST"])
-#@token_required
+@token_required
 def ocr_health_report():
     try:
         data = request.get_json(silent=True) or {}
@@ -1621,7 +1626,7 @@ def ocr_health_report():
         }), 500
 
 @app.route("/ocr-document", methods=["POST"])
-# @token_required
+@token_required
 def ocr_document():
     """
     PDF/DOCX compatibility endpoint.

@@ -782,8 +782,6 @@ class NetworkManager {
   }
   // MARK: - Health Report OCR
 
-  // MARK: - Health Report OCR
-  // private let baseURL = "http://127.0.0.1:5001"
   func scanHealthReport(
     imageData: Data,
     filename: String = "health-report.jpg",
@@ -794,15 +792,9 @@ class NetworkManager {
       ) -> Void
   ) {
     guard
-      let url = URL(
-        string: "http://127.0.0.1:5001/ocr-health-report"
-          // string: "\(baseURL)/ocr-health-report"
-      )
+      // let url = URL(string: "http://127.0.0.1:5001/ocr-health-report")
+      let url = AppConfig.url(path: "/ocr-health-report")
     else {
-
-    //   guard let url = AppConfig.url(
-    //       path: "/ocr-health-report"
-    //   ) else {
       completion(
         .failure(
           nsErr(
