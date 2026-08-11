@@ -1316,10 +1316,15 @@ def process_health_report(
             max_retries=max_retries,
         )
         raw_values = _merge_raw_extractions(model_raw, fallback_raw)
-    except (HealthOcrApiError, json.JSONDecodeError, TypeError, ValueError):
+    except (HealthOcrApiError, json.JSONDecodeError, TypeError, ValueError
+            )as error:
+                print(
+        "❌ Structured OCR extraction failed: "
+        f"{type(error).__name__}: {error}"
+            )
         # The deterministic fallback keeps the endpoint useful when the
         # text-to-JSON extraction call fails.
-        raw_values = fallback_raw
+                raw_values = fallback_raw
 
     fields = _validate_health_values(raw_values)
     

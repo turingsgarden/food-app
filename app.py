@@ -1591,9 +1591,11 @@ def ocr_health_report():
         )
 
         print(
-            f"✅ Health OCR completed: "
-            f"status={result.get('status')}"
-        )
+    "✅ Health OCR completed: "
+    f"status={result.get('status')}, "
+    f"additional_fields="
+    f"{len(result.get('additional_fields', []))}"
+)
 
         return jsonify(result), 200
 
