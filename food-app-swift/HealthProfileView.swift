@@ -586,6 +586,39 @@ struct HealthProfileView: View {
 
     /// Build an OCRHealthResult from the user-confirmed fields, then apply + advance.
     func applyConfirmedFields(_ fields: [OCRField]) {
+        // Confirm Scan passes every detected field so rejected rows can clear
+        // values that may already be enabled from a previous scan or profile.
+        let rejectedFieldIDs = Set(
+            fields.lazy
+                .filter { !$0.accepted }
+                .map(\.id)
+        )
+
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            if rejectedFieldIDs.contains("systolic_bp") ||
+                rejectedFieldIDs.contains("diastolic_bp") {
+                hasBP = false
+            }
+            if rejectedFieldIDs.contains("blood_sugar") {
+                hasBloodSugar = false
+            }
+            if rejectedFieldIDs.contains("cholesterol") {
+                hasCholesterol = false
+            }
+            if rejectedFieldIDs.contains("triglycerides") {
+                hasTriglycerides = false
+            }
+            if rejectedFieldIDs.contains("hba1c") {
+                hasHbA1c = false
+            }
+            if rejectedFieldIDs.contains("ldl") {
+                hasLDL = false
+            }
+            if rejectedFieldIDs.contains("hdl") {
+                hasHDL = false
+            }
+        }
+
         var r = OCRHealthResult()
         for f in fields where f.accepted {
             guard let v = Double(f.editedValue.trimmingCharacters(in: .whitespaces)) else { continue }

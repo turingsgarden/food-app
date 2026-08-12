@@ -933,6 +933,40 @@ struct EditHealthProfileView: View {
 
   /// Build an OCRHealthResult from the user-confirmed fields, then apply it.
   func applyConfirmedFields(_ fields: [OCRField]) {
+    // Confirm Scan passes every detected field so rejected rows can clear
+    // values that may already be enabled from a previous scan or profile.
+    let rejectedFieldIDs = Set(
+      fields.lazy
+        .filter { !$0.accepted }
+        .map(\.id)
+    )
+
+    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+      if rejectedFieldIDs.contains("systolic_bp")
+        || rejectedFieldIDs.contains("diastolic_bp")
+      {
+        hasBP = false
+      }
+      if rejectedFieldIDs.contains("blood_sugar") {
+        hasBloodSugar = false
+      }
+      if rejectedFieldIDs.contains("cholesterol") {
+        hasCholesterol = false
+      }
+      if rejectedFieldIDs.contains("triglycerides") {
+        hasTriglycerides = false
+      }
+      if rejectedFieldIDs.contains("hba1c") {
+        hasHbA1c = false
+      }
+      if rejectedFieldIDs.contains("ldl") {
+        hasLDL = false
+      }
+      if rejectedFieldIDs.contains("hdl") {
+        hasHDL = false
+      }
+    }
+
     var r = OCRHealthResult()
     for f in fields where f.accepted {
       guard let v = Double(f.editedValue.trimmingCharacters(in: .whitespaces)) else { continue }
@@ -1249,8 +1283,6 @@ struct EditHealthProfileView: View {
       healthMetricCard(
         title: "Blood Pressure",
         normalText: "Systolic 90–120 / Diastolic 60–80 mmHg",
-        icon: "heart.fill",
-        iconColor: .green,
         isOn: $hasBP
       ) {
         VStack(spacing: 16) {
@@ -1282,8 +1314,6 @@ struct EditHealthProfileView: View {
       healthMetricCard(
         title: "Fasting Blood Sugar",
         normalText: "3.9–5.5 mmol/L",
-        icon: "drop.fill",
-        iconColor: .blue,
         isOn: $hasBloodSugar
       ) {
         healthMetricSlider(
@@ -1300,8 +1330,6 @@ struct EditHealthProfileView: View {
       healthMetricCard(
         title: "Total Cholesterol",
         normalText: "< 5.2 mmol/L",
-        icon: "shield.fill",
-        iconColor: .purple,
         isOn: $hasCholesterol
       ) {
         healthMetricSlider(
@@ -1318,8 +1346,6 @@ struct EditHealthProfileView: View {
       healthMetricCard(
         title: "Triglycerides",
         normalText: "< 1.7 mmol/L",
-        icon: "drop.circle.fill",
-        iconColor: .orange,
         isOn: $hasTriglycerides
       ) {
         healthMetricSlider(
@@ -1336,8 +1362,6 @@ struct EditHealthProfileView: View {
       healthMetricCard(
         title: "HbA1c",
         normalText: "< 5.7 %",
-        icon: "cross.case.fill",
-        iconColor: .pink,
         isOn: $hasHbA1c
       ) {
         healthMetricSlider(
@@ -1354,8 +1378,6 @@ struct EditHealthProfileView: View {
       healthMetricCard(
         title: "LDL Cholesterol",
         normalText: "< 3.4 mmol/L",
-        icon: "l.circle.fill",
-        iconColor: .teal,
         isOn: $hasLDL
       ) {
         healthMetricSlider(
@@ -1372,8 +1394,6 @@ struct EditHealthProfileView: View {
       healthMetricCard(
         title: "HDL Cholesterol",
         normalText: "> 1.0 mmol/L",
-        icon: "h.circle.fill",
-        iconColor: .blue,
         isOn: $hasHDL
       ) {
         healthMetricSlider(
@@ -1391,22 +1411,11 @@ struct EditHealthProfileView: View {
   private func healthMetricCard<Content: View>(
     title: String,
     normalText: String,
-    icon: String,
-    iconColor: Color,
     isOn: Binding<Bool>,
     @ViewBuilder content: () -> Content
   ) -> some View {
     VStack(alignment: .leading, spacing: 16) {
       HStack(alignment: .center, spacing: 14) {
-        ZStack {
-          Circle()
-            .fill(iconColor.opacity(0.10))
-            .frame(width: 52, height: 52)
-
-          Image(systemName: icon)
-            .font(.system(size: 22, weight: .semibold))
-            .foregroundColor(iconColor)
-        }
 
         VStack(alignment: .leading, spacing: 7) {
           HStack(spacing: 7) {
@@ -2455,7 +2464,7 @@ struct OCRConfirmView: View {
           if hasFields {
             Button("Use Values") {
               onConfirm(
-                fields.filter { $0.accepted },
+                fields,
                 confirmedAdditionalFields
               )
               dismiss()
@@ -2497,7 +2506,6 @@ struct OCRConfirmView: View {
   ) -> some View {
 
     let f = field.wrappedValue
-    let style = fieldAppearance(for: f.id)
 
     let rawText = [
       f.rawName,
@@ -2519,20 +2527,6 @@ struct OCRConfirmView: View {
     ) {
       // Icon, title and switch
       HStack(spacing: 14) {
-        ZStack {
-          Circle()
-            .fill(style.color.opacity(0.12))
-            .frame(width: 56, height: 56)
-
-          Image(systemName: style.icon)
-            .font(
-              .system(
-                size: 23,
-                weight: .semibold
-              )
-            )
-            .foregroundColor(style.color)
-        }
 
         HStack(spacing: 5) {
           Text(f.label)
@@ -2650,42 +2644,6 @@ struct OCRConfirmView: View {
       y: 4
     )
     .opacity(f.accepted ? 1 : 0.55)
-  }
-  private func fieldAppearance(
-    for fieldID: String
-  ) -> (icon: String, color: Color) {
-
-    switch fieldID {
-    case "height_cm":
-      return ("ruler.fill", .blue)
-
-    case "weight_kg":
-      return ("scalemass.fill", .orange)
-
-    case "bmi":
-      return ("number.square.fill", .purple)
-
-    case "blood_sugar":
-      return ("drop.fill", .blue)
-
-    case "hba1c":
-      return ("cross.case.fill", .pink)
-
-    case "cholesterol":
-      return ("shield.fill", .purple)
-
-    case "ldl":
-      return ("arrow.down.circle.fill", .orange)
-
-    case "hdl":
-      return ("arrow.up.circle.fill", .green)
-
-    case "triglycerides":
-      return ("drop.triangle.fill", .orange)
-
-    default:
-      return ("waveform.path.ecg", .green)
-    }
   }
 
   private var emptyState: some View {
