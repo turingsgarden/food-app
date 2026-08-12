@@ -932,62 +932,76 @@ struct EditHealthProfileView: View {
   }
 
   /// Build an OCRHealthResult from the user-confirmed fields, then apply it.
-  func applyConfirmedFields(_ fields: [OCRField]) {
-    // Confirm Scan passes every detected field so rejected rows can clear
-    // values that may already be enabled from a previous scan or profile.
-    let rejectedFieldIDs = Set(
-      fields.lazy
-        .filter { !$0.accepted }
-        .map(\.id)
-    )
+  // func applyConfirmedFields(_ fields: [OCRField]) {
+  //   // Confirm Scan passes every detected field so rejected rows can clear
+  //   // values that may already be enabled from a previous scan or profile.
+  //   let rejectedFieldIDs = Set(
+  //     fields.lazy
+  //       .filter { !$0.accepted }
+  //       .map(\.id)
+  //   )
 
-    withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-      if rejectedFieldIDs.contains("systolic_bp")
-        || rejectedFieldIDs.contains("diastolic_bp")
-      {
-        hasBP = false
-      }
-      if rejectedFieldIDs.contains("blood_sugar") {
-        hasBloodSugar = false
-      }
-      if rejectedFieldIDs.contains("cholesterol") {
-        hasCholesterol = false
-      }
-      if rejectedFieldIDs.contains("triglycerides") {
-        hasTriglycerides = false
-      }
-      if rejectedFieldIDs.contains("hba1c") {
-        hasHbA1c = false
-      }
-      if rejectedFieldIDs.contains("ldl") {
-        hasLDL = false
-      }
-      if rejectedFieldIDs.contains("hdl") {
-        hasHDL = false
-      }
-    }
+  //   withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+  //     if rejectedFieldIDs.contains("systolic_bp")
+  //       || rejectedFieldIDs.contains("diastolic_bp")
+  //     {
+  //       hasBP = false
+  //     }
+  //     if rejectedFieldIDs.contains("blood_sugar") {
+  //       hasBloodSugar = false
+  //     }
+  //     if rejectedFieldIDs.contains("cholesterol") {
+  //       hasCholesterol = false
+  //     }
+  //     if rejectedFieldIDs.contains("triglycerides") {
+  //       hasTriglycerides = false
+  //     }
+  //     if rejectedFieldIDs.contains("hba1c") {
+  //       hasHbA1c = false
+  //     }
+  //     if rejectedFieldIDs.contains("ldl") {
+  //       hasLDL = false
+  //     }
+  //     if rejectedFieldIDs.contains("hdl") {
+  //       hasHDL = false
+  //     }
+  //   }
 
-    var r = OCRHealthResult()
-    for f in fields where f.accepted {
-      guard let v = Double(f.editedValue.trimmingCharacters(in: .whitespaces)) else { continue }
-      switch f.id {
-      case "systolic_bp": r.systolicBP = Int(v)
-      case "diastolic_bp": r.diastolicBP = Int(v)
-      case "blood_sugar": r.bloodSugar = v
-      case "hba1c": r.hba1c = v
-      case "cholesterol": r.cholesterol = v
-      case "ldl": r.ldl = v
-      case "hdl": r.hdl = v
-      case "triglycerides": r.triglycerides = v
-      case "height_cm": r.heightCm = v
-      case "weight_kg": r.weightKg = v
-      default: break  // bmi is derived from height/weight, not stored directly
-      }
-    }
-    applyOCRResult(r)
-    scanResult = r
-    showScanResult = r.hasAnyResult
-  }
+  //   var r = OCRHealthResult()
+  //   for f in fields where f.accepted {
+  //     guard let v = Double(f.editedValue.trimmingCharacters(in: .whitespaces)) else { continue }
+  //     switch f.id {
+  //     case "systolic_bp": r.systolicBP = Int(v)
+  //     case "diastolic_bp": r.diastolicBP = Int(v)
+  //     case "blood_sugar": r.bloodSugar = v
+  //     case "hba1c": r.hba1c = v
+  //     case "cholesterol": r.cholesterol = v
+  //     case "ldl": r.ldl = v
+  //     case "hdl": r.hdl = v
+  //     case "triglycerides": r.triglycerides = v
+  //     case "height_cm": r.heightCm = v
+  //     case "weight_kg": r.weightKg = v
+  //     default: break  // bmi is derived from height/weight, not stored directly
+  //     }
+  //   }
+  //   applyOCRResult(r)
+  //   scanResult = r
+  //   showScanResult = r.hasAnyResult
+  // }
+
+
+
+  // The newest confirmed scan replaces clinical results from previous scans.
+// Any value missing or disabled in this scan remains switched off.
+withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+    hasBP = false
+    hasBloodSugar = false
+    hasCholesterol = false
+    hasTriglycerides = false
+    hasHbA1c = false
+    hasLDL = false
+    hasHDL = false
+}
 
   func applyPrefill() {
     guard let p = prefill else { return }
