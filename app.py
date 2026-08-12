@@ -940,17 +940,59 @@ def link_email_password():
 
 # ── Health Agent Endpoints ──
 
+OPTIONAL_HEALTH_PROFILE_FIELDS = (
+    "systolic_bp",
+    "diastolic_bp",
+    "fasting_blood_sugar",
+    "total_cholesterol",
+    "triglycerides",
+    "hba1c",
+    "ldl",
+    "hdl",
+)
+
+
+def _health_profile_update_document(data, user_id):
+    """Build a full-profile update that removes disabled clinical fields."""
+    profile_data = dict(data)
+    profile_data["user_id"] = user_id
+    profile_data["updated_at"] = datetime.now().isoformat()
+
+    fields_to_unset = {
+        field_name: ""
+        for field_name in OPTIONAL_HEALTH_PROFILE_FIELDS
+        if profile_data.get(field_name) is None
+    }
+
+    # A field cannot appear in both $set and $unset in one MongoDB update.
+    for field_name in fields_to_unset:
+        profile_data.pop(field_name, None)
+
+    update_document = {"$set": profile_data}
+    if fields_to_unset:
+        update_document["$unset"] = fields_to_unset
+
+    return update_document
+
 @app.route("/save-health-profile", methods=["POST"])
 @token_required
 @db_required
 def save_health_profile():
     try:
         data = request.get_json()
-        if not data:
+        if not isinstance(data, dict) or not data:
             return jsonify({"error": "Empty request"}), 400
-        data["user_id"] = request.user_id
-        data["updated_at"] = datetime.now().isoformat()
-        db["health_profiles"].update_one({"user_id": request.user_id}, {"$set": data}, upsert=True)
+
+        update_document = _health_profile_update_document(
+            data,
+            request.user_id,
+        )
+
+        db["health_profiles"].update_one(
+            {"user_id": request.user_id},
+            update_document,
+            upsert=True,
+        )
         db["health_reports"].delete_many({"user_id": request.user_id})
         print(f"✅ Health profile saved for {request.user_id}")
         return jsonify({"success": True}), 200
