@@ -315,7 +315,17 @@ def analyze():
                 if "error" in result:
                     try: os.remove(image_path)
                     except: pass
-                    return jsonify({"error": f"Analysis failed: {result.get('error')}"}), 500
+                    error_message = str(result.get("error", ""))
+                    if any(message in error_message.lower() for message in (
+                        "no identifiable food",
+                        "unable to identify food",
+                    )):
+                        return jsonify({
+                            "error": "We could not identify food clearly. Please retake the photo with better lighting."
+                        }), 422
+                    return jsonify({
+                        "error": "Food analysis is temporarily unavailable. Please try again."
+                    }), 500
                 if result.get("dish_prediction", "").lower().startswith(("analysis failed", "could not identify", "unable to analyze")):
                     try: os.remove(image_path)
                     except: pass
@@ -1556,9 +1566,7 @@ def _empty_health_ocr_response(message: str, status: str = "no_text") -> dict:
 
 
 def _gemini_transcribe_image_b64(image_b64: str, mime_type: str = "image/jpeg") -> str:
-    """OCR step 1 (transcription) — SWAP POINT for the Gemini-only vs Vision+Gemini
-    comparison: to build the Vision variant, replace ONLY this function's body with a
-    Google Cloud Vision OCR call; all downstream extraction/validation stays identical."""
+    """OCR step 1 (transcription): Gemini transcribes the report image to text."""
     ocr_prompt = (
         "Transcribe ALL text from this medical or laboratory report image verbatim. "
         "Preserve table rows and columns. Do not summarize, translate, or omit content."

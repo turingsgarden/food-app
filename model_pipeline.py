@@ -409,9 +409,9 @@ Rules:
                     if value_str and float(value_str) >= 0:
                         nutrition_lines.append(f"{nutrient}|{value_str}|{unit}")
 
-        # Validate visible ingredients
-        if len(visible_ingredients) < 2:
-            raise Exception(f"Insufficient ingredients detected (only {len(visible_ingredients)})")
+        # A single visible ingredient is valid (for example, an apple or peanuts).
+        if not visible_ingredients:
+            raise Exception("No identifiable food detected")
 
         # Ensure all required nutrients present
         required_nutrients = {
