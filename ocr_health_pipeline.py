@@ -449,10 +449,6 @@ For every other measurement:
   codes, specimen details and method information from test names.
 - Use common medical abbreviations when they are clearer and shorter.
 - Examples:
-  "Pain severity - 0-10 verbal numeric rating [Score] - Reported"
-  -> "Pain Severity"
-  "Patient Health Questionnaire-9: Modified for Teens total score"
-  -> "PHQ-9"
   "White Blood Cell Count"
   -> "WBC Count"
   "Respiratory rate"
@@ -462,6 +458,40 @@ For every other measurement:
 - Preserve the original result.
 - Preserve the original unit.
 - One measurement must produce one object.
+
+Exclude screening and assessment scores:
+
+- Do not extract questionnaire-based, survey-based, behavioral,
+  psychological, substance-use, safety-risk, or symptom-assessment scores.
+- Exclude scores that are not universal laboratory, vital-sign, or physical
+  health measurements.
+- Exclude the assessment even if it contains a numeric result and the unit
+  is written as "score", "points", or "/21".
+
+Examples that must be excluded:
+
+- GAD-7
+- PHQ-2
+- PHQ-9
+- PHQ-9 Modified for Teens
+- AUDIT-C
+- DAST-10
+- HARK
+- Morse Fall Risk Score
+- Pain Severity Score
+- Depression screening scores
+- Anxiety screening scores
+- Alcohol-use screening scores
+- Drug-use screening scores
+- Fall-risk assessment scores
+- Behavioral-health questionnaire scores
+- Patient-reported symptom scores
+
+This exclusion applies only to screening questionnaires and assessment
+scores. Do not exclude an objective laboratory, vital-sign, or physical
+measurement merely because its label contains a number, ratio, index,
+percentage, grade, or calculated value. For example, BMI, eGFR, FEV1/FVC,
+oxygen saturation, and laboratory ratios should still be included.
 
 Important rules:
 - Matching is case-insensitive.
