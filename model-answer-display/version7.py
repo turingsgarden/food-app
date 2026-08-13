@@ -8,11 +8,11 @@ from PIL import Image
 # -----------------------------------------------------------------------
 # Paths — edit these to match where you run the app
 # -----------------------------------------------------------------------
-GROUND_TRUTH_CSV_PATH = "fsb_dataset/food_scan_bench_v1.csv"
+GROUND_TRUTH_CSV_PATH = "food_scan_bench_v1.csv"
 MODEL_FILES = {
-    "gemini-2.5-pro": "output/FoodScanBench_Gemini_pydantic_food_dataset_analysis.json",
+    "gemini-2.5-pro": "FoodScanBench_Gemini_pydantic_food_dataset_analysis.json",
 }
-IMAGE_DIR = "fsb_dataset/fsb_images"  # folder containing fsb_00000.jpg, fsb_00001.jpg, ...
+IMAGE_DIR = "images"  # folder containing fsb_00000.jpg, fsb_00001.jpg, ...
 
 
 def parse_ingredients_cell(cell):
@@ -209,6 +209,17 @@ def display_ground_truth_mass(ground_truth):
 
     st.subheader("Ground Truth")
 
+    # Ingredients first, so this box lines up with "Visible Ingredients"
+    # in the prediction column next to it.
+    st.markdown("**Ingredients:**")
+    ingredients = parse_ingredients_cell(ground_truth.get("ingredients_list"))
+    if ingredients:
+        render_ingredient_box(ingredients, value_field="quantity")
+    else:
+        st.info("No ingredients data available")
+
+    st.markdown("---")
+
     meal_name = ground_truth.get("meal_name")
     if meal_name:
         st.markdown(f"**Meal:** {meal_name}")
@@ -227,15 +238,6 @@ def display_ground_truth_mass(ground_truth):
     with col_c:
         fat = ground_truth.get("total_fat")
         st.metric("Fat (g)", f"{fat:.1f}" if pd.notna(fat) else "N/A")
-
-    st.markdown("---")
-
-    st.markdown("**Ingredients:**")
-    ingredients = parse_ingredients_cell(ground_truth.get("ingredients_list"))
-    if ingredients:
-        render_ingredient_box(ingredients, value_field="quantity")
-    else:
-        st.info("No ingredients data available")
 
 
 def main():
@@ -340,9 +342,16 @@ def main():
 
         [data-testid="stMetricValue"] {
             font-size: 14px;
+            color: #111111 !important;
         }
         [data-testid="stMetricLabel"] {
             font-size: 14px;
+            color: #333333 !important;
+        }
+        [data-testid="stMetric"] {
+            background-color: #f9f9f9;
+            padding: 6px 10px;
+            border-radius: 5px;
         }
 
         /* Buttons: white fill, black border/text, in every state */
