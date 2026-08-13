@@ -10,11 +10,9 @@ from PIL import Image
 # -----------------------------------------------------------------------
 GROUND_TRUTH_CSV_PATH = "fsb_dataset/food_scan_bench_v1.csv"
 MODEL_FILES = {
-    "gemini-3.1-flash-lite": "output/FoodScanBench_Gemini_pydantic_food_dataset_analysis.json",
+    "gemini-2.5-pro": "output/FoodScanBench_Gemini_pydantic_food_dataset_analysis.json",
 }
-IMAGE_DIR = (
-    "fsb_dataset/fsb_images"  # folder containing fsb_00000.jpg, fsb_00001.jpg, ...
-)
+IMAGE_DIR = "fsb_dataset/fsb_images"  # folder containing fsb_00000.jpg, fsb_00001.jpg, ...
 
 
 def parse_ingredients_cell(cell):
@@ -346,6 +344,43 @@ def main():
         [data-testid="stMetricLabel"] {
             font-size: 14px;
         }
+
+        /* Buttons: white fill, black border/text, in every state */
+        .stButton > button {
+            background-color: #ffffff !important;
+            color: #111111 !important;
+            border: 2px solid #111111 !important;
+            border-radius: 6px !important;
+        }
+        .stButton > button:hover {
+            background-color: #f2f2f2 !important;
+            color: #111111 !important;
+            border: 2px solid #111111 !important;
+        }
+        .stButton > button:active,
+        .stButton > button:focus,
+        .stButton > button:focus:not(:active) {
+            background-color: #e6e6e6 !important;
+            color: #111111 !important;
+            border: 2px solid #111111 !important;
+            box-shadow: none !important;
+        }
+        .stButton > button:disabled {
+            background-color: #f5f5f5 !important;
+            color: #aaaaaa !important;
+            border: 2px solid #cccccc !important;
+        }
+
+        /* Align the search row's text input and buttons on the same baseline */
+        div[data-testid="stTextInput"],
+        div[data-testid="stButton"] {
+            display: flex;
+            align-items: flex-end;
+        }
+        div[data-testid="stTextInput"] > div,
+        div[data-testid="stButton"] > button {
+            width: 100%;
+        }
     </style>
     """,
         unsafe_allow_html=True,
@@ -376,16 +411,18 @@ def main():
             )
 
             # Create list of valid entries for pagination.
-            # Prefer entries that have a ground-truth row; fall back to whatever
-            # images we could find on disk if the CSV row is missing an image.
+            # Only include image IDs that have BOTH a ground-truth row AND a
+            # model prediction, so every page has something to compare.
+            predicted_ids = set(model_dish_mapping.get("gemini-2.5-pro", {}).keys())
             valid_images = []
             for image_id in ground_truth_mapping.keys():
-                valid_images.append(
-                    {
-                        "dish_id": image_id,
-                        "image_path": image_mapping.get(image_id),
-                    }
-                )
+                if image_id in predicted_ids:
+                    valid_images.append(
+                        {
+                            "dish_id": image_id,
+                            "image_path": image_mapping.get(image_id),
+                        }
+                    )
 
             st.session_state.model_dish_mapping = model_dish_mapping
             st.session_state.available_models = available_models
@@ -412,6 +449,7 @@ def main():
 
     # Search box
     with st.container():
+        st.markdown("**Search by Image ID:**")
         col1, col2, col3 = st.columns([3, 1, 1])
 
         with col1:
@@ -420,6 +458,7 @@ def main():
                 value=st.session_state.search_dish_id,
                 placeholder="Enter image ID (e.g., fsb_00000)",
                 key="dish_id_search_input",
+                label_visibility="collapsed",
             )
 
         with col2:
@@ -438,9 +477,7 @@ def main():
                         st.session_state.current_page = found_index
                         st.success(f"Found image ID: {st.session_state.search_dish_id}")
                     else:
-                        st.error(
-                            f"Image ID {st.session_state.search_dish_id} not found"
-                        )
+                        st.error(f"Image ID {st.session_state.search_dish_id} not found")
                 else:
                     st.session_state.search_mode = False
 
@@ -458,9 +495,7 @@ def main():
         current_item = valid_images[current_page]
         current_dish_id = current_item["dish_id"]
         current_image_path = current_item["image_path"]
-        image_name = (
-            os.path.basename(current_image_path) if current_image_path else "N/A"
-        )
+        image_name = os.path.basename(current_image_path) if current_image_path else "N/A"
 
         current_model_response = find_model_response_by_dish_id(
             current_dish_id, model_dish_mapping, "gemini-2.5-pro"
