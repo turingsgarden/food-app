@@ -6,6 +6,7 @@ from version3 import run_version3
 from version4 import run_version4
 from version5 import run_version5  # 添加Version 5导入
 from version6 import run_version6 
+from version7 import run_version7 
 
 
 # -------------------------------
@@ -59,6 +60,12 @@ def clear_version_state(version_prefix):
     "v6_summary_dict"
     ]
 
+    keywords_v7 = [
+    "v7_current_page", "v7_search_dish_id", "v7_search_mode",
+    "v7_valid_images", "v7_data_loaded", "v7_model_dish_mapping",
+    "v7_available_models", "v7_ground_truth_mapping", "v7_image_mapping"
+    ]
+
     to_delete = []
     for key in list(st.session_state.keys()):
         if version_prefix == "v1" and any(k in key for k in keywords_v1):
@@ -72,6 +79,8 @@ def clear_version_state(version_prefix):
         elif version_prefix == "v5" and any(k in key for k in keywords_v5):
             to_delete.append(key)
         elif version_prefix == "v6" and any(k in key for k in keywords_v6):
+            to_delete.append(key)
+        elif version_prefix == "v7" and any(k in key for k in keywords_v7):
             to_delete.append(key)
 
     for key in to_delete:
@@ -98,7 +107,7 @@ if "version_initialized" not in st.session_state:
 if not st.session_state.selected_version:
     # Update selection box to include all versions
     st.selectbox("Select version to display:", 
-                ["Version 1", "Version 2", "Version 3", "Version 4", "Version 5", "Version 6"],  # 添加Version 5
+                ["Version 1", "Version 2", "Version 3", "Version 4", "Version 5", "Version 6", "Version 7"],  # 添加Version 5
                 key="page_select")
 
     if st.button("✅ Confirm Selection"):
@@ -117,6 +126,8 @@ if not st.session_state.selected_version:
         elif prev_version == "Version 5":  # 添加Version 5清理
             clear_version_state("v5")
         elif prev_version == "Version 6":
+            clear_version_state
+        elif prev_version == "Version 7":
             clear_version_state
 
         # ✅ Update selection and mark as freshly initialized
@@ -147,6 +158,8 @@ if st.session_state.selected_version:
             run_version5()
         elif st.session_state.selected_version == "Version 6":
             run_version6()
+        elif st.session_state.selected_version == "Version 7":
+            run_version7()
     except Exception as e:
         st.error("❌ Error occurred while executing subpage, please check traceback:")
         st.text(traceback.format_exc())
@@ -167,6 +180,8 @@ if st.session_state.selected_version:
             clear_version_state("v5")
         elif current_version == "Version 6":
             clear_version_state("v6")
+        elif current_version == "Version 7":
+            clear_version_state("v7")
 
         st.session_state.selected_version = ""
         st.session_state.version_initialized = False
