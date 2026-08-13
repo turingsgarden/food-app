@@ -8,11 +8,11 @@ from PIL import Image
 # -----------------------------------------------------------------------
 # Paths — edit these to match where you run the app
 # -----------------------------------------------------------------------
-GROUND_TRUTH_CSV_PATH = "food_scan_bench_v1.csv"
+GROUND_TRUTH_CSV_PATH = "fsb_dataset/food_scan_bench_v1.csv"
 MODEL_FILES = {
-    "gemini-2.5-pro": "FoodScanBench_Gemini_pydantic_food_dataset_analysis.json",
+    "gemini-3.1-flash": "output/FoodScanBench_Gemini_pydantic_food_dataset_analysis.json",
 }
-IMAGE_DIR = "images"  # folder containing fsb_00000.jpg, fsb_00001.jpg, ...
+IMAGE_DIR = "fsb_dataset/fsb_images"  # folder containing fsb_00000.jpg, fsb_00001.jpg, ...
 
 
 def parse_ingredients_cell(cell):
