@@ -10,7 +10,7 @@ from PIL import Image
 # -----------------------------------------------------------------------
 GROUND_TRUTH_CSV_PATH = "fsb_dataset/food_scan_bench_v1.csv"
 MODEL_FILES = {
-    "gemini-3.1-flash": "output/FoodScanBench_Gemini_pydantic_food_dataset_analysis.json",
+    "gemini-2.5-pro": "output/FoodScanBench_Gemini_pydantic_food_dataset_analysis.json",
 }
 IMAGE_DIR = "fsb_dataset/fsb_images"  # folder containing fsb_00000.jpg, fsb_00001.jpg, ...
 
@@ -228,16 +228,16 @@ def display_ground_truth_mass(ground_truth):
     cal_text = f"{total_calories:.1f} kcal" if pd.notna(total_calories) else "N/A"
     st.metric("Actual Total Calories", cal_text)
 
-    col_a, col_b, col_c = st.columns(3)
-    with col_a:
-        carbs = ground_truth.get("total_carbs")
-        st.metric("Carbs (g)", f"{carbs:.1f}" if pd.notna(carbs) else "N/A")
-    with col_b:
-        protein = ground_truth.get("total_protein")
-        st.metric("Protein (g)", f"{protein:.1f}" if pd.notna(protein) else "N/A")
-    with col_c:
-        fat = ground_truth.get("total_fat")
-        st.metric("Fat (g)", f"{fat:.1f}" if pd.notna(fat) else "N/A")
+    # Stacked (not nested-column) macro rows: this section already lives
+    # inside one of three page-level columns, so splitting it into three
+    # more columns squeezes each metric too narrow to render cleanly.
+    carbs = ground_truth.get("total_carbs")
+    protein = ground_truth.get("total_protein")
+    fat = ground_truth.get("total_fat")
+
+    st.metric("Carbs (g)", f"{carbs:.1f}" if pd.notna(carbs) else "N/A")
+    st.metric("Protein (g)", f"{protein:.1f}" if pd.notna(protein) else "N/A")
+    st.metric("Fat (g)", f"{fat:.1f}" if pd.notna(fat) else "N/A")
 
 
 def main():
@@ -352,6 +352,7 @@ def main():
             background-color: #f9f9f9;
             padding: 6px 10px;
             border-radius: 5px;
+            margin-bottom: 6px;
         }
 
         /* Buttons: white fill, black border/text, in every state */
@@ -439,6 +440,17 @@ def main():
             st.session_state.image_mapping = image_mapping
             st.session_state.valid_images = valid_images
             st.session_state.data_loaded = True
+
+            # --- Temporary diagnostics: remove once matching is confirmed ---
+            with st.expander("🔍 Debug info (matching diagnostics)", expanded=(len(valid_images) == 0)):
+                st.write("Available models:", available_models)
+                st.write("Model predictions loaded:", len(model_dish_mapping.get("gemini-2.5-pro", {})))
+                st.write("Ground truth rows:", len(ground_truth_mapping))
+                st.write("Overlapping image IDs:", len(predicted_ids))
+                st.write("Sample prediction keys:", list(model_dish_mapping.get("gemini-2.5-pro", {}).keys())[:5])
+                st.write("Sample ground truth keys:", list(ground_truth_mapping.keys())[:5])
+            # --- end diagnostics ---
+
 
     # Get data
     model_dish_mapping = st.session_state.model_dish_mapping
