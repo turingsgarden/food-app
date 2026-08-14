@@ -2760,7 +2760,7 @@ struct OCRConfirmView: View {
 
         VStack(spacing: 12) {
           ForEach(additionalFields.indices, id: \.self) { index in
-            additionalFieldRow($additionalFields[index])
+            fieldRow($additionalFields[index])
           }
         }
         .padding(18)
@@ -2783,90 +2783,85 @@ struct OCRConfirmView: View {
     }
   }
 
-  private func additionalFieldRow(
-    _ field: Binding<OCRField>
-  ) -> some View {
+  // private func additionalFieldRow(
+  //   _ field: Binding<OCRField>
+  // ) -> some View {
 
-    let f = field.wrappedValue
+  //   let f = field.wrappedValue
 
-    return HStack(spacing: 12) {
-      Text(f.label)
-        .font(
-          .system(
-            size: 15,
-            weight: .semibold
-          )
-        )
-        .foregroundColor(
-          themeManager.current.primaryText
-        )
-        .frame(
-          maxWidth: .infinity,
-          alignment: .leading
-        )
+  //   return HStack(spacing: 12) {
+  //     HStack(spacing: 5) {
+  //       Text(f.label)
+  //         .font(
+  //           .system(
+  //             size: 15,
+  //             weight: .semibold
+  //           )
+  //         )
+  //         .foregroundColor(
+  //           themeManager.current.primaryText
+  //         )
 
-      TextField("", text: field.editedValue)
-        .keyboardType(.decimalPad)
-        .multilineTextAlignment(.trailing)
-        .font(
-          .system(
-            size: 16,
-            weight: .bold,
-            design: .rounded
-          )
-        )
-        .foregroundColor(
-          themeManager.current.primaryText
-        )
-        .frame(width: 85)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 9)
-        .background(
-          themeManager.current.inputBackground
-        )
-        .cornerRadius(9)
-        .disabled(!f.accepted)
+  //       InfoTipButton(
+  //         content:
+  //           OCRFieldConversionTip
+  //           .content(for: f)
+  //       )
+  //     }
+  //     .frame(
+  //       maxWidth: .infinity,
+  //       alignment: .leading
+  //     )
 
-      // if !f.processedUnit.isEmpty {
-      //     Text(f.processedUnit)
-      //         .font(
-      //             .system(
-      //                 size: 13,
-      //                 weight: .medium
-      //             )
-      //         )
-      //         .foregroundColor(
-      //             themeManager.current.secondaryText
-      //         )
-      //         .fixedSize()
-      // }
-      Text(f.processedUnit)
-        .font(.system(size: 14, weight: .medium))
-        .foregroundColor(themeManager.current.secondaryText)
-        .frame(width: 45, alignment: .leading)
+  //     TextField("", text: field.editedValue)
+  //       .keyboardType(.decimalPad)
+  //       .multilineTextAlignment(.trailing)
+  //       .font(
+  //         .system(
+  //           size: 16,
+  //           weight: .bold,
+  //           design: .rounded
+  //         )
+  //       )
+  //       .foregroundColor(
+  //         themeManager.current.primaryText
+  //       )
+  //       .frame(width: 85)
+  //       .padding(.horizontal, 10)
+  //       .padding(.vertical, 9)
+  //       .background(
+  //         themeManager.current.inputBackground
+  //       )
+  //       .cornerRadius(9)
+  //       .disabled(!f.accepted)
 
-      Toggle("", isOn: field.accepted)
-        .labelsHidden()
-        .toggleStyle(
-          SwitchToggleStyle(tint: .green)
-        )
-    }
-    .padding(14)
-    .background(
-      themeManager.current.cardBackground
-    )
-    .cornerRadius(16)
-    .overlay {
-      RoundedRectangle(cornerRadius: 16)
-        .stroke(
-          f.accepted
-            ? Color.green.opacity(0.22)
-            : themeManager.current.cardBorder,
-          lineWidth: 1
-        )
-    }
-    .opacity(f.accepted ? 1 : 0.55)
-  }
+  //     Text(f.processedUnit)
+  //       .font(.system(size: 14, weight: .medium))
+  //       .foregroundColor(themeManager.current.secondaryText)
+  //       .frame(width: 45, alignment: .leading)
+
+  //     Toggle("", isOn: field.accepted)
+  //       .labelsHidden()
+  //       .toggleStyle(
+  //         SwitchToggleStyle(tint: .green)
+  //       )
+  //   }
+  //   .padding(14)
+  //   .background(
+  //     themeManager.current.cardBackground
+  //   )
+  //   .cornerRadius(16)
+  //   .overlay {
+  //     RoundedRectangle(cornerRadius: 16)
+  //       .stroke(
+  //         f.accepted
+  //           ? Color.green.opacity(0.22)
+  //           : themeManager.current.cardBorder,
+  //         lineWidth: 1
+  //       )
+  //   }
+  //   .opacity(f.accepted ? 1 : 0.55)
+  // }
 
   private var confirmedAdditionalFields: [HealthOCRAdditionalField] {
 

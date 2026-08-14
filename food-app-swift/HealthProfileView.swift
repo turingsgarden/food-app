@@ -70,6 +70,7 @@ struct HealthProfileView: View {
   @State private var pendingFields: [OCRField] = []
   @State private var pendingAdditionalFields: [HealthOCRAdditionalField] = []
   @State private var confirmedAdditionalFields: [HealthOCRAdditionalField] = []
+  @State private var isAdditionalResultsExpanded = false
   @State private var ocrStatus = ""
   @State private var ocrMessage: String? = nil
 
@@ -945,7 +946,125 @@ struct HealthProfileView: View {
           label: "HDL", value: $hdl, range: 0.3...5.0, step: 0.1,
           display: String(format: "%.1f mmol/L", hdl))
       }
+      if !confirmedAdditionalFields.isEmpty {
+        additionalTestResultsSection
+      }
     }
+  }
+
+  private var additionalTestResultsSection: some View {
+    VStack(spacing: 0) {
+      Button {
+        withAnimation(.easeInOut(duration: 0.22)) {
+          isAdditionalResultsExpanded.toggle()
+        }
+      } label: {
+        HStack(spacing: 14) {
+          Image(systemName: "list.bullet.rectangle")
+            .font(.system(size: 20, weight: .semibold))
+            .foregroundColor(.blue)
+
+          VStack(alignment: .leading, spacing: 4) {
+            Text("Additional Test Results")
+              .font(.system(size: 18, weight: .bold))
+              .foregroundColor(themeManager.current.primaryText)
+
+            Text("\(confirmedAdditionalFields.count) tests found")
+              .font(.system(size: 13))
+              .foregroundColor(themeManager.current.secondaryText)
+          }
+
+          Spacer()
+
+          Image(
+            systemName: isAdditionalResultsExpanded
+              ? "chevron.up"
+              : "chevron.down"
+          )
+          .font(.system(size: 15, weight: .semibold))
+          .foregroundColor(themeManager.current.secondaryText)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 18)
+        .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel(
+        isAdditionalResultsExpanded
+          ? "Hide additional test results"
+          : "Show additional test results"
+      )
+
+      if isAdditionalResultsExpanded {
+        Divider()
+          .padding(.horizontal, 18)
+
+        VStack(spacing: 0) {
+          ForEach(
+            Array(confirmedAdditionalFields.enumerated()),
+            id: \.element.id
+          ) { index, field in
+            additionalTestResultRow(field)
+              .padding(.horizontal, 18)
+
+            if index < confirmedAdditionalFields.count - 1 {
+              Divider()
+                .padding(.leading, 18)
+            }
+          }
+        }
+        .padding(.bottom, 6)
+      }
+    }
+    .background(themeManager.current.cardBackground)
+    .cornerRadius(20)
+    .overlay {
+      RoundedRectangle(cornerRadius: 20)
+        .stroke(
+          isAdditionalResultsExpanded
+            ? Color.blue.opacity(0.35)
+            : themeManager.current.cardBorder,
+          lineWidth: 1
+        )
+    }
+  }
+
+  private func additionalTestResultRow(
+    _ field: HealthOCRAdditionalField
+  ) -> some View {
+    let valueText = (field.value?.displayText ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+
+    let unitText = (field.unit ?? "")
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+
+    return HStack(alignment: .center, spacing: 12) {
+      Text(field.name)
+        .font(.system(size: 14, weight: .semibold))
+        .foregroundColor(themeManager.current.primaryText)
+
+      Spacer()
+
+      HStack(alignment: .firstTextBaseline, spacing: 5) {
+        Text(valueText.isEmpty ? "Not found" : valueText)
+          .font(.system(size: 15, weight: .bold, design: .rounded))
+          .foregroundColor(
+            valueText.isEmpty
+              ? themeManager.current.secondaryText
+              : themeManager.current.primaryText
+          )
+          .multilineTextAlignment(.trailing)
+          .lineLimit(2)
+
+        if !unitText.isEmpty {
+          Text(unitText)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundColor(themeManager.current.secondaryText)
+        }
+      }
+    }
+    .padding(.vertical, 13)
+    .padding(.horizontal, 2)
   }
 
   // MARK: - Step 3: Diet & Allergens
